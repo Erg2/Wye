@@ -5,17 +5,23 @@
 # contains constants (static classes)
 #    structures (regular classes)
 #    and factories (lib, obj)
-class Wye:
-    # Wye container class
 
+# Wye container class that holds Wye classes
+class Wye:
 
     #############################################
+    #
     #  Static Wye Classes
     #
-    #  These classes are never instantiated
+    #  The following classes hold static code.  They are never instantiated
+    #  Typically they are holders for constants
+    #
+    #  (let's not get into a discussion of Python not having constants so the values COULD change at runtime
+    #  because in that direction lies madness.  No legal Wye code is going to mess with the constant values.)
+    #
     #############################################
 
-    # base class for static python objects (libs, objs, words)
+    # base class for static python objects (libs, objs, verbs)
     # Only reason for existing it to complain if someone tries to instantiate the object!!
     class staticObj:
         def __init__(self):
@@ -139,9 +145,16 @@ class Wye:
                 case _:
                     return "--unknown access value " + str(access) + "--"
 
-    # stack frames
 
-    # Code frame - for any word defined by WyeCode rather than compiled Python
+    ###########################################################################
+    #
+    # Dynamic Wye Classes
+    #
+    # (instantiated like any normal class)
+    #
+    ###########################################################################
+
+    # Code frame - for any verb defined by WyeCode rather than compiled Python
     # note: each variable is wrapped in its own list so that it can be passed
     # as a parameter by reference
     class codeFrame:      # Used by any verb with Wye code
@@ -150,8 +163,9 @@ class Wye:
             self.verb = verb    # the static verb that we're holding runtime data for
             self.params = []  # caller will fill in params
             self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
-            self.PC = 0        # used by async words to track location in executing code
+            self.PC = 0        # used by async verbs to track location in executing code
             self.debug = ""
+            # print("codeFrame for verb", verb, " verb.varDescr =", verb.varDescr, " vars =", self.vars)
 
     class objFrame(codeFrame):   # Used by any object with its own exec
         def __init__(self, verb):
@@ -174,11 +188,6 @@ class Wye:
             self.params = ()
             self.vars = ()
 
-    ###########################################################################
-    #
-    # Dynamic Wye Classes
-    #
-    ###########################################################################
 
     ###########################################################################
     #

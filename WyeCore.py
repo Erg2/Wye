@@ -5,6 +5,7 @@
 #
 
 from Wye import Wye
+import inspect      # for debugging
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -29,15 +30,17 @@ class WyeCore(Wye.staticObj):
             # vars - tuple of (name, type, defaultVal) tuples
             vars = (("var1", Wye.type.INTEGER, 0), ("var2", Wye.type.OBJECT, None))  # var definition
 
-            def start():
-                frame = Wye.codeFrame(WyeCore.uiLib.listObjs)
+            def start(stack):
+                frame = Wye.codeFrame(WyeCore.uiLib.listObjs, stack)
                 return frame
 
     class utils(Wye.staticObj):
 
-        # Take a Wye code description and return compilable Python code
+        # Take a Wye code description tuple and return compilable Python code
+        # Resulting code pushes all the params to the frame, then runs the function
+        # Recurses to handle nested param tuples
         def parseWyeTuple(wyeTuple, fNum):
-            eff = "f"+str(fNum)
+            eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
             codeText = eff+" = " + wyeTuple[0] + ".start(frame.stack)\n"
             #print("parseWyeTuple: 1 codeText =", codeText[0])
             if len(wyeTuple) > 1:
@@ -45,11 +48,11 @@ class WyeCore(Wye.staticObj):
                     #print("parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple)-1)
                     paramDesc = wyeTuple[paramIx]
                     #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
-                    if paramDesc[0] is None:
+                    if paramDesc[0] is None:        # constant/var (leaf node)
                         #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
                         codeText += eff+".params.append(" + paramDesc[1] + ")\n"
                         #print("parseWyeTuple: 3 codeText=", codeText[0])
-                    else:
+                    else:                           # recurse to parse nested code tuple
                         #print("parseWyeTuple: 4 - Can't get here")
                         codeText += WyeCore.utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + eff+".params.append(" + \
                             "f"+str(fNum+1)+".params[0])\n"
@@ -61,7 +64,13 @@ class WyeCore(Wye.staticObj):
             #print("WyeCore buildCodeText compile code=", codeDescr)
 
             for wyeTuple in codeDescr:
+                # DEBUG start vvv
+                curframe = inspect.currentframe()
+                calframe = inspect.getouterframes(curframe, 2)
+                print('WyeCore buildCodeText caller:', calframe[1][3])
+                print('WyeCore buildCodeText caller:', calframe[1][3])
                 print("WyeCore buildCodeText: compile tuple=", wyeTuple)
+                # DEBUG end ^^^^
                 codeText[0] += WyeCore.utils.parseWyeTuple(wyeTuple, 0)
 
             print("buildCodeText complete.  codeText=\n", codeText[0])
