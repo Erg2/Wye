@@ -40,23 +40,32 @@ class WyeCore(Wye.staticObj):
         # Resulting code pushes all the params to the frame, then runs the function
         # Recurses to handle nested param tuples
         def parseWyeTuple(wyeTuple, fNum):
-            eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
-            codeText = eff+" = " + wyeTuple[0] + ".start(frame.stack)\n"
-            #print("parseWyeTuple: 1 codeText =", codeText[0])
-            if len(wyeTuple) > 1:
-                for paramIx in range(1, len(wyeTuple)):
-                    #print("parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple)-1)
-                    paramDesc = wyeTuple[paramIx]
-                    #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
-                    if paramDesc[0] is None:        # constant/var (leaf node)
-                        #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
-                        codeText += eff+".params.append(" + paramDesc[1] + ")\n"
-                        #print("parseWyeTuple: 3 codeText=", codeText[0])
-                    else:                           # recurse to parse nested code tuple
-                        #print("parseWyeTuple: 4 - Can't get here")
-                        codeText += WyeCore.utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + eff+".params.append(" + \
-                            "f"+str(fNum+1)+".params[0])\n"
-            codeText += wyeTuple[0] + ".run("+eff+")\n"
+            # Wye verb
+            if wyeTuple[0]:
+                eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
+                codeText = eff+" = " + wyeTuple[0] + ".start(frame.stack)\n"
+                #print("parseWyeTuple: 1 codeText =", codeText[0])
+                if len(wyeTuple) > 1:
+                    for paramIx in range(1, len(wyeTuple)):
+                        #print("parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple)-1)
+                        paramDesc = wyeTuple[paramIx]
+                        #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
+                        if paramDesc[0] is None:        # constant/var (leaf node)
+                            #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
+                            codeText += eff+".params.append(" + paramDesc[1] + ")\n"
+                            #print("parseWyeTuple: 3 codeText=", codeText[0])
+                        else:                           # recurse to parse nested code tuple
+                            #print("parseWyeTuple: 4 - Can't get here")
+                            codeText += WyeCore.utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + eff+".params.append(" + \
+                                "f"+str(fNum+1)+".params[0])\n"
+                codeText += wyeTuple[0] + ".run("+eff+")\n"
+            # Raw Python code
+            else:
+                if len(wyeTuple) > 1:
+                    codeText = wyeTuple[1]+"\n"
+                else:
+                    print("Wye Warning - parseTuple null verb but no raw code supplied")
+
             return codeText
 
         def buildCodeText(codeDescr):

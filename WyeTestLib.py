@@ -142,6 +142,22 @@ class testLib:
                 pIx += 1
             print("")
 
+    # print as many params as passed in, followed by a crlf
+    class wyePrint:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = ()     # takes arbitrary number of params.  Need to create a way to specify that
+        varDescr = ()
+
+        def start(stack):
+            return Wye.codeFrame(testLib.wyePrint, stack)
+
+        def run(frame):
+            #print(inspect.stack()[1].function, "params: ", end="")
+            for param in frame.params:
+                print(param, end="")
+            print("")
+
     # test operations on local variables
     class testAddInPlace:
         mode = Wye.mode.SINGLE_CYCLE
@@ -312,10 +328,10 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             return Wye.codeFrame(testLib.setObjPos, stack)
 
         def run(frame):
-            print("setObjPos run: params ", frame.params)
+            #print("setObjPos run: params ", frame.params)
             gObj = frame.params[0][0]
             vec = frame.params[1]
-            print("setObjPos set obj to ", vec)
+            print("setObjPos set obj", gObj, "to", vec)
             gObj.setPos(vec[0], vec[1], vec[2])
 
     # hand written code
@@ -357,8 +373,10 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             # call showModel with testLoader2 var0 and constantw for pos, scale, tag
 #            ("testLib.showModel", (None, "frame.vars[0]"), (None, "[-1,15,1]"), (None, "[.75,.75,.75]"), (None, "'o1'"))
             ("testLib.showModel", (None, "frame.vars[0]"),
-             ("testLib.makeVec", (None, "frame.vars[2]"), (None, "[-1]"), (None, "[15]"), (None, "[1]")),
-                (None, "[.75,.75,.75]"), (None, "'o1'"))
+                ("testLib.makeVec", (None, "[]"), (None, "[-1]"), (None, "[15]"), (None, "[1]")),
+                (None, "[.75,.75,.75]"),
+                (None, "'o1'")),
+            (None, "frame.params[0][0] = frame.vars[0][0]")
             )
         code = None
 
@@ -369,7 +387,6 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             return Wye.codeFrame(testLib.testLoader2, stack)
 
         def run(frame):
-            print("testLoader2 run: exec code")
             testLib.testLib_rt.testLoader2_run_rt(frame)
 
 
@@ -384,7 +401,8 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
                     ("scaleVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = (
-            ("testLib.printParams", (None, "'testLoader3 first line'")),
+            ("testLib.wyePrint", (None, "'testLoader3 first line'")),
+            (None, "print('test inline code')"),
             # call loadModel with testLoader3 params 0 and 1
             ("testLib.loadModel", (None, "frame.params[0]"), (None, "frame.params[1]")),
             # call showModel with testLoader3 on passed in params
@@ -401,9 +419,7 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             return Wye.codeFrame(testLib.testLoader3, stack)
 
         def run(frame):
-            print("testLoader3 run: exec code")
             testLib.testLib_rt.testLoader3_run_rt(frame)
-            print("testLoader3 run: finished exec code")
 
 
 
@@ -455,19 +471,23 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
 #f.params = [frame.vars[2], frame.vars[3], frame.vars[4]]
 #testLib.testAdd2.run(f)
 #print("testObj: post testAdd2 var contains ", frame.vars[2])
-#        
+
+# create object from verb's local variables
 print("testObj start: frame.vars ", frame.vars)
-f = testLib.testLoader3.start(frame.stack)
-f.params = [frame.vars[0], ["flyer_01.glb"], [-1,15,-1], [.75,.75,.75]]
-testLib.testLoader3.run(f)
-print("testObj after testLoader3: frame.vars ", frame.vars)
-#
-f.params = [[frame.vars[1]], ["flyer_01.glb"], [-1,15,-1], [.75,.75,.75]]
-testLib.testLoader3.run(f)
-#
+f = testLib.testLoader2.start(frame.stack)
+f.params = [frame.vars[0],]
+testLib.testLoader2.run(f)
+print("testObj after testLoader2: frame.vars ", frame.vars)
+
+# create object from parameters
+f1 = testLib.testLoader3.start(frame.stack)
+f1.params = [frame.vars[1], ["flyer_01.glb"], [-1,15,-1], [.75,.75,.75]]
+testLib.testLoader3.run(f1)
 print("testObj after 2nd testLoader3: frame.vars ", frame.vars)
+
+# move 2nd object
 f2 = testLib.setObjPos.start(frame.stack)
-f2.params = [frame.vars[0], [1,10,1]]
+f2.params = [frame.vars[1], [1,10,1]]
 testLib.setObjPos.run(f2)
 frame.params[0][0] = 1
 '''
