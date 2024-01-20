@@ -158,19 +158,15 @@ class Wye:
     # note: each variable is wrapped in its own list so that it can be passed
     # as a parameter by reference
     class codeFrame:      # Used by any verb with Wye code
-        def __init__(self, verb, stack):
-            self.stack = stack  # exec stack
+        def __init__(self, verb):
             self.verb = verb    # the static verb that we're holding runtime data for
             self.params = []  # caller will fill in params
             self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
-            self.PC = 0        # used by async verbs to track location in executing code
+            self.PC = 0         # used by async verbs to track location in executing code
+            self.SP = None      # points to stack list this frame is on
+            self.status = Wye.status.SUCCESS    # assume good things
             self.debug = ""
             # print("codeFrame for verb", verb, " verb.varDescr =", verb.varDescr, " vars =", self.vars)
-
-    class objFrame(codeFrame):   # Used by any object with its own exec
-        def __init__(self, verb):
-            super().__init__(verb)
-            self.stack = []
 
     class parallelFrame(codeFrame): # used by any object with parallel execution (multiple stacks)
         def __init__(self, verb):
@@ -188,6 +184,15 @@ class Wye:
             self.params = ()
             self.vars = ()
 
+    ###########################################################################
+    #
+    # Asynch callback context objec t
+    #
+    ###########################################################################
+
+    class WyeCallback:
+        def __init__(self):
+            pass
 
     ###########################################################################
     #

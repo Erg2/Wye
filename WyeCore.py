@@ -30,8 +30,8 @@ class WyeCore(Wye.staticObj):
             # vars - tuple of (name, type, defaultVal) tuples
             vars = (("var1", Wye.type.INTEGER, 0), ("var2", Wye.type.OBJECT, None))  # var definition
 
-            def start(stack):
-                frame = Wye.codeFrame(WyeCore.uiLib.listObjs, stack)
+            def start():
+                frame = Wye.codeFrame(WyeCore.uiLib.listObjs)
                 return frame
 
     class utils(Wye.staticObj):
@@ -43,7 +43,7 @@ class WyeCore(Wye.staticObj):
             # Wye verb
             if wyeTuple[0]:
                 eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
-                codeText = eff+" = " + wyeTuple[0] + ".start(frame.stack)\n"
+                codeText = eff+" = " + wyeTuple[0] + ".start()\n"
                 #print("parseWyeTuple: 1 codeText =", codeText[0])
                 if len(wyeTuple) > 1:
                     for paramIx in range(1, len(wyeTuple)):
@@ -94,3 +94,18 @@ class WyeCore(Wye.staticObj):
             return code
 
 
+        def printStatus(stat):
+            match stat:
+                case Wye.status.CONTINUE:
+                    return "CONTINUE"
+                case Wye.status.SUCCESS:
+                    return "SUCCESS"
+                case Wye.status.FAIL:
+                    return "FAIL"
+
+        def printStack(stack):
+            stkStr = "\n stack len=" + str(len(stack))
+            for frame in stack:
+                stkStr += "\n  verb=" + frame.verb.__name__ + " status " + WyeCore.utils.printStatus(frame.status) + \
+                          " params: " + str(frame.params)
+            return stkStr
