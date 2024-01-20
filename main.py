@@ -33,6 +33,8 @@ class universe:
     objs = []       # runnable objects
     objStacks = []  # objects run in parallel so each one gets a stack
 
+# called once per frame
+# runs all active objects in parallel
 def worldRunner(task):
     global worldInit
 
