@@ -25,14 +25,15 @@ class Wye:
     # Only reason for existing it to complain if someone tries to instantiate the object!!
     class staticObj:
         def __init__(self):
-            print("Wye Error - attempting to instantiate a static object!")
+            print("Wye Error - staticObj: attempting to instantiate a static object!")
             # if this happens a lot, maybe do an exit(1)
             # it would be cool to put code in every child object to identify which obj is being instantiated - once
             # the editor is fully running.
-
-    # convenient library holder
-    class libs:
-        pass
+# Unused
+#
+#   # convenient library holder
+#   class libs:
+#       pass
 
     # Constants
 
@@ -59,7 +60,6 @@ class Wye:
         SINGLE_CYCLE = "S"  # single cycle subroutine runs immediately and doesn't return a value
         MULTI_CYCLE = "M"   # multi-cycle subroutine that returns status (see above) on each cycle
         OBJECT = "O"        # multi-cycle object that has a "runnable" test and returns status (above) on each cycle
-
 
         def tostring(mode):            # static print function
             match(mode):
@@ -145,6 +145,9 @@ class Wye:
                 case _:
                     return "--unknown access value " + str(access) + "--"
 
+    # known event types that a word can wait for
+    class event:
+        PICK = 1
 
     ###########################################################################
     #
@@ -184,41 +187,44 @@ class Wye:
             self.params = ()
             self.vars = ()
 
-    ###########################################################################
-    #
-    # Asynch callback context objec t
-    #
-    ###########################################################################
-
-    class WyeCallback:
-        def __init__(self):
-            pass
-
-    ###########################################################################
-    #
-    # Static Parameter Functions
-    #
-    ###########################################################################
-
-    # return the next item in the code stream
-    def getImmediate(frame, code):
-        frame.PC += 1
-        return code[frame.PC]
-
-    def getParamConstVal(code):
-        pass
-
-    def getParamVarArrayVal(code):
-        pass
-
+# Unused
+#
+#    ###########################################################################
+#    #
+#    # Asynch callback context object
+#    #
+#    ###########################################################################
+#
+#    class WyeCallback:
+#        def __init__(self):
+#            pass
+#
+#    ###########################################################################
+#    #
+#    # Static Parameter Functions
+#    #
+#    ###########################################################################
+#
+#    # return the next item in the code stream
+#    def getImmediate(frame, code):
+#        frame.PC += 1
+#        return code[frame.PC]
+#
+#    def getParamConstVal(code):
+#        pass
+#
+#    def getParamVarArrayVal(code):
+#        pass
+#
     ###########################################################################
     # The main Wye class
-    # fill in global objects
+    # -- not used, static class and all, right??? ---
     ###########################################################################
     def __init__(self):
-        self.currWorld = None  # the universe
-        self.picker = None  # 3d object picker
-        self.textBgnd = None  # Text background geom reffed by all text
+        print("Wye.py Execution can't get here so you don't see this!!!")
+        #self.currWorld = None  # the universe
+        #self.picker = None  # 3d object picker
+        #self.textBgnd = None  # Text background geom reffed by all text
 
 
 

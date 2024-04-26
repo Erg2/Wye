@@ -2,6 +2,7 @@
 
 from Wye import Wye
 from WyeCore import WyeCore
+from WyeUI import WyeUI
 import inspect
 #import partial
 
@@ -67,6 +68,7 @@ class testLib:
     # TODO - move this to WyeCore
     # Build run_rt methods on each class
     def build():
+
         codeStr = "class testLib_rt:\n"
         # check all the classes in the lib for build functions.
         for attr in dir(testLib):
@@ -82,31 +84,32 @@ class testLib:
                     # start runtime function for class
                     codeStr += " def " + attr + "_run_rt(frame):\n" # define a runtime method containing the code lines
                     # DEBUG
-                    codeStr += "   print('execute "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
+                    #codeStr += "   print('execute "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
                     # End DEBUG
                     for line in lines:      # put child's code in rt method at required indent
                         if not line.isspace():
                             codeStr += "   " + line
-                    codeStr += "   print('end of "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
+                    #codeStr += "   print('end of "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
 
         #codeStr += "print('testLib is ', testLib)\n"        # DEBUG
 
-        # All classes in this library defined by Wye-code generate their runtime methods as methods of the library's dynamically added testLib_rt class
+        # All classes in this library defined by Wye-code generate their runtime methods as methods of
+        # the library's dynamically added testLib_rt class.
         # This allows the compile to be done once when the library is loaded instead of piecemeal for each class.
         #
         codeStr += 'setattr(testLib, "testLib_rt", testLib_rt)\n'
 
-        # DEBUG - print out code string for Python to compile
-        lineNum = 1
-        print("testLib code string:")
-        for line in codeStr.split("\n"):
-            if line[0:3] == "   ":
-                print("%-3d " % lineNum, line)
-                lineNum += 1
-            else:
-                lineNum = 1
-                print("    ", line)
-        # End DEBUG
+#        # DEBUG - print out code string for Python to compile
+#        lineNum = 1
+#        print("testLib code string:")
+#        for line in codeStr.split("\n"):
+#            if line[0:3] == "   ":
+#                print("%-3d " % lineNum, line)
+#                lineNum += 1
+#            else:
+#                lineNum = 1
+#                print("    ", line)
+#        # End DEBUG
 
         # Compile the runtime Wye code
         code = compile(codeStr, "<string>", "exec")
@@ -154,7 +157,7 @@ class testLib:
             return Wye.codeFrame(testLib.wyePrint)
 
         def run(frame):
-            #print(inspect.stack()[1].function, "params: ", end="")
+            print(inspect.stack()[1].function, "params: ", end="")
             for param in frame.params:
                 print(param, end="")
             print("")
@@ -176,7 +179,7 @@ frame.params[0][0] = frame.vars[0][0]
 
         def build():
             # string will be added to testLib_rt.testAddInPlace_rt
-            print("Called testAddInPlace.build()")
+            #print("Called testAddInPlace.build()")
             return testLib.testAddInPlace.codeString
 
         def start():
@@ -198,13 +201,13 @@ frame.params[0][0] = frame.vars[0][0]
         codeString = '''
 # add param 1 to param 2 and return in param 0
 frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
-print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get ", frame.params[0])
+#print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get ", frame.params[0])
 '''
         code = None
 
         def build():
             # string will be added to testLib_rt.testAdd_rt
-            print("Called testAdd.build()")
+            #print("Called testAdd.build()")
             return testLib.testAdd.codeString
 
         def start():
@@ -248,7 +251,7 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
 
         def run(frame):
             retList = [frame.params[1][0], frame.params[2][0], frame.params[3][0]]
-            print("testLib makeVec: return ", retList)
+            #print("testLib makeVec: return ", retList)
             frame.params[0] = retList
 
     class testWord2:
@@ -259,14 +262,14 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
 
         def start():
             frame = Wye.codeFrame(testLib.testWord2)
-            print("testWord2 start: frame params ", frame.params)
-            print("testWord2 start: frame vars ", frame.vars)
+            #print("testWord2 start: frame params ", frame.params)
+            #print("testWord2 start: frame vars ", frame.vars)
             return frame
 
         def run(frame):
             frame.params[0][0] = frame.vars[0][0] + frame.vars[1][0]
-            print("testWord2 run param 0 ", frame.params[0][0], " var 0 ", frame.vars[0][0], " + var 1 ",
-                  frame.vars[1][0], " = ", frame.params[0][0])
+            #print("testWord2 run param 0 ", frame.params[0][0], " var 0 ", frame.vars[0][0], " + var 1 ",
+            #      frame.vars[1][0], " = ", frame.params[0][0])
             pass
 
 
@@ -290,6 +293,24 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             model = base.loader.loadModel(filepath)
             frame.params[0][0] = model
 
+    class makePickable:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.INTEGER
+        paramDescr = (("returnId", Wye.type.INTEGER, 0), ("loadedObject", Wye.type.OBJECT, Wye.access.REFERENCE))
+        varDescr = ()
+
+        def start():
+            return Wye.codeFrame(testLib.makePickable)
+
+        def run(frame):
+            global base
+
+            obj = frame.params[1][0]
+            tag = "wyeTag" + str(WyeCore.utils.getId())
+            obj.setTag(tag, "true")
+            WyeCore.picker.makePickable(obj)
+            frame.params[0][0] = tag
+
     class showModel:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.type.NONE
@@ -309,7 +330,7 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             pos = frame.params[1]
             scale = frame.params[2]
             tag = frame.params[3][0]
-            print("showModel pos ", pos, " scale ", scale)
+            print("showModel pos ", pos, " scale ", scale, " tag ", tag)
             model.reparentTo(render)
             model.setScale(scale[0], scale[1], scale[2])
             model.setPos(pos[0], pos[1], pos[2])
@@ -332,7 +353,7 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             #print("setObjPos run: params ", frame.params)
             gObj = frame.params[0][0]
             vec = frame.params[1]
-            print("setObjPos set obj", gObj, "to", vec)
+            #print("setObjPos set obj", gObj, "to", vec)
             gObj.setPos(vec[0], vec[1], vec[2])
 
     # set object to given angle
@@ -349,26 +370,57 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
 
         # TODO - make multi-cycle
         def run(frame):
-            print('execute setAngle, params', frame.params, ' vars', frame.vars)
+            #print('execute setAngle, params', frame.params, ' vars', frame.vars)
 
             gObj = frame.params[0][0]
             vec = frame.params[1]
 
             hpr = frame.params[0][0].getHpr()
-            print("Current HPR ", hpr)
+            #print("Current HPR ", hpr)
 
-            print("setAngle obj", gObj, "to", vec)
+            #print("setAngle obj", gObj, "to", vec)
             gObj.setHpr(vec[0], vec[1], vec[2])
 
             hpr = frame.params[0][0].getHpr()
-            print("New HPR ", hpr)
+            #print("New HPR ", hpr)
+
+
+    class delay:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("startCt", Wye.type.INTEGER),)
+        varDescr = (("delayCt", Wye.type.INTEGER, 0),)
+        codeDescr = ()
+        code = None
+
+        def start():
+            f = Wye.codeFrame(testLib.delay)
+            f.status = Wye.status.CONTINUE
+            return f
+
+        # TODO - make multi-cycle
+        def run(frame):
+            match frame.PC:
+                case 0:
+                    #print('execute delay, params', frame.params, ' vars', frame.vars)
+
+                    frame.vars[0][0] = frame.params[0][0]   # set start count
+                    frame.PC += 1
+
+                case 1:
+                    if frame.vars[0][0] > 0:
+                        frame.vars[0][0] -= 1
+                    else:
+                        #print("delay done")
+                        frame.status = Wye.status.SUCCESS
+
 
 
     # spin object back and forth
     class spin:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.NONE
-        paramDescr = (("status", Wye.type.INTEGER), ("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
         varDescr = (("rotCt", Wye.type.INTEGER, 0),)
         codeDescr = ()
         code = None
@@ -392,11 +444,11 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
                     gObj.setHpr(vec[0], vec[1], vec[2])
                     if vec[0] > 45:   # end of swing this way
                         frame.vars[0][0] += 1  # count cycles
-                        if frame.vars[0][0] < 10:  # wiggle this many times, then exit
+                        if frame.vars[0][0] < 5:  # wiggle this many times, then exit
                             frame.PC += 1   # go to next state
                         else:
                             #print("spin: done")
-                            frame.PC = 100  # guaranteed outside the working range so will fall to default and exit
+                            frame.PC = -1  # undefined case value so will go to default to exit
 
                     frame.status = Wye.status.CONTINUE
 
@@ -412,6 +464,93 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
                 case _:
                     frame.status = Wye.status.SUCCESS
 
+    class waitClick:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start():
+            f = Wye.codeFrame(testLib.waitClick)
+            f.status = Wye.status.CONTINUE
+            return f
+
+        # TODO - make multi-cycle
+        def run(frame):
+            #print('execute spin, params', frame.params, ' vars', frame.vars)
+            match frame.PC:
+                case 0:
+                    WyeCore.world.setEventCallback("click", frame, "tag")
+                    frame.PC += 1
+                    print("waiting for event 'click'")
+                case 1:
+                    pass
+                    # do nothing until event occurs
+
+                case 2:
+                    frame.status = Wye.status.SUCCESS
+
+    # when clicked, spin object back and forth
+    class clickWiggle:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
+        varDescr = (("rotCt", Wye.type.INTEGER, 0),)
+        codeDescr = ()
+        code = None
+
+        def start():
+            f = Wye.codeFrame(testLib.clickWiggle)
+            f.status = Wye.status.CONTINUE
+            return f
+
+        # TODO - make multi-cycle
+        def run(frame):
+            #print('execute spin, params', frame.params, ' vars', frame.vars)
+
+            gObj = frame.params[0][0]
+            vec = gObj.getHpr()
+            #print("Current HPR ", vec)
+            match frame.PC:
+                case 0:
+                    WyeCore.world.setEventCallback("click", frame, "tag")
+                    frame.PC += 1
+                    print("clickWiggle waiting for event 'click'")
+                case 1:
+                    pass
+                    # do nothing until event occurs
+
+                case 2:
+                    vec[1] += 5
+                    #print("spin (pos) obj", gObj, "to", vec)
+                    gObj.setHpr(vec[0], vec[1], vec[2])
+                    if vec[1] > 45:   # end of swing this way
+                        frame.vars[0][0] += 1  # count cycles
+                        if frame.vars[0][0] < 2:  # wiggle this many times, then exit
+                            frame.PC += 1   # go to next state
+                        else:
+                            #print("spin: done")
+                            frame.PC = -1  # undefined case value so will go to default to exit
+
+                    frame.status = Wye.status.CONTINUE
+
+                case 3:
+                    vec[1] -= 5
+                    #print("spin (neg) obj ", gObj, "to", vec)
+                    gObj.setHpr(vec[0], vec[1], vec[2])
+                    if vec[1] < -45:    # end of swing other way
+                        frame.PC -= 1   # go to previous state
+
+                    frame.status = Wye.status.CONTINUE
+
+                case _:
+                    frame.status = Wye.status.SUCCESS
+
+
+
+
     # hand written code
     class testLoader:
         mode = Wye.mode.SINGLE_CYCLE
@@ -423,8 +562,9 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
             return Wye.codeFrame(testLib.testLoader)
 
         def run(frame):
+            print("testLoader")
             f = testLib.loadModel.start()
-            print("testLoader run: load model ", f.vars[1][0])
+            #print("testLoader run: load model ", f.vars[1][0])
             f.params.append(frame.vars[0])
             f.params.append(frame.vars[1])
             testLib.loadModel.run(f)
@@ -444,10 +584,13 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
         dataType = Wye.type.NONE
         paramDescr = ()
         varDescr = (("obj", Wye.type.OBJECT, None), ("file", Wye.type.STRING, "flyer_01.glb"),
-                    ("posVec", Wye.type.INTEGER_LIST, [0,0,0]))
+                    ("posVec", Wye.type.INTEGER_LIST, [0,0,0]), ("objPickId", Wye.type.INTEGER, 0))
         codeDescr = (
             # call loadModel with testLoader2 var0 and var1 as params
+            ("testLib.wyePrint", (None, "print('hi from testLoader2')")),
             ("testLib.loadModel", (None, "frame.vars[0]"), (None, "frame.vars[1]")),
+            ("testLib.makePickable", (None, "frame.vars[3]"), (None, "frame.vars[0]")),
+            ("testLib.wyePrint", (None, "frame.vars[3]")),
             # call showModel with testLoader2 var0 and constantw for pos, scale, tag
             #("testLib.showModel", (None, "frame.vars[0]"), (None, "[-1,15,1]"), (None, "[.75,.75,.75]"), (None, "'o1'"))
             ("testLib.showModel", (None, "frame.vars[0]"),
@@ -479,14 +622,14 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
                     ("scaleVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = (
-            ("testLib.wyePrint", (None, "'testLoader3 first line'")),
-            (None, "print('test inline code')"),
+            #("testLib.wyePrint", (None, "'testLoader3 first line'")),
+            #(None, "print('test inline code')"),
             # call loadModel with testLoader3 params 0 and 1
             ("testLib.loadModel", (None, "frame.params[0]"), (None, "frame.params[1]")),
             # call showModel with testLoader3 on passed in params
-            ("testLib.printParams", (None, "frame.params[0]"),(None, "frame.params[2]"), (None, "frame.params[3]")),
+            #("testLib.printParams", (None, "frame.params[0]"),(None, "frame.params[2]"), (None, "frame.params[3]")),
             ("testLib.showModel", (None, "frame.params[0]"),(None, "frame.params[2]"), (None, "frame.params[3]"),
-             (None, "'o1'")) # need to set up global object name list
+             (None, "frame.params[4]")) # need to set up global object name list
         )
         code = None
 
@@ -542,28 +685,29 @@ print("testAdd_run_rt: add  ", frame.params[1], " + ", frame.params[2], " to get
         #print("testAdd var contains ", frame.vars[2])
 
         codeString = '''
-#print("testObj: test testAdd2 ret in var")
+print("testObj: testLoader 2 and 3")
 #f = testLib.testAdd2.start()
 #f.params = [frame.vars[2], frame.vars[3], frame.vars[4]]
 #testLib.testAdd2.run(f)
 #print("testObj: post testAdd2 var contains ", frame.vars[2])
 
 # create object from verb's local variables
-print("testObj start: frame.vars ", frame.vars)
+#print("testObj start: frame.vars ", frame.vars)
 f = testLib.testLoader2.start()
 f.params = [frame.vars[0],]
 testLib.testLoader2.run(f)
-print("testObj after testLoader2: frame.vars ", frame.vars)
+#print("testObj after testLoader2: frame.vars ", frame.vars)
 
 # create object from parameters
 f1 = testLib.testLoader3.start()
-f1.params = [frame.vars[1], ["flyer_01.glb"], [-1,15,-1], [.75,.75,.75]]
+# position doesn't matter 'cause set pos below
+f1.params = [frame.vars[1], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], ["tstObj"]]
 testLib.testLoader3.run(f1)
-print("testObj after 2nd testLoader3: frame.vars ", frame.vars)
+#print("testObj after 2nd testLoader3: frame.vars ", frame.vars)
 
 # move 2nd object
 f2 = testLib.setObjPos.start()
-f2.params = [frame.vars[1], [1,10,1]]
+f2.params = [frame.vars[1], [1,20,1]]
 testLib.setObjPos.run(f2)
 
 # set angle of 1st object
@@ -584,7 +728,7 @@ frame.params[0][0] = 1
 
         def start():
             if not testLib.testObj.code:        # if object not compiled, compile it
-                print("testObj compile codeString")
+                #print("testObj compile codeString")
                 testLib.testObj.code = compile(testLib.testObj.codeString, "<string>", "exec")
             f = Wye.codeFrame(testLib.testObj)
             f.status = Wye.status.CONTINUE      # not done yet
@@ -593,7 +737,7 @@ frame.params[0][0] = 1
         def run(frame):
             #print("testObj run frame ",frame, " frame params ", frame.params, " debug '", frame.debug, "'")
             #print("testObj codeString ", testLib.testObj.code)
-            print("testObj exec code")
+            #print("testObj exec code")
             exec(testLib.testObj.code, {"testLib":testLib, "frame":frame, "Wye":Wye, "WyeCore":WyeCore})
 
 
@@ -610,40 +754,61 @@ frame.params[0][0] = 1
 match(frame.PC):
     case 0:
         print("testObj2 case 0: start - set up object")
+
         # create object from parameters
         f1 = testLib.testLoader3.start()
-        f1.params = [frame.vars[0], ["flyer_01.glb"], [-1,15,-1], [.75,.75,.75]]
+        # position doesn't matter - explicitly set, below
+        f1.params = [frame.vars[0], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], ["tstObj2"]]
         testLib.testLoader3.run(f1)
         #print("testObj2 after 2nd testLoader3: frame.vars ", frame.vars)
 
         # move object
         f2 = testLib.setObjPos.start()
-        f2.params = [frame.vars[0], [1,5,1]]
+        f2.params = [frame.vars[0], [1,5,0]]
         testLib.setObjPos.run(f2)
 
         frame.PC += 1
         
     case 1:
-        print("testObj2 case 1: start spin")
+        #print("testObj2 case 1: start spin")
         
-        f4 = testLib.spin.start()       # create multi-cycle verb and put its frame on the stack
-        f4.params = [frame.vars[0],]    # note: its status is CONTINUE
-        frame.SP.append(f4)             # note2: execution will continue in spin until it's done
+        f4 = testLib.spin.start()       # create multi-cycle verb (frame default status is CONTINUE
+        f4.params = [frame.vars[0],]    # pass obj to spin
+        frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
         #print("testObj2, frame.SP", frame.SP)
         #print("testObj2, stack contains ", WyeCore.utils.printStack(frame.SP))
-        frame.PC += 1
+        frame.PC = 3 # jump over delay to click wiggle                   # bump forward a step - when spin completes we'll pick up at the next case
         
     case 2:
-        print("testObj2 case 2: done spin")
+        #print("testObj2 case 2: done spin")
         # we won't get here until spin completes
         # spin's frame is at the bottom of the stack
-        f = frame.SP[len(frame.SP)-1]
-        #print("testObj2: spin returned", f.status)
-        #frame.status = f.status
-        frame.SP.remove(f)
+        f = frame.SP.pop()
+        #print("testObj2: spin returned p0 ", frame.params[0][0], " status ", WyeCore.status.tostring(f.status))
+        #frame.status = Wye.status.SUCCESS   # we're done
 
-        frame.PC -= 1   # go back a step and do it again
+        #print("testObj2 case 2 start delay")
+        f = testLib.delay.start()
+        f.params = [[200]]
+        frame.SP.append(f)
+        # when we get back here after delay, we'll pick up at case 3
+        frame.PC += 1       # when delay done, go pop frame
         
+    case 3:
+        frame.SP.pop()  # remove delay frame
+        
+        f = testLib.waitClick.start()       # create multi-cycle verb (frame default status is CONTINUE
+        f.params = [frame.vars[0],]    # pass obj to spin
+        frame.SP.append(f)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
+        print("tstObj2 Obj waiting for click")
+        frame.PC += 1                   # bump forward a step - when event happens we'll pick up at the next case
+        
+    case 4:
+        f = frame.SP.pop()  # remove event frame
+        print("Done event")
+        frame.PC = 1   # Set PC back so next cycle we do it all again
+
+#print("testObj2 cycle")
 # return a value for testing purposes
 frame.params[0][0] = 1
         '''
@@ -651,7 +816,7 @@ frame.params[0][0] = 1
 
         def start():
             if not testLib.testObj2.code:        # if object not compiled, compile it
-                print("testObj2 compile codeString")
+                #print("testObj2 compile codeString")
                 testLib.testObj2.code = compile(testLib.testObj2.codeString, "<string>", "exec")
             f = Wye.codeFrame(testLib.testObj2)
             f.status = Wye.status.CONTINUE  # not done yet
@@ -660,5 +825,5 @@ frame.params[0][0] = 1
         def run(frame):
             #print("testObj2 run frame ",frame, " frame params ", frame.params, " debug '", frame.debug, "'")
             #print("testObj2 codeString ", testLib.testObj.code)
-            print("testObj2 exec code")
+            #print("testObj2 exec code")
             exec(testLib.testObj2.code, {"testLib":testLib, "frame":frame, "Wye":Wye, "WyeCore":WyeCore})
