@@ -307,9 +307,12 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
 
             obj = frame.params[1][0]
             tag = "wyeTag" + str(WyeCore.utils.getId())
-            obj.setTag(tag, "true")
+# DEBUG            print("testLib makePickable: set tag ", tag, " on obj ", obj)
+# DEBUG            obj.setTag(tag, "true")
+# DEBUG            frame.params[0][0] = tag
             WyeCore.picker.makePickable(obj)
-            frame.params[0][0] = tag
+            print("testLib makePickable: set tag ", frame.params[0][0], " on obj ", obj)
+            obj.setTag(frame.params[0][0], "true")
 
     class showModel:
         mode = Wye.mode.SINGLE_CYCLE
@@ -330,7 +333,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             pos = frame.params[1]
             scale = frame.params[2]
             tag = frame.params[3][0]
-            print("showModel pos ", pos, " scale ", scale, " tag ", tag)
+            #print("showModel pos ", pos, " scale ", scale, " tag ", tag)
             model.reparentTo(render)
             model.setScale(scale[0], scale[1], scale[2])
             model.setPos(pos[0], pos[1], pos[2])
@@ -360,7 +363,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
     class setAngle:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("sngle", Wye.type.FLOAT_LIST, [0,0,0]))
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("angle", Wye.type.FLOAT_LIST, [0,0,0]))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -375,7 +378,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             gObj = frame.params[0][0]
             vec = frame.params[1]
 
-            hpr = frame.params[0][0].getHpr()
+            #hpr = frame.params[0][0].getHpr()
             #print("Current HPR ", hpr)
 
             #print("setAngle obj", gObj, "to", vec)
@@ -383,6 +386,25 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
 
             hpr = frame.params[0][0].getHpr()
             #print("New HPR ", hpr)
+
+
+    # set object to given color (r,g,b,a, values 0..1.0)
+    class setColor:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("color", Wye.type.FLOAT_LIST, [0,0,0,0]))
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start():
+            return Wye.codeFrame(testLib.setColor)
+
+        def run(frame):
+            gObj = frame.params[0][0]
+            color = frame.params[1]
+            #print("setColor obj", gObj, "to", color)
+            gObj.setColor(color[0], color[1], color[2], color[3])
 
 
     class delay:
@@ -482,21 +504,22 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             #print('execute spin, params', frame.params, ' vars', frame.vars)
             match frame.PC:
                 case 0:
-                    WyeCore.world.setEventCallback("click", frame, "tag")
+                    WyeCore.world.setEventCallback("click", frame.params[0][0], frame)
                     frame.PC += 1
-                    print("waiting for event 'click'")
+                    #print("waitClick: waiting for event 'click' tag ", frame.params[0][0])
                 case 1:
                     pass
                     # do nothing until event occurs
 
                 case 2:
+                    #print("waitClick: click on obj ", frame.eventData[0])
                     frame.status = Wye.status.SUCCESS
 
     # when clicked, spin object back and forth
     class clickWiggle:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("tag", Wye.type.STRING, Wye.access.REFERENCE))
         varDescr = (("rotCt", Wye.type.INTEGER, 0),)
         codeDescr = ()
         code = None
@@ -515,9 +538,9 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             #print("Current HPR ", vec)
             match frame.PC:
                 case 0:
-                    WyeCore.world.setEventCallback("click", frame, "tag")
+                    WyeCore.world.setEventCallback("click", frame.params[1][0], frame)
                     frame.PC += 1
-                    print("clickWiggle waiting for event 'click'")
+                    #print("clickWiggle waiting for event 'click' on tag ", frame.params[1][0])
                 case 1:
                     pass
                     # do nothing until event occurs
@@ -527,23 +550,27 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
                     #print("spin (pos) obj", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
                     if vec[1] > 45:   # end of swing this way
-                        frame.vars[0][0] += 1  # count cycles
-                        if frame.vars[0][0] < 2:  # wiggle this many times, then exit
-                            frame.PC += 1   # go to next state
-                        else:
-                            #print("spin: done")
-                            frame.PC = -1  # undefined case value so will go to default to exit
-
-                    frame.status = Wye.status.CONTINUE
+                        frame.PC += 1  # go to next state
 
                 case 3:
                     vec[1] -= 5
                     #print("spin (neg) obj ", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
                     if vec[1] < -45:    # end of swing other way
-                        frame.PC -= 1   # go to previous state
+                        frame.PC += 1   # go to previous state
 
-                    frame.status = Wye.status.CONTINUE
+                case 4:
+                    frame.vars[0][0] += 1  # count cycles
+                    if frame.vars[0][0] < 2:  # wiggle this many times, then exit
+                        frame.PC = 2    # go do another wiggle
+                    else:
+                        # finish by coming back to zero
+                        vec[1] += 5
+                        #print("spin (neg) obj ", gObj, "to", vec)
+                        gObj.setHpr(vec[0], vec[1], vec[2])
+                        if vec[1] >= 0:    # end of swing other way
+                            frame.status = Wye.status.SUCCESS
+
 
                 case _:
                     frame.status = Wye.status.SUCCESS
@@ -569,6 +596,13 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             f.params.append(frame.vars[1])
             testLib.loadModel.run(f)
             #print("testLoader run: loadModel returned ", f.params[0])
+
+            obj = frame.vars[0][0]
+            tag = "wyeTag" + str(WyeCore.utils.getId())
+            print("testLib testLoader: set tag ", tag, " on obj ", obj)
+            obj.setTag(tag, "true")
+            WyeCore.picker.makePickable(obj)
+
             f2 = testLib.showModel.start()
             f2.params.append(frame.vars[0])
             f2.params.append([1,15,1])
@@ -582,21 +616,22 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
     class testLoader2:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.type.NONE
-        paramDescr = ()
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("tag", Wye.type.STRING, Wye.access.REFERENCE))
         varDescr = (("obj", Wye.type.OBJECT, None), ("file", Wye.type.STRING, "flyer_01.glb"),
-                    ("posVec", Wye.type.INTEGER_LIST, [0,0,0]), ("objPickId", Wye.type.INTEGER, 0))
+                    ("posVec", Wye.type.INTEGER_LIST, [0,0,0]))
         codeDescr = (
             # call loadModel with testLoader2 var0 and var1 as params
-            ("testLib.wyePrint", (None, "print('hi from testLoader2')")),
+            #hi from testLoader2')")),
             ("testLib.loadModel", (None, "frame.vars[0]"), (None, "frame.vars[1]")),
-            ("testLib.makePickable", (None, "frame.vars[3]"), (None, "frame.vars[0]")),
-            ("testLib.wyePrint", (None, "frame.vars[3]")),
+#            ("testLib.makePickable", (None, "frame.params[1]"), (None, "frame.vars[0]")),
+            ("testLib.setColor", (None, "frame.vars[0]"), (None, "[1.,0.,0.,1.]")),
+#            ("testLib.wyePrint", (None, "frame.vars[3]")),
             # call showModel with testLoader2 var0 and constantw for pos, scale, tag
             #("testLib.showModel", (None, "frame.vars[0]"), (None, "[-1,15,1]"), (None, "[.75,.75,.75]"), (None, "'o1'"))
             ("testLib.showModel", (None, "frame.vars[0]"),
                 ("testLib.makeVec", (None, "[]"), (None, "[-1]"), (None, "[15]"), (None, "[1]")),
                 (None, "[.75,.75,.75]"),
-                (None, "'o1'")),
+                (None, "['tldr2ID']")),
             (None, "frame.params[0][0] = frame.vars[0][0]")
             )
         code = None
@@ -617,15 +652,23 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.type.NONE
 
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("file", Wye.type.STRING, Wye.access.REFERENCE),
-                    ("posVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE),
-                    ("scaleVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE))
-        varDescr = ()
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),
+                      ("file", Wye.type.STRING, Wye.access.REFERENCE),
+                      ("posVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE),
+                      ("scaleVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE),
+                      ("tag", Wye.type.STRING, Wye.access.REFERENCE),
+                      ("colorVec", Wye.type.FLOAT_LIST, Wye.access.REFERENCE))
+        varDescr = (("objId", Wye.type.STRING, "Tldr3ID"),)
         codeDescr = (
             #("testLib.wyePrint", (None, "'testLoader3 first line'")),
             #(None, "print('test inline code')"),
             # call loadModel with testLoader3 params 0 and 1
             ("testLib.loadModel", (None, "frame.params[0]"), (None, "frame.params[1]")),
+
+            ("testLib.makePickable", (None, "frame.vars[0]"), (None, "frame.params[0]")),
+
+            ("testLib.setColor", (None, "frame.params[0]"), (None, "frame.params[5]")),
+
             # call showModel with testLoader3 on passed in params
             #("testLib.printParams", (None, "frame.params[0]"),(None, "frame.params[2]"), (None, "frame.params[3]")),
             ("testLib.showModel", (None, "frame.params[0]"),(None, "frame.params[2]"), (None, "frame.params[3]"),
@@ -652,8 +695,9 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         dataType = Wye.type.INTEGER
         paramDescr = (("_ret_", Wye.type.INTEGER, Wye.access.REFERENCE),)    # gotta have a ret param
         #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
-        varDescr = (("obj1", Wye.type.OBJECT, {}),("obj2", Wye.type.OBJECT, {}),
-                    ("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
+        varDescr = (("obj1", Wye.type.OBJECT, None),("obj2", Wye.type.OBJECT, None),
+                    ("obj1Tag", Wye.type.STRING, "obj1Tag"), ("obj2Tag", Wye.type.STRING, "obj2Tag"),
+                    ("clickWiggle Frame", Wye.type.OBJECT, None))
 
         # print("testObj code: frame.params ", frame.params, " frame.debug '", frame.debug, "'")
         # chFrame = testLib.testWord2.start()
@@ -685,44 +729,63 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         #print("testAdd var contains ", frame.vars[2])
 
         codeString = '''
-print("testObj: testLoader 2 and 3")
-#f = testLib.testAdd2.start()
-#f.params = [frame.vars[2], frame.vars[3], frame.vars[4]]
-#testLib.testAdd2.run(f)
-#print("testObj: post testAdd2 var contains ", frame.vars[2])
+match frame.PC:
+    case 0:
+        print("testObj: testLoader 2 and 3")
+        #f = testLib.testAdd2.start()
+        #f.params = [frame.vars[2], frame.vars[3], frame.vars[4]]
+        #testLib.testAdd2.run(f)
+        #print("testObj: post testAdd2 var contains ", frame.vars[2])
+        
+        # create object from verb's local variables
+        #print("testObj start: frame.vars ", frame.vars)
+        f = testLib.testLoader2.start()
+        f.params = [frame.vars[0],frame.vars[2]]
+        testLib.testLoader2.run(f)
+        #print("testObj vars after testLoader2: ", frame.vars)
+        
+        # create object from parameters
+        f1 = testLib.testLoader3.start()
+        # position doesn't matter 'cause set pos below
+        f1.params = [frame.vars[1], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], frame.vars[3], [1,1,0,1]]
+        testLib.testLoader3.run(f1)
+     
+        #print("testObj vars after testLoader3: ", frame.vars)
+        
+        # move 2nd object
+        f2 = testLib.setObjPos.start()
+        f2.params = [frame.vars[1], [1,20,1]]
+        testLib.setObjPos.run(f2)
+        
+        # set angle of 1st object
+        f3 = testLib.setAngle.start()
+        f3.params = [frame.vars[0],[45, 0, 0]]
+        testLib.setAngle.run(f3)
+        
+        # set angle of 2nd object
+        f3 = testLib.setAngle.start()
+        f3.params = [frame.vars[1],[-45, 0, 0]]
+        testLib.setAngle.run(f3)
+        frame.PC += 1
+            
+    case 1:
+        f = testLib.clickWiggle.start()
+        f.params = [frame.vars[1], frame.vars[3]]
+        frame.vars[4]=[f]
+        frame.SP.append(frame.vars[4][0])
+        frame.PC += 1
+    
+    case 2:
+        # pop stack and go back to do it again
+        frame.SP.pop()
+        frame.PC -= 1
 
-# create object from verb's local variables
-#print("testObj start: frame.vars ", frame.vars)
-f = testLib.testLoader2.start()
-f.params = [frame.vars[0],]
-testLib.testLoader2.run(f)
-#print("testObj after testLoader2: frame.vars ", frame.vars)
-
-# create object from parameters
-f1 = testLib.testLoader3.start()
-# position doesn't matter 'cause set pos below
-f1.params = [frame.vars[1], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], ["tstObj"]]
-testLib.testLoader3.run(f1)
-#print("testObj after 2nd testLoader3: frame.vars ", frame.vars)
-
-# move 2nd object
-f2 = testLib.setObjPos.start()
-f2.params = [frame.vars[1], [1,20,1]]
-testLib.setObjPos.run(f2)
-
-# set angle of 1st object
-f3 = testLib.setAngle.start()
-f3.params = [frame.vars[0],[45, 0, 0]]
-testLib.setAngle.run(f3)
-
-# set angle of 2nd object
-f3 = testLib.setAngle.start()
-f3.params = [frame.vars[1],[-45, 0, 0]]
-testLib.setAngle.run(f3)
-
-# return a value for testing purposes
-frame.status = Wye.status.SUCCESS       # yeah, we're done
-frame.params[0][0] = 1
+    
+    case _:
+        # return a value for testing purposes
+        frame.status = Wye.status.SUCCESS       # yeah, we're done
+        frame.params[0][0] = 1
+    
 '''
         code = None
 
@@ -748,7 +811,7 @@ frame.params[0][0] = 1
         paramDescr = (("_ret_", Wye.type.INTEGER, Wye.access.REFERENCE),)    # gotta have a ret param
         #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
         varDescr = (("obj1", Wye.type.OBJECT, {}),("obj2", Wye.type.OBJECT, {}),
-                    ("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
+                    ("obj1Tag", Wye.type.STRING, "obj1Tag"), ("obj2Tag", Wye.type.STRING, "obj2Tag"), ("c", Wye.type.NUMBER, 2))
 
         codeString = '''
 match(frame.PC):
@@ -758,7 +821,7 @@ match(frame.PC):
         # create object from parameters
         f1 = testLib.testLoader3.start()
         # position doesn't matter - explicitly set, below
-        f1.params = [frame.vars[0], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], ["tstObj2"]]
+        f1.params = [frame.vars[0], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], frame.vars[2], [0,1,0,1]]
         testLib.testLoader3.run(f1)
         #print("testObj2 after 2nd testLoader3: frame.vars ", frame.vars)
 
@@ -776,7 +839,7 @@ match(frame.PC):
         f4.params = [frame.vars[0],]    # pass obj to spin
         frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
         #print("testObj2, frame.SP", frame.SP)
-        #print("testObj2, stack contains ", WyeCore.utils.printStack(frame.SP))
+        #print("testObj2, stack contains ", WyeCore.utils.stackToString(frame.SP))
         frame.PC = 3 # jump over delay to click wiggle                   # bump forward a step - when spin completes we'll pick up at the next case
         
     case 2:
@@ -798,14 +861,14 @@ match(frame.PC):
         frame.SP.pop()  # remove delay frame
         
         f = testLib.waitClick.start()       # create multi-cycle verb (frame default status is CONTINUE
-        f.params = [frame.vars[0],]    # pass obj to spin
+        f.params = [frame.vars[2],]    # pass obj to spin
         frame.SP.append(f)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
-        print("tstObj2 Obj waiting for click")
+        #print("tstObj2 Obj waiting for click")
         frame.PC += 1                   # bump forward a step - when event happens we'll pick up at the next case
         
     case 4:
         f = frame.SP.pop()  # remove event frame
-        print("Done event")
+        #print("tstObj2: got click on obj ", f.eventData[0])
         frame.PC = 1   # Set PC back so next cycle we do it all again
 
 #print("testObj2 cycle")

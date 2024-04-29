@@ -94,14 +94,14 @@ class WyeCore(Wye.staticObj):
                     if sLen > 0:  # if there's something on the stack
                         # run the frame furthest down the stack
                         frame = stack[-1]
-                        # print("worldRunner stack # ", stackNum, " frame ", frame, " status ", WyeCore.utils.printStatus(frame.status), " stackLen ", sLen,
-                        #       " stack ", WyeCore.utils.printStack(stack))
+                        # print("worldRunner stack # ", stackNum, " frame ", frame, " status ", WyeCore.utils.statusToString(frame.status), " stackLen ", sLen,
+                        #       " stack ", WyeCore.utils.stackToString(stack))
                         if frame.status == Wye.status.CONTINUE:
                             frame.verb.run(frame)
-                        # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.utils.printStatus(frame.status),
+                        # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.utils.statusToString(frame.status),
                         #       " returned param ", frame.params[0])
                         else:
-                            # print("worldRunner: status = ", WyeCore.utils.printStatus(frame.status))
+                            # print("worldRunner: status = ", WyeCore.utils.statusToString(frame.status))
                             if sLen > 1:  # if there's a parent frame on the stack list, let them know their called word has exited
                                 pFrame = stack[-2]
                                 # print("worldRunner: return from call, run frame one back from bottom ", pFrame.verb.__name__)
@@ -114,12 +114,35 @@ class WyeCore(Wye.staticObj):
 
         ##########################
         # Event Manager
+        #
+        # A dictionary word waiting for an event is sitting in an empty case statement (case #: pass)
+        # The following case is the event processing code.
+        # If the event returns data, the event processing code will put any data in frame.eventData
+        #
+        # The event dictionary has a separate entry for each kind of event
+        #
+        # Each kind of event has a dictionary of tags
+        #   Each tag has a list of (frame, data) pairs
+        #
+        #   When the event occurs the WyeCore entry point gets the tag associated with the given event
+        #       looks for a matching tag in its tag dictionary
+        #       If the tag exists, it has a list of frame, data pairs
+        #       For each pair it increments the PC in the frame and puts the event data in frame.eventData
+        #       Then it clears the tag from the dictionary
+        #       TODO - make recurring event handlers a thing
+        #
         ##########################
-        def setEventCallback(eventName, eventFrame, data=None):
+
+        def setEventCallback(eventName, tag, frame, data=None):
             if eventName in WyeCore.world.eventDict:
-                WyeCore.world.eventDict[eventName].append([eventFrame, data])
+                tagDict = WyeCore.world.eventDict[eventName]
+                if tag in tagDict:
+                    tagDict[tag].append((frame, data,))
+                else:
+                    tagDict[tag] = [(frame, data,)]
             else:
-                WyeCore.world.eventDict[eventName] = [[eventFrame, data]]
+                WyeCore.world.eventDict[eventName] = {tag: [(frame, data,),]}
+
 
 
     ##########################
@@ -149,13 +172,13 @@ class WyeCore(Wye.staticObj):
             # this holds the object that has been picked
             self.pickedObj = None
 
-            self.accept('mouse1', self.printMe)
+            self.accept('mouse1', self.objSelectEvent)
 
             self.pickerEnable = True
 
         # this function is meant to flag an object as being somthing we can pick
         def makePickable(self, newObj):
-            print("picker:  set 'pickable' on ", newObj)
+            #print("picker:  set 'pickable' on ", newObj)
             newObj.setTag('pickable', 'true')
 
         # DEBUG test for known tags on object
@@ -179,47 +202,59 @@ class WyeCore(Wye.staticObj):
             self.pickerRay.setFromLens(WyeCore.base.camNode, mpos.getX(), mpos.getY())
             self.picker.traverse(render)
             if self.queue.getNumEntries() > 0:
-                # print(self.queue.getNumEntries(), " entries in picker queue")
+                #print("getObjectHit: ", self.queue.getNumEntries(), " entries in picker queue")
                 self.queue.sortEntries()
-                # print("Queue contains ", self.queue)
+                #print("getObjectHit: Queue contains ", self.queue)
                 self.pickedObj = self.queue.getEntry(0).getIntoNodePath()
 
                 # parent=self.pickedObj.getParent()
                 parent = self.pickedObj
                 self.pickedObj = None
 
-                # print("First obj in queue '", parent, "'")
+                #print("getObjectHit: First obj in queue '", parent, "'")
                 while parent != render:
-                    # self.tagDebug(parent)  # DEBUG print tags on object
+                    #self.tagDebug(parent)  # DEBUG print tags on object
                     if parent.getTag('pickable') == 'true':
+                        #print("Pickable == true, return obj")
                         self.pickedObj = parent
                         return parent
                     else:
                         parent = parent.getParent()
+                print("Object not pickable")
             return None
 
         def getPickedObj(self):
             return self.pickedObj
 
-        def printMe(self):
-            # print("printMe called")
+        def objSelectEvent(self):
+            # print("objSelectEvent called")
             if self.pickerEnable:
                 self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
                 if self.pickedObj is None:
                     print("No object picked")
                 else:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
+                    #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                     # self.tagDebug(self.pickedObj)
 
-                    # need to match to object!
+                    # if there's a callback for the specific object, call it
                     if "click" in WyeCore.world.eventDict:
-                        list = WyeCore.world.eventDict["click"]
-                        print("Got click list ", list)
-                        for evt in list:
-                            evt[0].PC += 1
-                        list.clear()
+                        tagDict = WyeCore.world.eventDict["click"]
+                        if wyeID in tagDict:
+                            #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
+                            for frame, data in tagDict.pop(wyeID):
+                                frame.PC += 1
+                                frame.eventData = (wyeID, data)
 
+                        # if there's a callback for any click event, call it
+                        if "any" in tagDict:
+                            #print("Found ", len(tagDict[wyeID]), " callbacks for tag 'any'")
+                            for frame, data in tagDict.pop('any'):
+                                frame.PC += 1
+                                frame.eventData = (wyeID, data)
+
+                    else:
+                        print("No click events waiting")
         # else:
         #     print("Object picking disabled")
 
@@ -289,7 +324,7 @@ class WyeCore(Wye.staticObj):
             return code
 
 
-        def printStatus(stat):
+        def statusToString(stat):
             match stat:
                 case Wye.status.CONTINUE:
                     return "CONTINUE"
@@ -298,9 +333,9 @@ class WyeCore(Wye.staticObj):
                 case Wye.status.FAIL:
                     return "FAIL"
 
-        def printStack(stack):
+        def stackToString(stack):
             stkStr = "\n stack len=" + str(len(stack))
             for frame in stack:
-                stkStr += "\n  verb=" + frame.verb.__name__ + " status " + WyeCore.utils.printStatus(frame.status) + \
+                stkStr += "\n  verb=" + frame.verb.__name__ + " status " + WyeCore.utils.statusToString(frame.status) + \
                           " params: " + str(frame.params)
             return stkStr
