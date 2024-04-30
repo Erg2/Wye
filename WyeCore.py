@@ -136,6 +136,7 @@ class WyeCore(Wye.staticObj):
         def setEventCallback(eventName, tag, frame, data=None):
             if eventName in WyeCore.world.eventDict:
                 tagDict = WyeCore.world.eventDict[eventName]
+                print("setEventCallback: tagDict ", tagDict, " want tag ", tag)
                 if tag in tagDict:
                     tagDict[tag].append((frame, data,))
                 else:
@@ -206,57 +207,49 @@ class WyeCore(Wye.staticObj):
                 self.queue.sortEntries()
                 #print("getObjectHit: Queue contains ", self.queue)
                 self.pickedObj = self.queue.getEntry(0).getIntoNodePath()
-
-                # parent=self.pickedObj.getParent()
                 parent = self.pickedObj
                 self.pickedObj = None
-
-                #print("getObjectHit: First obj in queue '", parent, "'")
+                # go up the path looking for a pickable node
                 while parent != render:
-                    #self.tagDebug(parent)  # DEBUG print tags on object
                     if parent.getTag('pickable') == 'true':
-                        #print("Pickable == true, return obj")
                         self.pickedObj = parent
                         return parent
                     else:
                         parent = parent.getParent()
-                print("Object not pickable")
             return None
 
         def getPickedObj(self):
             return self.pickedObj
 
         def objSelectEvent(self):
-            # print("objSelectEvent called")
             if self.pickerEnable:
                 self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
-                if self.pickedObj is None:
-                    print("No object picked")
-                else:
+                if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
-                    # self.tagDebug(self.pickedObj)
+                    print("wyeID ", wyeID)
+                    if wyeID:
+                        print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
 
-                    # if there's a callback for the specific object, call it
-                    if "click" in WyeCore.world.eventDict:
-                        tagDict = WyeCore.world.eventDict["click"]
-                        if wyeID in tagDict:
-                            #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
-                            for frame, data in tagDict.pop(wyeID):
-                                frame.PC += 1
-                                frame.eventData = (wyeID, data)
+                        # if there's a callback for the specific object, call it
+                        if "click" in WyeCore.world.eventDict:
+                            tagDict = WyeCore.world.eventDict["click"]
+                            if wyeID in tagDict:
+                                #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
+                                for frame, data in tagDict.pop(wyeID):
+                                    frame.PC += 1
+                                    frame.eventData = (wyeID, data)
 
-                        # if there's a callback for any click event, call it
-                        if "any" in tagDict:
-                            #print("Found ", len(tagDict[wyeID]), " callbacks for tag 'any'")
-                            for frame, data in tagDict.pop('any'):
-                                frame.PC += 1
-                                frame.eventData = (wyeID, data)
+                            # if there's a callback for 'any' click event, call it
+                            if "any" in tagDict:
+                                #print("Found ", len(tagDict[wyeID]), " callbacks for tag 'any'")
+                                for frame, data in tagDict.pop('any'):
+                                    frame.PC += 1
+                                    frame.eventData = (wyeID, data)
 
-                    else:
-                        print("No click events waiting")
-        # else:
-        #     print("Object picking disabled")
+                        #else:
+                        #    print("No click events waiting")
+            #else:
+            #    print("Object picking disabled")
 
     class utils(Wye.staticObj):
 
