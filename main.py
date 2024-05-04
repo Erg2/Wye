@@ -4,17 +4,16 @@
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task.TaskManagerGlobal import taskMgr   # needed to run world task in sync with panda3d
-
+from importlib.machinery import SourceFileLoader    # to load libs from files
 from panda3d.core import *
 from direct.showbase.DirectObject import DirectObject
 #from pandac.PandaModules import *
 #from panda3d.core import loadPrcFileData
 
-#from Wye import Wye
-import WyeTestLib as WyeTestLib
 from WyeCore import WyeCore
 
-
+LibLoadList = ["TestLib.py",]
+startObjList = ["WyeTestLib.TestLib.testObj", "WyeTestLib.TestLib.testObj2"]
 
 ###########
 ############
@@ -31,13 +30,22 @@ class PandaRunner(ShowBase):
 loadPrcFileData('', 'win-size 1024 768')           # set size of window
 loadPrcFileData('', 'show-frame-rate-meter #t')    # turn on frame rate display
 
-# need to figure out better way to to start up?
-WyeCore.world.libs.append(WyeTestLib.testLib)
-WyeCore.world.startObjs.extend(["WyeTestLib.testLib.testObj", "WyeTestLib.testLib.testObj2"])
+# import libraries
+for libFile in LibLoadList:
+    print("Load lib '", libFile, "'")
+    libName = libFile.split(".")[0]
+    print("Lib name '", libName, "'")
+    libModule = SourceFileLoader(libName, libFile).load_module()
+    print("libModule ", libModule)
+    libClass = getattr(libModule, libName)
+    print("libClass ", libClass)
+    WyeCore.world.libs.append(libClass)
+
+# load starting objects
+WyeCore.world.startObjs.extend(startObjList)
 
 pandaRunner = PandaRunner()
 #print("Started, now run")
 pandaRunner.run()
 #print("Done")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

@@ -18,11 +18,9 @@ class WyeUI(Wye.staticObj):
                     ("children", Wye.type.ANY_LIST, []),    # list of child frames
                     ("callbacks", Wye.type.ANY_LIST, []))   # list of
 
-        def start():
-            f = Wye.codeFrame(WyeUI.wyeDialog)
+        def start(stack):
+            return Wye.codeFrame(WyeUI.wyeDialog, stack)
             # TODO create graphic object billboard
-            f.status = Wye.status.CONTINUE
-            return f
 
         # set position of our dialog object
         def setPos(frame, pos):

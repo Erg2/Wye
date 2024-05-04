@@ -161,13 +161,16 @@ class Wye:
     # note: each variable is wrapped in its own list so that it can be passed
     # as a parameter by reference
     class codeFrame:      # Used by any verb with Wye code
-        def __init__(self, verb):
+        def __init__(self, verb, stack):
             self.verb = verb    # the static verb that we're holding runtime data for
             self.params = []  # caller will fill in params
             self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
             self.PC = 0         # used by async verbs to track location in executing code
-            self.SP = None      # points to stack list this frame is on
-            self.status = Wye.status.SUCCESS    # assume good things
+            self.SP = stack      # points to stack list this frame is on
+            if verb.mode == Wye.mode.MULTI_CYCLE or verb.mode == Wye.mode.OBJECT:
+                self.status = Wye.status.CONTINUE   # assume stay running
+            else:
+                self.status = Wye.status.SUCCESS    # assume good things
             self.debug = ""
             # print("codeFrame for verb", verb, " verb.varDescr =", verb.varDescr, " vars =", self.vars)
 
