@@ -9,6 +9,8 @@ import inspect      # for debugging
 from direct.task import Task
 from direct.showbase.DirectObject import DirectObject
 from panda3d.core import *
+from direct.showbase import Audio3DManager
+import sys, os
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -26,6 +28,8 @@ class WyeCore(Wye.staticObj):
 
     picker = None   # object picker object
     base = None     # panda3d base - set by application
+
+    lastIsNothingToRun = False
 
     class world(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
@@ -98,13 +102,14 @@ class WyeCore(Wye.staticObj):
         # runs all active objects in parallel
         def worldRun(task):
             global render
+            global base
 
             property_names = [p for p in dir(Wye) if isinstance(getattr(Wye, p), property)]
             # print("Wye contains ", property_names)
 
             # init world on first frame
             if not WyeCore.worldInitialized:
-                print("worldRunner: World Init")
+                #print("worldRunner: World Init")
                 WyeCore.worldInitialized = True  # Only do this once
 
                 dlight = DirectionalLight('dlight')
@@ -115,27 +120,73 @@ class WyeCore(Wye.staticObj):
 
                 #######
 
+
                 text = TextNode('node name')
+                text.setWordwrap(7.0)
                 text.setText("Welcome to Wye 0.1")
                 text.setTextColor(1, 1, 1, 1)
-                text.setWordwrap(15.0)
-                text.setFrameColor(0, 0, 1, 1)
-                text.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
+                text.setAlign(TextNode.ACenter)
+                #text.setFrameColor(0, 0, 1, 1)
+                #text.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
 
-                text.setCardColor(.5, .5, 0.5, .5)
-                text.setCardAsMargin(0, 0, 0, 0)
+                text.setCardColor(0, 0, 0, 1)
+                text.setCardAsMargin(.1, .2, .1, .1)    # extend beyond edge of text (-x, +x, -y, +y)
                 text.setCardDecal(True)
-
-                text3d = NodePath(text)
+#
+                # create (unpickable) 3d text object
+                text3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
+                #text3d = NodePath(text)
                 text3d.reparentTo(render)
                 text3d.setScale(.2, .2, .2)
                 text3d.setPos(-.5, 17, 4)
                 text3d.setTwoSided(True)
 
+                #######
+
+                audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
+                snd = audio3d.loadSfx("WyePop.wav")
+                audio3d.attachSoundToObject(snd, text3d)
+                #######
+
+            #    cd = CardMaker("a card")
+            #    cd.setColor(1,0,0,1)
+            #    cd.setFrame(left=-1, right=1, bottom=-.5, top=.5)
+            #    card = render.attachNewNode(cd.generate())
+            #    #card = NodePath(cd.generate())
+
+
+                #cd.setFromCollideMask(GeomNode.getDefaultCollideMask())
+
+                #quad = CollisionPolygon(Point3(0, 0, 0), Point3(0, 0, 1),
+                #                        Point3(0, 1, 1), Point3(0, 1, 0))
+
+            #    cs = CollisionSphere(0, 0, 0, 1)
+            #    cnodePath = card.attachNewNode(CollisionNode('cnode'))
+            #    cnodePath.node().addSolid(cs)
+            #    cnodePath.node().setFromCollideMask(GeomNode.getDefaultCollideMask())
+#
+            #    cnodePath.show()
+#
+            #    #cd = card.attachNewNode(text)
+            #    #card.setColor(1,0,0,1)
+            #    card.setEffect(DecalEffect.make())
+#
+                #tnp = NodePath(card)
+            #    card.reparentTo(render)
+            #    card.setScale(1, .2, .2)
+            #    card.setPos(0, 17, 4)
+            #    card.setTwoSided(True)
+
 #                text.setScale(scale[0], scale[1], scale[2])
 #                text.setPos(pos[0], pos[1], pos[2])
                 #textNodePath = aspect2d.attachNewNode(text.generate())
                 #textNodePath.setScale(0.07)
+
+
+                ###########
+
+                #base.camera.setPos(10,25,10)        # this does not move camera - something else controlling pos?
+                #print("camPos",base.camera.getPos())
 
                 ###########
 
@@ -161,6 +212,7 @@ class WyeCore(Wye.staticObj):
                 # parse starting object names and find the objects in the known libraries
                 # print("worldRunner:  start ", len(world.startObjs), " objs")
                 for objStr in WyeCore.world.startObjs:
+                    #print("obj ", objStr," in startObjs")
                     namStrs = objStr.split(".")                     # parse name of object
                     obj = getattr(libDict[namStrs[1]], namStrs[2])  # get object from library
                     WyeCore.world.objs.append(obj)                  # add to list of runtime objects
@@ -190,9 +242,11 @@ class WyeCore(Wye.staticObj):
 
                 # debug
                 stackNum = 0
+                ranNothing = True   # pessimist
                 for stack in WyeCore.world.objStacks:
                     sLen = len(stack)
                     if sLen > 0:  # if there's something on the stack
+                        ranNothing = False
                         # run the frame furthest down the stack
                         frame = stack[-1]
                         #if frame:
@@ -205,6 +259,8 @@ class WyeCore(Wye.staticObj):
                         if frame.status == Wye.status.CONTINUE:
                             #print("worldRunner run: stack ", stackNum, " verb", frame.verb.__name__, " PC ", frame.PC)
                             frame.verb.run(frame)
+                            #if frame.status != Wye.status.CONTINUE:
+                            #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.utils.statusToString(frame.status))
                         # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.utils.statusToString(frame.status),
                         #       " returned param ", frame.params[0])
                         else:
@@ -216,6 +272,12 @@ class WyeCore(Wye.staticObj):
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
                                 stack.remove(frame)
+                if ranNothing:
+                    #print("ranNothing ", ranNothing, " and WyeCore.lastIsNothingToRun", WyeCore.lastIsNothingToRun)
+                    if not WyeCore.lastIsNothingToRun:
+                        WyeCore.lastIsNothingToRun = True
+                        #print("worldRunner stack # ", stackNum, " nothing to run")
+
                     stackNum += 1
 
             return Task.cont    # tell panda3d we want to run next frame too
@@ -274,32 +336,10 @@ class WyeCore(Wye.staticObj):
         # remove it from rep dict and from event dict
         def clearRepeatEventCallback(frameTag):
             if frameTag in WyeCore.world.repeatEventCallbackDict:
-                frame, eventName, tag, frameID = WyeCore.world.repeatEventCallbackDict.pop(frameTag)
+                del WyeCore.world.repeatEventCallbackDict[frameTag]
                 #print("clrRepEvt: frame ", frame, " evt ", eventName, " tag ", tag, " frmID ", frameID)
                 #print("clrRepEvt: callbackDict ", WyeCore.world.eventCallbackDict)
-                if eventName in WyeCore.world.eventCallbackDict:
-                    tagDict = WyeCore.world.eventCallbackDict[eventName]
-                    #print("clrRepEvt: found tagDict ", tagDict)
-                    if tag in tagDict:
-                        #print("clrRepEvt: get framelist for tag ", tag)
-                        frameList = tagDict[tag]
-                        #print("clrRepEvt: frameList ", frameList)
-                        delList = []
-                        for ii in range(len(frameList)):
-                            if frame == frameList[ii][0]:
-                                #print("ClrRepEvt: remove list entry ", ii)
-                                delList.insert(0, ii)   # put on del list in reverse order
-                        # remove frame from list
-                        for ii in delList:
-                            del frameList[ii]
-                        if len(frameList) == 0:
-                            del tagDict[tag]
-                    else:
-                        print("Error: clearRepeatEventCallback failed to find eventName '", tag,
-                              "' in WyeCore.world.eventCallbackDict under event '", eventName,"'")
-                else:
-                    print("Error: clearRepeatEventCallback failed to find eventName '", eventName,
-                          "' in WyeCore.world.eventCallbackDict")
+
             else:
                 print("Error: clearRepeatEventCallback failed to find frameTag '", frameTag,
                       "' in WyeCore.world.repeatEventCallbackDict")
@@ -386,11 +426,11 @@ class WyeCore(Wye.staticObj):
                 self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    #print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
+            #        print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
 
-                        # if there's a callback for the specific object, call it
+                        # if there's a callback for the specific object, call itF
                         if "click" in WyeCore.world.eventCallbackDict:
                             tagDict = WyeCore.world.eventCallbackDict["click"]
                             if wyeID in tagDict:
@@ -407,7 +447,7 @@ class WyeCore(Wye.staticObj):
                                     #print("objSelectEvent: inc frame ", frame.verb.__name__, " PC ", frame.PC)
                                     frame.PC += 1
                                     frame.eventData = (wyeID, data)        # user data
-                                    del tagDict[wyeID]
+                                del tagDict[wyeID]
 
                             # if there's a callback for 'any' click event, call it
                             if "any" in tagDict:
@@ -418,6 +458,8 @@ class WyeCore(Wye.staticObj):
 
                         #else:
                         #    print("No click events waiting")
+                #else:
+                #    print("No object under mouse")
             #else:
             #    print("Object picking disabled")
 
@@ -432,6 +474,22 @@ class WyeCore(Wye.staticObj):
                 _nextsId = 1
                 
             return _nextId
+
+        def resourcePath(relative_path):
+            #print("WyeCore utils resourcePath: start '"+ relative_path+ "'")
+            if hasattr(sys, '_MEIPASS'):
+                pwd = os.path.dirname(sys.executable)
+                path = str(os.path.join(pwd, relative_path))
+                #print("executable path", path)
+            else:
+                pwd = os.path.abspath(".")
+                #print("os.path.abspath('.')", pwd)
+                path = str(os.path.join(pwd, relative_path))
+
+            path = path.replace("\\","/")
+            #path = path.replace(":","")
+            #print("  return path '"+ path+"'")
+            return path
 
         # Take a Wye code description tuple and return compilable Python code
         # Resulting code pushes all the params to the frame, then runs the function
@@ -452,10 +510,9 @@ class WyeCore(Wye.staticObj):
                             codeText += eff+".params.append(" + paramDesc[1] + ")\n"
                             #print("parseWyeTuple: 3 codeText=", codeText[0])
                         else:                           # recurse to parse nested code tuple
-                            #print("parseWyeTuple: 4 - Can't get here")
-                            codeText += WyeCore.utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + eff+".params.append(" + \
-                                        "f"+str(fNum+1)+".params[0])\n"
-                codeText += wyeTuple[0] + ".run("+eff+")\n"
+                            codeText += WyeCore.utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + \
+                                        eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
+                codeText += wyeTuple[0] + ".run("+eff+")\nif "+eff+".status == Wye.status.FAIL:\n frame.status = "+eff+".status\n return\n"
             # Raw Python code
             else:
                 if len(wyeTuple) > 1:
@@ -479,12 +536,12 @@ class WyeCore(Wye.staticObj):
                 # DEBUG end ^^^^
                 codeText[0] += WyeCore.utils.parseWyeTuple(wyeTuple, 0)
 
-            #print("buildCodeText complete.  codeText=\n", codeText[0])
+            #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return codeText[0]
 
         # Take Python code for a Wye word and return compiled code
         def compileCodeText(codeText):
- #           print("WyeCore.compileCodeText: compile ", codeText)
+            #print("WyeCore.compileCodeText: compile ", codeText)
             code = compile(codeText, "<string>", "exec")
  #           if code:
  #               print("WyeCore.compileCodeText: Compiled successfully")

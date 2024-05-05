@@ -10,15 +10,15 @@ from direct.showbase.DirectObject import DirectObject
 #from pandac.PandaModules import *
 #from panda3d.core import loadPrcFileData
 
+
 from WyeCore import WyeCore
-import sys
+import sys, os
 
 version = "0.1"
 
 libLoadList = [] #["TestLib.py",]
-startObjList = [] #["WyeTestLib.TestLib.testObj", "WyeTestLib.TestLib.testObj2"]
+startObjList = [] #["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2"]
 
-###########
 ############
 
 # run the world
@@ -34,8 +34,10 @@ class PandaRunner(ShowBase):
 
 
 # main program, run 3d
+
+
 #print("Start")
-loadPrcFileData('', 'win-size 1024 768')           # set size of window
+loadPrcFileData('', 'win-size 1200 800')           # set size of window
 loadPrcFileData('', 'show-frame-rate-meter #t')    # turn on frame rate display
 loadPrcFileData('', 'window-title Wye V'+version)
 
@@ -52,17 +54,26 @@ if len(sys.argv) > 1:
             case "-o":
                 #print("cmd line start obj ", val)
                 startObjList.append(val)
+else:
+    libLoadList = ["TestLib.py",]
+    startObjList = ["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2"]
 
 # import libraries
 for libFile in libLoadList:
     #print("Load lib '", libFile, "'")
     libName = libFile.split(".")[0]
     #print("Lib name '", libName, "'")
-    try:
-        libModule = SourceFileLoader(libName, libFile).load_module()
-    except:
-        print("Failed to load class ", libName, " From file ", libFile)
-        continue
+    path = libFile
+    #path = WyeCore.utils.resourcePath(libFile)
+    libModule = SourceFileLoader(libName, path).load_module()
+
+    #try:
+    #    path = resourcePath(libFile)
+    #    libModule = SourceFileLoader(libName, path).load_module()
+    #except:
+    #    print("Failed to load class ", libName, " From file ", libFile)
+    #    continue
+
     #print("libModule ", libModule)
     libClass = getattr(libModule, libName)
     #print("libClass ", libClass)

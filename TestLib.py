@@ -8,6 +8,7 @@ import inspect
 #import partial
 import traceback
 import sys
+from sys import exit
 from direct.showbase import Audio3DManager
 
 '''
@@ -116,6 +117,7 @@ class TestLib:
 #        # End DEBUG
 
         # Compile the runtime Wye code
+        #print("TestLib codeStr\n"+codeStr)
         code = compile(codeStr, "<string>", "exec")
         exec(code, {"TestLib":TestLib, "Wye":Wye, "WyeCore":WyeCore})
 
@@ -294,8 +296,22 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             global base
 
             filepath = frame.params[1][0]
-            model = base.loader.loadModel(filepath)
-            frame.params[0][0] = model
+            # full path minus drive letter
+            path = WyeCore.utils.resourcePath(filepath)[2:]
+            #path = filepath
+            #path = "C/Users/ebeng/PycharmProjects/Wye/flyer_01.glb"
+            try:
+                #print("Load graphic model ", path)
+                model = base.loader.loadModel(path)
+                if model:
+                    frame.params[0][0] = model
+                else:
+                    frame.status = Wye.status.FAIL
+            except:
+                print("TestLib loadModel: failed to load model ", path)
+                frame.status = Wye.status.FAIL
+                #ex = sys.exception()
+                #traceback.print_exception(ex)
 
     # make this object pickable
     class makePickable:
@@ -471,7 +487,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
     class spin:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("axis", Wye.type.INTEGER, Wye.access.REFERENCE))
         varDescr = (("rotCt", Wye.type.INTEGER, 0),)
         codeDescr = ()
         code = None
@@ -485,27 +501,30 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
 
             gObj = frame.params[0][0]
             vec = gObj.getHpr()
+            axis = frame.params[1][0]
             #print("Current HPR ", vec)
             match frame.PC:
                 case 0:
-                    vec[0] += 5
+                    vec[axis] += 5
                     #print("spin (pos) obj", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
-                    if vec[0] > 45:   # end of swing this way
-                        frame.vars[0][0] += 1  # count cycles
-                        if frame.vars[0][0] < 5:  # wiggle this many times, then exit
+                    if frame.vars[0][0] < 4:  # wiggle this many times, then exit
+                        if vec[axis] > 45:  # end of swing this way
+                            frame.vars[0][0] += 1  # count cycles
                             frame.PC += 1   # go to next state
-                        else:
-                            #print("spin: done")
+                    else:   # last spin cycle, stop at zero
+                        #print("spin: done")
+                        if vec[axis] >= 0:  # end of swing this way
                             frame.PC = -1  # undefined case value so will go to default to exit
+
 
                     frame.status = Wye.status.CONTINUE
 
                 case 1:
-                    vec[0] -= 5
+                    vec[axis] -= 5
                     #print("spin (neg) obj ", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
-                    if vec[0] < -45:    # end of swing other way
+                    if vec[axis] < -45:    # end of swing other way
                         frame.PC -= 1   # go to previous state
 
                     frame.status = Wye.status.CONTINUE
@@ -546,7 +565,8 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
     class repClickWiggle:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("tag", Wye.type.STRING, Wye.access.REFERENCE))
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("tag", Wye.type.STRING, Wye.access.REFERENCE),
+                      ("axis", Wye.type.INTEGER, Wye.access.REFERENCE))
         varDescr = (("repCt", Wye.type.INTEGER, 0),("repFrm", Wye.type.OBJECT, None))
         codeDescr = ()
         code = None
@@ -564,21 +584,26 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
                     # create a single shot event
                     #print("repClickWiggle: start clickWiggle")
                     f = TestLib.clickWiggle.start(frame.SP)
-                    f.params = [frame.params[0], frame.params[1]]  # obj, obj tag
+                    f.params = [frame.params[0], frame.params[1], frame.params[2]]  # obj, obj tag
                     frame.SP.append(f)  # push clickWiggle stack frame so it execs until done
                     frame.PC += 1
+
                 case 1:
                     #print("repClickWiggle: done clickWiggle")
                     frame.SP.pop()
                     frame.vars[0][0] += 1
-                    if frame.vars[0][0] < 5:
+                    if frame.vars[0][0] < 2:        # stop rep event after this many wiggles
                         #print("repClickWIggle ct ", frame.vars[0][0], " <5, do it again")
                         # go back to do it again
                         frame.PC -= 1
                     # done repeats, finished with repeated event
                     else:
                         #print("repClickWiggle ct ", frame.vars[0][0], " >=5, done")
+                        f = TestLib.setMaterialColor.start(frame.SP)
+                        f.params = [frame.params[0], (1,1,1,1)]
+                        f.verb.run(f)
                         frame.status = Wye.status.SUCCESS  # yeah, we're done
+
                 case _:
                     print("repClickWiggle ct ", frame.vars[0][0], " unexpected PC ", frame.PC, " ERROR EXIT")
 
@@ -588,7 +613,8 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
     class clickWiggle:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("tag", Wye.type.STRING, Wye.access.REFERENCE))
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("tag", Wye.type.STRING, Wye.access.REFERENCE),
+                      ("axis", Wye.type.INTEGER, Wye.access.REFERENCE))
         varDescr = (("rotCt", Wye.type.INTEGER, 0),("sound", Wye.type.OBJECT, None))
         codeDescr = ()
         code = None
@@ -602,6 +628,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
 
             gObj = frame.params[0][0]
             vec = gObj.getHpr()
+            axis = frame.params[2][0]
             #print("Current HPR ", vec)
             match frame.PC:
                 case 0:
@@ -621,29 +648,29 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
                     frame.PC += 1
 
                 case 3:
-                    vec[1] += 5
+                    vec[axis] += 5
                     #print("spin (pos) obj", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
-                    if vec[1] > 45:   # end of swing this way
+                    if vec[axis] > 45:   # end of swing this way
                         frame.PC += 1  # go to next state
 
                 case 4:
-                    vec[1] -= 5
+                    vec[axis] -= 5
                     #print("spin (neg) obj ", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
-                    if vec[1] < -45:    # end of swing other way
+                    if vec[axis] < -45:    # end of swing other way
                         frame.PC += 1   # go to previous state
 
                 case 5:
                     frame.vars[0][0] += 1  # count cycles
-                    if frame.vars[0][0] < 5:  # wiggle this many times, then exit
+                    if frame.vars[0][0] < 2:  # wiggle this many times, then exit
                         frame.PC = 3    # go do another wiggle
                     else:
                         # finish by coming back to zero
-                        vec[1] += 5
+                        vec[axis] += 5
                         #print("spin (neg) obj ", gObj, "to", vec)
                         gObj.setHpr(vec[0], vec[1], vec[2])
-                        if vec[1] >= 0:    # end of swing other way
+                        if vec[axis] >= 0:    # end of swing other way
                             #print("clickWiggle: done")
                             frame.status = Wye.status.SUCCESS
 
@@ -671,6 +698,10 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             f.params.append(frame.vars[0])
             f.params.append(frame.vars[1])
             TestLib.loadModel.run(f)
+            if f.status != Wye.status.SUCCESS:
+                frame.status = f.status
+                return
+
             #print("testLoader run: loadModel returned ", f.params[0])
 
             obj = frame.vars[0][0]
@@ -703,7 +734,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             ("TestLib.setMaterialColor", (None, "frame.vars[0]"), (None, "[1.,0.,0.,1.]")),
             # call showModel with testLoader2 var0 and constantw for pos, scale, tag
             ("TestLib.showModel", (None, "frame.vars[0]"),
-                ("TestLib.makeVec", (None, "[]"), (None, "[-1]"), (None, "[15]"), (None, "[1]")),
+                ("TestLib.makeVec", (None, "[]"), (None, "[-4]"), (None, "[15]"), (None, "[1]")),
                 (None, "[.75,.75,.75]")),
             (None, "frame.params[0][0] = frame.vars[0][0]")
             )
@@ -753,9 +784,8 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
 
 
 
-    # compiled code
-    # testObj calls testWord2 and passes it testObj's var as testWord2's return param
-    # then testObj puts the value from var into it's return param
+    # Runtime object
+    # test compiled code
     class testObj:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.INTEGER
@@ -763,7 +793,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
         varDescr = (("obj1", Wye.type.OBJECT, None),("obj2", Wye.type.OBJECT, None),
                     ("obj1Tag", Wye.type.STRING, ""), ("obj2Tag", Wye.type.STRING, ""),
-                    ("repEvtID", Wye.type.OBJECT, None))
+                    ("repEvtID", Wye.type.OBJECT, None), ("repEvtFrm", Wye.type.OBJECT, None))
 
         # print("testObj code: frame.params ", frame.params, " frame.debug '", frame.debug, "'")
         # chFrame = TestLib.testWord2.start(frame.SP)
@@ -795,28 +825,33 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         #print("testAdd var contains ", frame.vars[2])
 
         codeString = '''
-match frame.PC:
+def f():
+  match frame.PC:
     case 0:
         #print("testObj: testLoader 2 and 3")
         
-        # create object from verb's local variables
+        # create object1 from verb's local variables
         #print("testObj start: frame.vars ", frame.vars)
         f = TestLib.testLoader2.start(frame.SP)
         f.params = [frame.vars[0],frame.vars[2]]
         TestLib.testLoader2.run(f)
         #print("testObj vars after testLoader2: ", frame.vars)
         
-        # create object from parameters
+        # create object2 from parameters
         f1 = TestLib.testLoader3.start(frame.SP)
         # position doesn't matter 'cause set pos below
         f1.params = [frame.vars[1], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], frame.vars[3], [1,1,0,1]]
         TestLib.testLoader3.run(f1)
-     
+        if f1.status != Wye.status.SUCCESS:
+            print("Exit testObj code on file load error")
+            frame.status = f1.status
+            return
+            
         #print("testObj vars after testLoader3: ", frame.vars)
         
         # move 2nd object
         f2 = TestLib.setObjPos.start(frame.SP)
-        f2.params = [frame.vars[1], [1,20,1]]
+        f2.params = [frame.vars[1], [2.5,10,1]]
         TestLib.setObjPos.run(f2)
 
         # set angle of 1st object
@@ -828,53 +863,75 @@ match frame.PC:
         f3 = TestLib.setAngle.start(frame.SP)
         f3.params = [frame.vars[1],[-45, 0, 0]]
         TestLib.setAngle.run(f3)
-        frame.PC += 1
                         
         # create a repeated event on obj 1
         fRep = TestLib.repClickWiggle.start(frame.SP)
-        fRep.params = [frame.vars[0], frame.vars[2]]       #obj 1, obj 1 tag
+        fRep.params = [frame.vars[0], frame.vars[2],[0]]       #obj 1, obj 1 tag, spin axis
         fTag = WyeCore.world.setRepeatEventCallback("click", fRep)
         frame.vars[4] = [fTag]                          # save rep event tag so can cancel it
+        frame.vars[5] = [fRep]
+        
+        frame.PC += 1
         
     case 1:
         # create a single shot event
         #print("testObj: push clickWiggle")
         f = TestLib.clickWiggle.start(frame.SP)
-        f.params = [frame.vars[1], frame.vars[3]]       #obj 2, obj 2 tag
+        f.params = [frame.vars[1], frame.vars[3], [2]]       #obj 2, obj 2 tag, spin axis
         frame.SP.append(f)               #push clickWiggle stack frame so it execs until done
         frame.PC += 1                                   #inc to next state, which will run when clickWiggle done
 
     case 2:
-        #print("testObj: done clickWiggle")
+        #print("testObj: done clickWiggle on obj 2")
         # pop stack and go back to do it again (never ending loop)
         frame.SP.pop()
+        
+        # if repClickWiggle on obj 1 is done, make another one
+        oldEvtFrm = frame.vars[5][0]
+        if oldEvtFrm.status != Wye.status.CONTINUE:         # if repClickWiggle is done, Start over.            
+            axis = oldEvtFrm.params[2][0]
+            axis = (axis + 1) %3                            # progress through axes
+            #print("Start another repClickWiggle")
+            fRep = TestLib.repClickWiggle.start(frame.SP)
+            fRep.params = [frame.vars[0], frame.vars[2], [axis]]       #obj 1, obj 1 tag, spin axis
+            fTag = WyeCore.world.setRepeatEventCallback("click", fRep)
+            frame.vars[4][0] = fTag                          # save rep event tag so can cancel it
+            frame.vars[5][0] = fRep
+        
+            f = TestLib.setMaterialColor.start(frame.SP)
+            color = [0,0,0,1]
+            color[axis] = 1
+            f.params = [frame.vars[0], color]
+            f.verb.run(f)
+        
         frame.PC -= 1
     
     case _:
         # return a value for testing purposes
         frame.status = Wye.status.SUCCESS       # yeah, we're done
         frame.params[0][0] = 1
-    
+f()
 '''
         code = None
 
         def start(stack):
             if not TestLib.testObj.code:        # if object not compiled, compile it
-                #print("testObj compile codeString")
+                #print("testObj compile codeString:"+TestLib.testObj.codeString)
                 TestLib.testObj.code = compile(TestLib.testObj.codeString, "<string>", "exec")
             return Wye.codeFrame(TestLib.testObj, stack)
 
         def run(frame):
-            #print("testObj run frame ",frame, " frame params ", frame.params, " debug '", frame.debug, "'")
+            #print("testObj run frame ",frame, " frame params ", frame.params)
             #print("testObj codeString ", TestLib.testObj.code)
             #print("testObj exec code")
             try:
                 exec(TestLib.testObj.code, {"TestLib":TestLib, "frame":frame, "Wye":Wye, "WyeCore":WyeCore})
             except:
-                print("testObj run error:")
+                #print("testObj run error:")
+                frame.status = Wye.status.FAIL
                 ex = sys.exception()
                 traceback.print_exception(ex)
-                exit(1)
+                #exit(1)
 
 
     class testObj2:
@@ -887,7 +944,8 @@ match frame.PC:
                     ("sound", Wye.type.OBJECT, None))   # var 4
 
         codeString = '''
-match(frame.PC):
+def f():
+  match(frame.PC):
     case 0:
         #print("testObj2 case 0: start - set up object")
 
@@ -896,11 +954,15 @@ match(frame.PC):
         # position doesn't matter - explicitly set, below
         f1.params = [frame.vars[0], ["flyer_01.glb"], [0,0,0], [.75,.75,.75], frame.vars[2], [0,1,0,1]]
         TestLib.testLoader3.run(f1)
+        if f1.status != Wye.status.SUCCESS:
+            print("Exit testObj2 code on file load error")
+            frame.status = f1.status
+            return
         #print("testObj2 after 2nd testLoader3: frame.vars ", frame.vars)
 
         # move object
         f2 = TestLib.setObjPos.start(frame.SP)
-        f2.params = [frame.vars[0], [1,5,0]]
+        f2.params = [frame.vars[0], [0,5,-.5]]
         TestLib.setObjPos.run(f2)
         
         # load click sound
@@ -915,12 +977,12 @@ match(frame.PC):
     case 1:
         #print("testObj2 case 1: start spin")        
         f4 = TestLib.spin.start(frame.SP)       # create multi-cycle verb (frame default status is CONTINUE
-        f4.params = [frame.vars[0],]    # pass obj to spin
+        f4.params = [frame.vars[0], [1]]    # pass obj, rotation axis to spin
         frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
         #print("testObj2, frame.SP", frame.SP)
         #print("testObj2, stack contains ", WyeCore.utils.stackToString(frame.SP))
         
-        frame.PC = 3 # jump over delay to click wiggle                   # bump forward a step - when spin completes we'll pick up at the next case
+        frame.PC = 3 # jump over delay to waitClick                    # bump forward a step - when spin completes we'll pick up at the next case
         
     case 2:
         #print("testObj2 case 2: done spin")
@@ -953,14 +1015,15 @@ match(frame.PC):
         #print("tstObj2: got click on obj ", f.eventData[0])
         frame.PC = 1   # Set PC back so next cycle we do it all again
 
-#print("testObj2 cycle")
-# return a value for testing purposes
-frame.params[0][0] = 1
+  #print("testObj2 cycle")
+  # return a value for testing purposes
+  frame.params[0][0] = 1
+f()
         '''
         code = None
         def start(stack):
             if not TestLib.testObj2.code:        # if object not compiled, compile it
-                #print("testObj2 compile codeString")
+                #print("testObj2 compile codeString:"+TestLib.testObj.codeString)
                 TestLib.testObj2.code = compile(TestLib.testObj2.codeString, "<string>", "exec")
             f = Wye.codeFrame(TestLib.testObj2, stack)
             f.status = Wye.status.CONTINUE  # not done yet
@@ -973,7 +1036,8 @@ frame.params[0][0] = 1
             try:
                 exec(TestLib.testObj2.code, {"TestLib":TestLib, "frame":frame, "Wye":Wye, "WyeCore":WyeCore})
             except:
-                print("testObj2 run error:")
+                #print("testObj2 run error:")
+                frame.status = Wye.status.FAIL
                 ex = sys.exception()
                 traceback.print_exception(ex)
-                exit(1)
+                #exit(1)

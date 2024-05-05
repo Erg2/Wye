@@ -1,9 +1,12 @@
 # Wye
 Wye character implementation language
 
+# Engine requires at least one library and start object on command line.  Ex:
+python WyeMain.py -l TestLib.py -o TestLib.TestLib.testObj -o TestLib.TestLib.testObj2
+
 # Two attempts to build, neither work
 
 # Pand3D dist - doesn't build
 python setup.py build_apps
-# PyInstaller dist - builds but doesn't run
- pyinstaller -F --onefile --windowed  WyeMain.py --name "Wye_V0.1.exe"
+# PyInstaller dist - works
+pyinstaller -F --onefile --windowed  --add-data 'C:\Panda3D-1.10.14-x64\etc\Config.prc;etc'  --add-data 'C:\Panda3D-1.10.14-x64\etc\Confauto.prc;etc' --add-data 'C:\Panda3D-1.10.14-x64\bin\libpandagl.dll;.' --add-data 'C:\Panda3D-1.10.14-x64\bin\CgGL.dll;.' --add-data 'C:\Panda3D-1.10.14-x64\bin\libp3windisplay.dll;.' --add-data 'C:\Panda3D-1.10.14-x64\bin\libp3openal_audio.dll;.' --add-data 'C:\Panda3D-1.10.14-x64\bin\libp3assimp.dll;.' --add-data 'C:\Panda3D-1.10.14-x64\bin\libp3ptloader.dll;.' --add-data 'WyeUI.py;.'  --add-data 'flyer_01.glb;.' --add-data '*.wav;.' WyeMain.py --name "Wye_V0.1.exe"
