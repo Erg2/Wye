@@ -8,10 +8,7 @@ from Wye import Wye
 import inspect      # for debugging
 from direct.task import Task
 from direct.showbase.DirectObject import DirectObject
-from panda3d.core import CollisionTraverser
-from panda3d.core import CollisionHandlerQueue, CollisionNode
-from panda3d.core import CollisionRay, GeomNode
-#from panda3d.core import CollisionPlane, CollisionSphere, Plane, Vec3, Point3, BitMask32
+from panda3d.core import *
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -21,7 +18,6 @@ from panda3d.core import CollisionRay, GeomNode
 
 # used to make unique ids
 _nextId = 0
-
 
 
 class WyeCore(Wye.staticObj):
@@ -77,16 +73,16 @@ class WyeCore(Wye.staticObj):
                     # bottom of stack done, run next up on stack if any
                     elif len(evt[0]) > 1:
                         frame = evt[0][-2]
-                        print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
+                        #print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
                         frame.eventData = (evtID, evt[1])        # user data
                         frame.verb.run(frame)
                         # On parent error, bail out - TODO - consider letting its parent handle error
                         if frame.status == Wye.status.FAIL and len(evt[0]) > 1:
-                            print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
+                            #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
                             delList.append(evt[3])  # save this entry's tag to delete when done
                     # if only one frame on stack and it's done, remove event entry
                     if len(evt[0]) == 1 and evt[0][0].status != Wye.status.CONTINUE:
-                        print("repEventObj run: done with evt ", evtIx, ".  Remove from dict")
+                        #print("repEventObj run: done with evt ", evtIx, ".  Remove from dict")
                         delList.append(evt[3])      # save this entry's tag to delete when done
                     evtIx += 1 # debug
 
@@ -101,6 +97,7 @@ class WyeCore(Wye.staticObj):
         # called once per frame
         # runs all active objects in parallel
         def worldRun(task):
+            global render
 
             property_names = [p for p in dir(Wye) if isinstance(getattr(Wye, p), property)]
             # print("Wye contains ", property_names)
@@ -109,6 +106,40 @@ class WyeCore(Wye.staticObj):
             if not WyeCore.worldInitialized:
                 print("worldRunner: World Init")
                 WyeCore.worldInitialized = True  # Only do this once
+
+                dlight = DirectionalLight('dlight')
+                dlight.setColor((1,1,1,1)) #(0.8, 0.8, 0.5, 1))
+                dlnp = render.attachNewNode(dlight)
+                dlnp.setHpr(45, -60, 0)
+                render.setLight(dlnp)
+
+                #######
+
+                text = TextNode('node name')
+                text.setText("Welcome to Wye 0.1")
+                text.setTextColor(1, 1, 1, 1)
+                text.setWordwrap(15.0)
+                text.setFrameColor(0, 0, 1, 1)
+                text.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
+
+                text.setCardColor(.5, .5, 0.5, .5)
+                text.setCardAsMargin(0, 0, 0, 0)
+                text.setCardDecal(True)
+
+                text3d = NodePath(text)
+                text3d.reparentTo(render)
+                text3d.setScale(.2, .2, .2)
+                text3d.setPos(-.5, 17, 4)
+                text3d.setTwoSided(True)
+
+#                text.setScale(scale[0], scale[1], scale[2])
+#                text.setPos(pos[0], pos[1], pos[2])
+                #textNodePath = aspect2d.attachNewNode(text.generate())
+                #textNodePath.setScale(0.07)
+
+                ###########
+
+
                 libDict = {}        # lib name -> lib lookup dictionary
 
                 # put rep exec obj on obj list
@@ -124,7 +155,7 @@ class WyeCore(Wye.staticObj):
                 # build all libraries - compiles any Wye code words in each lib
                 for lib in WyeCore.world.libs:
                     lib.build()         # build all Wye code segments in code words
-                    print("build lib ", lib.__name__)
+                    #print("build lib ", lib.__name__)
                     libDict[lib.__name__] = lib     # build lib name -> lib lookup dictionary
 
                 # parse starting object names and find the objects in the known libraries
@@ -212,7 +243,7 @@ class WyeCore(Wye.staticObj):
         def setEventCallback(eventName, tag, frame, data=None):
             if eventName in WyeCore.world.eventCallbackDict:
                 tagDict = WyeCore.world.eventCallbackDict[eventName]
-                print("setEventCallback: add frame '", frame.verb.__name__, "' to tag '", tag, "'tagDict ", tagDict)
+                #print("setEventCallback: add frame '", frame.verb.__name__, "' to tag '", tag, "'tagDict ", tagDict)
                 if tag in tagDict:
                     tagDict[tag].append((frame, data,))
                     #print("setEventCallback: existing tag '", tag, "', dict now=", WyeCore.world.eventCallbackDict)
@@ -221,7 +252,7 @@ class WyeCore(Wye.staticObj):
                     #print("setEventCallback: new tag '", tag, "', dict now=", WyeCore.world.eventCallbackDict)
             else:
                 WyeCore.world.eventCallbackDict[eventName] = {tag: [(frame, data,),]}
-                print("setEventCallback: new event '", eventName, " put frame '", frame.verb.__name__, "' on tag '", tag, "', dict now=", WyeCore.world.eventCallbackDict)
+                #print("setEventCallback: new event '", eventName, " put frame '", frame.verb.__name__, "' on tag '", tag, "', dict now=", WyeCore.world.eventCallbackDict)
 
         # frames for repeated events need to be kept globally so they can be called 
         # even if their context has gone away
@@ -244,19 +275,19 @@ class WyeCore(Wye.staticObj):
         def clearRepeatEventCallback(frameTag):
             if frameTag in WyeCore.world.repeatEventCallbackDict:
                 frame, eventName, tag, frameID = WyeCore.world.repeatEventCallbackDict.pop(frameTag)
-                print("clrRepEvt: frame ", frame, " evt ", eventName, " tag ", tag, " frmID ", frameID)
-                print("clrRepEvt: callbackDict ", WyeCore.world.eventCallbackDict)
+                #print("clrRepEvt: frame ", frame, " evt ", eventName, " tag ", tag, " frmID ", frameID)
+                #print("clrRepEvt: callbackDict ", WyeCore.world.eventCallbackDict)
                 if eventName in WyeCore.world.eventCallbackDict:
                     tagDict = WyeCore.world.eventCallbackDict[eventName]
-                    print("clrRepEvt: found tagDict ", tagDict)
+                    #print("clrRepEvt: found tagDict ", tagDict)
                     if tag in tagDict:
-                        print("clrRepEvt: get framelist for tag ", tag)
+                        #print("clrRepEvt: get framelist for tag ", tag)
                         frameList = tagDict[tag]
-                        print("clrRepEvt: frameList ", frameList)
+                        #print("clrRepEvt: frameList ", frameList)
                         delList = []
                         for ii in range(len(frameList)):
                             if frame == frameList[ii][0]:
-                                print("ClrRepEvt: remove list entry ", ii)
+                                #print("ClrRepEvt: remove list entry ", ii)
                                 delList.insert(0, ii)   # put on del list in reverse order
                         # remove frame from list
                         for ii in delList:
@@ -355,7 +386,7 @@ class WyeCore(Wye.staticObj):
                 self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    print("wyeID ", wyeID)
+                    #print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
 
@@ -363,7 +394,7 @@ class WyeCore(Wye.staticObj):
                         if "click" in WyeCore.world.eventCallbackDict:
                             tagDict = WyeCore.world.eventCallbackDict["click"]
                             if wyeID in tagDict:
-                                print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
+                                #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
                                 # run through lists calling callbacks.
                                 # keep any repeated frames and update the callback entry with just them
                                 # if no repeated frames, remove callback entry for this target
@@ -373,7 +404,7 @@ class WyeCore(Wye.staticObj):
                                 for evt in evtLst:
                                     frame = evt[0]
                                     data = evt[1]
-                                    print("objSelectEvent: inc frame ", frame.verb.__name__, " PC ", frame.PC)
+                                    #print("objSelectEvent: inc frame ", frame.verb.__name__, " PC ", frame.PC)
                                     frame.PC += 1
                                     frame.eventData = (wyeID, data)        # user data
                                     del tagDict[wyeID]
@@ -423,7 +454,7 @@ class WyeCore(Wye.staticObj):
                         else:                           # recurse to parse nested code tuple
                             #print("parseWyeTuple: 4 - Can't get here")
                             codeText += WyeCore.utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + eff+".params.append(" + \
-                                "f"+str(fNum+1)+".params[0])\n"
+                                        "f"+str(fNum+1)+".params[0])\n"
                 codeText += wyeTuple[0] + ".run("+eff+")\n"
             # Raw Python code
             else:

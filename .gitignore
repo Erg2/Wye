@@ -1,2 +1,15 @@
 .idea/
 __pycache__/
+*.pyc
+.idea/
+venv/
+build/
+*.mp4
+*.tiff
+*.tif
+*.png
+*.jpg
+*.spec
+*.avi
+*.csv
+*.cfg
