@@ -236,7 +236,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         code = None
 
         def build():
-            return WyeCore.utils.buildCodeText(TestLib.testAdd2.codeDescr)
+            return WyeCore.Utils.buildCodeText(TestLib.testAdd2.codeDescr)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testAdd2, stack)
@@ -297,7 +297,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
 
             filepath = frame.params[1][0]
             # full path minus drive letter
-            path = WyeCore.utils.resourcePath(filepath)[2:]
+            path = WyeCore.Utils.resourcePath(filepath)[2:]
             #path = filepath
             #path = "C/Users/ebeng/PycharmProjects/Wye/flyer_01.glb"
             try:
@@ -331,7 +331,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             tag = obj.getTag('wyeTag')
             # if no tag, then create one and make the object pickable
             if not tag:
-                tag = "wyeTag" + str(WyeCore.utils.getId())     # generate unique tag for object
+                tag = "wyeTag" + str(WyeCore.Utils.getId())     # generate unique tag for object
                 obj.setTag("wyeTag", tag)
             WyeCore.picker.makePickable(obj)                # just be sure it's pickable
             frame.params[0][0] = tag                        # return tag to caller
@@ -549,7 +549,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             match frame.PC:
                 case 0:
                     #print("waitClick: set event for tag ", frame.params[0][0])
-                    WyeCore.world.setEventCallback("click", frame.params[0][0], frame)
+                    WyeCore.World.setEventCallback("click", frame.params[0][0], frame)
                     frame.PC += 1
                     #print("waitClick: waiting for event 'click' tag ", frame.params[0][0])
                 case 1:
@@ -632,7 +632,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             #print("Current HPR ", vec)
             match frame.PC:
                 case 0:
-                    WyeCore.world.setEventCallback("click", frame.params[1][0], frame)
+                    WyeCore.World.setEventCallback("click", frame.params[1][0], frame)
                     # frame.vars[1][0] = base.loader.loadSfx("WyePop.wav")
                     audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                     frame.vars[1][0] = audio3d.loadSfx("WyePop.wav")
@@ -705,7 +705,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             #print("testLoader run: loadModel returned ", f.params[0])
 
             obj = frame.vars[0][0]
-            tag = "wyeTag" + str(WyeCore.utils.getId())
+            tag = "wyeTag" + str(WyeCore.Utils.getId())
             #print("TestLib testLoader: set tag ", tag, " on obj ", obj)
             obj.setTag(tag, "true")
             WyeCore.picker.makePickable(obj)
@@ -741,7 +741,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         code = None
 
         def build():
-            return WyeCore.utils.buildCodeText(TestLib.testLoader2.codeDescr)
+            return WyeCore.Utils.buildCodeText(TestLib.testLoader2.codeDescr)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testLoader2, stack)
@@ -774,7 +774,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         code = None
 
         def build():
-            return WyeCore.utils.buildCodeText(TestLib.testLoader3.codeDescr)
+            return WyeCore.Utils.buildCodeText(TestLib.testLoader3.codeDescr)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testLoader3, stack)
@@ -867,7 +867,7 @@ def f():
         # create a repeated event on obj 1
         fRep = TestLib.repClickWiggle.start(frame.SP)
         fRep.params = [frame.vars[0], frame.vars[2],[0]]       #obj 1, obj 1 tag, spin axis
-        fTag = WyeCore.world.setRepeatEventCallback("click", fRep)
+        fTag = WyeCore.World.setRepeatEventCallback("click", fRep)
         frame.vars[4] = [fTag]                          # save rep event tag so can cancel it
         frame.vars[5] = [fRep]
         
@@ -894,7 +894,7 @@ def f():
             #print("Start another repClickWiggle")
             fRep = TestLib.repClickWiggle.start(frame.SP)
             fRep.params = [frame.vars[0], frame.vars[2], [axis]]       #obj 1, obj 1 tag, spin axis
-            fTag = WyeCore.world.setRepeatEventCallback("click", fRep)
+            fTag = WyeCore.World.setRepeatEventCallback("click", fRep)
             frame.vars[4][0] = fTag                          # save rep event tag so can cancel it
             frame.vars[5][0] = fRep
         
@@ -980,7 +980,7 @@ def f():
         f4.params = [frame.vars[0], [1]]    # pass obj, rotation axis to spin
         frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
         #print("testObj2, frame.SP", frame.SP)
-        #print("testObj2, stack contains ", WyeCore.utils.stackToString(frame.SP))
+        #print("testObj2, stack contains ", WyeCore.Utils.stackToString(frame.SP))
         
         frame.PC = 3 # jump over delay to waitClick                    # bump forward a step - when spin completes we'll pick up at the next case
         

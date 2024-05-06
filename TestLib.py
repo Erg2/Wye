@@ -70,87 +70,10 @@ Compiling
 
 class TestLib:
 
-    # TODO - move this to WyeCore
     # Build run_rt methods on each class
     def build():
+        WyeCore.Utils.buildLib(TestLib)
 
-        codeStr = "class TestLib_rt:\n"
-        # check all the classes in the lib for build functions.
-        for attr in dir(TestLib):
-            val = getattr(TestLib, attr)
-            if inspect.isclass(val):
-                # if the class has a build function then call it to generate Python source code for its runtime method
-                if hasattr(val, "build"):
-                    #print("class ", attr, " has build method.  attr is ", type(attr), " val is ", type(val))
-                    build = getattr(val, "build")   # get child's build method
-                    # call the build function to get the "run" code string
-                    bldStr = build()                # call it to get child's runtime code string(s)
-                    lines = bldStr.splitlines(True) # break the code into lines
-                    # start runtime function for class
-                    codeStr += " def " + attr + "_run_rt(frame):\n" # define a runtime method containing the code lines
-                    # DEBUG
-                    #codeStr += "   print('execute "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
-                    # End DEBUG
-                    for line in lines:      # put child's code in rt method at required indent
-                        if not line.isspace():
-                            codeStr += "   " + line
-                    #codeStr += "   print('end of "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
-
-        #codeStr += "print('TestLib is ', TestLib)\n"        # DEBUG
-
-        # All classes in this library defined by Wye-code generate their runtime methods as methods of
-        # the library's dynamically added TestLib_rt class.
-        # This allows the compile to be done once when the library is loaded instead of piecemeal for each class.
-        #
-        codeStr += 'setattr(TestLib, "TestLib_rt", TestLib_rt)\n'
-
-#        # DEBUG - print out code string for Python to compile
-#        lineNum = 1
-#        print("TestLib code string:")
-#        for line in codeStr.split("\n"):
-#            if line[0:3] == "   ":
-#                print("%-3d " % lineNum, line)
-#                lineNum += 1
-#            else:
-#                lineNum = 1
-#                print("    ", line)
-#        # End DEBUG
-
-        # Compile the runtime Wye code
-        #print("TestLib codeStr\n"+codeStr)
-        code = compile(codeStr, "<string>", "exec")
-        exec(code, {"TestLib":TestLib, "Wye":Wye, "WyeCore":WyeCore})
-
-        ## DEBUG vvv Check that TestLib_rt class was created and has testAdd_run_rt method
-        ##print("TestLib attrs after exec:\n", dir(TestLib))
-        #if hasattr(TestLib, "TestLib_rt"):
-        #    tLib_rt = getattr(TestLib, "TestLib_rt")
-        #    if hasattr(tLib_rt, "testAdd_run_rt"):
-        #        print("TestLib.TestLib_rt.testAdd_run_rt found!")
-        #    else:
-        #        print("TestLib.TestLib_rt does not have testAdd_run_rt")
-        #else:
-        #    print("TestLib does not have TestLib_rt")
-        ## End DEBUG ^^^
-
-
-    # print as many params as passed in, followed by a crlf
-    class printParams:
-        mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = ()     # takes arbitrary number of params.  Need to create a way to specify that
-        varDescr = ()
-
-        def start(stack):
-            return Wye.codeFrame(TestLib.printParams, stack)
-
-        def run(frame):
-            print(inspect.stack()[1].function, "params: ", end="")
-            pIx = 0
-            for param in frame.params:
-                print(" param[%d] =" % pIx, param, end="")
-                pIx += 1
-            print("")
 
     # print as many params as passed in, followed by a crlf
     class wyePrint:
@@ -165,8 +88,8 @@ class TestLib:
         def run(frame):
             print(inspect.stack()[1].function, "params: ", end="")
             for param in frame.params:
-                print(param, end="")
-            print("")
+                print(param[0], end="")
+            print("\n")
 
     # test operations on local variables
     class testAddInPlace:
@@ -236,7 +159,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         code = None
 
         def build():
-            return WyeCore.utils.buildCodeText(TestLib.testAdd2.codeDescr)
+            return WyeCore.Utils.buildCodeText(TestLib.testAdd2.codeDescr)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testAdd2, stack)
@@ -297,7 +220,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
 
             filepath = frame.params[1][0]
             # full path minus drive letter
-            path = WyeCore.utils.resourcePath(filepath)[2:]
+            path = WyeCore.Utils.resourcePath(filepath)[2:]
             #path = filepath
             #path = "C/Users/ebeng/PycharmProjects/Wye/flyer_01.glb"
             try:
@@ -331,7 +254,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             tag = obj.getTag('wyeTag')
             # if no tag, then create one and make the object pickable
             if not tag:
-                tag = "wyeTag" + str(WyeCore.utils.getId())     # generate unique tag for object
+                tag = "wyeTag" + str(WyeCore.Utils.getId())     # generate unique tag for object
                 obj.setTag("wyeTag", tag)
             WyeCore.picker.makePickable(obj)                # just be sure it's pickable
             frame.params[0][0] = tag                        # return tag to caller
@@ -549,7 +472,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             match frame.PC:
                 case 0:
                     #print("waitClick: set event for tag ", frame.params[0][0])
-                    WyeCore.world.setEventCallback("click", frame.params[0][0], frame)
+                    WyeCore.World.setEventCallback("click", frame.params[0][0], frame)
                     frame.PC += 1
                     #print("waitClick: waiting for event 'click' tag ", frame.params[0][0])
                 case 1:
@@ -632,7 +555,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             #print("Current HPR ", vec)
             match frame.PC:
                 case 0:
-                    WyeCore.world.setEventCallback("click", frame.params[1][0], frame)
+                    WyeCore.World.setEventCallback("click", frame.params[1][0], frame)
                     # frame.vars[1][0] = base.loader.loadSfx("WyePop.wav")
                     audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                     frame.vars[1][0] = audio3d.loadSfx("WyePop.wav")
@@ -705,7 +628,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             #print("testLoader run: loadModel returned ", f.params[0])
 
             obj = frame.vars[0][0]
-            tag = "wyeTag" + str(WyeCore.utils.getId())
+            tag = "wyeTag" + str(WyeCore.Utils.getId())
             #print("TestLib testLoader: set tag ", tag, " on obj ", obj)
             obj.setTag(tag, "true")
             WyeCore.picker.makePickable(obj)
@@ -741,7 +664,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         code = None
 
         def build():
-            return WyeCore.utils.buildCodeText(TestLib.testLoader2.codeDescr)
+            return WyeCore.Utils.buildCodeText(TestLib.testLoader2.codeDescr)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testLoader2, stack)
@@ -774,7 +697,7 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
         code = None
 
         def build():
-            return WyeCore.utils.buildCodeText(TestLib.testLoader3.codeDescr)
+            return WyeCore.Utils.buildCodeText(TestLib.testLoader3.codeDescr)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testLoader3, stack)
@@ -867,7 +790,7 @@ def f():
         # create a repeated event on obj 1
         fRep = TestLib.repClickWiggle.start(frame.SP)
         fRep.params = [frame.vars[0], frame.vars[2],[0]]       #obj 1, obj 1 tag, spin axis
-        fTag = WyeCore.world.setRepeatEventCallback("click", fRep)
+        fTag = WyeCore.World.setRepeatEventCallback("click", fRep)
         frame.vars[4] = [fTag]                          # save rep event tag so can cancel it
         frame.vars[5] = [fRep]
         
@@ -894,7 +817,7 @@ def f():
             #print("Start another repClickWiggle")
             fRep = TestLib.repClickWiggle.start(frame.SP)
             fRep.params = [frame.vars[0], frame.vars[2], [axis]]       #obj 1, obj 1 tag, spin axis
-            fTag = WyeCore.world.setRepeatEventCallback("click", fRep)
+            fTag = WyeCore.World.setRepeatEventCallback("click", fRep)
             frame.vars[4][0] = fTag                          # save rep event tag so can cancel it
             frame.vars[5][0] = fRep
         
@@ -980,7 +903,7 @@ def f():
         f4.params = [frame.vars[0], [1]]    # pass obj, rotation axis to spin
         frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
         #print("testObj2, frame.SP", frame.SP)
-        #print("testObj2, stack contains ", WyeCore.utils.stackToString(frame.SP))
+        #print("testObj2, stack contains ", WyeCore.Utils.stackToString(frame.SP))
         
         frame.PC = 3 # jump over delay to waitClick                    # bump forward a step - when spin completes we'll pick up at the next case
         
@@ -1025,9 +948,7 @@ f()
             if not TestLib.testObj2.code:        # if object not compiled, compile it
                 #print("testObj2 compile codeString:"+TestLib.testObj.codeString)
                 TestLib.testObj2.code = compile(TestLib.testObj2.codeString, "<string>", "exec")
-            f = Wye.codeFrame(TestLib.testObj2, stack)
-            f.status = Wye.status.CONTINUE  # not done yet
-            return f
+            return Wye.codeFrame(TestLib.testObj2, stack)
 
         def run(frame):
             #print("testObj2 run frame ",frame, " frame params ", frame.params, " debug '", frame.debug, "'")

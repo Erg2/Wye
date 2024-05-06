@@ -31,15 +31,18 @@ class WyeCore(Wye.staticObj):
 
     lastIsNothingToRun = False
 
-    class world(Wye.staticObj):
+    class World(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.type.NONE
         paramDescr = ()
         varDescr = ()
         codeDescr = ()
 
+        keyHandler = None
+
         # universe specific
         libs = []
+        libDict = {}  # lib name -> lib lookup dictionary
         startObjs = []
         objs = []  # runnable objects
         objStacks = []  # objects run in parallel so each one gets a stack
@@ -49,6 +52,17 @@ class WyeCore(Wye.staticObj):
 
         displayCycleCount = 0           # DEBUG
 
+        class libObj:
+            placeholder = ""
+
+        class KeyHandler(DirectObject):
+            def __init__(self):
+                base.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
+                self.accept('keystroke', self.myFunc)
+
+            def myFunc(self, keyname):
+                print("KeyHandler: key=",keyname)
+
         # list of independent frames running until they succeed/fail
         class repeatEventExecObj:
             mode = Wye.mode.MULTI_CYCLE
@@ -57,16 +71,16 @@ class WyeCore(Wye.staticObj):
             varDescr = ()
 
             def start(stack):
-                return Wye.codeFrame(WyeCore.world.repeatEventExecObj, stack)
+                return Wye.codeFrame(WyeCore.World.repeatEventExecObj, stack)
 
             # run event frames every display frame
             # it is up to the event frames to wait on whatever event they have in mind
             def run(frame):
                 delList = []
-                #print("repEventObj run: Event dict:", WyeCore.world.repeatEventCallbackDict)
+                #print("repEventObj run: Event dict:", WyeCore.World.repeatEventCallbackDict)
                 evtIx = 0       # debug
-                for evtID in WyeCore.world.repeatEventCallbackDict:
-                    evt = WyeCore.world.repeatEventCallbackDict[evtID]
+                for evtID in WyeCore.World.repeatEventCallbackDict:
+                    evt = WyeCore.World.repeatEventCallbackDict[evtID]
                     frame = evt[0][-1]
                     #print("repEventObj run: frame=", frame)
                     # run bottom of stack unless done
@@ -92,7 +106,7 @@ class WyeCore(Wye.staticObj):
 
                 for tag in delList:
                     #print("repEventObj: done with tag ", tag)
-                    WyeCore.world.clearRepeatEventCallback(tag)
+                    WyeCore.World.clearRepeatEventCallback(tag)
 
 
         ##########################
@@ -119,7 +133,7 @@ class WyeCore(Wye.staticObj):
                 render.setLight(dlnp)
 
                 #######
-
+                WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
 
                 text = TextNode('node name')
                 text.setWordwrap(7.0)
@@ -140,6 +154,8 @@ class WyeCore(Wye.staticObj):
                 text3d.setScale(.2, .2, .2)
                 text3d.setPos(-.5, 17, 4)
                 text3d.setTwoSided(True)
+
+                text3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
                 #######
 
@@ -191,49 +207,55 @@ class WyeCore(Wye.staticObj):
                 ###########
 
 
-                libDict = {}        # lib name -> lib lookup dictionary
+
 
                 # put rep exec obj on obj list
-                WyeCore.world.objs.append(WyeCore.world.repeatEventExecObj)
+                WyeCore.World.objs.append(WyeCore.World.repeatEventExecObj)
                 stk = []
-                f = WyeCore.world.repeatEventExecObj.start(stk)  # start the object and get its stack frame
+                f = WyeCore.World.repeatEventExecObj.start(stk)  # start the object and get its stack frame
                 stk.append(f)  # create a stack for it
                 f.SP = stk  # put ptr to stack in frame
                 f.params = [[0], ]  # place to put return param
-                WyeCore.world.objStacks.append(stk)
+                WyeCore.World.objStacks.append(stk)
 
+                # build list of known libraries (so can ref them during build)
+                for lib in WyeCore.World.libs:
+                    WyeCore.World.libDict[lib.__name__] = lib     # build lib name -> lib lookup dictionary
+                    setattr(WyeCore.World.libObj, lib.__name__, lib)
 
                 # build all libraries - compiles any Wye code words in each lib
-                for lib in WyeCore.world.libs:
+                for lib in WyeCore.World.libs:
+                    #print("Build ", lib)
                     lib.build()         # build all Wye code segments in code words
-                    #print("build lib ", lib.__name__)
-                    libDict[lib.__name__] = lib     # build lib name -> lib lookup dictionary
 
                 # parse starting object names and find the objects in the known libraries
                 # print("worldRunner:  start ", len(world.startObjs), " objs")
-                for objStr in WyeCore.world.startObjs:
+                for objStr in WyeCore.World.startObjs:
                     #print("obj ", objStr," in startObjs")
                     namStrs = objStr.split(".")                     # parse name of object
-                    obj = getattr(libDict[namStrs[1]], namStrs[2])  # get object from library
-                    WyeCore.world.objs.append(obj)                  # add to list of runtime objects
+                    obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
+                    WyeCore.World.objs.append(obj)                  # add to list of runtime objects
                     stk = []
                     f = obj.start(stk)                                 # start the object and get its stack frame
                     stk.append(f)                                   # create a stack for it
                     #f.SP = stk                                      # put ptr to stack in frame
                     f.params = [[0], ]                              # place to put return param
-                    WyeCore.world.objStacks.append(stk)             # put obj's stack on list and put obj's frame on the stack
+                    WyeCore.World.objStacks.append(stk)             # put obj's stack on list and put obj's frame on the stack
                 # print("worldRunner done World Init")
 
                 # create picker object
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
+                WyeCore.picker.makePickable(text3d)
+                tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
+                text3d.setTag("wyeTag", tag)
             # run
             else:
-                WyeCore.world.displayCycleCount += 1
+                WyeCore.World.displayCycleCount += 1
                 # # DEBUG
-                # print("\nworldRunner: cycle ", WyeCore.world.displayCycleCount, " run ", len(WyeCore.world.objStacks), " stacks:")
+                # print("\nworldRunner: cycle ", WyeCore.World.displayCycleCount, " run ", len(WyeCore.World.objStacks), " stacks:")
                 # stkNum = 0
-                # for stk in WyeCore.world.objStacks:
+                # for stk in WyeCore.World.objStacks:
                 #     print("   Stack ", stkNum, " depth ", len(stk))
                 #     for frm in stk:
                 #         print("     frame for obj ", frm.verb.__name__)
@@ -243,16 +265,16 @@ class WyeCore(Wye.staticObj):
                 # debug
                 stackNum = 0
                 ranNothing = True   # pessimist
-                for stack in WyeCore.world.objStacks:
+                for stack in WyeCore.World.objStacks:
                     sLen = len(stack)
                     if sLen > 0:  # if there's something on the stack
                         ranNothing = False
                         # run the frame furthest down the stack
                         frame = stack[-1]
                         #if frame:
-                        #    print("worldRunner stack # ", stackNum, " frame ", frame, " status ", WyeCore.utils.statusToString(frame.status),
+                        #    print("worldRunner stack # ", stackNum, " frame ", frame, " status ", WyeCore.Utils.statusToString(frame.status),
                         #          " verb", frame.verb.__name__,
-                        #          " stackLen ", sLen, " stack ", WyeCore.utils.stackToString(stack))
+                        #          " stackLen ", sLen, " stack ", WyeCore.Utils.stackToString(stack))
                         #else:
                         #    print("worldRunner stack # ", stackNum, " frame = None")
                         #    exit(1)
@@ -260,11 +282,11 @@ class WyeCore(Wye.staticObj):
                             #print("worldRunner run: stack ", stackNum, " verb", frame.verb.__name__, " PC ", frame.PC)
                             frame.verb.run(frame)
                             #if frame.status != Wye.status.CONTINUE:
-                            #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.utils.statusToString(frame.status))
-                        # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.utils.statusToString(frame.status),
+                            #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
+                        # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.Utils.statusToString(frame.status),
                         #       " returned param ", frame.params[0])
                         else:
-                            # print("worldRunner: status = ", WyeCore.utils.statusToString(frame.status))
+                            # print("worldRunner: status = ", WyeCore.Utils.statusToString(frame.status))
                             if sLen > 1:  # if there's a parent frame on the stack list, let them know their called word has exited
                                 pFrame = stack[-2]
                                 # print("worldRunner: return from call, run frame one back from bottom ", pFrame.verb.__name__)
@@ -303,18 +325,18 @@ class WyeCore(Wye.staticObj):
         ##########################
 
         def setEventCallback(eventName, tag, frame, data=None):
-            if eventName in WyeCore.world.eventCallbackDict:
-                tagDict = WyeCore.world.eventCallbackDict[eventName]
+            if eventName in WyeCore.World.eventCallbackDict:
+                tagDict = WyeCore.World.eventCallbackDict[eventName]
                 #print("setEventCallback: add frame '", frame.verb.__name__, "' to tag '", tag, "'tagDict ", tagDict)
                 if tag in tagDict:
                     tagDict[tag].append((frame, data,))
-                    #print("setEventCallback: existing tag '", tag, "', dict now=", WyeCore.world.eventCallbackDict)
+                    #print("setEventCallback: existing tag '", tag, "', dict now=", WyeCore.World.eventCallbackDict)
                 else:
                     tagDict[tag] = [(frame, data,),]
-                    #print("setEventCallback: new tag '", tag, "', dict now=", WyeCore.world.eventCallbackDict)
+                    #print("setEventCallback: new tag '", tag, "', dict now=", WyeCore.World.eventCallbackDict)
             else:
-                WyeCore.world.eventCallbackDict[eventName] = {tag: [(frame, data,),]}
-                #print("setEventCallback: new event '", eventName, " put frame '", frame.verb.__name__, "' on tag '", tag, "', dict now=", WyeCore.world.eventCallbackDict)
+                WyeCore.World.eventCallbackDict[eventName] = {tag: [(frame, data,),]}
+                #print("setEventCallback: new event '", eventName, " put frame '", frame.verb.__name__, "' on tag '", tag, "', dict now=", WyeCore.World.eventCallbackDict)
 
         # frames for repeated events need to be kept globally so they can be called 
         # even if their context has gone away
@@ -322,27 +344,27 @@ class WyeCore(Wye.staticObj):
         # even if those variable's frames have been GC'd
         def setRepeatEventCallback(eventName, frame, data=None):
 
-            frameID = "frm"+str(WyeCore.utils.getId()) # get unique id for frame list
+            frameID = "frm"+str(WyeCore.Utils.getId()) # get unique id for frame list
             # note: list in repEvtCallbackDict acts as global stack frame as well as
             # holding onto the event tags this event is for
             repEvt = [[frame], eventName, data, frameID]
             frame.SP = repEvt[0]        # repeated event runs on its own stack
-            WyeCore.world.repeatEventCallbackDict[frameID] = repEvt
-            #print("setRepeatEventCallback on event ", eventName, " object ", objTag, " add frameID ", frameID, "\nrepDict now=", WyeCore.world.repeatEventCallbackDict)
+            WyeCore.World.repeatEventCallbackDict[frameID] = repEvt
+            #print("setRepeatEventCallback on event ", eventName, " object ", objTag, " add frameID ", frameID, "\nrepDict now=", WyeCore.World.repeatEventCallbackDict)
             return frameID
             pass
 
         # find frame entry in rep event dict
         # remove it from rep dict and from event dict
         def clearRepeatEventCallback(frameTag):
-            if frameTag in WyeCore.world.repeatEventCallbackDict:
-                del WyeCore.world.repeatEventCallbackDict[frameTag]
+            if frameTag in WyeCore.World.repeatEventCallbackDict:
+                del WyeCore.World.repeatEventCallbackDict[frameTag]
                 #print("clrRepEvt: frame ", frame, " evt ", eventName, " tag ", tag, " frmID ", frameID)
-                #print("clrRepEvt: callbackDict ", WyeCore.world.eventCallbackDict)
+                #print("clrRepEvt: callbackDict ", WyeCore.World.eventCallbackDict)
 
             else:
                 print("Error: clearRepeatEventCallback failed to find frameTag '", frameTag,
-                      "' in WyeCore.world.repeatEventCallbackDict")
+                      "' in WyeCore.World.repeatEventCallbackDict")
 
     ##########################
     # Picker code does odd stuff when included, figure out why
@@ -426,13 +448,13 @@ class WyeCore(Wye.staticObj):
                 self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-            #        print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
+                    print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
 
                         # if there's a callback for the specific object, call itF
-                        if "click" in WyeCore.world.eventCallbackDict:
-                            tagDict = WyeCore.world.eventCallbackDict["click"]
+                        if "click" in WyeCore.World.eventCallbackDict:
+                            tagDict = WyeCore.World.eventCallbackDict["click"]
                             if wyeID in tagDict:
                                 #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
                                 # run through lists calling callbacks.
@@ -463,7 +485,7 @@ class WyeCore(Wye.staticObj):
             #else:
             #    print("Object picking disabled")
 
-    class utils(Wye.staticObj):
+    class Utils(Wye.staticObj):
 
         # get unique number
         def getId():
@@ -510,7 +532,7 @@ class WyeCore(Wye.staticObj):
                             codeText += eff+".params.append(" + paramDesc[1] + ")\n"
                             #print("parseWyeTuple: 3 codeText=", codeText[0])
                         else:                           # recurse to parse nested code tuple
-                            codeText += WyeCore.utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + \
+                            codeText += WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + \
                                         eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
                 codeText += wyeTuple[0] + ".run("+eff+")\nif "+eff+".status == Wye.status.FAIL:\n frame.status = "+eff+".status\n return\n"
             # Raw Python code
@@ -534,7 +556,7 @@ class WyeCore(Wye.staticObj):
 #                print('WyeCore buildCodeText caller:', callrframe[1][3])
 #                print("WyeCore buildCodeText: compile tuple=", wyeTuple)
                 # DEBUG end ^^^^
-                codeText[0] += WyeCore.utils.parseWyeTuple(wyeTuple, 0)
+                codeText[0] += WyeCore.Utils.parseWyeTuple(wyeTuple, 0)
 
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return codeText[0]
@@ -560,6 +582,40 @@ class WyeCore(Wye.staticObj):
         def stackToString(stack):
             stkStr = "\n stack len=" + str(len(stack))
             for frame in stack:
-                stkStr += "\n  verb=" + frame.verb.__name__ + " status " + WyeCore.utils.statusToString(frame.status) + \
+                stkStr += "\n  verb=" + frame.verb.__name__ + " status " + WyeCore.Utils.statusToString(frame.status) + \
                           " params: " + str(frame.params)
             return stkStr
+
+
+        def buildLib(libClass):
+            libName = libClass.__name__
+            #print("WyeCore buildLib: libNamess", libName)
+            codeStr = "class "+libName+"_rt:\n"
+            # check all the classes in the lib for build functions.
+            doBuild = False     # assume nothing to do
+            for attr in dir(libClass):
+                val = getattr(libClass, attr)
+                if inspect.isclass(val):
+                    # if the class has a build function then call it to generate Python source code for its runtime method
+                    if hasattr(val, "build"):
+                        doBuild = True
+                        # print("class ", attr, " has build method.  attr is ", type(attr), " val is ", type(val))
+                        build = getattr(val, "build")  # get child's build method
+                        # call the build function to get the "run" code string
+                        bldStr = build()  # call it to get child's runtime code string(s)
+                        lines = bldStr.splitlines(True)  # break the code into lines
+                        # start runtime function for class
+                        codeStr += " def " + attr + "_run_rt(frame):\n"  # define a runtime method containing the code lines
+                        # DEBUG
+                        # codeStr += "   print('execute "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
+                        # End DEBUG
+                        for line in lines:  # put child's code in rt method at required indent
+                            if not line.isspace():
+                                codeStr += "   " + line
+
+            # if there's code to build for the library, doit
+            if doBuild:
+                codeStr += 'setattr('+libName+', "'+libName+'_rt", '+libName+'_rt)\n'
+                code = compile(codeStr, "<string>", "exec")
+                #print("lib code string\n"+codeStr)  # DEBUG
+                exec(code, {"TestLib":libClass, "Wye":Wye, "WyeCore":WyeCore})

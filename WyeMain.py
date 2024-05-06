@@ -25,7 +25,7 @@ startObjList = [] #["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2"]
 class PandaRunner(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)     # Init Panda3d
-        taskMgr.add(WyeCore.world.worldRun)
+        taskMgr.add(WyeCore.World.worldRun)
         WyeCore.base = self      # world needs this to do panda3d stuff
 
         #props = WindowProperties()
@@ -55,8 +55,8 @@ if len(sys.argv) > 1:
                 #print("cmd line start obj ", val)
                 startObjList.append(val)
 else:
-    libLoadList = ["TestLib.py",]
-    startObjList = ["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2"]
+    libLoadList = ["TestLib.py","TestLib2.py"]
+    startObjList = ["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2", "TestLib2.TestLib2.testObj3"]
 
 # import libraries
 for libFile in libLoadList:
@@ -64,7 +64,7 @@ for libFile in libLoadList:
     libName = libFile.split(".")[0]
     #print("Lib name '", libName, "'")
     path = libFile
-    #path = WyeCore.utils.resourcePath(libFile)
+    #path = WyeCore.Utils.resourcePath(libFile)
     libModule = SourceFileLoader(libName, path).load_module()
 
     #try:
@@ -77,10 +77,10 @@ for libFile in libLoadList:
     #print("libModule ", libModule)
     libClass = getattr(libModule, libName)
     #print("libClass ", libClass)
-    WyeCore.world.libs.append(libClass)
+    WyeCore.World.libs.append(libClass)
 
 # load starting objects
-WyeCore.world.startObjs.extend(startObjList)
+WyeCore.World.startObjs.extend(startObjList)
 
 pandaRunner = PandaRunner()
 #print("Started, now run")
