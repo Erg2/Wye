@@ -79,7 +79,7 @@ class TestLib2:
                     frame.vars[1][0] = txt3d
 
                     # get text node from path and set text
-                    txt3d.node().setText("Text String 3")
+#                    txt3d.node().setText("Text String 3")
 
                     #txtFroPath = txt3d.node()
                     #print("txtFroPath == txt", txtFroPath == txt)
@@ -92,9 +92,18 @@ class TestLib2:
 
                     #txt3d.setPos(-.5, 17, 2)
 
-                    #txt.setText("Text String 5n 5 5 5")
+                    txt.setText("Text String 5 5 5 5")
 
-                    txt3d.setBillboardPointWorld(0.)
+                    txfrm = txt.getFrameActual()
+                    print("frame", txfrm)
+                    txfrm[0] -= .1
+                    txfrm[1] += .4
+                    txfrm[2] -= .1
+                    txfrm[3] += .1
+                    print("frame", txfrm)
+                    #txt3d.node().setFrame(txfrm)
+
+#                    txt3d.setBillboardPointWorld(0.)
 
                     #WyeCore.picker.makePickable(txt3d)
                     #tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object

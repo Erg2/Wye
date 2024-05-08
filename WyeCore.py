@@ -586,17 +586,34 @@ class WyeCore(Wye.staticObj):
             #txtNode.setCardDecal(True)
 
             #CardMaker.setFrame(txtNode.getFrameActual())
+            print("txtNode frame ", txtNode.getFrameActual())
             cardThing = CardMaker("My Card")
-            cardThing.setFrame((-1,-1,1,1))
-            card = NodePath(cardThing.generate())
-            tnp = card.attachNewNode(txtNode)
-            card.setEffect(DecalEffect.make())
+            frame = txtNode.getFrameActual()
+            print("frame", frame)
+            frame[0] -= .1
+            frame[1] += .4
+            frame[2] -= .1
+            frame[3] += .1
+            print("frame", frame)
+            cardThing.setFrame(frame)
+            card3d = NodePath(cardThing.generate())
+            tnp = card3d.attachNewNode(txtNode)
+            card3d.setEffect(DecalEffect.make())
             #card3d = render.attachNewNode(card)
-            card3d = card.reparentTo(render)
+            card3d.reparentTo(render)
+            WyeCore.picker.makePickable(card3d)
+            card3d.setTag("wyeTag", txtNode.name)
+            card3d.setPos(-.5, 17, 1)
+            card3d.setScale(.2, .2, .2)
+
+            card3d.setBillboardPointWorld(0.)
+            card3d.setLightOff()
+            card3d.setColor(0,0,0,1)
 
             return txtNode
 
         def gen3dTextObj(txtNode, pos=(0,0,0), scale=(1,1,1)):
+            return
             #
             # create 3d text object
             text3d = render.attach_new_node(txtNode)    # prevents collision/selection from working
@@ -606,8 +623,9 @@ class WyeCore(Wye.staticObj):
             text3d.setTwoSided(True)
 
             #text3d.reparentTo(render)
-            text3d.setScale(scale)
-            text3d.setPos(pos)
+    #        text3d.setScale(scale)
+    #        text3d.setPos(pos)
+            text3d.setPos(0,-.1,0)
 
             # make node pickable
             #text3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
