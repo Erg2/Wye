@@ -544,6 +544,7 @@ class WyeCore(Wye.staticObj):
 
             return codeText
 
+        # parse list of Wye tuples to text
         def buildCodeText(codeDescr):
             codeText = [""]
             #print("WyeCore buildCodeText compile code=", codeDescr)
@@ -561,15 +562,61 @@ class WyeCore(Wye.staticObj):
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return codeText[0]
 
-        # Take Python code for a Wye word and return compiled code
-        def compileCodeText(codeText):
-            #print("WyeCore.compileCodeText: compile ", codeText)
-            code = compile(codeText, "<string>", "exec")
- #           if code:
- #               print("WyeCore.compileCodeText: Compiled successfully")
-            return code
+        # return params concanated
+        def paramsToString(frame):
+            pStr = ""
+            for param in frame.params:
+                pStr += str(param[0])
+            return pStr
 
 
+
+        def genTextObj(text, color=(1,1,1,1)):
+            tag = "txt"+str(WyeCore.Utils.getId())
+            txtNode = TextNode(tag)
+            #txtNode.setWordwrap(7.0)
+            txtNode.setText(text)
+            txtNode.setTextColor(1, 1, 1, 1)
+            #txtNode.setAlign(TextNode.ACenter)
+            # txtNode.setFrameColor(0, 0, 1, 1)
+            # txtNode.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
+
+            #txtNode.setCardColor(0, 0, 0, 1)
+            #txtNode.setCardAsMargin(.1, .2, .1, .1)  # extend beyond edge of text (-x, +x, -y, +y)
+            #txtNode.setCardDecal(True)
+
+            #CardMaker.setFrame(txtNode.getFrameActual())
+            cardThing = CardMaker("My Card")
+            cardThing.setFrame((-1,-1,1,1))
+            card = NodePath(cardThing.generate())
+            tnp = card.attachNewNode(txtNode)
+            card.setEffect(DecalEffect.make())
+            #card3d = render.attachNewNode(card)
+            card3d = card.reparentTo(render)
+
+            return txtNode
+
+        def gen3dTextObj(txtNode, pos=(0,0,0), scale=(1,1,1)):
+            #
+            # create 3d text object
+            text3d = render.attach_new_node(txtNode)    # prevents collision/selection from working
+            #text3d = NodePath(txtNode.generate())  # prevents textNode.setText from working
+            text3d.reparentTo(render)
+
+            text3d.setTwoSided(True)
+
+            #text3d.reparentTo(render)
+            text3d.setScale(scale)
+            text3d.setPos(pos)
+
+            # make node pickable
+            #text3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
+            WyeCore.picker.makePickable(text3d)
+            text3d.setTag("wyeTag", txtNode.name)
+
+            return text3d
+
+        # return status as string
         def statusToString(stat):
             match stat:
                 case Wye.status.CONTINUE:
@@ -579,12 +626,17 @@ class WyeCore(Wye.staticObj):
                 case Wye.status.FAIL:
                     return "FAIL"
 
+        # return stack in reverse order
         def stackToString(stack):
-            stkStr = "\n stack len=" + str(len(stack))
-            for frame in stack:
+            sLen = len(stack)
+            stkStr = "\n stack len=" + str(len)
+            for ix in range(len-1, -1, -1):
+                frame = stack[ix]
                 stkStr += "\n  verb=" + frame.verb.__name__ + " status " + WyeCore.Utils.statusToString(frame.status) + \
                           " params: " + str(frame.params)
             return stkStr
+
+
 
 
         def buildLib(libClass):

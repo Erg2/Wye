@@ -75,7 +75,7 @@ class TestLib:
         WyeCore.Utils.buildLib(TestLib)
 
 
-    # print as many params as passed in, followed by a crlf
+    # print params passed in, followed by a crlf
     class wyePrint:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.type.NONE
@@ -86,7 +86,6 @@ class TestLib:
             return Wye.codeFrame(TestLib.wyePrint, stack)
 
         def run(frame):
-            print(inspect.stack()[1].function, "params: ", end="")
             for param in frame.params:
                 print(param[0], end="")
             print("\n")
