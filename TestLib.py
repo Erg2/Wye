@@ -392,7 +392,6 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
             match frame.PC:
                 case 0:
                     #print('execute delay, params', frame.params, ' vars', frame.vars)
-
                     frame.vars[0][0] = frame.params[0][0]   # set start count
                     frame.PC += 1
 
@@ -454,6 +453,10 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
                 case _:
                     frame.status = Wye.status.SUCCESS
 
+    # Wait for click on graphic object
+    # caller puts wyeTag of graphic obj in waitClick param[0]
+    # caller pushes waitClick frame on stack and updates frame.PC to state it wants to go to when click happens
+    # When click event happens, caller must pop waitClick frame off stack
     class waitClick:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.NONE

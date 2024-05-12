@@ -9,15 +9,16 @@ from panda3d.core import *
 from direct.showbase.DirectObject import DirectObject
 #from pandac.PandaModules import *
 #from panda3d.core import loadPrcFileData
+import traceback
 
 
 from WyeCore import WyeCore
 import sys, os
 
-version = "0.1"
+version = "0.2"
 
-libLoadList = [] #["TestLib.py",]
-startObjList = [] #["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2"]
+libLoadList = []        # list of lib files from command line to load on start
+startObjList = []       # list of lib objs from command line to load on start
 
 ############
 
@@ -63,24 +64,25 @@ for libFile in libLoadList:
     #print("Load lib '", libFile, "'")
     libName = libFile.split(".")[0]
     #print("Lib name '", libName, "'")
-    path = libFile
-    #path = WyeCore.Utils.resourcePath(libFile)
-    libModule = SourceFileLoader(libName, path).load_module()
-
-    #try:
-    #    path = resourcePath(libFile)
-    #    libModule = SourceFileLoader(libName, path).load_module()
-    #except:
-    #    print("Failed to load class ", libName, " From file ", libFile)
-    #    continue
-
-    #print("libModule ", libModule)
-    libClass = getattr(libModule, libName)
-    #print("libClass ", libClass)
-    WyeCore.World.libs.append(libClass)
+    #path = libFile
+    path = WyeCore.Utils.resourcePath(libFile)
+    try:
+        libModule = SourceFileLoader(libName, path).load_module()
+        # print("libModule ", libModule)
+        libClass = getattr(libModule, libName)
+        # print("libClass ", libClass)
+        WyeCore.World.libs.append(libClass)
+        print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
+    except:
+        print("Failed to load class ", libName, " From file ", path)
+        ex = sys.exception()
+        traceback.print_exception(ex)
 
 # load starting objects
 WyeCore.World.startObjs.extend(startObjList)
+
+print("Loaded libs:", WyeCore.World.libs)
+print("start objs:", WyeCore.World.startObjs)
 
 pandaRunner = PandaRunner()
 #print("Started, now run")

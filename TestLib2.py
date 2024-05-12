@@ -42,8 +42,7 @@ class TestLib2:
         dataType = Wye.type.INTEGER
         paramDescr = ()    # gotta have a ret param
         #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
-        varDescr = (("txtObj", Wye.type.OBJECT, None),("3dTxtObj", Wye.type.OBJECT, None),
-                    ("val", Wye.type.INTEGER, 0))
+        varDescr = (("txtObj", Wye.type.OBJECT, None), ("val", Wye.type.INTEGER, 10), ("ct", Wye.type.INTEGER, 0))
 
         class testObj3Callback:
             pass
@@ -61,71 +60,50 @@ class TestLib2:
                     ll = WyeCore.World.libObj
                     f = ll.TestLib.wyePrint.start(frame.SP)
                     f.params = [["The number two="], [2], [". Cool, huh?"]]
-                    f.verb.run(f)
+                    f.verb.run(f)   # demonstrate wyePrint verb
 
+                    # demonstrate WyeCore function that returns params as a string
+                    f.params[1][0] = 3
                     print(WyeCore.Utils.paramsToString(f))
 
-                    txt = WyeCore.Utils.genTextObj("Text String 1", (1,0,0,1))
-
-                    txt.setText("Text String 2")
-
-                    #txt.setTextColor(1,0,0,1)
+                    # put up 3d text
+                    txt = WyeCore.Text3d("Text String 1", (1,0,0,1))
                     frame.vars[0][0] = txt
-
-                    #txt3d = render.attach_new_node(txt)
-                    #txt3d = WyeCore.Utils.gen3dTextObj(txt)     # this kills the ability to change text
-
-                    txt3d = WyeCore.Utils.gen3dTextObj(txt, (-.5, 17, 2), (.2, .2, .2))
-                    frame.vars[1][0] = txt3d
-
-                    # get text node from path and set text
-#                    txt3d.node().setText("Text String 3")
-
-                    #txtFroPath = txt3d.node()
-                    #print("txtFroPath == txt", txtFroPath == txt)
-                    #txtFroPath.setText("How about this one?")
-
-                    #txt3d.reparentTo(render)
-                    #txt3d.setScale(.2, .2, .2)
-
-                    #txt.setText("Text String 4")
-
-                    #txt3d.setPos(-.5, 17, 2)
-
-                    txt.setText("Text String 5 5 5 5")
-
-                    txfrm = txt.getFrameActual()
-                    print("frame", txfrm)
-                    txfrm[0] -= .1
-                    txfrm[1] += .4
-                    txfrm[2] -= .1
-                    txfrm[3] += .1
-                    print("frame", txfrm)
-                    #txt3d.node().setFrame(txfrm)
-
-#                    txt3d.setBillboardPointWorld(0.)
-
-                    #WyeCore.picker.makePickable(txt3d)
-                    #tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
-                    #txt3d.setTag("wyeTag", tag)
-
-                    print("testObj3 go to case 1")
-
-                    frame.PC += 1
+                    frame.PC += 1  # bump forward a step
 
                 case 1:
-                    text = frame.vars[0][0]
-                    text3d = frame.vars[1][0]
-
                     print("testObj3 case 1")
-                    #text.setText("Text String 6")
+                    # wait for click on 3d text
+                    lib = WyeCore.World.libDict["TestLib"]
+                    f = lib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE
+                    f.params = [[frame.vars[0][0].getTag()], ]  # pass tag to waitClick
+                    frame.SP.append(f)  # note2:  put its frame on the stack.  Execution will continue in spin until it's done
+                    # print("tstObj2 Obj waiting for click")
+                    frame.PC += 1  # bump forward a step - when event happens we'll pick up at the next case
+
+                case 2:
+                    frame.SP.pop()      # remove waitclick or delay frame
+                    #change text
+                    txt = "Text String " + str(frame.vars[1][0])
+                    frame.vars[0][0].setText(txt)
+
+                    # Increase size of text by one place for next time
+                    frame.vars[1][0] *= 10
                     frame.vars[2][0] += 1
+                    if frame.vars[2][0] > 10:
+                        frame.vars[2][0] = 0        # restart reset counter
+                        frame.vars[1][0] = 1        # reset text display number
+
+                    f = WyeCore.World.libDict["TestLib"].delay.start(frame.SP)
+                    f.params = [[60]]
+                    frame.SP.append(f)
 
                     frame.PC += 1
 
-                case 2:
-
-
+                case 3:
+                    # NOTE: don't pop stack here 'cause prev case pops stack first think.  Reuse that pop
+                    #frame.SP.pop()      # remove waitclick frame
+                    frame.PC -= 1       # go back a step
                     pass
 
         def keyFunc(keyName):
