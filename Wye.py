@@ -21,7 +21,7 @@ class Wye:
     #
     #############################################
 
-    # base class for static python objects (libs, objs, verbs)
+    # base class for static python objects (libList, objs, verbs)
     # Only reason for existing it to complain if someone tries to instantiate the object!!
     class staticObj:
         def __init__(self):
@@ -32,7 +32,7 @@ class Wye:
 # Unused
 #
 #   # convenient library holder
-#   class libs:
+#   class libList:
 #       pass
 
     # Constants
@@ -53,6 +53,22 @@ class Wye:
                     return "FAIL"
                 case _:
                     return "--unknown status value " + str(status) + "--"
+
+    class pType:
+        REQUIRED = 0        # default
+        OPTIONAL = 1
+
+        def tostring(pType):
+            match(pType):
+                case Wye.status.REQUIRED:
+                    return "REQUIRED"
+
+                case Wye.status.OPTIONAL:
+                    return "OPTIONAL"
+
+                case _:
+                    return "unknown pType "+str(pType)
+
 
     # verb modes
     class mode:

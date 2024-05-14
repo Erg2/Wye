@@ -3,7 +3,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
 from panda3d.core import *
-from WyeUI import WyeUI
+
 import inspect
 #import partial
 import traceback
@@ -14,7 +14,7 @@ from direct.showbase import Audio3DManager
 '''
 Wye Overview
 
-Libs and words are static
+libList and words are static
 All refs to a lib or word within a lib or word have to be 3rd person (lib.word.xxx) rather than self.
 because there is no instantiated class so there is no self.
 All context (local variables, parameters passed in, and PC (which is used by multi-pass word) is in the 
@@ -451,38 +451,6 @@ frame.params[0][0] = frame.params[1][0] + frame.params[2][0]
                     frame.status = Wye.status.CONTINUE
 
                 case _:
-                    frame.status = Wye.status.SUCCESS
-
-    # Wait for click on graphic object
-    # caller puts wyeTag of graphic obj in waitClick param[0]
-    # caller pushes waitClick frame on stack and updates frame.PC to state it wants to go to when click happens
-    # When click event happens, caller must pop waitClick frame off stack
-    class waitClick:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
-        varDescr = ()
-        codeDescr = ()
-        code = None
-
-        def start(stack):
-            return Wye.codeFrame(TestLib.waitClick, stack)
-
-        # TODO - make multi-cycle
-        def run(frame):
-            #print('execute spin, params', frame.params, ' vars', frame.vars)
-            match frame.PC:
-                case 0:
-                    #print("waitClick: set event for tag ", frame.params[0][0])
-                    WyeCore.World.setEventCallback("click", frame.params[0][0], frame)
-                    frame.PC += 1
-                    #print("waitClick: waiting for event 'click' tag ", frame.params[0][0])
-                case 1:
-                    pass
-                    # do nothing until event occurs
-
-                case 2:
-                    #print("waitClick: click on obj ", frame.eventData[0])
                     frame.status = Wye.status.SUCCESS
 
 
@@ -927,7 +895,7 @@ def f():
     case 3:
         frame.SP.pop()  # remove delay frame
         
-        f = TestLib.waitClick.start(frame.SP)       # create multi-cycle verb (frame default status is CONTINUE
+        f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)       # create multi-cycle verb (frame default status is CONTINUE
         f.params = [frame.vars[2],]    # pass tag to waitClick
         frame.SP.append(f)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
         #print("tstObj2 Obj waiting for click")

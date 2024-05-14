@@ -15,7 +15,7 @@ import sys, os
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
 # Building it this way prevents the editor from accidentally writing over the core because
-# editing one of the contained libs will create an external file for just that lib.
+# editing one of the contained libList will create an external file for just that lib.
 # Incorporating the result requires external editing.
 
 # used to make unique ids
@@ -31,6 +31,9 @@ class WyeCore(Wye.staticObj):
 
     lastIsNothingToRun = False
 
+    class libs:
+        placeholder = ""
+
     class World(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.type.NONE
@@ -41,7 +44,7 @@ class WyeCore(Wye.staticObj):
         keyHandler = None
 
         # universe specific
-        libs = []
+        libList = []
         libDict = {}  # lib name -> lib lookup dictionary
         startObjs = []
         objs = []  # runnable objects
@@ -51,9 +54,6 @@ class WyeCore(Wye.staticObj):
         repeatEventCallbackDict = {}      # dictionary of repeated event frames
 
         displayCycleCount = 0           # DEBUG
-
-        class libObj:
-            placeholder = ""
 
         class KeyHandler(DirectObject):
             def __init__(self):
@@ -148,20 +148,20 @@ class WyeCore(Wye.staticObj):
                 text.setCardDecal(True)
 #
                 # create (unpickable) 3d text object
-                text3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
-                #text3d = NodePath(text)
-                text3d.reparentTo(render)
-                text3d.setScale(.2, .2, .2)
-                text3d.setPos(-.5, 17, 4)
-                text3d.setTwoSided(True)
+                Label3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
+                #Label3d = NodePath(text)
+                Label3d.reparentTo(render)
+                Label3d.setScale(.2, .2, .2)
+                Label3d.setPos(-.5, 17, 4)
+                Label3d.setTwoSided(True)
 
-                text3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
+                Label3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
                 #######
 
                 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 snd = audio3d.loadSfx("WyePop.wav")
-                audio3d.attachSoundToObject(snd, text3d)
+                audio3d.attachSoundToObject(snd, Label3d)
                 #######
 
             #    cd = CardMaker("a card")
@@ -206,9 +206,6 @@ class WyeCore(Wye.staticObj):
 
                 ###########
 
-
-
-
                 # put rep exec obj on obj list
                 WyeCore.World.objs.append(WyeCore.World.repeatEventExecObj)
                 stk = []
@@ -219,12 +216,12 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.objStacks.append(stk)
 
                 # build list of known libraries (so can ref them during build)
-                for lib in WyeCore.World.libs:
+                for lib in WyeCore.World.libList:
                     WyeCore.World.libDict[lib.__name__] = lib     # build lib name -> lib lookup dictionary
-                    setattr(WyeCore.World.libObj, lib.__name__, lib)
+                    setattr(WyeCore.libs, lib.__name__, lib)
 
                 # build all libraries - compiles any Wye code words in each lib
-                for lib in WyeCore.World.libs:
+                for lib in WyeCore.World.libList:
                     #print("Build ", lib)
                     lib.build()         # build all Wye code segments in code words
 
@@ -249,9 +246,9 @@ class WyeCore(Wye.staticObj):
                 # create picker object
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
-                WyeCore.picker.makePickable(text3d)
+                WyeCore.picker.makePickable(Label3d)
                 tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
-                text3d.setTag("wyeTag", tag)
+                Label3d.setTag("wyeTag", tag)
             # run
             else:
                 WyeCore.World.displayCycleCount += 1
@@ -368,6 +365,42 @@ class WyeCore(Wye.staticObj):
             else:
                 print("Error: clearRepeatEventCallback failed to find frameTag '", frameTag,
                       "' in WyeCore.World.repeatEventCallbackDict")
+
+
+        # Wait for click on graphic object
+        # caller puts wyeTag of graphic obj in waitClick param[0]
+        # caller pushes waitClick frame on stack and updates frame.PC to state it wants to go to when click happens
+        # When click event happens, caller must pop waitClick frame off stack
+        class waitClick:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.type.NONE
+            paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("data", Wye.type.OBJECT, Wye.access.REFERENCE, ))
+            varDescr = ()
+            codeDescr = ()
+            code = None
+
+            def start(stack):
+                return Wye.codeFrame(WyeCore.World.waitClick, stack)
+
+            # TODO - make multi-cycle
+            def run(frame):
+                #print('execute spin, params', frame.params, ' vars', frame.vars)
+                match frame.PC:
+                    case 0:
+                        #print("waitClick: set event for tag ", frame.params[0][0])
+                        WyeCore.World.setEventCallback("click", frame.params[0][0], frame)
+                        frame.PC += 1
+                        #print("waitClick: waiting for event 'click' tag ", frame.params[0][0])
+                    case 1:
+                        pass
+                        # do nothing until event occurs
+
+                    case 2:
+                        #print("waitClick: click on obj ", frame.eventData[0])
+                        frame.status = Wye.status.SUCCESS
+
+
+
 
     ##########################
     # Picker code does odd stuff when included, figure out why
@@ -487,128 +520,6 @@ class WyeCore(Wye.staticObj):
                 #    print("No object under mouse")
             #else:
             #    print("Object picking disabled")
-
-    # 3d positioned clickable text
-    # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
-    # Changing the text requires regenerating the card and 3d node
-    class Text3d:
-        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
-            self.marginL = .1
-            self.marginR = .2
-            self.marginB = .1
-            self.marginT = .1
-            #
-            self.__genTextObj(text, color)
-            self.__genCardObj()
-            self.__gen3dTextObj((-.5, 17, 2), (.2, .2, .2), (0, 0, 0, 1))
-            # txtNode.setAlign(TextNode.ACenter)
-            # txtNode.setFrameColor(0, 0, 1, 1)
-            # txtNode.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
-
-        def setAlign(self, ctr):
-            self.text.setAlign(ctr)
-
-        # update the frame color
-        def setFrameColor(self, color):
-            self.text3d.setColor(color)
-
-        # update the margin spacing
-        def setFrameAsMargin(self, marginL, marginR, marginB, marginT):
-            self.marginL = marginL
-            self.marginR = marginR
-            self.marginB = marginB
-            self.marginT = marginT
-            self.__regen3d()
-
-        # changing the text requires regenerating the background card and the 3d node
-        def setText(self, text):
-            self.text.setText(text)
-            self.__regen3d()
-
-        def setPos(self, val):
-            self.text3d.setPos(val)
-
-        def setColor(self, val):
-            self.text3d.setColor(val)
-
-        def setScale(self, val):
-            self.text3d.setScale(val)
-
-        def setWordWrap(self):
-            return self.text.getWordwrap()
-
-        def getText(self):
-            return self.text.getText()
-
-        def getPos(self):
-            return self.text3d.getPos()
-
-        def getColor(self):
-            return self.text3d.getColor()
-
-        def getScale(self):
-            return self.text3d.getScale()
-
-        def getWordWrap(self):
-            return self.text.setWordwrap()
-
-        def getTag(self):
-            return self.text.name
-
-        def getAlign(self):
-            return self.text.getAlign()
-
-        def getFrameColor(self):
-            return self.text3d.getColor()
-
-        # update the margin spacing
-        def getFrameAsMargin(self):
-            return (self.marginL, self.marginR, self.marginB, self.marginT)
-
-        # rebuild card and path for updated text object
-        def __regen3d(self):
-            bg = self.text3d.getColor()
-            pos = self.text3d.getPos()
-            scale = self.text3d.getScale()
-            self.__genCardObj()                     # generate new card obj for updated text object
-            self.text3d.detachNode()                # detach 3d node path to old card
-            self.__gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
-
-        # internal rtn to gen text object with unique wyeTag name
-        def __genTextObj(self, text, color=(1,1,1,1)):
-            tag = "txt"+str(WyeCore.Utils.getId())
-            self.text = TextNode(tag)
-            self.text.setText(text)
-            self.text.setTextColor(color)
-
-        # internal rtn to gen 3d Card clickable background object
-        def __genCardObj(self):
-            #print("initial txtNode frame ", self.text.getFrameActual())
-            self.card = CardMaker("My Card")
-            frame = self.text.getFrameActual()
-            #print("frame", frame)
-            frame[0] -= self.marginL
-            frame[1] += self.marginR
-            frame[2] -= self.marginB
-            frame[3] += self.marginT
-            #print("initial adjusted frame", frame)
-            self.card.setFrame(frame)
-
-        # internal rtn to generate 3d (path) object to position, etc. the text
-        def __gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
-            self.text3d = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
-            self.text3d.attachNewNode(self.text)
-            self.text3d.setEffect(DecalEffect.make())        # glue text onto card
-            self.text3d.reparentTo(render)
-            WyeCore.picker.makePickable(self.text3d)         # make selectable
-            self.text3d.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
-            self.text3d.setPos(pos)
-            self.text3d.setScale(scale)
-
-            self.text3d.setBillboardPointWorld(0.)           # always face the camera
-            self.text3d.setLightOff()                        # unaffected by world lighting
-            self.text3d.setColor(bg)
-
 
 
     # General utilities for world building
@@ -764,3 +675,4 @@ class WyeCore(Wye.staticObj):
                 code = compile(codeStr, "<string>", "exec")
                 #print("lib code string\n"+codeStr)  # DEBUG
                 exec(code, {"TestLib":libClass, "Wye":Wye, "WyeCore":WyeCore})
+

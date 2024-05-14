@@ -4,7 +4,7 @@
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task.TaskManagerGlobal import taskMgr   # needed to run world task in sync with panda3d
-from importlib.machinery import SourceFileLoader    # to load libs from files
+from importlib.machinery import SourceFileLoader    # to load libList from files
 from panda3d.core import *
 from direct.showbase.DirectObject import DirectObject
 #from pandac.PandaModules import *
@@ -17,8 +17,8 @@ import sys, os
 
 version = "0.2"
 
-libLoadList = []        # list of lib files from command line to load on start
-startObjList = []       # list of lib objs from command line to load on start
+libLoadList = ["WyeLib.py", "WyeUI.py"] # list of lib files to load on start.  libList on cmd line added to it
+startObjList = []           # list of lib objs from command line to load on start
 
 ############
 
@@ -43,7 +43,7 @@ loadPrcFileData('', 'show-frame-rate-meter #t')    # turn on frame rate display
 loadPrcFileData('', 'window-title Wye V'+version)
 
 
-# if the user supplied a list of libs and or start objs
+# if the user supplied a list of libList and or start objs
 if len(sys.argv) > 1:
     for ix in range(1, len(sys.argv), 2):
         sw = sys.argv[ix]
@@ -56,7 +56,7 @@ if len(sys.argv) > 1:
                 #print("cmd line start obj ", val)
                 startObjList.append(val)
 else:
-    libLoadList = ["TestLib.py","TestLib2.py"]
+    libLoadList.extend(["TestLib.py","TestLib2.py"])
     startObjList = ["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2", "TestLib2.TestLib2.testObj3"]
 
 # import libraries
@@ -71,7 +71,7 @@ for libFile in libLoadList:
         # print("libModule ", libModule)
         libClass = getattr(libModule, libName)
         # print("libClass ", libClass)
-        WyeCore.World.libs.append(libClass)
+        WyeCore.World.libList.append(libClass)
         print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
     except:
         print("Failed to load class ", libName, " From file ", path)
@@ -81,7 +81,7 @@ for libFile in libLoadList:
 # load starting objects
 WyeCore.World.startObjs.extend(startObjList)
 
-print("Loaded libs:", WyeCore.World.libs)
+print("Loaded libList:", WyeCore.World.libList)
 print("start objs:", WyeCore.World.startObjs)
 
 pandaRunner = PandaRunner()
