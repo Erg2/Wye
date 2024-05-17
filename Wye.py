@@ -75,6 +75,7 @@ class Wye:
         FUNCTION = "F"      # single cycle function that immediately returns a value of a predefined type (see type)
         SINGLE_CYCLE = "S"  # single cycle subroutine runs immediately and doesn't return a value
         MULTI_CYCLE = "M"   # multi-cycle subroutine that returns status (see above) on each cycle
+        PARALLEL = "P"      # parallel processing of parameters
         OBJECT = "O"        # multi-cycle object that has a "runnable" test and returns status (above) on each cycle
 
         def tostring(mode):            # static print function
@@ -191,8 +192,8 @@ class Wye:
             # print("codeFrame for verb", verb, " verb.varDescr =", verb.varDescr, " vars =", self.vars)
 
     class parallelFrame(codeFrame): # used by any object with parallel execution (multiple stacks)
-        def __init__(self, verb):
-            super().__init__(verb)
+        def __init__(self, verb, stack):
+            super().__init__(verb, stack)
             self.stacks = []        # callee must fill in empty lists for appropriate number of stacks
 
     # object template class for editing new Wye objects

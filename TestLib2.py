@@ -40,13 +40,10 @@ class TestLib2:
 
     class testObj3():
         mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.INTEGER
+        dataType = Wye.type.NONE
         paramDescr = ()    # gotta have a ret param
         #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
         varDescr = (("txtObj", Wye.type.OBJECT, None), ("val", Wye.type.INTEGER, 10), ("ct", Wye.type.INTEGER, 0))
-
-        class testObj3Callback:
-            pass
 
         def start(stack):
             return Wye.codeFrame(TestLib2.testObj3, stack)
@@ -68,12 +65,12 @@ class TestLib2:
                     print(WyeCore.Utils.paramsToString(f))
 
                     # put up 3d text
-                    txt = WyeCore.libs.WyeUI.Label3d("Text String 1", (1,0,0,1))
+                    txt = WyeCore.libs.WyeUI.label3d("Text String 1", (1,0,0,1), pos=(-.5,10,0), scale=(.2,.2,.2))
                     frame.vars[0][0] = txt
                     frame.PC += 1  # bump forward a step
 
                 case 1:
-                    print("testObj3 case 1")
+                    #print("testObj3 case 1")
                     # wait for click on 3d text
                     #lib = WyeCore.World.libDict["TestLib"]
                     f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE
@@ -84,8 +81,6 @@ class TestLib2:
 
                 case 2:
                     evtFrm = frame.SP.pop()      # remove waitclick or delay frame
-
-                    print()
 
                     #change text
                     txt = "Text String " + str(frame.vars[1][0])
@@ -98,7 +93,7 @@ class TestLib2:
                         frame.vars[2][0] = 0        # restart reset counter
                         frame.vars[1][0] = 1        # reset text display number
 
-                    f = WyeCore.World.libDict["TestLib"].delay.start(frame.SP)
+                    f = WyeCore.libs.WyeLib.delay.start(frame.SP)
                     f.params = [[60]]
                     frame.SP.append(f)
 
@@ -110,5 +105,116 @@ class TestLib2:
                     frame.PC -= 1       # go back a step
                     pass
 
-        def keyFunc(keyName):
-            print("keyFunc: key ", keyName)
+
+
+    class testPar():
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = ()    # gotta have a ret param
+        #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
+        varDescr = (("stack", Wye.type.OBJECT, [[],[]]), ("txtObj0", Wye.type.OBJECT, None), ("txtObj1", Wye.type.OBJECT, None),
+                    ("txtBuff", Wye.type.INTEGER, 10))
+
+        codeDescr = ()
+
+        code = '''
+def Stream0():
+    # code for first parallel path
+def Stream1():
+    # code for 2nd parallel path
+'''
+
+#        def build():
+#            return
+
+        def start(stack):
+            f = Wye.parallelFrame(TestLib2.testPar, stack)
+            f.stacks.extend([[], []])   # stacks for parallel processing
+
+            fS0 = Wye.codeFrame(TestLib2.testPar.singleStream, f.stacks[0])
+            fS0.vars = f.vars
+            fS0.params = f.params
+            fS0.run = TestLib2.testPar.Stream0
+            f.stacks[0].append(fS0)
+
+            fS1 = Wye.codeFrame(TestLib2.testPar.singleStream, f.stacks[1])
+            fS1.vars = f.vars
+            fS1.params = f.params
+            fS1.run = TestLib2.testPar.Stream0
+            f.stacks[1].append(fS1)
+
+            return f
+
+        def run(frame):
+            global base
+            global render
+
+            #print("testPar ", len(frame.stacks), " stacks")
+            dbgIx = 0
+            for stack in frame.stacks:
+                if len(stack) > 0:
+                    #print("testPar run stack ", dbgIx)
+                    f = stack[-1]
+                    if f.status == Wye.status.CONTINUE:
+                        f.verb.run(f)
+                    dbgIx += 1
+
+        def Stream0(frame):
+            match(frame.PC):
+                case 0:
+                    # put up 3d text
+                    txt = WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(2,10,2), scale=(.2,.2,.2))
+                    frame.vars[1][0] = txt
+                    frame.PC += 1  # bump forward a step
+
+                case 1:
+                    print("testObj3 case 1")
+                    # wait for click on 3d text
+                    # lib = WyeCore.World.libDict["TestLib"]
+                    f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE
+                    f.params = [[frame.vars[1][0].getTag()], ]  # pass tag to waitClick
+                    frame.SP.append(f)  # note2:  put its frame on the stack.  Execution will continue in spin until it's done
+                    # print("tstObj2 Obj waiting for click")
+                    frame.PC += 1  # bump forward a step - when event happens we'll pick up at the next case
+
+                case  2:
+                    evtFrm = frame.SP.pop()  # remove waitclick or delay frame
+                    frame.PC += 1
+                case 3:
+                    pass    # just hang out here for now
+
+        def Stream1(frame):
+            match(frame.PC):
+                case 0:
+                    # put up 3d text
+                    txt = WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(-2,10,2), scale=(.2,.2,.2))
+                    frame.vars[2][0] = txt
+                    frame.PC += 1  # bump forward a step
+
+                case 1:
+                    print("testObj3 case 1")
+                    # wait for click on 3d text
+                    # lib = WyeCore.World.libDict["TestLib"]
+                    f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE
+                    f.params = [[frame.vars[2][0].getTag()], ]  # pass tag to waitClick
+                    frame.SP.append(f)  # note2:  put its frame on the stack.  Execution will continue in spin until it's done
+                    # print("tstObj2 Obj waiting for click")
+                    frame.PC += 1  # bump forward a step - when event happens we'll pick up at the next case
+
+                case  2:
+                    evtFrm = frame.SP.pop()  # remove waitclick or delay frame
+                    frame.PC += 1
+                case 3:
+                    pass    # just hang out here for now
+
+
+        class singleStream:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.type.NONE
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                return Wye.codeFrame()
+            def run(frame):
+               frame.run(frame)

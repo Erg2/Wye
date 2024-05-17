@@ -20,23 +20,26 @@ class WyeUI(Wye.staticObj):
 
     # Build run_rt methods on each class
     def build():
-        print("Hi from WyeLib")
         WyeCore.Utils.buildLib(WyeUI)
 
 
     # 3d positioned clickable text
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
     # Changing the text requires regenerating the card and 3d node
-    class Label3d:
+    class label3d:
         def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
             self.marginL = .1
             self.marginR = .2
             self.marginB = .1
             self.marginT = .1
             #
+            self.text = None
+            self.card = None
+            self.label3d = None
+            #
             self.__genTextObj(text, color)
             self.__genCardObj()
-            self.__gen3dTextObj((-.5, 17, 2), (.2, .2, .2), (0, 0, 0, 1))
+            self.__gen3dTextObj(pos, scale, bg)
             # txtNode.setAlign(TextNode.ACenter)
             # txtNode.setFrameColor(0, 0, 1, 1)
             # txtNode.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
@@ -46,7 +49,7 @@ class WyeUI(Wye.staticObj):
 
         # update the frame color
         def setFrameColor(self, color):
-            self.Label3d.setColor(color)
+            self.label3d.setColor(color)
 
         # update the margin spacing
         def setFrameAsMargin(self, marginL, marginR, marginB, marginT):
@@ -62,13 +65,13 @@ class WyeUI(Wye.staticObj):
             self.__regen3d()
 
         def setPos(self, val):
-            self.Label3d.setPos(val)
+            self.label3d.setPos(val)
 
         def setColor(self, val):
-            self.Label3d.setColor(val)
+            self.label3d.setColor(val)
 
         def setScale(self, val):
-            self.Label3d.setScale(val)
+            self.label3d.setScale(val)
 
         def setWordWrap(self):
             return self.text.getWordwrap()
@@ -77,13 +80,13 @@ class WyeUI(Wye.staticObj):
             return self.text.getText()
 
         def getPos(self):
-            return self.Label3d.getPos()
+            return self.label3d.getPos()
 
         def getColor(self):
-            return self.Label3d.getColor()
+            return self.label3d.getColor()
 
         def getScale(self):
-            return self.Label3d.getScale()
+            return self.label3d.getScale()
 
         def getWordWrap(self):
             return self.text.setWordwrap()
@@ -95,7 +98,7 @@ class WyeUI(Wye.staticObj):
             return self.text.getAlign()
 
         def getFrameColor(self):
-            return self.Label3d.getColor()
+            return self.label3d.getColor()
 
         # update the margin spacing
         def getFrameAsMargin(self):
@@ -103,11 +106,11 @@ class WyeUI(Wye.staticObj):
 
         # rebuild card and path for updated text object
         def __regen3d(self):
-            bg = self.Label3d.getColor()
-            pos = self.Label3d.getPos()
-            scale = self.Label3d.getScale()
+            bg = self.label3d.getColor()
+            pos = self.label3d.getPos()
+            scale = self.label3d.getScale()
             self.__genCardObj()                     # generate new card obj for updated text object
-            self.Label3d.detachNode()                # detach 3d node path to old card
+            self.label3d.detachNode()                # detach 3d node path to old card
             self.__gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
 
         # internal rtn to gen text object with unique wyeTag name
@@ -132,16 +135,18 @@ class WyeUI(Wye.staticObj):
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def __gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
-            self.Label3d = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
-            self.Label3d.attachNewNode(self.text)
-            self.Label3d.setEffect(DecalEffect.make())        # glue text onto card
-            self.Label3d.reparentTo(render)
-            WyeCore.picker.makePickable(self.Label3d)         # make selectable
-            self.Label3d.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
-            self.Label3d.setPos(pos)
-            self.Label3d.setScale(scale)
+            global render
 
-            self.Label3d.setBillboardPointWorld(0.)           # always face the camera
-            self.Label3d.setLightOff()                        # unaffected by world lighting
-            self.Label3d.setColor(bg)
+            self.label3d = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
+            self.label3d.attachNewNode(self.text)
+            self.label3d.setEffect(DecalEffect.make())        # glue text onto card
+            self.label3d.reparentTo(render)
+            WyeCore.picker.makePickable(self.label3d)         # make selectable
+            self.label3d.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
+            self.label3d.setPos(pos)
+            self.label3d.setScale(scale)
+
+            self.label3d.setBillboardPointWorld(0.)           # always face the camera
+            self.label3d.setLightOff()                        # unaffected by world lighting
+            self.label3d.setColor(bg)
 

@@ -148,20 +148,20 @@ class WyeCore(Wye.staticObj):
                 text.setCardDecal(True)
 #
                 # create (unpickable) 3d text object
-                Label3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
-                #Label3d = NodePath(text)
-                Label3d.reparentTo(render)
-                Label3d.setScale(.2, .2, .2)
-                Label3d.setPos(-.5, 17, 4)
-                Label3d.setTwoSided(True)
+                label3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
+                #label3d = NodePath(text)
+                label3d.reparentTo(render)
+                label3d.setScale(.2, .2, .2)
+                label3d.setPos(-.5, 17, 4)
+                label3d.setTwoSided(True)
 
-                Label3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
+                label3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
                 #######
 
                 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 snd = audio3d.loadSfx("WyePop.wav")
-                audio3d.attachSoundToObject(snd, Label3d)
+                audio3d.attachSoundToObject(snd, label3d)
                 #######
 
             #    cd = CardMaker("a card")
@@ -246,9 +246,9 @@ class WyeCore(Wye.staticObj):
                 # create picker object
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
-                WyeCore.picker.makePickable(Label3d)
+                WyeCore.picker.makePickable(label3d)
                 tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
-                Label3d.setTag("wyeTag", tag)
+                label3d.setTag("wyeTag", tag)
             # run
             else:
                 WyeCore.World.displayCycleCount += 1
@@ -403,10 +403,9 @@ class WyeCore(Wye.staticObj):
 
 
     ##########################
-    # Picker code does odd stuff when included, figure out why
+    # 3d object Picker
     ##########################
 
-    # For reasons I don't fully understand, Picker deriving from DirectObject causes
     class Picker(DirectObject):
         def __init__(self, app):
             # setup collision stuff
@@ -561,32 +560,72 @@ class WyeCore(Wye.staticObj):
             path = path.replace("\\","/")
             #path = path.replace(":","")
 
-            print("  return path '"+ path+"'")
+            #print("  return path '"+ path+"'")
             return path
 
         # Take a Wye code description tuple and return compilable Python code
         # Resulting code pushes all the params to the frame, then runs the function
         # Recurses to handle nested param tuples
-        def parseWyeTuple(wyeTuple, fNum):
+        # caseNumList is a list so the number can be incremented
+        def parseWyeTuple(wyeTuple, fNum, caseNumList):
             # Wye verb
-            if wyeTuple[0]:
-                eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
-                codeText = eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
-                #print("parseWyeTuple: 1 codeText =", codeText[0])
-                if len(wyeTuple) > 1:
-                    for paramIx in range(1, len(wyeTuple)):
-                        #print("parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple)-1)
-                        paramDesc = wyeTuple[paramIx]
-                        #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
-                        if paramDesc[0] is None:        # constant/var (leaf node)
-                            #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
-                            codeText += eff+".params.append(" + paramDesc[1] + ")\n"
-                            #print("parseWyeTuple: 3 codeText=", codeText[0])
-                        else:                           # recurse to parse nested code tuple
-                            codeText += WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + \
-                                        eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
-                codeText += wyeTuple[0] + ".run("+eff+")\nif "+eff+".status == Wye.status.FAIL:\n frame.status = "+eff+".status\n return\n"
-            # Raw Python code
+            if wyeTuple[0]:     # if there is a verb here
+                # find tuple library entry
+                tupleParts = wyeTuple[0].split('.')
+                libName = tupleParts[-2]
+                verbName = tupleParts[-1]
+                lib = WyeCore.World.libDict[libName]
+                verbClass = getattr(lib, verbName)
+
+                # generate appropriate code for verb mode
+                match(verbClass.mode):
+                    case Wye.mode.SINGLE_CYCLE:
+                        eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
+                        codeText = "  "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                        #print("parseWyeTuple: 1 codeText =", codeText[0])
+                        if len(wyeTuple) > 1:
+                            for paramIx in range(1, len(wyeTuple)):
+                                #print("parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple)-1)
+                                paramDesc = wyeTuple[paramIx]
+                                #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
+                                if paramDesc[0] is None:        # constant/var (leaf node)
+                                    #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
+                                    codeText += "  "+eff+".params.append(" + paramDesc[1] + ")\n"
+                                    #print("parseWyeTuple: 3 codeText=", codeText[0])
+                                else:                           # recurse to parse nested code tuple
+                                    codeText += WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList) + "\n" + \
+                                                "  "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
+                        codeText += "  "+wyeTuple[0] + ".run("+eff+")\n  if "+eff+".status == Wye.status.FAIL:\n   frame.status = "+eff+".status\n   return\n"
+
+                    case Wye.mode.MULTI_CYCLE:
+                        eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
+                        codeText = "  "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                        #print("parseWyeTuple: 1 codeText =", codeText[0])
+                        if len(wyeTuple) > 1:
+                            for paramIx in range(1, len(wyeTuple)):
+                                #print("parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple)-1)
+                                paramDesc = wyeTuple[paramIx]
+                                #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
+                                if paramDesc[0] is None:        # constant/var (leaf node)
+                                    #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
+                                    codeText += "  "+eff+".params.append(" + paramDesc[1] + ")\n"
+                                    #print("parseWyeTuple: 3 codeText=", codeText[0])
+                                else:                           # recurse to parse nested code tuple
+                                    codeText += WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + \
+                                                "  "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
+                        codeText += "  frame.SP.append("+eff+")\n  frame.PC +=1\n case "+str(caseNumList[0])+":\n"
+                        caseNumList[0] += 1
+                        codeText += " case "+str(caseNumList[0]+":\n  "+eff+"=frame.SP.pop()\n")
+                        codeText += "  if "+eff+".status == Wye.status.FAIL:\n   frame.status = "+eff+".status\n   return\n"
+                        pass
+
+                    case Wye.mode.PARALLEL:
+                        pass
+
+                    case _:
+                        print("INTERNAL ERROR: WyeCore parseWyeTuple verb ",wyeTuple," has unknown mode ",verbClass.mode)
+
+            # Tuple has no verb, just raw Python code
             else:
                 if len(wyeTuple) > 1:
                     codeText = wyeTuple[1]+"\n"
@@ -597,7 +636,8 @@ class WyeCore(Wye.staticObj):
 
         # parse list of Wye tuples to text
         def buildCodeText(codeDescr):
-            codeText = [""]
+            caseNumList = [0]  # list so called fn can increment it.  This is Python pass by reference
+            codeText = ["match(frame.PC):\n case 0:\n"]
             #print("WyeCore buildCodeText compile code=", codeDescr)
 
             for wyeTuple in codeDescr:
@@ -608,7 +648,7 @@ class WyeCore(Wye.staticObj):
 #                print('WyeCore buildCodeText caller:', callrframe[1][3])
 #                print("WyeCore buildCodeText: compile tuple=", wyeTuple)
                 # DEBUG end ^^^^
-                codeText[0] += WyeCore.Utils.parseWyeTuple(wyeTuple, 0)
+                codeText[0] += WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
 
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return codeText[0]
@@ -645,13 +685,14 @@ class WyeCore(Wye.staticObj):
 
         def buildLib(libClass):
             libName = libClass.__name__
-            #print("WyeCore buildLib: libNamess", libName)
+            #print("WyeCore buildLib: libName", libName)
             codeStr = "class "+libName+"_rt:\n"
             # check all the classes in the lib for build functions.
             doBuild = False     # assume nothing to do
             for attr in dir(libClass):
                 val = getattr(libClass, attr)
                 if inspect.isclass(val):
+                    #print("build class ",attr," in lib ",libName)
                     # if the class has a build function then call it to generate Python source code for its runtime method
                     if hasattr(val, "build"):
                         doBuild = True
@@ -672,7 +713,7 @@ class WyeCore(Wye.staticObj):
             # if there's code to build for the library, doit
             if doBuild:
                 codeStr += 'setattr('+libName+', "'+libName+'_rt", '+libName+'_rt)\n'
+                print("lib code string\n" + codeStr)  # DEBUG
                 code = compile(codeStr, "<string>", "exec")
-                #print("lib code string\n"+codeStr)  # DEBUG
                 exec(code, {"TestLib":libClass, "Wye":Wye, "WyeCore":WyeCore})
 

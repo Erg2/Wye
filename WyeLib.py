@@ -19,10 +19,9 @@ class WyeLib:
 
     # Build run_rt methods on each class
     def build():
-        print("Hi from WyeLib")
         WyeCore.Utils.buildLib(WyeLib)
 
-
+    # placeholder for future dev
     class parallelFailAny:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.type.NONE
@@ -32,13 +31,52 @@ class WyeLib:
         code = None
 
         def start(stack):
-            f = Wye.codeFrame(WyeLib.parallelFailAny, stack)
+            f = Wye.codeFrame(WyeCore.libs.WyeLib.parallelFailAny, stack)
 
             return f
 
         # TODO - make multi-cycle
         def run(frame):
             pass
+
+
+    # placeholder for future dev
+    class parallelFailAny:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = ()
+        varDescr = (("stackList", Wye.type.OBJECT, []),)        # stacks used by parallel words
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            f = Wye.codeFrame(WyeCore.libs.WyeLib.parallelFailAny, stack)
+
+            return f
+
+        # TODO - make multi-cycle
+        def run(frame):
+            pass
+
+
+    # placeholder for future dev
+    class parallelExecOne:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = ()
+        varDescr = (("stackList", Wye.type.OBJECT, []),)        # stacks used by parallel words
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            f = Wye.codeFrame(WyeCore.libs.WyeLib.parallelFailAny, stack)
+
+            return f
+
+        # TODO - make multi-cycle
+        def run(frame):
+            pass
+
 
     # Wait for click on graphic object
     # caller puts wyeTag of graphic obj in waitClick param[0]
@@ -71,4 +109,208 @@ class WyeLib:
                 case 2:
                     #print("waitClick: click on obj ", frame.eventData[0])
                     frame.status = Wye.status.SUCCESS
+
+
+
+    # load Panda3d model
+    # p0 - returned model
+    # p1 - file path to model
+    class loadModel:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("loadedObject", Wye.type.OBJECT, Wye.access.REFERENCE),
+                      ("objectFileName", Wye.type.STRING, Wye.access.REFERENCE))
+        varDescr = ()
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.loadModel, stack)
+
+        def run(frame):
+            global base
+
+            filepath = frame.params[1][0]
+            # full path minus drive letter
+            path = WyeCore.Utils.resourcePath(filepath)[2:]
+            #path = filepath
+            #path = "C/Users/ebeng/PycharmProjects/Wye/flyer_01.glb"
+            try:
+                #print("Load graphic model ", path)
+                model = base.loader.loadModel(path)
+                if model:
+                    frame.params[0][0] = model
+                else:
+                    frame.status = Wye.status.FAIL
+            except:
+                print("WyeLib loadModel: failed to load model ", path)
+                frame.status = Wye.status.FAIL
+                #ex = sys.exception()
+                #traceback.print_exception(ex)
+
+    # make this object pickable
+    class makePickable:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.INTEGER
+        paramDescr = (("returnId", Wye.type.INTEGER, 0), ("loadedObject", Wye.type.OBJECT, Wye.access.REFERENCE))
+        varDescr = ()
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.makePickable, stack)
+
+        def run(frame):
+            global base
+
+            obj = frame.params[1][0]
+            # if the object already has a tag, we're done, return it
+            tag = obj.getTag('wyeTag')
+            # if no tag, then create one and make the object pickable
+            if not tag:
+                tag = "wyeTag" + str(WyeCore.Utils.getId())     # generate unique tag for object
+                obj.setTag("wyeTag", tag)
+            WyeCore.picker.makePickable(obj)                # just be sure it's pickable
+            frame.params[0][0] = tag                        # return tag to caller
+
+    class showModel:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("object", Wye.type.OBJECT, Wye.access.REFERENCE),
+                      ("position", Wye.type.FLOAT_LIST, Wye.access.REFERENCE),
+                      ("scale", Wye.type.FLOAT_LIST, Wye.access.REFERENCE),
+                     # ("tag", Wye.type.STRING, Wye.access.REFERENCE)
+                      )
+        varDescr = ()
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.showModel, stack)
+
+        def run(frame):
+            global render     # panda3d base
+
+            model = frame.params[0][0]
+            pos = frame.params[1]
+            scale = frame.params[2]
+            #tag = frame.params[3][0]
+            #print("showModel pos ", pos, " scale ", scale) #, " tag ", tag)
+            model.reparentTo(render)
+            model.setScale(scale[0], scale[1], scale[2])
+            model.setPos(pos[0], pos[1], pos[2])
+            #model.setTag('wyeTag', tag)
+
+    # set model pos
+    class setObjPos:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),
+                    ("posVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE))
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setObjPos, stack)
+
+        def run(frame):
+            #print("setObjPos run: params ", frame.params)
+            gObj = frame.params[0][0]
+            vec = frame.params[1]
+            #print("setObjPos set obj", gObj, "to", vec)
+            gObj.setPos(vec[0], vec[1], vec[2])
+
+    # set object to given angle
+    class setObjAngle:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("angle", Wye.type.FLOAT_LIST, [0,0,0]))
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setObjAngle, stack)
+
+        # TODO - make multi-cycle
+        def run(frame):
+            #print('execute setObjAngle, params', frame.params, ' vars', frame.vars)
+
+            gObj = frame.params[0][0]
+            vec = frame.params[1]
+
+            #hpr = frame.params[0][0].getHpr()
+            #print("Current HPR ", hpr)
+
+            #print("setObjAngle obj", gObj, "to", vec)
+            gObj.setHpr(vec[0], vec[1], vec[2])
+
+            hpr = frame.params[0][0].getHpr()
+            #print("New HPR ", hpr)
+
+
+    # set object to given color (r,g,b,a, values 0..1.0)
+    class setObjColor:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("color", Wye.type.FLOAT_LIST, [0,0,0,0]))
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setObjColor, stack)
+
+        def run(frame):
+            gObj = frame.params[0][0]
+            color = frame.params[1]
+            #print("setColor obj", gObj, "to", color)
+            gObj.setColor(color[0], color[1], color[2], color[3])
+
+
+
+    # set object wityh material to given color (r,g,b,a, values 0..1.0)
+    class setObjMaterialColor:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("color", Wye.type.FLOAT_LIST, [0,0,0,0]))
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setObjMaterialColor, stack)
+
+        def run(frame):
+            gObj = frame.params[0][0]
+            color = frame.params[1]
+            #print("setMaterialColor obj", gObj, "to", color)
+            mat = Material()
+            mat.setShininess(5.0)  # Make this material shiny
+            mat.setAmbient((color[0], color[1], color[2], color[3]))  # Make this material blue
+            mat.setDiffuse((color[0], color[1], color[2], color[3]))  # Make this material blue
+            gObj.setMaterial(mat, 1)
+
+
+    class delay:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.type.NONE
+        paramDescr = (("startCt", Wye.type.INTEGER),)
+        varDescr = (("delayCt", Wye.type.INTEGER, 0),)
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.delay, stack)
+
+        # TODO - make multi-cycle
+        def run(frame):
+            match frame.PC:
+                case 0:
+                    #print('execute delay, params', frame.params, ' vars', frame.vars)
+                    frame.vars[0][0] = frame.params[0][0]   # set start count
+                    frame.PC += 1
+
+                case 1:
+                    if frame.vars[0][0] > 0:
+                        frame.vars[0][0] -= 1
+                    else:
+                        #print("delay done")
+                        frame.status = Wye.status.SUCCESS
+
 

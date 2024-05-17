@@ -55,9 +55,11 @@ if len(sys.argv) > 1:
             case "-o":
                 #print("cmd line start obj ", val)
                 startObjList.append(val)
+
+# No parameters, load default libs and start default objs
 else:
-    libLoadList.extend(["TestLib.py","TestLib2.py"])
-    startObjList = ["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2", "TestLib2.TestLib2.testObj3"]
+    libLoadList.extend(["TestLib.py", "TestLib2.py"])
+    startObjList = ["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2", "TestLib2.TestLib2.testObj3", "TestLib2.TestLib2.testPar"]
 
 # import libraries
 for libFile in libLoadList:
@@ -72,7 +74,7 @@ for libFile in libLoadList:
         libClass = getattr(libModule, libName)
         # print("libClass ", libClass)
         WyeCore.World.libList.append(libClass)
-        print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
+        #print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
     except:
         print("Failed to load class ", libName, " From file ", path)
         ex = sys.exception()
@@ -81,8 +83,8 @@ for libFile in libLoadList:
 # load starting objects
 WyeCore.World.startObjs.extend(startObjList)
 
-print("Loaded libList:", WyeCore.World.libList)
-print("start objs:", WyeCore.World.startObjs)
+#print("Loaded libList:", WyeCore.World.libList)
+#print("start objs:", WyeCore.World.startObjs)
 
 pandaRunner = PandaRunner()
 #print("Started, now run")
