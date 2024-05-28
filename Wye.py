@@ -70,29 +70,50 @@ class Wye:
                     return "unknown pType "+str(pType)
 
 
+    # Wye dType - verb, object, function verb
+    class cType:
+        FUNCTION = "F"      # Function that immediately returns a value of given dType (see dType)
+        OBJECT = "O"        # multi-cycle object that has a "runnable" test and returns status (above) on each cycle
+        VERB = "V"          # regular verb (default)
+        
+        def tostring(val):            # static print function
+            match(val):
+                case Wye.mode.FUNCTION:
+                    return "FUNCTION"
+                case Wye.mode.OBJECT:
+                    return "OBJECT"
+                case Wye.mode.VERB:
+                    return "VERB"
+
+                case _:
+                    return "--unknown cType value " + str(val) + "--"
+            
     # verb modes
     class mode:
-        FUNCTION = "F"      # single cycle function that immediately returns a value of a predefined type (see type)
         SINGLE_CYCLE = "S"  # single cycle subroutine runs immediately and doesn't return a value
         MULTI_CYCLE = "M"   # multi-cycle subroutine that returns status (see above) on each cycle
         PARALLEL = "P"      # parallel processing of parameters
-        OBJECT = "O"        # multi-cycle object that has a "runnable" test and returns status (above) on each cycle
+
 
         def tostring(mode):            # static print function
             match(mode):
-                case Wye.mode.FUNCTION:
-                    return "FUNCTION"
+                case Wye.mode.PARALLEL:
+                    return "PARALLEL"
                 case Wye.mode.SINGLE_CYCLE:
                     return "SINGLE_CYCLE"
                 case Wye.mode.MULTI_CYCLE:
                     return "MULTI_CYCLE"
-                case Wye.mode.OBJECT:
-                    return "OBJECT"
                 case _:
                     return "--unknown mode value " + str(mode) + "--"
 
+    # parallel completion rquirement
+    class parType:
+        FIRST_FAIL = "F"        # done when any fails or all succeed
+        FIRST_SUCCESS = "S"     # done when any succeeds or all fail
+        FIRST_ANY = "A"         # done on first non-CONTINUE (i.e don on succeed or fail)
+
     # Data types
-    class type:
+    class dType:
         NONE = "Z"
         ANY = "A"
         NUMBER = "N"
@@ -111,39 +132,39 @@ class Wye:
 
         def tostring(dataType):            # static print function
             match(dataType):
-                case Wye.type.NONE:
+                case Wye.dType.NONE:
                     return "NONE"
-                case Wye.type.ANY:
+                case Wye.dType.ANY:
                     return "ANY"
-                case Wye.type.NUMBER:
+                case Wye.dType.NUMBER:
                     return "NUMBER"
-                case Wye.type.INTEGER:
+                case Wye.dType.INTEGER:
                     return "INTEGER"
-                case Wye.type.FLOAT:
+                case Wye.dType.FLOAT:
                     return "FLOAT"
-                case Wye.type.BOOL:
+                case Wye.dType.BOOL:
                     return "BOOL"
-                case Wye.type.OBJECT:
+                case Wye.dType.OBJECT:
                     return "OBJECT"
-                case Wye.type.STRING:
+                case Wye.dType.STRING:
                     return "STRING"
-                case Wye.type.ANY_LIST:
+                case Wye.dType.ANY_LIST:
                     return "NUMBER_LIST"
-                case Wye.type.ANY_LIST:
+                case Wye.dType.ANY_LIST:
                     return "NUMBER_LIST"
-                case Wye.type.INTEGER_LIST:
+                case Wye.dType.INTEGER_LIST:
                     return "INTEGER_LIST"
-                case Wye.type.FLOAT_LIST:
+                case Wye.dType.FLOAT_LIST:
                     return "FLOAT_LIST"
-                case Wye.type.BOOL_LIST:
+                case Wye.dType.BOOL_LIST:
                     return "BOOL_LIST"
-                case Wye.type.OBJECT_LIST:
+                case Wye.dType.OBJECT_LIST:
                     return "OBJECT_LIST"
-                case Wye.type.STRING_LIST:
+                case Wye.dType.STRING_LIST:
                     return "STRING_LIST"
 
                 case _:
-                    return "--unknown data type value " + str(dataType) + "--"
+                    return "--unknown data dType value " + str(dataType) + "--"
 
     # parameter access (how parameter is passed)
     class access:
@@ -153,11 +174,11 @@ class Wye:
 
         def tostring(access):            # static print function
             match(access):
-                case Wye.type.VALUE:
+                case Wye.dType.VALUE:
                     return "VALUE"
-                case Wye.type.REFERENCE:
+                case Wye.dType.REFERENCE:
                     return "REFERENCE"
-                #case Wye.type.OUT:
+                #case Wye.dType.OUT:
                 #    return "OUT"
                 case _:
                     return "--unknown access value " + str(access) + "--"
@@ -181,10 +202,18 @@ class Wye:
         def __init__(self, verb, stack):
             self.verb = verb    # the static verb that we're holding runtime data for
             self.params = []  # caller will fill in params
-            self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
+            try:
+                if not hasattr(verb, "varDescr"):
+                    print("verb",verb, " has no varDescr")
+                #self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
+                self.vars = []
+                for varDef in verb.varDescr:
+                    self.vars.append([varDef[2]])
+            except:
+                print("ERROR Wye codeFrame: verb ",verb.__name__," varDef failed to parse:", varDef, " in ", verb.varDescr)
             self.PC = 0         # used by async verbs to track location in executing code
             self.SP = stack      # points to stack list this frame is on
-            if verb.mode == Wye.mode.MULTI_CYCLE or verb.mode == Wye.mode.OBJECT:
+            if verb.mode == Wye.mode.MULTI_CYCLE or verb.mode == Wye.mode.PARALLEL:
                 self.status = Wye.status.CONTINUE   # assume stay running
             else:
                 self.status = Wye.status.SUCCESS    # assume good things
@@ -203,7 +232,7 @@ class Wye:
         def __init__(self):
             self.library = None
             self.mode = Wye.mode.OBJECT
-            self.type = ""
+            self.dType = ""
             self.params = ()
             self.vars = ()
 

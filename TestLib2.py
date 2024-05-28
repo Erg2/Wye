@@ -20,11 +20,12 @@ class TestLib2:
 
     # Build run_rt methods on each class
     def build():
+        #print("build TestLib2")
         WyeCore.Utils.buildLib(TestLib2)
 
     class crossCall:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
+        dataType = Wye.dType.NONE
         paramDescr = ()     # takes arbitrary number of params.  Need to create a way to specify that
         varDescr = ()
 
@@ -40,10 +41,10 @@ class TestLib2:
 
     class testObj3():
         mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = ()    # gotta have a ret param
-        #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
-        varDescr = (("txtObj", Wye.type.OBJECT, None), ("val", Wye.type.INTEGER, 10), ("ct", Wye.type.INTEGER, 0))
+        dataType = Wye.dType.NONE
+        paramDescr = ()
+        #varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
+        varDescr = (("txtObj", Wye.dType.OBJECT, None), ("val", Wye.dType.INTEGER, 10), ("ct", Wye.dType.INTEGER, 0))
 
         def start(stack):
             return Wye.codeFrame(TestLib2.testObj3, stack)
@@ -55,8 +56,7 @@ class TestLib2:
             match frame.PC:
                 case 0:
                     # cross call to other library
-                    ll = WyeCore.libs
-                    f = ll.TestLib.wyePrint.start(frame.SP)
+                    f = WyeCore.libs.TestLib.wyePrint.start(frame.SP)
                     f.params = [["The number two="], [2], [". Cool, huh?"]]
                     f.verb.run(f)   # demonstrate wyePrint verb
 
@@ -106,15 +106,16 @@ class TestLib2:
                     pass
 
 
-
-    class testPar():
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = ()    # gotta have a ret param
-        #varDescr = (("a", Wye.type.NUMBER, 0), ("b", Wye.type.NUMBER, 1), ("c", Wye.type.NUMBER, 2))
-        varDescr = (("stack", Wye.type.OBJECT, [[],[]]), ("txtObj0", Wye.type.OBJECT, None), ("txtObj1", Wye.type.OBJECT, None),
-                    ("txtBuff", Wye.type.INTEGER, 10))
-
+    # test concept of parallel processing
+    # note: Wye compiled parallel code will put stream functions on library
+    class testPar:
+        mode = Wye.mode.PARALLEL
+        dataType = Wye.dType.NONE
+        paramDescr = ()
+        #varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
+        varDescr = (("stack", Wye.dType.OBJECT, [[],[]]), ("txtObj0", Wye.dType.OBJECT, None), ("txtObj1", Wye.dType.OBJECT, None),
+                    ("txtBuff", Wye.dType.INTEGER, 10))
+        parType = Wye.parType.FIRST_SUCCESS
         codeDescr = ()
 
         code = '''
@@ -131,13 +132,13 @@ def Stream1():
             f = Wye.parallelFrame(TestLib2.testPar, stack)
             f.stacks.extend([[], []])   # stacks for parallel processing
 
-            fS0 = Wye.codeFrame(TestLib2.testPar.singleStream, f.stacks[0])
+            fS0 = Wye.codeFrame(WyeCore.libs.WyeLib.ParallelStream, f.stacks[0])
             fS0.vars = f.vars
             fS0.params = f.params
             fS0.run = TestLib2.testPar.Stream0
             f.stacks[0].append(fS0)
 
-            fS1 = Wye.codeFrame(TestLib2.testPar.singleStream, f.stacks[1])
+            fS1 = Wye.codeFrame(WyeCore.libs.WyeLib.ParallelStream, f.stacks[1])
             fS1.vars = f.vars
             fS1.params = f.params
             fS1.run = TestLib2.testPar.Stream0
@@ -168,7 +169,7 @@ def Stream1():
                     frame.PC += 1  # bump forward a step
 
                 case 1:
-                    print("testObj3 case 1")
+                    print("testObj3 Stream 0 case 1")
                     # wait for click on 3d text
                     # lib = WyeCore.World.libDict["TestLib"]
                     f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE
@@ -192,7 +193,7 @@ def Stream1():
                     frame.PC += 1  # bump forward a step
 
                 case 1:
-                    print("testObj3 case 1")
+                    print("testObj3 Stream 1 case 1")
                     # wait for click on 3d text
                     # lib = WyeCore.World.libDict["TestLib"]
                     f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE
@@ -208,13 +209,153 @@ def Stream1():
                     pass    # just hang out here for now
 
 
-        class singleStream:
-            mode = Wye.mode.MULTI_CYCLE
-            dataType = Wye.type.NONE
-            paramDescr = ()
-            varDescr = ()
+    class testCompiledPar:
+        mode = Wye.mode.PARALLEL
+        parType = Wye.parType.FIRST_FAIL
+        dataType = Wye.dType.NONE
+        paramDescr = ()
+        varDescr = (("obj", Wye.dType.OBJECT, None),                # 0
+                    ("file", Wye.dType.STRING, "flyer_01.glb"),     # 1
+                    ("objId", Wye.dType.STRING, ""),                # 2
+                    ("obj", Wye.dType.OBJECT, None),                # 3
+                    ("file", Wye.dType.STRING, "flyer_01.glb"),     # 4
+                    ("objId", Wye.dType.STRING, ""))                # 5
 
-            def start(stack):
-                return Wye.codeFrame()
-            def run(frame):
-               frame.run(frame)
+        # two parallel code streams
+        codeDescr = (
+            (
+                ("WyeCore.libs.WyeLib.loadModel", (None, "frame.vars[0]"), (None, "frame.vars[1]")),
+                ("WyeCore.libs.WyeLib.makePickable", (None, "frame.vars[2]"), (None, 'frame.vars[0]')),
+                ("WyeCore.libs.WyeLib.showModel", (None, "frame.vars[0]"),
+                 ("WyeCore.libs.TestLib.makeVec", (None, "[]"), (None, "[-1]"), (None, "[15]"), (None, "[0]")),
+                 (None, "(.5,.5,.5)")),
+                ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[0]"), (None, "(1,0,0,1)")),
+                (None, "print('TestCompiledPar stream0 zero Wait For Click case ',frame.PC)"),
+                ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[2]")),
+                (None, "print('TestCompiledPar stream0 one case ',frame.PC)"),
+                ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[0]"), (None, "(0,1,0,1)")),
+                (None, "print('TestCompiledPar stream0 set color (0,1,0,1)')"),
+            ),
+            (
+                ("WyeCore.libs.WyeLib.loadModel", (None, "frame.vars[3]"), (None, "frame.vars[4]")),
+                ("WyeCore.libs.WyeLib.makePickable", (None, "frame.vars[5]"), (None, 'frame.vars[3]')),
+                ("WyeCore.libs.WyeLib.showModel", (None, "frame.vars[3]"), (None, "(1,15,0)"), (None, "(.5,.5,.5)")),
+                ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(1,1,0,1)")),
+                ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[5]")),
+                (None, "print('TestCompiledPar stream1 one case ',frame.PC)"),
+                ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(0,1,0,1)")),
+                (None, "print('TestCompiledPar stream1 set color (0,1,0,1)')"),
+            )
+                     )
+        code = None
+
+        def build():
+            #print("Testlib2 build testCompiledPar")
+            return WyeCore.Utils.buildParallelText("TestLib2", "testCompiledPar", TestLib2.testCompiledPar.codeDescr)
+
+        def start(stack):
+            return TestLib2.TestLib2_rt.testCompiledPar_start_rt(stack)        # run compiled start code to build parallel code stacks
+
+        def run(frame):
+            WyeCore.Utils.runParallelCode(frame)      # run compiled run code
+
+
+    class testMCycle:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = ()
+        varDescr = (("obj", Wye.dType.OBJECT, None),                # 0
+                    ("file", Wye.dType.STRING, "flyer_01.glb"),     # 1
+                    ("objId", Wye.dType.STRING, ""),                # 2
+                    ("obj", Wye.dType.OBJECT, None),                # 3
+                    ("file", Wye.dType.STRING, "flyer_01.glb"),     # 4
+                    ("objId", Wye.dType.STRING, ""))                # 5
+        codeDescr = (
+            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.vars[0]"), (None, "frame.vars[1]")),
+            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.vars[2]"), (None, 'frame.vars[0]')),
+            ("WyeCore.libs.WyeLib.showModel", (None, "frame.vars[0]"),
+                                              #(None, "(1,15,0)"),
+                                              ("WyeCore.libs.TestLib.makeVec", (None, "[]"), (None, "[-1]"),(None, "[15]"),(None, "[0]")),
+                                              (None, "(.5,.5,.5)")),
+
+            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.vars[3]"), (None, "frame.vars[4]")),
+            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.vars[5]"), (None, 'frame.vars[3]')),
+            ("WyeCore.libs.WyeLib.showModel", (None, "frame.vars[3]"), (None, "(1,15,0)"), (None, "(.5,.5,.5)")),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(0,1,1,1)")),
+
+            (None, "print('testMCycle zero Wait For Click case ',frame.PC)"),
+            ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[2]")),
+            (None, "print('testMCycle one case ',frame.PC)"),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[0]"), (None, "(0,1,0,1)")),
+
+            (None, "print('testMCycle vars=',frame.vars)"),
+
+            ("TestLib2.testMCycle2", (None, "frame.vars[3]"), (None, "frame.vars[5]")),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(0,1,0,1)"))
+        )
+
+        def build():
+            #print("Testlib2 build testMCycle")
+            return WyeCore.Utils.buildCodeText("testMCycle", TestLib2.testMCycle.codeDescr)
+
+        def start(stack):
+            return Wye.codeFrame(TestLib2.testMCycle, stack)
+
+        def run(frame):
+            TestLib2.TestLib2_rt.testMCycle_run_rt(frame)
+
+
+    class testMCycle2:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE), ("objTag", Wye.dType.STRING, Wye.access.REFERENCE))
+        varDescr = (("obj", Wye.dType.OBJECT, None),                # 0
+                    ("file", Wye.dType.STRING, "flyer_01.glb"),     # 1
+                    ("objId", Wye.dType.STRING, ""))                # 2
+        codeDescr = (
+            (None, "frame.vars[0][0] = frame.params[0][0]"),
+            (None, "frame.vars[2][0] = frame.params[1][0]"),
+            (None, "print('testMCycle2 tag=',frame.vars[2][0])"),
+
+            (None, "print('testMCycle2 zero Wait For Click case ',frame.PC)"),
+            ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[2]")),
+            (None, "print('testMCycle2 one case ',frame.PC)"),
+        )
+
+        def build():
+            #print("Testlib2 build testMCycle2")
+            return WyeCore.Utils.buildCodeText("testMCycle2", TestLib2.testMCycle2.codeDescr)
+
+        def start(stack):
+            return Wye.codeFrame(TestLib2.testMCycle2, stack)
+
+        def run(frame):
+            TestLib2.TestLib2_rt.testMCycle2_run_rt(frame)
+
+
+    class testMObj:
+        cType = Wye.cType.OBJECT
+        autoStart = True
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = () 
+        varDescr = ()
+
+        def start(stack):
+            return Wye.codeFrame(TestLib2.testMObj, stack)
+        
+        def run(frame):
+            match(frame.PC):
+                case 0:
+                    print("testMObj: case 0, Start TestCompiledPar, get frame")
+                    f = TestLib2.testCompiledPar.start(frame.SP)
+                    frame.SP.append(f)
+                    frame.PC += 1
+                case 1:
+                    print("testMObj: case 1, TestCompiledPar runtime done, pop frame")
+                    f = frame.SP.pop()
+
+                    frame.PC += 1
+                case 2:
+                    pass
+                    

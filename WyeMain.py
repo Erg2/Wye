@@ -59,7 +59,7 @@ if len(sys.argv) > 1:
 # No parameters, load default libs and start default objs
 else:
     libLoadList.extend(["TestLib.py", "TestLib2.py"])
-    startObjList = ["TestLib.TestLib.testObj", "TestLib.TestLib.testObj2", "TestLib2.TestLib2.testObj3", "TestLib2.TestLib2.testPar"]
+    startObjList = [] #"TestLib.TestLib.testObj", "TestLib.TestLib.testObj2", "TestLib2.TestLib2.testObj3", "TestLib2.TestLib2.testPar"]
 
 # import libraries
 for libFile in libLoadList:

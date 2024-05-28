@@ -21,62 +21,6 @@ class WyeLib:
     def build():
         WyeCore.Utils.buildLib(WyeLib)
 
-    # placeholder for future dev
-    class parallelFailAny:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = ()
-        varDescr = (("stackList", Wye.type.OBJECT, []),)        # stacks used by parallel words
-        codeDescr = ()
-        code = None
-
-        def start(stack):
-            f = Wye.codeFrame(WyeCore.libs.WyeLib.parallelFailAny, stack)
-
-            return f
-
-        # TODO - make multi-cycle
-        def run(frame):
-            pass
-
-
-    # placeholder for future dev
-    class parallelFailAny:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = ()
-        varDescr = (("stackList", Wye.type.OBJECT, []),)        # stacks used by parallel words
-        codeDescr = ()
-        code = None
-
-        def start(stack):
-            f = Wye.codeFrame(WyeCore.libs.WyeLib.parallelFailAny, stack)
-
-            return f
-
-        # TODO - make multi-cycle
-        def run(frame):
-            pass
-
-
-    # placeholder for future dev
-    class parallelExecOne:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = ()
-        varDescr = (("stackList", Wye.type.OBJECT, []),)        # stacks used by parallel words
-        codeDescr = ()
-        code = None
-
-        def start(stack):
-            f = Wye.codeFrame(WyeCore.libs.WyeLib.parallelFailAny, stack)
-
-            return f
-
-        # TODO - make multi-cycle
-        def run(frame):
-            pass
-
 
     # Wait for click on graphic object
     # caller puts wyeTag of graphic obj in waitClick param[0]
@@ -84,8 +28,8 @@ class WyeLib:
     # When click event happens, caller must pop waitClick frame off stack
     class waitClick:
         mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),)
+        dataType = Wye.dType.NONE
+        paramDescr = (("tag", Wye.dType.STRING, Wye.access.REFERENCE),)
         varDescr = ()
         codeDescr = ()
         code = None
@@ -107,7 +51,7 @@ class WyeLib:
                     # do nothing until event occurs
 
                 case 2:
-                    #print("waitClick: click on obj ", frame.eventData[0])
+                    #print("waitClick: clicked on obj ", frame.eventData[0])
                     frame.status = Wye.status.SUCCESS
 
 
@@ -117,9 +61,9 @@ class WyeLib:
     # p1 - file path to model
     class loadModel:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("loadedObject", Wye.type.OBJECT, Wye.access.REFERENCE),
-                      ("objectFileName", Wye.type.STRING, Wye.access.REFERENCE))
+        dataType = Wye.dType.NONE
+        paramDescr = (("loadedObject", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("objectFileName", Wye.dType.STRING, Wye.access.REFERENCE))
         varDescr = ()
 
         def start(stack):
@@ -149,8 +93,8 @@ class WyeLib:
     # make this object pickable
     class makePickable:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.INTEGER
-        paramDescr = (("returnId", Wye.type.INTEGER, 0), ("loadedObject", Wye.type.OBJECT, Wye.access.REFERENCE))
+        dataType = Wye.dType.INTEGER
+        paramDescr = (("returnId", Wye.dType.STRING, 0), ("loadedObject", Wye.dType.OBJECT, Wye.access.REFERENCE))
         varDescr = ()
 
         def start(stack):
@@ -171,11 +115,11 @@ class WyeLib:
 
     class showModel:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("object", Wye.type.OBJECT, Wye.access.REFERENCE),
-                      ("position", Wye.type.FLOAT_LIST, Wye.access.REFERENCE),
-                      ("scale", Wye.type.FLOAT_LIST, Wye.access.REFERENCE),
-                     # ("tag", Wye.type.STRING, Wye.access.REFERENCE)
+        dataType = Wye.dType.NONE
+        paramDescr = (("object", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE),
+                      ("scale", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE),
+                     # ("tag", Wye.dType.STRING, Wye.access.REFERENCE)
                       )
         varDescr = ()
 
@@ -198,9 +142,9 @@ class WyeLib:
     # set model pos
     class setObjPos:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),
-                    ("posVec", Wye.type.INTEGER_LIST, Wye.access.REFERENCE))
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                    ("posVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -218,8 +162,8 @@ class WyeLib:
     # set object to given angle
     class setObjAngle:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("angle", Wye.type.FLOAT_LIST, [0,0,0]))
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),("angle", Wye.dType.FLOAT_LIST, [0,0,0]))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -247,8 +191,8 @@ class WyeLib:
     # set object to given color (r,g,b,a, values 0..1.0)
     class setObjColor:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("color", Wye.type.FLOAT_LIST, [0,0,0,0]))
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),("color", Wye.dType.FLOAT_LIST, [0,0,0,0]))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -267,8 +211,8 @@ class WyeLib:
     # set object wityh material to given color (r,g,b,a, values 0..1.0)
     class setObjMaterialColor:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE),("color", Wye.type.FLOAT_LIST, [0,0,0,0]))
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),("color", Wye.dType.FLOAT_LIST, [0,0,0,0]))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -289,9 +233,9 @@ class WyeLib:
 
     class delay:
         mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.type.NONE
-        paramDescr = (("startCt", Wye.type.INTEGER),)
-        varDescr = (("delayCt", Wye.type.INTEGER, 0),)
+        dataType = Wye.dType.NONE
+        paramDescr = (("startCt", Wye.dType.INTEGER),)
+        varDescr = (("delayCt", Wye.dType.INTEGER, 0),)
         codeDescr = ()
         code = None
 

@@ -26,6 +26,8 @@ class WyeCore(Wye.staticObj):
     # used to detect first call for initialization
     worldInitialized = False
 
+    debugListCode = True       # true to list Python code generated from Wye code
+
     picker = None   # object picker object
     base = None     # panda3d base - set by application
 
@@ -36,7 +38,7 @@ class WyeCore(Wye.staticObj):
 
     class World(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.type.NONE
+        dataType = Wye.dType.NONE
         paramDescr = ()
         varDescr = ()
         codeDescr = ()
@@ -66,7 +68,7 @@ class WyeCore(Wye.staticObj):
         # list of independent frames running until they succeed/fail
         class repeatEventExecObj:
             mode = Wye.mode.MULTI_CYCLE
-            dataType = Wye.type.NONE
+            dataType = Wye.dType.NONE
             paramDescr = ()
             varDescr = ()
 
@@ -162,42 +164,6 @@ class WyeCore(Wye.staticObj):
                 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 snd = audio3d.loadSfx("WyePop.wav")
                 audio3d.attachSoundToObject(snd, label3d)
-                #######
-
-            #    cd = CardMaker("a card")
-            #    cd.setColor(1,0,0,1)
-            #    cd.setFrame(left=-1, right=1, bottom=-.5, top=.5)
-            #    card = render.attachNewNode(cd.generate())
-            #    #card = NodePath(cd.generate())
-
-
-                #cd.setFromCollideMask(GeomNode.getDefaultCollideMask())
-
-                #quad = CollisionPolygon(Point3(0, 0, 0), Point3(0, 0, 1),
-                #                        Point3(0, 1, 1), Point3(0, 1, 0))
-
-            #    cs = CollisionSphere(0, 0, 0, 1)
-            #    cnodePath = card.attachNewNode(CollisionNode('cnode'))
-            #    cnodePath.node().addSolid(cs)
-            #    cnodePath.node().setFromCollideMask(GeomNode.getDefaultCollideMask())
-#
-            #    cnodePath.show()
-#
-            #    #cd = card.attachNewNode(text)
-            #    #card.setColor(1,0,0,1)
-            #    card.setEffect(DecalEffect.make())
-#
-                #tnp = NodePath(card)
-            #    card.reparentTo(render)
-            #    card.setScale(1, .2, .2)
-            #    card.setPos(0, 17, 4)
-            #    card.setTwoSided(True)
-
-#                text.setScale(scale[0], scale[1], scale[2])
-#                text.setPos(pos[0], pos[1], pos[2])
-                #textNodePath = aspect2d.attachNewNode(text.generate())
-                #textNodePath.setScale(0.07)
-
 
                 ###########
 
@@ -236,7 +202,6 @@ class WyeCore(Wye.staticObj):
                         stk = []
                         f = obj.start(stk)                                 # start the object and get its stack frame
                         stk.append(f)                                   # create a stack for it
-                        #f.SP = stk                                      # put ptr to stack in frame
                         f.params = [[0], ]                              # place to put return param
                         WyeCore.World.objStacks.append(stk)             # put obj's stack on list and put obj's frame on the stack
                     else:
@@ -272,11 +237,11 @@ class WyeCore(Wye.staticObj):
                         # run the frame furthest down the stack
                         frame = stack[-1]
                         #if frame:
-                        #    print("worldRunner stack # ", stackNum, " frame ", frame, " status ", WyeCore.Utils.statusToString(frame.status),
-                        #          " verb", frame.verb.__name__,
-                        #          " stackLen ", sLen, " stack ", WyeCore.Utils.stackToString(stack))
+                        #    print("worldRunner stack # ", stackNum, " verb", frame.verb.__name__,
+                        #          " status ", WyeCore.Utils.statusToString(frame.status),
+                        #          " stack:", WyeCore.Utils.stackToString(stack))
                         #else:
-                        #    print("worldRunner stack # ", stackNum, " frame = None")
+                        #    print("worldRunner ERROR: stack # ", stackNum, " depth", len(stack)," stack[-1] frame = None")
                         #    exit(1)
                         if frame.status == Wye.status.CONTINUE:
                             #print("worldRunner run: stack ", stackNum, " verb", frame.verb.__name__, " PC ", frame.PC)
@@ -294,13 +259,12 @@ class WyeCore(Wye.staticObj):
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
                                 stack.remove(frame)
+                    stackNum += 1
                 if ranNothing:
                     #print("ranNothing ", ranNothing, " and WyeCore.lastIsNothingToRun", WyeCore.lastIsNothingToRun)
                     if not WyeCore.lastIsNothingToRun:
                         WyeCore.lastIsNothingToRun = True
                         #print("worldRunner stack # ", stackNum, " nothing to run")
-
-                    stackNum += 1
 
             return Task.cont    # tell panda3d we want to run next frame too
 
@@ -365,39 +329,6 @@ class WyeCore(Wye.staticObj):
             else:
                 print("Error: clearRepeatEventCallback failed to find frameTag '", frameTag,
                       "' in WyeCore.World.repeatEventCallbackDict")
-
-
-        # Wait for click on graphic object
-        # caller puts wyeTag of graphic obj in waitClick param[0]
-        # caller pushes waitClick frame on stack and updates frame.PC to state it wants to go to when click happens
-        # When click event happens, caller must pop waitClick frame off stack
-        class waitClick:
-            mode = Wye.mode.MULTI_CYCLE
-            dataType = Wye.type.NONE
-            paramDescr = (("obj", Wye.type.OBJECT, Wye.access.REFERENCE), ("data", Wye.type.OBJECT, Wye.access.REFERENCE, ))
-            varDescr = ()
-            codeDescr = ()
-            code = None
-
-            def start(stack):
-                return Wye.codeFrame(WyeCore.World.waitClick, stack)
-
-            # TODO - make multi-cycle
-            def run(frame):
-                #print('execute spin, params', frame.params, ' vars', frame.vars)
-                match frame.PC:
-                    case 0:
-                        #print("waitClick: set event for tag ", frame.params[0][0])
-                        WyeCore.World.setEventCallback("click", frame.params[0][0], frame)
-                        frame.PC += 1
-                        #print("waitClick: waiting for event 'click' tag ", frame.params[0][0])
-                    case 1:
-                        pass
-                        # do nothing until event occurs
-
-                    case 2:
-                        #print("waitClick: click on obj ", frame.eventData[0])
-                        frame.status = Wye.status.SUCCESS
 
 
 
@@ -535,19 +466,6 @@ class WyeCore(Wye.staticObj):
             return _nextId
 
         def resourcePath(relative_path):
-    #        #print("WyeCore utils resourcePath: start '"+ relative_path+ "'")
-    #        if hasattr(sys, '_MEIPASS'):
-    #            pwd = os.path.dirname(sys.executable)
-    #            path = str(os.path.join(pwd, relative_path))
-    #            #print("executable path", path)
-    #        else:
-    #            pwd = os.path.abspath(".")
-    #            #print("os.path.abspath('.')", pwd)
-    #            path = str(os.path.join(pwd, relative_path))
-#
-    #        path = path.replace("\\","/")
-    #        #path = path.replace(":","")
-
             try:
                 # look for PyInstaller temp folder
                 base_path = sys._MEIPASS
@@ -565,23 +483,34 @@ class WyeCore(Wye.staticObj):
 
         # Take a Wye code description tuple and return compilable Python code
         # Resulting code pushes all the params to the frame, then runs the function
-        # Recurses to handle nested param tuples
+        # Recurses to parse nested param tuples
+        #
+        # Note: SINGLE_CYCLE and MULTI_CYCLE verb code is a list of verbs to process
+        #       PARALLEL verb code is a list of verbs to split into separate parallel
+        #       execution streams
         # caseNumList is a list so the number can be incremented
+        # fns is a list that parallel functions are added to
         def parseWyeTuple(wyeTuple, fNum, caseNumList):
+            codeText = ""
+            parFnText = ""
             # Wye verb
             if wyeTuple[0]:     # if there is a verb here
                 # find tuple library entry
+                #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
                 libName = tupleParts[-2]
                 verbName = tupleParts[-1]
                 lib = WyeCore.World.libDict[libName]
                 verbClass = getattr(lib, verbName)
 
+
                 # generate appropriate code for verb mode
+                #print("WyeCore parseWyeTuple verb '" + wyeTuple[0] + "' dType "+Wye.mode.tostring(verbClass.mode))
                 match(verbClass.mode):
+                    # single cycle verbs create code that runs immediately when called
                     case Wye.mode.SINGLE_CYCLE:
                         eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
-                        codeText = "  "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                        codeText += "    "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
                         #print("parseWyeTuple: 1 codeText =", codeText[0])
                         if len(wyeTuple) > 1:
                             for paramIx in range(1, len(wyeTuple)):
@@ -590,56 +519,70 @@ class WyeCore(Wye.staticObj):
                                 #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
                                 if paramDesc[0] is None:        # constant/var (leaf node)
                                     #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
-                                    codeText += "  "+eff+".params.append(" + paramDesc[1] + ")\n"
+                                    codeText += "    "+eff+".params.append(" + paramDesc[1] + ")\n"
                                     #print("parseWyeTuple: 3 codeText=", codeText[0])
                                 else:                           # recurse to parse nested code tuple
-                                    codeText += WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList) + "\n" + \
-                                                "  "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
-                        codeText += "  "+wyeTuple[0] + ".run("+eff+")\n  if "+eff+".status == Wye.status.FAIL:\n   frame.status = "+eff+".status\n   return\n"
+                                    cdTxt, fnTxt = WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList)
+                                    cdTxt += "    "+eff+".params.append(f"+str(fNum+1)+".params[0])\n"
+                                    codeText += cdTxt
+                                    parFnText += fnTxt
+                        codeText += "    "+wyeTuple[0] + ".run("+eff+")\n    if "+eff+".status == Wye.status.FAIL:\n"
+                        #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
+                        codeText += "     frame.status = "+eff+".status\n     return\n"
 
-                    case Wye.mode.MULTI_CYCLE:
+                    # multi-cycle verbs create code that pushes a new frame on the stack which will run on the next display cycle and
+                    # generates a new case statement in this verb that will pick up when the pushed frame completes
+                    # Note that a parallel verb is a multi-cycle verb from the caller's perspective
+                    case Wye.mode.MULTI_CYCLE | Wye.mode.PARALLEL:
+                        #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
                         eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
-                        codeText = "  "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                        codeText += "    "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
                         #print("parseWyeTuple: 1 codeText =", codeText[0])
                         if len(wyeTuple) > 1:
                             for paramIx in range(1, len(wyeTuple)):
-                                #print("parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple)-1)
+                                #print("parseWyeTuple: 2a verbIx ", verbIx, " out of ", len(wyeTuple)-1)
                                 paramDesc = wyeTuple[paramIx]
                                 #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
                                 if paramDesc[0] is None:        # constant/var (leaf node)
                                     #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
-                                    codeText += "  "+eff+".params.append(" + paramDesc[1] + ")\n"
+                                    codeText += "    "+eff+".params.append(" + paramDesc[1] + ")\n"
                                     #print("parseWyeTuple: 3 codeText=", codeText[0])
                                 else:                           # recurse to parse nested code tuple
-                                    codeText += WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1) + "\n" + \
-                                                "  "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
-                        codeText += "  frame.SP.append("+eff+")\n  frame.PC +=1\n case "+str(caseNumList[0])+":\n"
+                                    caseNumList[0] += 1
+                                    cdTxt, fnTxt = WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList)
+                                    cdTxt += "    "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
+                                    codeText += cdTxt
+                                    parFnText += fnTxt
+                        codeText += "    frame.SP.append("+eff+")\n    frame.PC +=1\n"
                         caseNumList[0] += 1
-                        codeText += " case "+str(caseNumList[0]+":\n  "+eff+"=frame.SP.pop()\n")
-                        codeText += "  if "+eff+".status == Wye.status.FAIL:\n   frame.status = "+eff+".status\n   return\n"
+                        #codeText += "   case "+str(caseNumList[0])+":\n    pass\n    "+eff+"=frame.SP.pop()\n"
+                        codeText += "   case "+str(caseNumList[0])+":\n    "+eff+"=frame.SP.pop()\n"
+                        codeText += "    if "+eff+".status == Wye.status.FAIL:\n"
+                        #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
+                        codeText += "     frame.status = "+eff+".status\n     return\n"
                         pass
 
-                    case Wye.mode.PARALLEL:
-                        pass
 
+                    # huh, wut?
                     case _:
                         print("INTERNAL ERROR: WyeCore parseWyeTuple verb ",wyeTuple," has unknown mode ",verbClass.mode)
 
             # Tuple has no verb, just raw Python code
             else:
                 if len(wyeTuple) > 1:
-                    codeText = wyeTuple[1]+"\n"
+                    codeText += "    "+wyeTuple[1]+"\n"
                 else:
                     print("Wye Warning - parseTuple null verb but no raw code supplied")
 
-            return codeText
+            return (codeText, parFnText)
 
-        # parse list of Wye tuples to text
-        def buildCodeText(codeDescr):
-            caseNumList = [0]  # list so called fn can increment it.  This is Python pass by reference
-            codeText = ["match(frame.PC):\n case 0:\n"]
-            #print("WyeCore buildCodeText compile code=", codeDescr)
-
+        # build run time code for a sequential verb (single or multiple cycle)
+        # parse verb's code (list of Wye tuples) into Python code text
+        def buildCodeText(name, codeDescr):
+            caseNumList = [0]   # list so called fn can increment it.  This is Python pass by reference
+            # define runtime method for this function
+            codeText = " def " + name + "_run_rt(frame):\n  match(frame.PC):\n   case 0:\n"
+            parFnText = ""
             for wyeTuple in codeDescr:
                 # DEBUG start vvv
 #                currFrame = inspect.currentframe()
@@ -648,10 +591,64 @@ class WyeCore(Wye.staticObj):
 #                print('WyeCore buildCodeText caller:', callrframe[1][3])
 #                print("WyeCore buildCodeText: compile tuple=", wyeTuple)
                 # DEBUG end ^^^^
-                codeText[0] += WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+                cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+                codeText += cdTxt
+                parFnText += parTxt
 
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
-            return codeText[0]
+            return (codeText, parFnText)
+
+
+        # build run time code for parallel function verb (always multi cycle)
+        # which includes the inline runtime runction and the separate
+        # parallel runtime functions
+        def buildParallelText(libName, verbName, streamDescr):
+
+            # build the parallel stream functions
+            parFnText = ""
+            nStreams = len(streamDescr)
+            # create run function for each stream
+            for ix in range(nStreams):
+                print("Create ",verbName," stream ", ix)
+                parFnText += " def " + verbName + "_stream" + str(ix) + "_run_rt(frame):\n"
+                #parFnText += "  print('" + verbName + "_stream" + str(ix) + "_run_rt')\n"
+                parFnText += "  match (frame.PC):\n"
+                parFnText += "   case 0:\n"
+                #parFnText += "    print('" + verbName + "_stream" + str(ix) + "_run_rt')\n"
+                caseNumList = [0]
+                codeDescr = streamDescr[ix]
+                streamTxt = ""
+                #dbgIx = 0
+                for wyeTuple in codeDescr:
+                    cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+                    streamTxt += cdTxt
+                    print("ctTxt=", cdTxt)
+                    #streamTxt += "    print('" + verbName + "_stream" + str(ix) + "_run_rt "+str(dbgIx)+"')\n"
+                    parFnText += parTxt
+                    #dbgIx += 1
+                parFnText += streamTxt
+
+            # define start last since it refs the run routines created above
+            # create start routine for this parallel verb
+            parFnText +=     " def " + verbName + "_start_rt(stack):\n"
+            #parFnText +=     "  print('" + verbName + "_start_rt')\n"
+            parFnText +=     "  f = Wye.parallelFrame(" + libName + "." + verbName + ",stack)\n"
+            for ix in range(nStreams):
+                parFnText += "  stk = []\n"     # stack for parallel stream
+                parFnText += "  fs = Wye.codeFrame(WyeCore.ParallelStream, stk)\n" # frame for stream
+                parFnText += "  fs.vars = f.vars\n"
+                parFnText += "  fs.params = f.params\n"
+                parFnText += "  fs.run = " + libName + "."  + libName + "_rt." + verbName + "_stream"+str(ix)+"_run_rt\n"
+                parFnText += "  stk.append(fs)\n"   # put stream frame at top of stream's stack
+                parFnText += "  f.stacks.append(stk)\n" # put stack on our frame's list of stream stacks
+
+            #parFnText +=     "  print('f.stacks', f.stacks)\n"
+            #parFnText +=     "  print('f.verb', f.verb)\n"
+            parFnText +=     "  return f\n"
+
+            # print("buildParallelText complete.  parFnText=\n"+parFnText[0])
+            return ("", parFnText)
+
 
         # return params concanated
         def paramsToString(frame):
@@ -673,47 +670,127 @@ class WyeCore(Wye.staticObj):
         # return stack in reverse order
         def stackToString(stack):
             sLen = len(stack)
-            stkStr = "\n stack len=" + str(len)
-            for ix in range(len-1, -1, -1):
-                frame = stack[ix]
-                stkStr += "\n  verb=" + frame.verb.__name__ + " status " + WyeCore.Utils.statusToString(frame.status) + \
-                          " params: " + str(frame.params)
+            stkStr = "\n stack len=" + str(sLen)
+            if sLen > 0:
+                for ix in range(sLen-1, -1, -1):
+                    frame = stack[ix]
+                    stkStr += "\n  ["+str(ix)+"] verb=" + frame.verb.__name__ + " status " + WyeCore.Utils.statusToString(frame.status) + \
+                              " PC=" + str(frame.PC)+ " params: " + str(frame.params)
             return stkStr
 
-
-
-
+        # build a runtime library function for this library
         def buildLib(libClass):
             libName = libClass.__name__
             #print("WyeCore buildLib: libName", libName)
             codeStr = "class "+libName+"_rt:\n"
-            # check all the classes in the lib for build functions.
+            parFnStr = ""     # any parallel stream fns to add to end of codeStr
+
+            # for any class in the lib that has a build function, call it to build class code into the lib runtime
             doBuild = False     # assume nothing to do
             for attr in dir(libClass):
-                val = getattr(libClass, attr)
-                if inspect.isclass(val):
-                    #print("build class ",attr," in lib ",libName)
-                    # if the class has a build function then call it to generate Python source code for its runtime method
-                    if hasattr(val, "build"):
-                        doBuild = True
-                        # print("class ", attr, " has build method.  attr is ", type(attr), " val is ", type(val))
-                        build = getattr(val, "build")  # get child's build method
-                        # call the build function to get the "run" code string
-                        bldStr = build()  # call it to get child's runtime code string(s)
-                        lines = bldStr.splitlines(True)  # break the code into lines
-                        # start runtime function for class
-                        codeStr += " def " + attr + "_run_rt(frame):\n"  # define a runtime method containing the code lines
-                        # DEBUG
-                        # codeStr += "   print('execute "+attr+"_run_rt(frame) params', frame.params, ' vars', frame.vars)\n"
-                        # End DEBUG
-                        for line in lines:  # put child's code in rt method at required indent
-                            if not line.isspace():
-                                codeStr += "   " + line
+                if attr != "__class__":     # avoid lib's self reference
+                    val = getattr(libClass, attr)
+                    if inspect.isclass(val):
+                        #print("build class ",attr," in lib ",libName)
+
+                        # if the class has a build function then call it to generate Python source code for its runtime method
+                        if hasattr(val, "build"):
+                            doBuild = True      # there is code to compile
+                            # print("class ", attr, " has build method.  attr is ", dType(attr), " val is ", dType(val))
+                            build = getattr(val, "build")  # get child's build method
+                            # call the build function to get the "run" code string
+                            cdStr, parStr = build()  # call it to get child's runtime code string(s)
+                            codeStr += cdStr
+                            parFnStr += parStr
+
+                        # if this class is an object that should be added to the world's active object list
+                        if hasattr(val, "autoStart"):
+                            classStr = libName + "." + libName + "." + val.__name__
+                            #print("Startobj: ", classStr)
+                            WyeCore.World.startObjs.append(classStr)
 
             # if there's code to build for the library, doit
             if doBuild:
+                codeStr += parFnStr         # tack parallel code on end of regular code
                 codeStr += 'setattr('+libName+', "'+libName+'_rt", '+libName+'_rt)\n'
-                print("lib code string\n" + codeStr)  # DEBUG
-                code = compile(codeStr, "<string>", "exec")
-                exec(code, {"TestLib":libClass, "Wye":Wye, "WyeCore":WyeCore})
 
+                # If debug compiled Wye code
+                if WyeCore.debugListCode:
+                    print("\nlib '"+libClass.__name__+"' code=")
+                    lnIx = 1
+                    for ln in codeStr.split('\n'):
+                        print("%2d "%lnIx, ln)
+                        lnIx += 1
+
+                code = compile(codeStr, "<string>", "exec")
+                exec(code, {libName:libClass, "Wye":Wye, "WyeCore":WyeCore})
+
+        # default runtime code for parallel verb
+        # handles logic for parTypes FIRST_FAIL, FIRST_SUCCESS, FIRST_ANY
+        def runParallelCode(frame):
+            dbgIx = 0
+            status = Wye.status.CONTINUE  # assume we'll keep going
+            foundFail = False
+            foundSuccess = False
+            foundContinue = False
+            # print("parallel run: frame.stacks:")
+            # for sIx in range(len(frame.stacks)):
+            #  print(" stack:", sIx, WyeCore.Utils.stackToString(frame.stacks[sIx]))
+            for stack in frame.stacks:
+                # print("testPar stack ", dbgIx, " depth", len(stack))
+                if len(stack) > 0:
+                    f = stack[-1]
+                    if f.status == Wye.status.CONTINUE:
+                        # print("testPar stack ", dbgIx," run ", f.verb.__name__)
+                        f.verb.run(f)
+                        foundContinue = True
+                    else:
+                        if len(stack) > 1:
+                            f = stack[-2]
+                            f.verb.run(f)
+                        else:
+                            if f.status == Wye.status.FAIL:
+                                foundFail = True
+                            elif f.status == Wye.status.SUCCESS:
+                                foundSuccess = True
+                            else:
+                                foundContinue = True
+                            if (foundFail and frame.verb.parType == Wye.parType.FIRST_FAIL) or \
+                                    (foundSuccess and frame.verb.parType == Wye.parType.FIRST_SUCCESS) or \
+                                    ((foundFail or foundSuccess) and frame.verb.parType == Wye.parType.FIRST_ANY):
+                                print("stream complete with status ", f.status)
+                                status = f.status
+                                break;
+                    dbgIx += 1
+            if status == Wye.status.CONTINUE and not foundContinue:  # all streams completed without triggering an exit
+                if frame.verb.parType == Wye.parType.FIRST_FAIL:
+                    print("stream done, all succeeded")
+                    status = Wye.status.SUCCESS  # FIRST_FAIL didn't have any failures - yay!
+                else:
+                    print("stream done, all failed")
+                    status = Wye.status.FAIL  # FIRST_SUCCESS and didn't have any successes - boo :-(
+            frame.status = status  # return whatever status we have
+
+
+    # Very special verb  used to execute parallel code
+    # A verb that uses mode=Wye.mode.PARALLEL has only ParallelStream verbs in its codeDescr
+    # All the parallel code is listed as nested code within each of the ParallelStream verbs
+    #
+    # At start time the parallel verb's param list and var list get copied to each child instance
+    # of ParallelStream.
+    #
+    # When code within a stream ref's the parent's var/params it indirectly ref's through the ParallelStream
+    # frame's param list to the parent parallel verb frame's list.
+    #
+    # Whether this is elegant or an ugly hack is moot 'cause that's how it works.  So there.
+    class ParallelStream:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        parallelStreamFlag = True       # flag this as special verb (consider alternative way to encode parallel stream headers)
+        paramDescr = ()
+        varDescr = ()
+
+        def start(stack):
+            return Wye.codeFrame()
+        def run(frame):
+           frame.run(frame)

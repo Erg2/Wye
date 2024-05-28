@@ -15,6 +15,7 @@ from direct.showbase import Audio3DManager
 
 from direct.showbase.DirectObject import DirectObject
 
+# 3d UI element library
 class WyeUI(Wye.staticObj):
 
 
