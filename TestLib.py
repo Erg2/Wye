@@ -477,6 +477,7 @@ class TestLib:
     # test compiled code
     class testObj:
         mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
         dataType = Wye.dType.INTEGER
         paramDescr = (("_ret_", Wye.dType.INTEGER, Wye.access.REFERENCE),)    # gotta have a ret param
         #varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
@@ -625,6 +626,7 @@ f()
 
     class testObj2:
         mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
         dataType = Wye.dType.INTEGER
         paramDescr = (("_ret_", Wye.dType.INTEGER, Wye.access.REFERENCE),)    # gotta have a ret param
         #varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))

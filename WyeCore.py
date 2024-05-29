@@ -580,20 +580,38 @@ class WyeCore(Wye.staticObj):
         # parse verb's code (list of Wye tuples) into Python code text
         def buildCodeText(name, codeDescr):
             caseNumList = [0]   # list so called fn can increment it.  This is Python pass by reference
+            labelDict = {}
             # define runtime method for this function
-            codeText = " def " + name + "_run_rt(frame):\n  match(frame.PC):\n   case 0:\n"
+            codeText = " def " + name + "_run_rt(frame):\n  match(frame.PC):\n   case 0:\n    pass\n"
             parFnText = ""
             for wyeTuple in codeDescr:
-                # DEBUG start vvv
-#                currFrame = inspect.currentframe()
-#                callrframe = inspect.getouterframes(currFrame, 2)
-#                print('WyeCore buildCodeText caller:', callrframe[1][3])
-#                print('WyeCore buildCodeText caller:', callrframe[1][3])
-#                print("WyeCore buildCodeText: compile tuple=", wyeTuple)
-                # DEBUG end ^^^^
-                cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
-                codeText += cdTxt
-                parFnText += parTxt
+                # label for branch/loop
+                if wyeTuple[0] == "Label":
+                    caseNumList[0] += 1
+                    labelDict[wyeTuple[1]] = caseNumList[0]
+                    codeText += "    frame.PC += 1\n   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
+                elif wyeTuple[0] == "If":
+                    codeText += "    if (" + wyeTuple[1] + "):\n"
+                    codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #Go To Label " + wyeTuple[2] + "\n"
+                    caseNumList[0] += 1
+                    codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
+                elif wyeTuple[0] == "GoTo":     # note: can only go to labels already seen
+                    codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #Go To Label " + wyeTuple[1] + "\n"
+                    caseNumList[0] += 1
+                    # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
+                    codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
+                else: # normal tuple
+                    # DEBUG start vvv
+                    #currFrame = inspect.currentframe()
+                    #callrframe = inspect.getouterframes(currFrame, 2)
+                    #print('WyeCore buildCodeText caller:', callrframe[1][3])
+                    #print('WyeCore buildCodeText caller:', callrframe[1][3])
+                    #print("WyeCore buildCodeText: compile tuple=", wyeTuple)
+                    # DEBUG end ^^^^
+                    cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+
+                    codeText += cdTxt
+                    parFnText += parTxt
 
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return (codeText, parFnText)
@@ -609,24 +627,46 @@ class WyeCore(Wye.staticObj):
             nStreams = len(streamDescr)
             # create run function for each stream
             for ix in range(nStreams):
+                # TODO - this looks identical to buildCodeText... call that instead?
                 print("Create ",verbName," stream ", ix)
-                parFnText += " def " + verbName + "_stream" + str(ix) + "_run_rt(frame):\n"
-                #parFnText += "  print('" + verbName + "_stream" + str(ix) + "_run_rt')\n"
-                parFnText += "  match (frame.PC):\n"
-                parFnText += "   case 0:\n"
-                #parFnText += "    print('" + verbName + "_stream" + str(ix) + "_run_rt')\n"
-                caseNumList = [0]
                 codeDescr = streamDescr[ix]
-                streamTxt = ""
-                #dbgIx = 0
-                for wyeTuple in codeDescr:
-                    cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
-                    streamTxt += cdTxt
-                    print("ctTxt=", cdTxt)
-                    #streamTxt += "    print('" + verbName + "_stream" + str(ix) + "_run_rt "+str(dbgIx)+"')\n"
-                    parFnText += parTxt
-                    #dbgIx += 1
-                parFnText += streamTxt
+                cd, fn = WyeCore.Utils.buildCodeText(verbName+"_stream" + str(ix), codeDescr)
+
+                #parFnText += " def " + verbName + "_stream" + str(ix) + "_run_rt(frame):\n"
+                ##parFnText += "  print('" + verbName + "_stream" + str(ix) + "_run_rt')\n"
+                #parFnText += "  match (frame.PC):\n"
+                #parFnText += "   case 0:\n"
+                ##parFnText += "    print('" + verbName + "_stream" + str(ix) + "_run_rt')\n"
+                #caseNumList = [0]
+                #codeText = ""
+                ##dbgIx = 0
+                #labelDict = {}
+                ## parse all top level tuples in this stream code block
+                #for wyeTuple in codeDescr:
+                #    if wyeTuple[0] == "Label":
+                #        caseNumList[0] += 1
+                #        labelDict[wyeTuple[1]] = caseNumList[0]
+                #        codeText += "    frame.PC += 1\n   case " + str(caseNumList[0]) + ": #Label "+ wyeTuple[1] + "\n    pass\n"
+                #    elif wyeTuple[0] == "If":
+                #        codeText += "    if (" + wyeTuple[1] + "):\n"
+                #        codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #Go To Label "+ wyeTuple[2] + "\n"
+                #        caseNumList[0] += 1
+                #        codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
+                #    elif wyeTuple[0] == "GoTo":
+                #        codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #Go To Label "+ wyeTuple[1] + "\n"
+                #        caseNumList[0] += 1
+                #        # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
+                #        codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
+                #    else:
+                #        cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+                #        codeText += cdTxt
+                #        #print("ctTxt=", cdTxt)
+                #        #codeText += "    print('" + verbName + "_stream" + str(ix) + "_run_rt "+str(dbgIx)+"')\n"
+                #        parFnText += parTxt
+                #        #dbgIx += 1
+                #parFnText += codeText
+
+                parFnText += cd + fn
 
             # define start last since it refs the run routines created above
             # create start routine for this parallel verb
@@ -733,21 +773,35 @@ class WyeCore(Wye.staticObj):
             foundFail = False
             foundSuccess = False
             foundContinue = False
-            # print("parallel run: frame.stacks:")
-            # for sIx in range(len(frame.stacks)):
-            #  print(" stack:", sIx, WyeCore.Utils.stackToString(frame.stacks[sIx]))
+
+            # DEBUG: print out all the stacks
+            #print("parallel run: frame.stacks:")
+            #for sIx in range(len(frame.stacks)):
+            # print(" stack:", sIx, WyeCore.Utils.stackToString(frame.stacks[sIx]))
+
+            # Each parallel code block has its own stack
+            # Loop through each stack until termination conditions met (based on parType for parallel verb)
             for stack in frame.stacks:
                 # print("testPar stack ", dbgIx, " depth", len(stack))
+
+                # if there's a frame, there's something to do
                 if len(stack) > 0:
-                    f = stack[-1]
+                    f = stack[-1]       # grab the bottom frame
+
+                    # if it's still running, run it again
                     if f.status == Wye.status.CONTINUE:
                         # print("testPar stack ", dbgIx," run ", f.verb.__name__)
                         f.verb.run(f)
                         foundContinue = True
+
+                    # if it terminated, if there's a parent, call it to clean up completed child
                     else:
+                        # have a parent
                         if len(stack) > 1:
                             f = stack[-2]
-                            f.verb.run(f)
+                            f.verb.run(f)   # run parent (will test child status, remove from stack, and continue)
+                            foundContinue = True    # technically we haven't checked, but we will next time
+                        # no parent, atatus not CONTINUE, we're done with stream
                         else:
                             if f.status == Wye.status.FAIL:
                                 foundFail = True
