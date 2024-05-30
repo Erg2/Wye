@@ -23,6 +23,20 @@ class WyeUI(Wye.staticObj):
     def build():
         WyeCore.Utils.buildLib(WyeUI)
 
+    def displayLib(lib, coord, elements=None):
+        yy =0
+        for attr in dir(lib):
+            if attr != "__class__":
+                val = getattr(lib, attr)
+                if inspect.isclass(val) and hasattr(val, "mode"):
+                    print("lib", lib.__name__, " verb", val.__name__)
+                    txt = lib.__name__ + "." +val.__name__
+                    txtCoord = list(coord)
+                    txtCoord[2] +=yy
+                    #elements.append(WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
+                    WyeCore.libs.WyeUI.label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=(.2, .2, .2))
+                    yy += -.25
+
 
     # 3d positioned clickable text
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
@@ -150,4 +164,5 @@ class WyeUI(Wye.staticObj):
             self.label3d.setBillboardPointWorld(0.)           # always face the camera
             self.label3d.setLightOff()                        # unaffected by world lighting
             self.label3d.setColor(bg)
+
 

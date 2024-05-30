@@ -590,7 +590,7 @@ class WyeCore(Wye.staticObj):
                     caseNumList[0] += 1
                     labelDict[wyeTuple[1]] = caseNumList[0]
                     codeText += "    frame.PC += 1\n   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
-                elif wyeTuple[0] == "If":
+                elif wyeTuple[0] == "IfGoTo":
                     codeText += "    if (" + wyeTuple[1] + "):\n"
                     codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #Go To Label " + wyeTuple[2] + "\n"
                     caseNumList[0] += 1

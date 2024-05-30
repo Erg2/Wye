@@ -257,4 +257,15 @@ class WyeLib:
                         #print("delay done")
                         frame.status = Wye.status.SUCCESS
 
+    # put value into var
+    class setEqual:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.ANY
+        paramDescr = (("var", Wye.dType.ANY, Wye.access.REFERENCE),("value", Wye.dType.ANY, None))
+        varDescr = ()
 
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setEqual, stack)
+
+        def run(frame):
+            frame.params[0][0] = frame.params[1][0]

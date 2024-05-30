@@ -189,7 +189,7 @@ def Stream1():
             match(frame.PC):
                 case 0:
                     # put up 3d text
-                    txt = WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(-2,10,2), scale=(.2,.2,.2))
+                    txt = WyeCore.libs.WyeUI.label3d("Stream 1", color=(0, 1, 0, 1), pos=(-2,10,2), scale=(.2,.2,.2))
                     frame.vars[2][0] = txt
                     frame.PC += 1  # bump forward a step
 
@@ -256,7 +256,7 @@ def Stream1():
                 ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(frame.vars[6][0]*(1/10),1,0,1)")),
                 (None, "print('TestCompiledPar stream1 set color', (frame.vars[6][0]*(1/10),1,0,1))"),
 
-                ("If", "frame.vars[6][0] < 10", "DoClick"),
+                ("IfGoTo", "frame.vars[6][0] < 10", "DoClick"),
                 ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(1,1,1,1)")),
                 (None, "print('TestCompiledPar stream1 done')"),
                 (None, "frame.vars[6][0] = 1"),

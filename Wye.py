@@ -236,35 +236,7 @@ class Wye:
             self.params = ()
             self.vars = ()
 
-# Unused
-#
-#    ###########################################################################
-#    #
-#    # Asynch callback context object
-#    #
-#    ###########################################################################
-#
-#    class WyeCallback:
-#        def __init__(self):
-#            pass
-#
-#    ###########################################################################
-#    #
-#    # Static Parameter Functions
-#    #
-#    ###########################################################################
-#
-#    # return the next item in the code stream
-#    def getImmediate(frame, code):
-#        frame.PC += 1
-#        return code[frame.PC]
-#
-#    def getParamConstVal(code):
-#        pass
-#
-#    def getParamVarArrayVal(code):
-#        pass
-#
+
     ###########################################################################
     # The main Wye class
     # -- not used, static class and all, right??? ---
