@@ -17,26 +17,53 @@ from direct.showbase.DirectObject import DirectObject
 
 # 3d UI element library
 class WyeUI(Wye.staticObj):
-
+    LINE_HEIGHT = .25
+    TEXT_SCALE = (.2,.2,.2)
+    TEXT_COLOR = (1,1,1,1)
 
     # Build run_rt methods on each class
     def build():
         WyeCore.Utils.buildLib(WyeUI)
 
+    def displayCommand(cmd, coord):
+        txt = str([str(e) for e in cmd])
+        txtCoord = list(coord)
+        # elements.append(WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
+        WyeCore.libs.WyeUI.label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]),
+                                   scale=(.2, .2, .2))
+        txtCoord[2] -= WyeUI.LINE_HEIGHT
+        return txtCoord[2]
+
+    def displayVerb(verb, coord):
+        cd = verb.codeDescr
+        xyz = list(coord)
+        xyz[0] += WyeUI.LINE_HEIGHT
+        if verb.mode == Wye.mode.PARALLEL:
+            for codeBlock in cd:
+                for cmd in codeBlock:
+                    xyz[2] = WyeUI.displayCommand(cmd, xyz)
+                xyz[2] -= WyeUI.LINE_HEIGHT
+        else:
+            for cmd in cd:
+                xyz[2] = WyeUI.displayCommand(cmd, xyz)
+
+        xyz[2] -= WyeUI.LINE_HEIGHT
+        return xyz[2]
+
     def displayLib(lib, coord, elements=None):
-        yy =0
+        txtCoord = list(coord)
         for attr in dir(lib):
             if attr != "__class__":
-                val = getattr(lib, attr)
-                if inspect.isclass(val) and hasattr(val, "mode"):
-                    print("lib", lib.__name__, " verb", val.__name__)
-                    txt = lib.__name__ + "." +val.__name__
-                    txtCoord = list(coord)
-                    txtCoord[2] +=yy
+                verb = getattr(lib, attr)
+                if inspect.isclass(verb) and hasattr(verb, "mode"):
+                    print("lib", lib.__name__, " verb", verb.__name__)
+                    txt = lib.__name__ + "." +verb.__name__
+                    txtCoord[2] -= WyeUI.LINE_HEIGHT
                     #elements.append(WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
-                    WyeCore.libs.WyeUI.label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=(.2, .2, .2))
-                    yy += -.25
-
+                    WyeCore.libs.WyeUI.label3d(txt, color=WyeUI.TEXT_COLOR, pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=WyeUI.TEXT_SCALE)
+                    txtCoord[2] -= WyeUI.LINE_HEIGHT
+                    if hasattr(verb, "codeDescr"):
+                        txtCoord[2] = WyeUI.displayVerb(verb, txtCoord)
 
     # 3d positioned clickable text
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position

@@ -40,7 +40,7 @@ class TestLib3:
         def run(frame):
             WyeCore.Utils.runParallelCode(frame)      # run compiled run code
 
-
+'''
     class doitButton:
         cType = Wye.cType.OBJECT
         autoStart = True
@@ -51,3 +51,4 @@ class TestLib3:
         varDescr = (("doitBtn", Wye.dType.OBJECT, None),                # 0
                     ("doitId", Wye.dType.STRING, ""),                   # 1
                     )
+'''
