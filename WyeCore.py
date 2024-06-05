@@ -150,20 +150,20 @@ class WyeCore(Wye.staticObj):
                 text.setCardDecal(True)
 #
                 # create (unpickable) 3d text object
-                label3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
-                #label3d = NodePath(text)
-                label3d.reparentTo(render)
-                label3d.setScale(.2, .2, .2)
-                label3d.setPos(-.5, 17, 4)
-                label3d.setTwoSided(True)
+                _label3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
+                #_label3d = NodePath(text)
+                _label3d.reparentTo(render)
+                _label3d.setScale(.2, .2, .2)
+                _label3d.setPos(-.5, 17, 4)
+                _label3d.setTwoSided(True)
 
-                label3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
+                _label3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
                 #######
 
                 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 snd = audio3d.loadSfx("WyePop.wav")
-                audio3d.attachSoundToObject(snd, label3d)
+                audio3d.attachSoundToObject(snd, _label3d)
 
                 ###########
 
@@ -211,9 +211,9 @@ class WyeCore(Wye.staticObj):
                 # create picker object
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
-                WyeCore.picker.makePickable(label3d)
+                WyeCore.picker.makePickable(_label3d)
                 tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
-                label3d.setTag("wyeTag", tag)
+                _label3d.setTag("wyeTag", tag)
             # run
             else:
                 WyeCore.World.displayCycleCount += 1

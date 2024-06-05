@@ -25,32 +25,33 @@ class WyeUI(Wye.staticObj):
     def build():
         WyeCore.Utils.buildLib(WyeUI)
 
-    def displayCommand(cmd, coord):
+    # utility functions for building 3d objects
+    def _displayCommand(cmd, coord):
         txt = str([str(e) for e in cmd])
         txtCoord = list(coord)
-        # elements.append(WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
-        WyeCore.libs.WyeUI.label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]),
+        # elements.append(WyeCore.libs.WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
+        WyeCore.libs.WyeUI._label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]),
                                    scale=(.2, .2, .2))
         txtCoord[2] -= WyeUI.LINE_HEIGHT
         return txtCoord[2]
 
-    def displayVerb(verb, coord):
+    def _displayVerb(verb, coord):
         cd = verb.codeDescr
         xyz = list(coord)
         xyz[0] += WyeUI.LINE_HEIGHT
         if verb.mode == Wye.mode.PARALLEL:
             for codeBlock in cd:
                 for cmd in codeBlock:
-                    xyz[2] = WyeUI.displayCommand(cmd, xyz)
+                    xyz[2] = WyeUI._displayCommand(cmd, xyz)
                 xyz[2] -= WyeUI.LINE_HEIGHT
         else:
             for cmd in cd:
-                xyz[2] = WyeUI.displayCommand(cmd, xyz)
+                xyz[2] = WyeUI._displayCommand(cmd, xyz)
 
         xyz[2] -= WyeUI.LINE_HEIGHT
         return xyz[2]
 
-    def displayLib(lib, coord, elements=None):
+    def _displayLib(lib, coord, elements=None):
         txtCoord = list(coord)
         for attr in dir(lib):
             if attr != "__class__":
@@ -59,16 +60,18 @@ class WyeUI(Wye.staticObj):
                     print("lib", lib.__name__, " verb", verb.__name__)
                     txt = lib.__name__ + "." +verb.__name__
                     txtCoord[2] -= WyeUI.LINE_HEIGHT
-                    #elements.append(WyeCore.libs.WyeUI.label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
-                    WyeCore.libs.WyeUI.label3d(txt, color=WyeUI.TEXT_COLOR, pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=WyeUI.TEXT_SCALE)
+                    #elements.append(WyeCore.libs.WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
+                    WyeCore.libs.WyeUI._label3d(txt, color=WyeUI.TEXT_COLOR, pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=WyeUI.TEXT_SCALE)
                     txtCoord[2] -= WyeUI.LINE_HEIGHT
                     if hasattr(verb, "codeDescr"):
-                        txtCoord[2] = WyeUI.displayVerb(verb, txtCoord)
+                        txtCoord[2] = WyeUI._displayVerb(verb, txtCoord)
 
+
+            
     # 3d positioned clickable text
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
     # Changing the text requires regenerating the card and 3d node
-    class label3d:
+    class _label3d:
         def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
             self.marginL = .1
             self.marginR = .2
@@ -77,11 +80,11 @@ class WyeUI(Wye.staticObj):
             #
             self.text = None
             self.card = None
-            self.label3d = None
+            self._label3d = None
             #
-            self.__genTextObj(text, color)
-            self.__genCardObj()
-            self.__gen3dTextObj(pos, scale, bg)
+            self._genTextObj(text, color)
+            self._genCardObj()
+            self._gen3dTextObj(pos, scale, bg)
             # txtNode.setAlign(TextNode.ACenter)
             # txtNode.setFrameColor(0, 0, 1, 1)
             # txtNode.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
@@ -91,7 +94,7 @@ class WyeUI(Wye.staticObj):
 
         # update the frame color
         def setFrameColor(self, color):
-            self.label3d.setColor(color)
+            self._label3d.setColor(color)
 
         # update the margin spacing
         def setFrameAsMargin(self, marginL, marginR, marginB, marginT):
@@ -99,21 +102,21 @@ class WyeUI(Wye.staticObj):
             self.marginR = marginR
             self.marginB = marginB
             self.marginT = marginT
-            self.__regen3d()
+            self._regen3d()
 
         # changing the text requires regenerating the background card and the 3d node
         def setText(self, text):
             self.text.setText(text)
-            self.__regen3d()
+            self._regen3d()
 
         def setPos(self, val):
-            self.label3d.setPos(val)
+            self._label3d.setPos(val)
 
         def setColor(self, val):
-            self.label3d.setColor(val)
+            self._label3d.setColor(val)
 
         def setScale(self, val):
-            self.label3d.setScale(val)
+            self._label3d.setScale(val)
 
         def setWordWrap(self):
             return self.text.getWordwrap()
@@ -122,13 +125,13 @@ class WyeUI(Wye.staticObj):
             return self.text.getText()
 
         def getPos(self):
-            return self.label3d.getPos()
+            return self._label3d.getPos()
 
         def getColor(self):
-            return self.label3d.getColor()
+            return self._label3d.getColor()
 
         def getScale(self):
-            return self.label3d.getScale()
+            return self._label3d.getScale()
 
         def getWordWrap(self):
             return self.text.setWordwrap()
@@ -140,30 +143,30 @@ class WyeUI(Wye.staticObj):
             return self.text.getAlign()
 
         def getFrameColor(self):
-            return self.label3d.getColor()
+            return self._label3d.getColor()
 
         # update the margin spacing
         def getFrameAsMargin(self):
             return (self.marginL, self.marginR, self.marginB, self.marginT)
 
         # rebuild card and path for updated text object
-        def __regen3d(self):
-            bg = self.label3d.getColor()
-            pos = self.label3d.getPos()
-            scale = self.label3d.getScale()
-            self.__genCardObj()                     # generate new card obj for updated text object
-            self.label3d.detachNode()                # detach 3d node path to old card
-            self.__gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
+        def _regen3d(self):
+            bg = self._label3d.getColor()
+            pos = self._label3d.getPos()
+            scale = self._label3d.getScale()
+            self._genCardObj()                     # generate new card obj for updated text object
+            self._label3d.detachNode()                # detach 3d node path to old card
+            self._gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
 
         # internal rtn to gen text object with unique wyeTag name
-        def __genTextObj(self, text, color=(1,1,1,1)):
+        def _genTextObj(self, text, color=(1,1,1,1)):
             tag = "txt"+str(WyeCore.Utils.getId())
             self.text = TextNode(tag)
             self.text.setText(text)
             self.text.setTextColor(color)
 
         # internal rtn to gen 3d Card clickable background object
-        def __genCardObj(self):
+        def _genCardObj(self):
             #print("initial txtNode frame ", self.text.getFrameActual())
             self.card = CardMaker("My Card")
             frame = self.text.getFrameActual()
@@ -176,20 +179,45 @@ class WyeUI(Wye.staticObj):
             self.card.setFrame(frame)
 
         # internal rtn to generate 3d (path) object to position, etc. the text
-        def __gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
+        def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
             global render
 
-            self.label3d = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
-            self.label3d.attachNewNode(self.text)
-            self.label3d.setEffect(DecalEffect.make())        # glue text onto card
-            self.label3d.reparentTo(render)
-            WyeCore.picker.makePickable(self.label3d)         # make selectable
-            self.label3d.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
-            self.label3d.setPos(pos)
-            self.label3d.setScale(scale)
+            self._label3d = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
+            self._label3d.attachNewNode(self.text)
+            self._label3d.setEffect(DecalEffect.make())        # glue text onto card
+            self._label3d.reparentTo(render)
+            WyeCore.picker.makePickable(self._label3d)         # make selectable
+            self._label3d.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
+            self._label3d.setPos(pos)
+            self._label3d.setScale(scale)
 
-            self.label3d.setBillboardPointWorld(0.)           # always face the camera
-            self.label3d.setLightOff()                        # unaffected by world lighting
-            self.label3d.setColor(bg)
+            self._label3d.setBillboardPointWorld(0.)           # always face the camera
+            self._label3d.setLightOff()                        # unaffected by world lighting
+            self._label3d.setColor(bg)
 
+    # text entry verb
+    class text3d:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NUMBER
+        paramDescr = (
+            ("text", Wye.dType.STRING, Wye.access.REFERENCE),       # 0 - caller var updated with curr text
+            ("pos", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE),  # 1 - position to put text3d at
+            ("color", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # 2 - color
+            ("scale", Wye.dType.NUMBER_LIST, Wye.access.REFERENCE)  # 3 - scale
+        )
+        varDescr = (
+            ("label", Wye.dType.OBJECT, None),          # 0 - label showing text
+            ("labelID", Wye.dType.STRING, None),        # 1 - id of label for setting selected
+            ("pos", Wye.dType.INTEGER_LIST, [0,0,0]),   # 2 - pos?
+            ("text", Wye.dType.STRING, "---"),   # 2
+           )   # var 4
+
+        # np=loader.loadModel("jack") #load a model
+        # #... do something
+        # np.removeNode() #unload the model
+        # loader.unloadModel(path)
+
+
+        def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
+            label = WyeUI._label3d(text, color, pos, scale, bg)
 
