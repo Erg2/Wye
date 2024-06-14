@@ -15,6 +15,7 @@ class TestLib3:
         paramDescr = ()
         varDescr = (("doitBtn", Wye.dType.OBJECT, None),                # 0
                     ("doitId", Wye.dType.STRING, ""),                   # 1
+                    ("retChar", Wye.dType.STRING, ""),                   # 2
                     )
 
         codeDescr = (
@@ -27,6 +28,15 @@ class TestLib3:
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[1]")),
                 (None, "WyeCore.libs.WyeUI._displayLib(WyeCore.libs.TestLib3, (.1,10,.8))"),
                 ("Label", "Done")
+            ),
+            (
+                #(None, "print('doitButton: before key loop')"),
+                ("Label", "Loop"),
+                #(None, "print('doitButton: top of key loop')"),
+                #(None, "print('doitButton: wait for char')"),
+                ("WyeCore.libs.WyeLib.waitChar", (None, "frame.vars[2]"), (None, "frame.vars[1]")),
+                (None, "print('received char=', frame.vars[2][0])"),
+                ("GoTo", "Loop")
             )
         )
 

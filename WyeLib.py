@@ -55,6 +55,41 @@ class WyeLib:
                     frame.status = Wye.status.SUCCESS
 
 
+    # Wait for user to type a character
+    # caller puts unique wyeTag waitChar param[0]
+    # caller pushes waitChar frame on stack and updates frame.PC to state it wants to go to when click happens
+    # When click event happens, caller must pop waitChar frame off stack
+    # char is returned as function value
+    class waitChar:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = (("retChar", Wye.dType.STRING, Wye.access.REFERENCE),("tag", Wye.dType.STRING, Wye.access.REFERENCE),)
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.waitChar, stack)
+
+        # TODO - make multi-cycle
+        def run(frame):
+            #print('execute spin, params', frame.params, ' vars', frame.vars)
+            match frame.PC:
+                case 0:
+                    #print("waitChar: set event for tag ", frame.params[1][0])
+                    WyeCore.World.setEventCallback("key", frame.params[1][0], frame)
+                    frame.PC += 1
+                    #print("waitChar: waiting for event 'key' tag ", frame.params[1][0])
+                case 1:
+                    pass
+                    # do nothing until event occurs
+
+                case 2:
+                    #print("waitChar: clicked on obj tag ", frame.eventData[0], " returned ", frame.eventData[1])
+                    frame.params[0][0] = frame.eventData[1]     # return character
+                    frame.status = Wye.status.SUCCESS
+
+
 
     # load Panda3d model
     # p0 - returned model

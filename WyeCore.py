@@ -63,7 +63,25 @@ class WyeCore(Wye.staticObj):
                 self.accept('keystroke', self.myFunc)
 
             def myFunc(self, keyname):
-                print("KeyHandler: key=",keyname)
+                #print("KeyHandler: key=", keyname)
+                # if there's a callback for the specific object, call itF
+                if "key" in WyeCore.World.eventCallbackDict:
+                    tagDict = WyeCore.World.eventCallbackDict["key"]
+                    delLst = []
+                    for wyeID in tagDict:
+                        #print("Found ", len(tagDict[wyeID]), " key callbacks for tag ", wyeID)
+                        # run through lists calling callbacks.
+                        # print("objSelectEvent: tagDict=", tagDict)
+                        evtLst = tagDict[wyeID]
+                        for evt in evtLst:
+                            frame = evt[0]
+                            data = evt[1]
+                            #print("KeyHandler event: inc frame ", frame.verb.__name__, " PC ", frame.PC)
+                            frame.PC += 1
+                            frame.eventData = (wyeID, keyname, data)  # user data
+                        delLst.append(wyeID)
+                    for tag in delLst:  # remove tag from active callbacks
+                        del tagDict[tag]
 
         # list of independent frames running until they succeed/fail
         class repeatEventExecObj:
@@ -134,8 +152,7 @@ class WyeCore(Wye.staticObj):
                 dlnp.setHpr(45, -60, 0)
                 render.setLight(dlnp)
 
-                #######
-                WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
+                ####### Test 3d text
 
                 text = TextNode('node name')
                 text.setWordwrap(7.0)
@@ -159,7 +176,7 @@ class WyeCore(Wye.staticObj):
 
                 _label3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
-                #######
+                ####### Test 3d spimd
 
                 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 snd = audio3d.loadSfx("WyePop.wav")
@@ -206,14 +223,21 @@ class WyeCore(Wye.staticObj):
                         WyeCore.World.objStacks.append(stk)             # put obj's stack on list and put obj's frame on the stack
                     else:
                         print("Error: Lib '"+namStrs[1]+"' not found for start object ", objStr)
-                # print("worldRunner done World Init")
 
-                # create picker object
+
+                # set up for text input events
+                WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
+
+
+                # create picker object for object selection events
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
                 WyeCore.picker.makePickable(_label3d)
                 tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
                 _label3d.setTag("wyeTag", tag)
+
+                # print("worldRunner done World Init")
+
             # run
             else:
                 WyeCore.World.displayCycleCount += 1
@@ -421,12 +445,10 @@ class WyeCore(Wye.staticObj):
                         # if there's a callback for the specific object, call itF
                         if "click" in WyeCore.World.eventCallbackDict:
                             tagDict = WyeCore.World.eventCallbackDict["click"]
+                            delLst = []
                             if wyeID in tagDict:
                                 #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
                                 # run through lists calling callbacks.
-                                # keep any repeated frames and update the callback entry with just them
-                                # if no repeated frames, remove callback entry for this target
-                                repEvts = []
                                 #print("objSelectEvent: tagDict=", tagDict)
                                 evtLst = tagDict[wyeID]
                                 for evt in evtLst:
@@ -435,7 +457,7 @@ class WyeCore(Wye.staticObj):
                                     #print("objSelectEvent: inc frame ", frame.verb.__name__, " PC ", frame.PC)
                                     frame.PC += 1
                                     frame.eventData = (wyeID, data)        # user data
-                                del tagDict[wyeID]
+                                del tagDict[wyeID] # remove tag from dict of active callbacks
 
                             # if there's a callback for 'any' click event, call it
                             if "any" in tagDict:
