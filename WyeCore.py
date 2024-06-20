@@ -57,13 +57,15 @@ class WyeCore(Wye.staticObj):
 
         displayCycleCount = 0           # DEBUG
 
+        # key callback
+        # handle Wye key events
         class KeyHandler(DirectObject):
             def __init__(self):
                 base.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
                 self.accept('keystroke', self.myFunc)
 
             def myFunc(self, keyname):
-                #print("KeyHandler: key=", keyname)
+                print("KeyHandler: key=", keyname, "=", ord(keyname))
                 # if there's a callback for the specific object, call itF
                 if "key" in WyeCore.World.eventCallbackDict:
                     tagDict = WyeCore.World.eventCallbackDict["key"]
@@ -166,7 +168,7 @@ class WyeCore(Wye.staticObj):
                 text.setCardAsMargin(.1, .2, .1, .1)    # extend beyond edge of text (-x, +x, -y, +y)
                 text.setCardDecal(True)
 #
-                # create (unpickable) 3d text object
+                # create 3d text object
                 _label3d = NodePath(text.generate())      # supposed to, but does not, generate pickable node
                 #_label3d = NodePath(text)
                 _label3d.reparentTo(render)
@@ -200,8 +202,8 @@ class WyeCore(Wye.staticObj):
 
                 # build list of known libraries (so can ref them during build)
                 for lib in WyeCore.World.libList:
-                    WyeCore.World.libDict[lib.__name__] = lib     # build lib name -> lib lookup dictionary
-                    setattr(WyeCore.libs, lib.__name__, lib)
+                    WyeCore.World.libDict[lib.__name__] = lib       # build lib name -> lib lookup dictionary
+                    setattr(WyeCore.libs, lib.__name__, lib)        # put lib on lib dict
 
                 # build all libraries - compiles any Wye code words in each lib
                 for lib in WyeCore.World.libList:
@@ -217,7 +219,7 @@ class WyeCore(Wye.staticObj):
                         obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
                         WyeCore.World.objs.append(obj)                  # add to list of runtime objects
                         stk = []
-                        f = obj.start(stk)                                 # start the object and get its stack frame
+                        f = obj.start(stk)                              # start the object and get its stack frame
                         stk.append(f)                                   # create a stack for it
                         f.params = [[0], ]                              # place to put return param
                         WyeCore.World.objStacks.append(stk)             # put obj's stack on list and put obj's frame on the stack
@@ -232,9 +234,9 @@ class WyeCore(Wye.staticObj):
                 # create picker object for object selection events
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
-                WyeCore.picker.makePickable(_label3d)
-                tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
-                _label3d.setTag("wyeTag", tag)
+                #WyeCore.picker.makePickable(_label3d)
+                #tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
+                #_label3d.setTag("wyeTag", tag)
 
                 # print("worldRunner done World Init")
 
@@ -409,7 +411,7 @@ class WyeCore(Wye.staticObj):
         def getObjectHit(self, mpos):  # mpos is the position of the mouse on the screen
             global render
 
-            self.pickedObj = None  # be sure to reset this
+            self.pickedObj = None  # don't have an obj yet
             self.pickerRay.setFromLens(WyeCore.base.camNode, mpos.getX(), mpos.getY())
             self.picker.traverse(render)
             if self.queue.getNumEntries() > 0:

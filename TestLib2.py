@@ -119,16 +119,6 @@ class TestLib2:
         parType = Wye.parType.FIRST_SUCCESS
         codeDescr = ()
 
-        code = '''
-def Stream0():
-    # code for first parallel path
-def Stream1():
-    # code for 2nd parallel path
-'''
-
-#        def build():
-#            return
-
         def start(stack):
             f = Wye.parallelFrame(TestLib2.testPar, stack)
             f.stacks.extend([[], []])   # stacks for parallel processing
