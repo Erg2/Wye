@@ -221,3 +221,4 @@ class WyeUI(Wye.staticObj):
         def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
             label = WyeUI._label3d(text, color, pos, scale, bg)
 
+#    class displayDialog:

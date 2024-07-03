@@ -158,7 +158,7 @@ class WyeCore(Wye.staticObj):
 
                 text = TextNode('node name')
                 text.setWordwrap(7.0)
-                text.setText("Welcome to Wye 0.1")
+                text.setText("Welcome to Wye "+Wye.version)
                 text.setTextColor(1, 1, 1, 1)
                 text.setAlign(TextNode.ACenter)
                 #text.setFrameColor(0, 0, 1, 1)
@@ -204,6 +204,7 @@ class WyeCore(Wye.staticObj):
                 for lib in WyeCore.World.libList:
                     WyeCore.World.libDict[lib.__name__] = lib       # build lib name -> lib lookup dictionary
                     setattr(WyeCore.libs, lib.__name__, lib)        # put lib on lib dict
+                    print("Put '"+lib.__name__+"' in WyeCore.libs")
 
                 # build all libraries - compiles any Wye code words in each lib
                 for lib in WyeCore.World.libList:
@@ -713,13 +714,38 @@ class WyeCore(Wye.staticObj):
             # print("buildParallelText complete.  parFnText=\n"+parFnText[0])
             return ("", parFnText)
 
+        def frameToString(frame):
+            print("frame:", frame)
+            if hasattr(frame, "verb"):
+                if hasattr(frame.verb, "__name__"):
+                    print("  verb ", frame.verb.__name__)
+                else:
+                    print("  verb has no name")
+            else:
+                print("  frame has no verb")
+            print("  params:", WyeCore.Utils.paramsToString(frame))
+            print("  vars:", WyeCore.Utils.varsToString(frame))
+
+        def listToString(lst):
+            pStr = ""
+            if len(lst) > 0:
+                ii = 0
+                for ii in range(ii):
+                    param = lst[ii]
+                    pStr += str(param[0])
+                    if ii < len(lst)-1:
+                        pStr += ", "
+            else:
+                pstr = "<empty>"
+            return pStr
 
         # return params concanated
         def paramsToString(frame):
-            pStr = ""
-            for param in frame.params:
-                pStr += str(param[0])
-            return pStr
+            return WyeCore.Utils.listToString(frame.params)
+
+        # return vars concanated
+        def varsToString(frame):
+            return WyeCore.Utils.listToString(frame.params)
 
         # return status as string
         def statusToString(stat):

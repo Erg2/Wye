@@ -8,7 +8,7 @@ class TestLib3:
 
     class doitButton:
         cType = Wye.cType.OBJECT
-        autoStart = True
+        #autoStart = True
         mode = Wye.mode.PARALLEL
         parType = Wye.parType.FIRST_FAIL
         dataType = Wye.dType.NONE
@@ -71,22 +71,43 @@ class TestLib3:
     class Dialog:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.OBJECT
-        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),    # return own frame
-                      ("title", Wye.dType.STRING, Wye.access.REFERENCE),    # user supplied title for dialog
-                      ("parent", Wye.dType.STRING, Wye.access.REFERENCE))   # parent dialog, if any
+        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),    # 0 return own frame
+                      ("title", Wye.dType.STRING, Wye.access.REFERENCE),    # 1 user supplied title for dialog
+                      ("position", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # 2 user supplied position
+                      ("parent", Wye.dType.STRING, Wye.access.REFERENCE))   # 3 parent dialog, if any
                       # This parameter list is dynamic.  TODO Figger out how to specify this
                       # input widgets go here (Input fields, Buttons, and who knows what all cool stuff that may come
 
-        varDescr = ()
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),          # 0 pos copy
+                    ("dlgWidgets", Wye.dType.OBJECT_LIST, []),              # 1 default obj ids
+                    ("inpWidgets", Wye.dType.OBJECT_LIST, []))              # 2 input obj ids
 
         def start(stack):
-            return Wye.codeFrame(TestLib3.TextInput, stack)
+            return Wye.codeFrame(TestLib3.Dialog, stack)
 
         def run(frame):
             frame.params[0][0] = frame  # self referential!
+            print("Dialog put frame in param[0][0]", frame)
+            frame.vars[0] = (frame.params[2])        # save display position
             # return frame and success, caller dialog will use frame as placeholder for input
             frame.status = Wye.status.SUCCESS
 
+        def display(frame):
+            # Default widgets
+            # display title
+            print("Dialog display: pos=frame.params[2]", frame.params[2])
+            txt = WyeCore.libs.WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2], scale=(.2, .2, .2))
+            frame.vars[1][0].append(txt)
+            # display buttons
+            pos = [x for x in frame.params[2]]    # copy position
+            pos[2] -= .3
+            txt = WyeCore.libs.WyeUI._label3d("OK", color=(1, 1, 1, 1), pos=tuple(pos), scale=(.2, .2, .2))
+            frame.vars[1][0].append(txt)
+            pos[0] += .5
+            txt = WyeCore.libs.WyeUI._label3d("Cancel", color=(1, 1, 1, 1), pos=tuple(pos), scale=(.2, .2, .2))
+            frame.vars[1][0].append(txt)
+            # user supplied input widgets
+            # ...
 
     class DlgTst:
         cType = Wye.cType.OBJECT
@@ -94,16 +115,20 @@ class TestLib3:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = ()
-        varDescr = (("Title", Wye.dType.INTEGER, "Test Dialog"),
-                    ("id", Wye.dType.STRING, "0"),
+        varDescr = (("id", Wye.dType.OBJECT, None),
+                    ("Title", Wye.dType.INTEGER, "Test Dialog"),
                     ("text1", Wye.dType.INTEGER, 0),
                     ("text2", Wye.dType.INTEGER, 0),
                     )  # 0
 
         codeDescr = (
-            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars[1]"),
-             ("TestLib3.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-                                              (None, "None"))),
+            (None, "print('DlgTst frame',WyeCore.Utils.frameToString(frame))"),
+            ("TestLib3.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
+                               (None, "(0,10,0)"), (None, "None")),
+            (None, "print('DlgTst: Dialog returned frame ',frame.vars[0][0])"),
+            (None, "print('DlgTst: frame for verb ',frame.vars[0][0].verb)"),
+            (None, "print('DlgTst: frame for verb name ',frame.vars[0][0].verb.__name__)"),
+            (None, "frame.vars[0][0].verb.display(frame.vars[0][0])"),
             ("Label", "Done")
             #("WyeCore.libs.WyeLib.makePickable", (None, "frame.params[4]"), (None, "frame.params[0]")),
             #("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params[0]"), (None, "frame.params[5]")),
