@@ -222,3 +222,87 @@ class WyeUI(Wye.staticObj):
             label = WyeUI._label3d(text, color, pos, scale, bg)
 
 #    class displayDialog:
+
+    # Widget focus manager singleton
+    # Maintains a list of dialog hierarchies where the most recently added member of each hierarchy is the only one
+    # whose widgets can accept focus
+    # Only one widget in all of them can have focus (if any have)
+    #
+    # Note: in theory this should turn on event handling when there's a dialog up and
+    # shut it off when
+    #
+    # Note: event management is rudimentary.
+    # Optimization might be to switch off key and drag events when an input doesn't have
+    # focus.  For now, simplicity wins over optimization
+    #
+    class FocusManager:
+        dialogHierarchies = []          # list of open dialog hierarchies (dialog frame lists)
+        hasFocus = None                 # frame of input that currently has focus, if any
+        focusDialog = None              # frame of dialog that current input belongs to
+        _mouseHandler = None
+
+        # Mouse event delivery requires an instantiated class
+        class _MouseHandler(DirectObject):
+            def __init__(self):
+                print("WyeUI FocusManager openDialog set mouse event")
+                self.accept('mouse1', self.mouseEvt)
+
+            def mouseEvt(self):
+                evt = WyeCore.base.mouseWatcherNode.getMouse()
+                print("FocusManager mouseEvt:", evt)
+
+                # todo - deliver event to leaf dialogs
+
+        # find dialogFrame in leaf nodes of dialog hierarchies
+        def findDialog(dialogFrame):
+            retHier = None
+            for hier in WyeUI.FocusManager.dialogHierarchies:
+                # if found it, add to hierarchy list
+                if len(hier) > 0 and hier[-1] == dialogFrame:
+                    retHier = hier
+                    break;  # found it, break out of loop
+
+                if retHier is None:
+                    print("Error: WyeUI FocusManager openDialog - dialog not found")
+                    print("  dialog ", dialogFrame.params[1][0])
+            return retHier
+
+
+        # User is adding a dialog to the display
+        # If it has a parent dialog, it is now the leaf of the hierarchy and
+        # its inputs get any incoming events
+        def openDialog(dialogFrame, parentFrame):
+            # if no focus manager set to catch selected objects, fix that
+            if WyeCore.Utils.getFocusManager() is None:
+                WyeCore.Utils.setFocusManager(WyeUI.FocusManager)
+                #WyeUI.FocusManager._mouseHandler = WyeUI.FocusManager._MouseHandler()
+
+                # sign up for events
+
+            # if starting new dialog hierarchy
+            if parentFrame is None:
+                WyeUI.FocusManager.dialogHierarchies.append([dialogFrame])
+
+            # if has parent then add it to the parent's hierarchy
+            else:
+                hier = WyeUI.FocusManager.findDialog(parentFrame)
+                if not hier is None:
+                    hier.append(dialogFrame)
+
+        # Remove the given dialog from the display hierarchy
+        def closeDialog(dialogFrame):
+            hier = WyeUI.FocusManager.findDialog(dialogFrame)
+            del hier[-1]    # remove dialog from hierarchy
+            if len(hier) == 0:  # if that was the last dialog, remove hierarchy too
+                WyeUI.FocusManager.dialogHierarchies.remove(hier)
+
+
+        # User clicked on object
+        # find it
+        # set it as having focus
+        # todo - manage hierarchy
+        def doSelectEvent(id):
+            print("FocusManager doSelectEvent")
+            return False
+
+

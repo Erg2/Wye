@@ -116,20 +116,20 @@ class TestLib2:
         #varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("stack", Wye.dType.OBJECT, [[],[]]), ("txtObj0", Wye.dType.OBJECT, None), ("txtObj1", Wye.dType.OBJECT, None),
                     ("txtBuff", Wye.dType.INTEGER, 10))
-        parType = Wye.parType.FIRST_SUCCESS
+        parTermType = Wye.parTermType.FIRST_SUCCESS
         codeDescr = ()
 
         def start(stack):
             f = Wye.parallelFrame(TestLib2.testPar, stack)
             f.stacks.extend([[], []])   # stacks for parallel processing
 
-            fS0 = Wye.codeFrame(WyeCore.libs.WyeLib.ParallelStream, f.stacks[0])
+            fS0 = Wye.codeFrame(WyeCore.ParallelStream, f.stacks[0])
             fS0.vars = f.vars
             fS0.params = f.params
             fS0.run = TestLib2.testPar.Stream0
             f.stacks[0].append(fS0)
 
-            fS1 = Wye.codeFrame(WyeCore.libs.WyeLib.ParallelStream, f.stacks[1])
+            fS1 = Wye.codeFrame(WyeCore.ParallelStream, f.stacks[1])
             fS1.vars = f.vars
             fS1.params = f.params
             fS1.run = TestLib2.testPar.Stream0
@@ -202,7 +202,7 @@ class TestLib2:
 
     class testCompiledPar:
         mode = Wye.mode.PARALLEL
-        parType = Wye.parType.FIRST_FAIL
+        parTermType = Wye.parTermType.FIRST_FAIL
         dataType = Wye.dType.NONE
         paramDescr = ()
         varDescr = (("obj", Wye.dType.OBJECT, None),                # 0
@@ -343,7 +343,7 @@ class TestLib2:
 
     class testMObj:
         cType = Wye.cType.OBJECT
-        #autoStart = True
+        autoStart = True
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = () 

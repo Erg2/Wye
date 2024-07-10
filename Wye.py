@@ -108,28 +108,29 @@ class Wye:
                     return "--unknown mode value " + str(mode) + "--"
 
     # parallel completion rquirement
-    class parType:
+    class parTermType:
         FIRST_FAIL = "F"        # done when any fails or all succeed
         FIRST_SUCCESS = "S"     # done when any succeeds or all fail
         FIRST_ANY = "A"         # done on first non-CONTINUE (i.e don on succeed or fail)
 
     # Data types
     class dType:
-        NONE = "Z"
-        ANY = "A"
-        NUMBER = "N"
-        INTEGER = "I"
-        FLOAT = "F"
-        BOOL = "B"
-        OBJECT = "O"
-        STRING = "S"
-        ANY_LIST = "AL"
-        NUMBER_LIST = "NL"
-        INTEGER_LIST = "IL"
-        FLOAT_LIST = "FL"
-        BOOL_LIST = "BL"
-        OBJECT_LIST = "OL"
-        STRING_LIST = "SL"
+        NONE =          "Z"
+        ANY =           "A"
+        NUMBER =        "N"
+        INTEGER =       "I"
+        FLOAT =         "F"
+        BOOL =          "B"
+        OBJECT =        "O"
+        STRING =        "S"
+        ANY_LIST =      "AL"
+        NUMBER_LIST =   "NL"
+        INTEGER_LIST =  "IL"
+        FLOAT_LIST =    "FL"
+        BOOL_LIST =     "BL"
+        OBJECT_LIST =   "OL"
+        STRING_LIST =   "SL"
+        VARIABLE =      "V"
 
         def tostring(dataType):            # static print function
             match(dataType):
