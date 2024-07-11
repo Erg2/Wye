@@ -355,12 +355,12 @@ class TestLib2:
         def run(frame):
             match(frame.PC):
                 case 0:
-                    print("testMObj: case 0, Start TestCompiledPar, get frame")
+                    #print("testMObj: case 0, Start TestCompiledPar, get frame")
                     f = TestLib2.testCompiledPar.start(frame.SP)
                     frame.SP.append(f)
                     frame.PC += 1
                 case 1:
-                    print("testMObj: case 1, TestCompiledPar runtime done, pop frame")
+                    #print("testMObj: case 1, TestCompiledPar runtime done, pop frame")
                     f = frame.SP.pop()
 
                     frame.PC += 1

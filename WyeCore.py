@@ -288,31 +288,51 @@ class WyeCore(Wye.staticObj):
         class KeyHandler(DirectObject):
             def __init__(self):
                 base.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
-                self.accept('keystroke', self.myFunc)
+                self.accept('keystroke', self.keyFunc)
+                self.accept('arrow_right', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
+                self.accept('arrow_left', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
+                self.accept('arrow_up', self.controlKeyFunc, [Wye.ctlKeys.UP])
+                self.accept('arrow_down', self.controlKeyFunc, [Wye.ctlKeys.DOWN])
+                self.accept('shift_down', self.controlKeyFunc, [Wye.ctlKeys.SHIFT_DOWN])
+                self.accept('shift_up', self.controlKeyFunc, [Wye.ctlKeys.SHIFT_UP])
+                self.accept('ctl_down', self.controlKeyFunc, [Wye.ctlKeys.CTL_DOWN])
+                self.accept('ctl_up', self.controlKeyFunc, [Wye.ctlKeys.CTL_UP])
 
-            def myFunc(self, keyname):
-                print("KeyHandler: key=", keyname, "=", ord(keyname))
+
+            def controlKeyFunc(self, keyID):
+                print("Control key ", keyID)
+                if WyeCore.focusManager:
+                    WyeCore.focusManager.doKey(keyID)
+
+            def keyFunc(self, keyname):
+                #print("KeyHandler: key=", keyname, "=", ord(keyname))
                 # if there's a dialog focus manager running
-                #if !!!
+                focusStatus = False
+                if WyeCore.focusManager:
+                    # returns True if it used the event
+                    focusStatus = WyeCore.focusManager.doKey(keyname)
 
-                # if there's a callback for the specific object, call itF
-                if "key" in WyeCore.World.eventCallbackDict:
-                    tagDict = WyeCore.World.eventCallbackDict["key"]
-                    delLst = []
-                    for wyeID in tagDict:
-                        #print("Found ", len(tagDict[wyeID]), " key callbacks for tag ", wyeID)
-                        # run through lists calling callbacks.
-                        # print("objSelectEvent: tagDict=", tagDict)
-                        evtLst = tagDict[wyeID]
-                        for evt in evtLst:
-                            frame = evt[0]
-                            data = evt[1]
-                            #print("KeyHandler event: inc frame ", frame.verb.__name__, " PC ", frame.PC)
-                            frame.PC += 1
-                            frame.eventData = (wyeID, keyname, data)  # user data
-                        delLst.append(wyeID)
-                    for tag in delLst:  # remove tag from active callbacks
-                        del tagDict[tag]
+                # if there isn't a focusManager or it didn't want that event, check if
+                # anyone else wants it
+                if not focusStatus:
+                    # if there's a callback for the specific object, call itF
+                    if "key" in WyeCore.World.eventCallbackDict:
+                        tagDict = WyeCore.World.eventCallbackDict["key"]
+                        delLst = []
+                        for wyeID in tagDict:
+                            #print("Found ", len(tagDict[wyeID]), " key callbacks for tag ", wyeID)
+                            # run through lists calling callbacks.
+                            # print("objSelectEvent: tagDict=", tagDict)
+                            evtLst = tagDict[wyeID]
+                            for evt in evtLst:
+                                frame = evt[0]
+                                data = evt[1]
+                                #print("KeyHandler event: inc frame ", frame.verb.__name__, " PC ", frame.PC)
+                                frame.PC += 1
+                                frame.eventData = (wyeID, keyname, data)  # user data
+                            delLst.append(wyeID)
+                        for tag in delLst:  # remove tag from active callbacks
+                            del tagDict[tag]
 
         # every-frame event dispatcher
         # list of independent frames running until they succeed/fail
@@ -449,8 +469,8 @@ class WyeCore(Wye.staticObj):
                         # if there's a user input focus manager, call it
                         focusStatus = False
                         if WyeCore.focusManager:
-                            # if no UI element processed the event, look for any object waiting for a collision event
-                            focusStatus =  WyeCore.focusManager.doSelectEvent(wyeID)
+                            # Returns True if it used the event.
+                            focusStatus = WyeCore.focusManager.doSelect(wyeID)
 
                         # if there isn't a focusManager or it didn't want that event, check if
                         # anyone else wants it
@@ -557,6 +577,7 @@ class WyeCore(Wye.staticObj):
                                     #print("parseWyeTuple: 3 codeText=", codeText[0])
                                 else:                           # recurse to parse nested code tuple
                                     cdTxt, fnTxt = WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList)
+                                    # NOTE: Assumes that IDE ensured verb is a function!
                                     cdTxt += "    "+eff+".params.append(f"+str(fNum+1)+".params[0])\n"
                                     codeText += cdTxt
                                     parFnText += fnTxt
@@ -587,7 +608,7 @@ class WyeCore(Wye.staticObj):
                                     cdTxt += "    "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
                                     codeText += cdTxt
                                     parFnText += fnTxt
-                        codeText += "    frame.SP.append("+eff+")\n    frame.PC +=1\n"
+                        codeText += "    frame.SP.append("+eff+")\n    frame.PC += 1\n"
                         caseNumList[0] += 1
                         #codeText += "   case "+str(caseNumList[0])+":\n    pass\n    "+eff+"=frame.SP.pop()\n"
                         codeText += "   case "+str(caseNumList[0])+":\n    "+eff+"=frame.SP.pop()\n"
@@ -616,36 +637,41 @@ class WyeCore(Wye.staticObj):
             caseNumList = [0]   # list so called fn can increment it.  This is Python pass by reference
             labelDict = {}
             # define runtime method for this function
-            codeText = " def " + name + "_run_rt(frame):\n  match(frame.PC):\n   case 0:\n    pass\n"
+            codeText = " def " + name + "_run_rt(frame):\n  match(frame.PC):\n   case 0:\n"
             parFnText = ""
-            for wyeTuple in codeDescr:
-                # label for branch/loop
-                if wyeTuple[0] == "Label":
-                    caseNumList[0] += 1
-                    labelDict[wyeTuple[1]] = caseNumList[0]
-                    codeText += "    frame.PC += 1\n   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
-                elif wyeTuple[0] == "IfGoTo":
-                    codeText += "    if (" + wyeTuple[1] + "):\n"
-                    codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #Go To Label " + wyeTuple[2] + "\n"
-                    caseNumList[0] += 1
-                    codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
-                elif wyeTuple[0] == "GoTo":     # note: can only go to labels already seen
-                    codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #Go To Label " + wyeTuple[1] + "\n"
-                    caseNumList[0] += 1
-                    # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
-                    codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
-                else: # normal tuple
-                    # DEBUG start vvv
-                    #currFrame = inspect.currentframe()
-                    #callrframe = inspect.getouterframes(currFrame, 2)
-                    #print('WyeCore buildCodeText caller:', callrframe[1][3])
-                    #print('WyeCore buildCodeText caller:', callrframe[1][3])
-                    #print("WyeCore buildCodeText: compile tuple=", wyeTuple)
-                    # DEBUG end ^^^^
-                    cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+            if len(codeDescr) > 0:
+                for wyeTuple in codeDescr:
+                    # label for branch/loop
+                    if wyeTuple[0] == "Label":
+                        caseNumList[0] += 1
+                        labelDict[wyeTuple[1]] = caseNumList[0]
+                        codeText += "    frame.PC += 1\n   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
+                    elif wyeTuple[0] == "IfGoTo":
+                        codeText += "    if (" + wyeTuple[1] + "):\n"
+                        codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #GoToLabel " + wyeTuple[2] + "\n"
+                        caseNumList[0] += 1
+                        codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
+                    elif wyeTuple[0] == "GoTo":     # note: can only go to labels already seen
+                        codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #GoToLabel " + wyeTuple[1] + "\n"
+                        caseNumList[0] += 1
+                        # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
+                        codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
+                    else: # normal tuple
+                        # DEBUG start vvv
+                        #currFrame = inspect.currentframe()
+                        #callrframe = inspect.getouterframes(currFrame, 2)
+                        #print('WyeCore buildCodeText caller:', callrframe[1][3])
+                        #print('WyeCore buildCodeText caller:', callrframe[1][3])
+                        #print("WyeCore buildCodeText: compile tuple=", wyeTuple)
+                        # DEBUG end ^^^^
+                        cdTxt, parTxt = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
 
-                    codeText += cdTxt
-                    parFnText += parTxt
+                        codeText += cdTxt
+                        parFnText += parTxt
+
+            # no code, make sure fn compiles
+            else:
+                codeText += "pass\n"
 
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return (codeText, parFnText)

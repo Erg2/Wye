@@ -189,6 +189,35 @@ class Wye:
     class event:
         PICK = 1
 
+    class ctlKeys:
+        RIGHT = -1
+        LEFT = -2
+        UP = -3
+        DOWN = -4
+        CTL_DOWN = -5
+        CTL_UP = -6
+        SHIFT_DOWN = -7
+        SHIFT_UP = -8
+
+        def tostring(key):
+            match(key):
+                case Wye.ctlKyes.RIGHT:
+                    return("RIGHT")
+                case Wye.ctlKyes.LEFT:
+                    return("LEFT")
+                case Wye.ctlKyes.UP:
+                    return("UP")
+                case Wye.ctlKyes.DOWN:
+                    return("DOWN")
+                case Wye.ctlKyes.CTL_DOWN:
+                    return("CTL_DOWN")
+                case Wye.ctlKyes.CTL_UP:
+                    return("CTL_UP")
+                case Wye.ctlKyes.SHIFT_DOWN:
+                    return("SHIFT_DOWN")
+                case Wye.ctlKyes.SHIFT_UP:
+                    return("SHIFT_UP")
+
     ###########################################################################
     #
     # Dynamic Wye Classes
@@ -203,7 +232,7 @@ class Wye:
     class codeFrame:      # Used by any verb with Wye code
         def __init__(self, verb, stack):
             self.verb = verb    # the static verb that we're holding runtime data for
-            print("codeFrame ", self, " for verb ", verb.__name__)
+            #print("codeFrame ", self, " for verb ", verb.__name__)
             self.params = []  # caller will fill in params
             try:
                 if not hasattr(verb, "varDescr"):

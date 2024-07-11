@@ -6,6 +6,7 @@ from Wye import Wye
 from WyeCore import WyeCore
 import inspect      # for debugging
 from panda3d.core import *
+from functools import partial
 
 #import partial
 import traceback
@@ -20,6 +21,7 @@ class WyeUI(Wye.staticObj):
     LINE_HEIGHT = .25
     TEXT_SCALE = (.2,.2,.2)
     TEXT_COLOR = (1,1,1,1)
+
 
     # Build run_rt methods on each class
     def build():
@@ -162,6 +164,8 @@ class WyeUI(Wye.staticObj):
         def _genTextObj(self, text, color=(1,1,1,1)):
             tag = "txt"+str(WyeCore.Utils.getId())
             self.text = TextNode(tag)
+            if len(text) == 0:
+                text = ' '
             self.text.setText(text)
             self.text.setTextColor(color)
 
@@ -169,14 +173,17 @@ class WyeUI(Wye.staticObj):
         def _genCardObj(self):
             #print("initial txtNode frame ", self.text.getFrameActual())
             self.card = CardMaker("My Card")
-            frame = self.text.getFrameActual()
-            #print("frame", frame)
-            frame[0] -= self.marginL
-            frame[1] += self.marginR
-            frame[2] -= self.marginB
-            frame[3] += self.marginT
-            #print("initial adjusted frame", frame)
-            self.card.setFrame(frame)
+            gFrame = self.text.getFrameActual()
+            if gFrame[1] == 0:      # if empty frame
+                gFrame[1] = 1
+                gFrame[3] = 1
+            #print("gFrame", gFrame)
+            gFrame[0] -= self.marginL
+            gFrame[1] += self.marginR
+            gFrame[2] -= self.marginB
+            gFrame[3] += self.marginT
+            #print("initial adjusted gFrame", gFrame)
+            self.card.setFrame(gFrame)
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
@@ -241,20 +248,33 @@ class WyeUI(Wye.staticObj):
         focusDialog = None              # frame of dialog that current input belongs to
         _mouseHandler = None
 
+        shiftDown = False
+        ctlDown = False
+
         # Mouse event delivery requires an instantiated class
         class _MouseHandler(DirectObject):
             def __init__(self):
                 print("WyeUI FocusManager openDialog set mouse event")
                 self.accept('mouse1', self.mouseEvt)
 
+
+                ## reference
+                # "escape", "f" + "1-12"(e.g.
+                # "f1", "f2", ...
+                # "f12"), "print_screen",
+                # "scroll_lock", "backspace", "insert", "home", "page_up", "num_lock",
+                # "tab", "delete", "end", "page_down", "caps_lock", "enter", "arrow_left",
+                # "arrow_up", "arrow_down", "arrow_right", "shift", "lshift", "rshift",
+                # "control", "alt", "lcontrol", "lalt", "space", "ralt", "rcontrol"
+                ## end reference
+
             def mouseEvt(self):
                 evt = WyeCore.base.mouseWatcherNode.getMouse()
                 print("FocusManager mouseEvt:", evt)
 
-                # todo - deliver event to leaf dialogs
 
         # find dialogFrame in leaf nodes of dialog hierarchies
-        def findDialog(dialogFrame):
+        def findDialogHier(dialogFrame):
             retHier = None
             for hier in WyeUI.FocusManager.dialogHierarchies:
                 # if found it, add to hierarchy list
@@ -291,18 +311,51 @@ class WyeUI(Wye.staticObj):
 
         # Remove the given dialog from the display hierarchy
         def closeDialog(dialogFrame):
-            hier = WyeUI.FocusManager.findDialog(dialogFrame)
+            hier = WyeUI.FocusManager.findDialogHier(dialogFrame)
             del hier[-1]    # remove dialog from hierarchy
             if len(hier) == 0:  # if that was the last dialog, remove hierarchy too
                 WyeUI.FocusManager.dialogHierarchies.remove(hier)
 
 
         # User clicked on object
-        # find it
-        # set it as having focus
-        # todo - manage hierarchy
-        def doSelectEvent(id):
-            print("FocusManager doSelectEvent")
-            return False
+        # call each leaf dialog to see if obj belongs to it.
+        # If so, return True (we used it)
+        # else return False (someone else can use it)
+        def doSelect(id):
+            status = False
+            for hier in WyeUI.FocusManager.dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
+                if len(hier) > 0:
+                    frm = hier[-1]
+                    print("FocusManager doSelect", id)
+                    if frm.verb.doSelect(frm, id):
+                        status = True
+            return status
+
+        def doKey(key):
+            # handle control codes.
+            # if key, apply case
+            match key:
+                case Wye.ctlKeys.CTL_DOWN:
+                    WyeUI.FocusManager.ctlDown = True
+                    return True
+                case Wye.ctlKeys.CTL_UP:
+                    WyeUI.FocusManager.ctlDown = False
+                    return True
+                case Wye.ctlKeys.SHIFT_DOWN:
+                    WyeUI.FocusManager.shiftDown = True
+                    return True
+                case Wye.ctlKeys.SHIFT_UP:
+                    WyeUI.FocusManager.shiftDown = True
+                    return True
+                case _:
+                    if isinstance(key, str) and 'a' <= key and key <= 'z' and WyeUI.FocusManager.shiftDown:
+                        key = key.upper()
+                    for hier in WyeUI.FocusManager.dialogHierarchies:
+                        if len(hier) > 0:
+                            frm = hier[-1]
+                            print("FocusManager doKey", key)
+                            if frm.verb.doKey(frm, key):
+                                return True
+                    return False
 
 

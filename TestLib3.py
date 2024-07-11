@@ -51,8 +51,14 @@ class TestLib3:
             WyeCore.Utils.runParallelCode(frame)      # run compiled run code
 
     # Input field classes
-    # Runtime returns frame as p0
-
+    # Each input run method just returns its frame as p0
+    #
+    # Dialog sets up input graphics when it runs
+    # Since the input has run before the dialog does, it cannot do any graphic setup
+    # because it doesn't know where it's going to be.  The Dialog manages that.
+    # Therefore, all it can do is set up its info in its frame and return the frame for the
+    # dialog to use.
+    #
     # Effectively each is a factory generating an input object frame for dialog to use
 
     # label field
@@ -75,25 +81,28 @@ class TestLib3:
     # text input field
     class TextInput:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.dType.STRING
-        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
-                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
-                      ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
-        varDescr = (("currPos", Wye.dType.INTEGER, 0),)  # 0
+        dataType = Wye.dType.OBJECT
+        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # 0 return own frame
+                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # 1 user supplied label for field
+                      ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # 2 user supplied var to return value in
+        varDescr = (("currPos", Wye.dType.INTEGER, 0),      # 0
+                    ("currVal", Wye.dType.STRING, ""),      # 1
+                    ("currInsPt", Wye.dType.INTEGER, 0))    # 2
 
         def start(stack):
             return Wye.codeFrame(TestLib3.TextInput, stack)
 
         def run(frame):
-            frame.params[0][0] = frame  # self referential!
+            frame.vars[1][0] = frame.params[2][0]
+            frame.params[0] = [frame]  # self referential!
             # return frame and success, caller dialog will use frame as placeholder for input
             frame.status = Wye.status.SUCCESS
 
     # Effectively this is a factory generating a dialog object for the UI to use
     class Dialog:
-        mode = Wye.mode.SINGLE_CYCLE
+        mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.OBJECT
-        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),    # 0 return own frame
+        paramDescr = (("frame", Wye.dType.OBJECT, Wye.access.REFERENCE),    # 0 return own frame
                       ("title", Wye.dType.STRING, Wye.access.REFERENCE),    # 1 user supplied title for dialog
                       ("position", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # 2 user supplied position
                       ("parent", Wye.dType.STRING, Wye.access.REFERENCE),   # 3 parent dialog, if any
@@ -102,20 +111,23 @@ class TestLib3:
                       # input widgets go here (Input fields, Buttons, and who knows what all cool stuff that may come
 
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),          # 0 pos copy
-                    ("dlgWidgets", Wye.dType.OBJECT_LIST, []),              # 1 default obj ids
-                    ("inpWidgets", Wye.dType.OBJECT_LIST, []))              # 2 input obj ids
+                    ("dlgWidgets", Wye.dType.OBJECT_LIST, []),              # 1 default obj input classes
+                    ("inpWidgets", Wye.dType.OBJECT_LIST, []),              # 2 input obj input classes
+                    ("inpTags", Wye.dType.OBJECT, {}),                      # 3 dictionary by tag of class ix
+                    ("currInp", Wye.dType.INTEGER, -1))                     # 4 index to current focus widget, if any
 
         def start(stack):
-            print("Dialog start")
+            #print("Dialog start")
             frame = Wye.codeFrame(TestLib3.Dialog, stack)
-            print("Dialog Add dialog to focus manager")
-            WyeCore.Utils.setFocusManager(WyeCore.libs.WyeUI.FocusManager.openDialog(frame, None))
             return frame
 
         def run(frame):
             match frame.PC:
                 case 0:     # Start up case - set up all the fields
-                    frame.params[0][0] = frame  # self referential!
+                    print("Dialog Add dialog", frame.params[1][0], "to focus manager")
+                    WyeCore.libs.WyeUI.FocusManager.openDialog(frame, None)
+
+                    frame.params[0] = [frame]  # self referential!
                     print("Dialog put frame in param[0][0]", frame)
                     frame.vars[0] = (frame.params[2])        # save display position
                     # return frame
@@ -127,11 +139,27 @@ class TestLib3:
                     pos = [x for x in frame.params[2]]    # copy position
 
                     # do user inputs
-                    nInputs = len(frame.params) - 4
-                    print("Dialog ", nInputs, " user widgets")
-                    #for ii in range(nInputs):
-                    #
-
+                    # Note that input returns its frame as parameter value
+                    nInputs = (len(frame.params) - 4)
+                    print("Dialog ", nInputs, " user widgets. nParams=", len(frame.params))
+                    # draw user- supplied label and text inputs
+                    # todo - make this a bit more flexible by input type!!!
+                    for ii in range(nInputs):
+                        pos[2] -= .3
+                        print("Dialog input", ii, " param ", 4+(ii*2))
+                        inFrm = frame.params[4+ii][0]
+                        print("Dialog input ", ii, " inFrm", inFrm)
+                        print("       inFrm.params[1]", inFrm.params[1])
+                        lbl = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
+                                                          scale=(.2, .2, .2))
+                        frame.vars[3][0][lbl.getTag()] = ii     # tag => inp index dictionary
+                        lblGFrm = lbl.text.getFrameActual()
+                        width = (lblGFrm[1] - lblGFrm[0]) * .2 + .1
+                        txt = WyeCore.libs.WyeUI._label3d(inFrm.vars[1][0], (1, 0, 0, 1),
+                                                          pos=(pos[0] + width, pos[1], pos[2]), scale=(.2, .2, .2))
+                        frame.vars[2][0].append(txt)            # save text instance
+                        frame.vars[3][0][txt.getTag()] = ii     # tag => inp index dictionary
+                    print("Dialog has input widgets", frame.vars[2])
                     # display buttons
                     pos[2] -= .3
                     txt = WyeCore.libs.WyeUI._label3d("OK", color=(1, 1, 1, 1), pos=tuple(pos), scale=(.2, .2, .2))
@@ -140,13 +168,70 @@ class TestLib3:
                     txt = WyeCore.libs.WyeUI._label3d("Cancel", color=(1, 1, 1, 1), pos=tuple(pos),
                                                       scale=(.2, .2, .2))
                     frame.vars[1][0].append(txt)
-                    # user supplied input widgets
-                    
+
 
                     frame.PC += 1   #
                 case 1:
                     # handle events
                     pass
+
+        def doSelect(frame, tag):
+            print("Dialog doSelect: tag", tag)
+            prevSel = frame.vars[4][0]      # get current selection
+            # if tag is input field in this dialog, selecdt it
+            print("Dialog tag dictionary contains:", frame.vars[3][0])
+
+            if tag in frame.vars[3][0]:        # do we have a matching tag?
+                ix = frame.vars[3][0][tag]     # Yes, make it selected (save ix, chg bgnd)
+                inWidg = frame.vars[2][0][ix]
+                print("  found ix", ix, " txt", inWidg, " Set selected color")
+                inWidg.setColor((0,.25,0,1))
+                frame.vars[4][0] = ix
+            # nothing selected on this dialog
+            else:
+                frame.vars[4][0] = -1
+
+            # If there was a diff selection before, fix that
+            if prevSel >= -1 and prevSel != frame.vars[4][0]:
+                inWidg = frame.vars[2][0][prevSel]
+                inWidg.setColor((0,0,0, 1))
+
+        def doKey(frame, key):
+            # if we have an input with focus
+            ix = frame.vars[4][0]
+            if ix >= 0:
+                inFrm = frame.params[4 + ix][0]
+                txt = inFrm.vars[1][0]
+                insPt = inFrm.vars[2][0]
+                preTxt = txt[:insPt]
+                postTxt = txt[insPt:]
+                # delete key
+                if key == '\u0008':
+                    if insPt > 0:
+                        preTxt = preTxt[:-1]
+                        insPt -= 1
+                        inFrm.vars[2][0] = insPt
+                    txt = preTxt + postTxt
+                # arrow keys
+                elif key == Wye.ctlKeys.LEFT:
+                    if insPt > 0:
+                        insPt -= 1
+                        inFrm.vars[2][0] = insPt
+                    return
+                elif key == Wye.ctlKeys.RIGHT:
+                    if insPt < len(txt):
+                        insPt += 1
+                        inFrm.vars[2][0] = insPt
+                    return
+                # printable key, insert it in the string
+                else:
+                    txt = preTxt + key + postTxt
+                    insPt += 1
+                    inFrm.vars[2][0] = insPt
+                inFrm.vars[1][0] = txt
+                inWidg = frame.vars[2][0][ix]
+                print("  set text", txt," ix", ix, " txtWidget", inWidg)
+                inWidg.setText(txt)
 
 
     class DlgTst:
@@ -155,18 +240,45 @@ class TestLib3:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = ()
-        varDescr = (("id", Wye.dType.OBJECT, None),
-                    ("Title", Wye.dType.INTEGER, "Test Dialog"),
-                    ("text1", Wye.dType.INTEGER, 0),
-                    ("text2", Wye.dType.INTEGER, 0),
-                    )  # 0
+        varDescr = (("id", Wye.dType.OBJECT, None),                 # 0
+                    ("Title", Wye.dType.INTEGER, "Test Dialog"),    # 1
+                    ("text1ID", Wye.dType.STRING, ""),              # 2
+                    ("text1Val", Wye.dType.STRING, ""),        # 3
+                    ("text2ID", Wye.dType.STRING, ""),              # 4
+                    ("text2Val", Wye.dType.STRING, "<val1>"),        # 5
+
+                    ("id2", Wye.dType.OBJECT, None),  # 6
+                    ("Title2", Wye.dType.INTEGER, "Test Dialog 2"),  # 7
+                    ("text1ID2", Wye.dType.STRING, ""),  # 8
+                    ("text1Val2", Wye.dType.STRING, ""),  # 9
+                    ("text2ID2", Wye.dType.STRING, ""),  # 10
+                    ("text2Val2", Wye.dType.STRING, "<val2>"),  # 11
+                    )
 
         codeDescr = (
-            (None, "print('DlgTst frame',WyeCore.Utils.frameToString(frame))"),
+            #(None, "print('DlgTst frame',WyeCore.Utils.frameToString(frame))"),
+            ("TestLib3.Dialog", (None, "frame.vars[6]"), (None, "frame.vars[7]"),
+                               (None, "(-3,10,0)"), (None, "None"),
+                               ("TestLib3.TextInput", (None, "frame.vars[8]"),
+                                (None, "['T3Label']"),
+                                (None, "frame.vars[9]")
+                               ),
+                               ("TestLib3.TextInput", (None, "frame.vars[10]"),
+                                  (None, "['T4Label']"),
+                                  (None, "frame.vars[11]")
+                               )
+             ),
             ("TestLib3.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-                               (None, "(0,10,0)"), (None, "None"),
-                               #("TestLib3.TextInput", )
-                                ),
+             (None, "(3,10,0)"), (None, "None"),
+             ("TestLib3.TextInput", (None, "frame.vars[2]"),
+              (None, "['T1Label']"),
+              (None, "frame.vars[3]")
+              ),
+             ("TestLib3.TextInput", (None, "frame.vars[4]"),
+              (None, "['T2Label']"),
+              (None, "frame.vars[5]")
+              )
+             ),
             #(None, "print('DlgTst: Dialog returned frame ',frame.vars[0][0])"),
             #(None, "print('DlgTst: frame for verb ',frame.vars[0][0].verb)"),
             #(None, "print('DlgTst: frame for verb name ',frame.vars[0][0].verb.__name__)"),
