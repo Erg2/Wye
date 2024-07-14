@@ -603,7 +603,7 @@ class WyeCore(Wye.staticObj):
                                     codeText += "    "+eff+".params.append(" + paramDesc[1] + ")\n"
                                     #print("parseWyeTuple: 3 codeText=", codeText[0])
                                 else:                           # recurse to parse nested code tuple
-                                    caseNumList[0] += 1
+                                    #caseNumList[0] += 1
                                     cdTxt, fnTxt = WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList)
                                     cdTxt += "    "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
                                     codeText += cdTxt
@@ -714,25 +714,47 @@ class WyeCore(Wye.staticObj):
             return ("", parFnText)
 
         def frameToString(frame):
-            print("frame:", frame)
+            fStr = ""
+            fStr += "frame: "+str(frame)+"\n"
             if hasattr(frame, "verb"):
                 if hasattr(frame.verb, "__name__"):
-                    print("  verb ", frame.verb.__name__)
+                    fStr += "  verb "+frame.verb.__name__+"\n"
                 else:
-                    print("  verb has no name")
+                    fStr += "  verb has no name"+"\n"
             else:
-                print("  frame has no verb")
-            print("  params:", WyeCore.Utils.paramsToString(frame))
-            print("  vars:", WyeCore.Utils.varsToString(frame))
+                fStr += "  frame has no verb"+"\n"
+            if hasattr(frame, "PC"):
+                fStr += "  PC="+str(frame.PC)+"\n"
+            else:
+                fStr += "  <no PC>"+"\n"
+            if hasattr(frame, "SP"):
+                fStr += "  SP="+WyeCore.Utils.frameListSummary(frame.SP)+"\n"
+            else:
+                fStr += "  <no SP>"+"\n"
+            fStr += "  params:" + WyeCore.Utils.paramsToString(frame)+"\n"
+            fStr += "  vars:" + WyeCore.Utils.varsToString(frame)
+
+            return fStr
+
+        def frameListSummary(lst):
+            pStr = ""
+            if len(lst) > 0:
+                for ii in range(len(lst)):
+                    frm = lst[ii]
+                    pStr += str(frm.verb.__name__)
+                    if ii < len(lst)-2:
+                        pStr += ", "
+            else:
+                pstr = "<empty>"
+            return pStr
 
         def listToString(lst):
             pStr = ""
             if len(lst) > 0:
-                ii = 0
-                for ii in range(ii):
+                for ii in range(len(lst)):
                     param = lst[ii]
                     pStr += str(param[0])
-                    if ii < len(lst)-1:
+                    if ii < len(lst)-2:
                         pStr += ", "
             else:
                 pstr = "<empty>"

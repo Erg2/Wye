@@ -202,7 +202,12 @@ class WyeUI(Wye.staticObj):
             self._label3d.setLightOff()                        # unaffected by world lighting
             self._label3d.setColor(bg)
 
+        def removeNode(self):
+            self._label3d.removeNode()
+
+
     # text entry verb
+    # todo - finish this
     class text3d:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NUMBER
@@ -216,7 +221,8 @@ class WyeUI(Wye.staticObj):
             ("label", Wye.dType.OBJECT, None),          # 0 - label showing text
             ("labelID", Wye.dType.STRING, None),        # 1 - id of label for setting selected
             ("pos", Wye.dType.INTEGER_LIST, [0,0,0]),   # 2 - pos?
-            ("text", Wye.dType.STRING, "---"),   # 2
+            ("text", Wye.dType.STRING, "---"),          # 3
+            ("graphicID", Wye.dType.OBJECT, None)       # 4
            )   # var 4
 
         # np=loader.loadModel("jack") #load a model
@@ -225,10 +231,13 @@ class WyeUI(Wye.staticObj):
         # loader.unloadModel(path)
 
 
-        def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
-            label = WyeUI._label3d(text, color, pos, scale, bg)
+        #def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
+        #    label = WyeUI._label3d(text, color, pos, scale, bg)
 
-#    class displayDialog:
+    # class displayDialog:
+    # todo - move here from test lib
+
+
 
     # Widget focus manager singleton
     # Maintains a list of dialog hierarchies where the most recently added member of each hierarchy is the only one
@@ -254,7 +263,7 @@ class WyeUI(Wye.staticObj):
         # Mouse event delivery requires an instantiated class
         class _MouseHandler(DirectObject):
             def __init__(self):
-                print("WyeUI FocusManager openDialog set mouse event")
+                #print("WyeUI FocusManager openDialog set mouse event")
                 self.accept('mouse1', self.mouseEvt)
 
 
@@ -270,7 +279,7 @@ class WyeUI(Wye.staticObj):
 
             def mouseEvt(self):
                 evt = WyeCore.base.mouseWatcherNode.getMouse()
-                print("FocusManager mouseEvt:", evt)
+                #print("FocusManager mouseEvt:", evt)
 
 
         # find dialogFrame in leaf nodes of dialog hierarchies
@@ -326,7 +335,7 @@ class WyeUI(Wye.staticObj):
             for hier in WyeUI.FocusManager.dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
                 if len(hier) > 0:
                     frm = hier[-1]
-                    print("FocusManager doSelect", id)
+                    print("FocusManager doSelect", frm, ", ", id)
                     if frm.verb.doSelect(frm, id):
                         status = True
             return status
@@ -353,7 +362,7 @@ class WyeUI(Wye.staticObj):
                     for hier in WyeUI.FocusManager.dialogHierarchies:
                         if len(hier) > 0:
                             frm = hier[-1]
-                            print("FocusManager doKey", key)
+                            #print("FocusManager doKey", key)
                             if frm.verb.doKey(frm, key):
                                 return True
                     return False
