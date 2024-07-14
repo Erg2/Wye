@@ -112,29 +112,33 @@ class TestLib3:
                       # input widgets go here (Input fields, Buttons, and who knows what all cool stuff that may come
 
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),          # 0 pos copy
-                    ("dlgWidgets", Wye.dType.OBJECT_LIST, []),              # 1 standard dialog widgets
-                    ("dlgTags", Wye.dType.OBJECT, []),                      # 2 OK, Cancel widget tags
-                    ("inpWidgets", Wye.dType.OBJECT_LIST, []),              # 3 input obj input classes
-                    ("inpTags", Wye.dType.OBJECT, {}),                      # 4d dictionary by tag of class ix
+                    ("dlgWidgets", Wye.dType.OBJECT_LIST, None),              # 1 standard dialog widgets
+                    ("dlgTags", Wye.dType.STRING_LIST, None),                      # 2 OK, Cancel widget tags
+                    ("inpWidgets", Wye.dType.OBJECT_LIST, None),              # 3 input obj input classes
+                    ("inpTags", Wye.dType.OBJECT, None),                      # 4d dictionary by tag of class ix
                     ("currInp", Wye.dType.INTEGER, -1))                     # 5 index to current focus widget, if any
 
         def start(stack):
             #print("Dialog start")
             frame = Wye.codeFrame(TestLib3.Dialog, stack)
+            frame.vars[1][0] = []
+            frame.vars[2][0] = []
+            frame.vars[3][0] = []
+            frame.vars[4][0] = {}
             return frame
 
         def run(frame):
             match frame.PC:
                 case 0:     # Start up case - set up all the fields
-                    print("Dialog Add dialog", frame.params[1][0], "to focus manager")
+                    print("Dialog Add dialog", frame.params[1][0], ", ", frame, "to focus manager")
                     WyeCore.libs.WyeUI.FocusManager.openDialog(frame, None)
 
                     frame.params[0] = [frame]  # self referential!
-                    print("Dialog put frame in param[0][0]", frame)
+                    #print("Dialog put frame in param[0][0]", frame)
                     frame.vars[0] = (frame.params[2])        # save display position
                     # return frame
 
-                    print("Dialog display: pos=frame.params[2]", frame.params[2])
+                    #print("Dialog display: pos=frame.params[2]", frame.params[2])
                     dlg = WyeCore.libs.WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2], scale=(.2, .2, .2))
                     frame.vars[1][0].append(dlg)
 
@@ -143,15 +147,15 @@ class TestLib3:
                     # do user inputs
                     # Note that input returns its frame as parameter value
                     nInputs = (len(frame.params) - 4)
-                    print("Dialog ", nInputs, " user widgets. nParams=", len(frame.params))
+                    #print("Dialog ", nInputs, " user widgets. nParams=", len(frame.params))
                     # draw user- supplied label and text inputs
                     # todo - make this a bit more flexible by input type!!!
                     for ii in range(nInputs):
                         pos[2] -= .3
-                        print("Dialog input", ii, " param ", 4+(ii*2))
+                        #print("Dialog input", ii, " param ", 4+(ii*2))
                         inFrm = frame.params[4+ii][0]
-                        print("Dialog input ", ii, " inFrm", inFrm)
-                        print("       inFrm.params[1]", inFrm.params[1])
+                        print("    Dialog input ", ii, " inFrm", inFrm)
+                        #print("       inFrm.params[1]", inFrm.params[1])
                         lbl = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
                                                           scale=(.2, .2, .2))
                         frame.vars[1][0].append(lbl)
@@ -163,6 +167,7 @@ class TestLib3:
                         width = (lblGFrm[1] - lblGFrm[0]) * .2 + .1
                         txt = WyeCore.libs.WyeUI._label3d(inFrm.vars[1][0], (1, 0, 0, 1),
                                                           pos=(pos[0] + width, pos[1], pos[2]), scale=(.2, .2, .2))
+                        print("    Dialog inWdg", txt)
                         frame.vars[3][0].append(txt)            # save text instance
                         frame.vars[4][0][txt.getTag()] = ii     # tag => inp index dictionary
 
@@ -194,7 +199,7 @@ class TestLib3:
             if tag in frame.vars[4][0]:        # do we have a matching tag?
                 ix = frame.vars[4][0][tag]     # Yes, make it selected (save ix, chg bgnd)
                 inWidg = frame.vars[3][0][ix]
-                #print("  found ix", ix, " txt", inWidg, " Set selected color")
+                print("  found ix", ix, " inWdg", inWidg, " Set selected color")
                 inWidg.setColor((0,.25,0,1))
                 frame.vars[5][0] = ix
             elif tag in frame.vars[2][0]:
