@@ -300,7 +300,7 @@ class WyeCore(Wye.staticObj):
 
 
             def controlKeyFunc(self, keyID):
-                print("Control key ", keyID)
+                #print("Control key ", keyID)
                 if WyeCore.focusManager:
                     WyeCore.focusManager.doKey(keyID)
 
@@ -463,9 +463,9 @@ class WyeCore(Wye.staticObj):
                 self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
+                    #print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
-                        print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
+                        #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                         # if there's a user input focus manager, call it
                         focusStatus = False
                         if WyeCore.focusManager:
@@ -479,14 +479,14 @@ class WyeCore(Wye.staticObj):
                             if "click" in WyeCore.World.eventCallbackDict:
                                 tagDict = WyeCore.World.eventCallbackDict["click"]
                                 if wyeID in tagDict:
-                                    print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
+                                    #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
                                     # run through lists calling callbacks.
                                     #print("objSelectEvent: tagDict=", tagDict)
                                     evtLst = tagDict[wyeID]
                                     for evt in evtLst:
                                         frame = evt[0]
                                         data = evt[1]
-                                        print("objSelectEvent: inc frame ", frame.verb.__name__, " PC ", frame.PC)
+                                        #print("objSelectEvent: inc frame ", frame.verb.__name__, " PC ", frame.PC)
                                         frame.PC += 1
                                         frame.eventData = (wyeID, data)        # user data
                                     del tagDict[wyeID] # remove tag from dict of active callbacks
@@ -749,15 +749,15 @@ class WyeCore(Wye.staticObj):
             return pStr
 
         def listToString(lst):
+            print("lst", lst)
             pStr = ""
             if len(lst) > 0:
                 for ii in range(len(lst)):
-                    param = lst[ii]
-                    pStr += str(param[0])
+                    pStr += str(lst[ii])
                     if ii < len(lst)-2:
                         pStr += ", "
             else:
-                pstr = "<empty>"
+                pStr = "<empty>"
             return pStr
 
         # return params concanated
@@ -766,7 +766,7 @@ class WyeCore(Wye.staticObj):
 
         # return vars concanated
         def varsToString(frame):
-            return WyeCore.Utils.listToString(frame.params)
+            return WyeCore.Utils.listToString(frame.vars)
 
         # return status as string
         def statusToString(stat):
@@ -803,6 +803,19 @@ class WyeCore(Wye.staticObj):
                     val = getattr(libClass, attr)
                     if inspect.isclass(val):
                         #print("build class ",attr," in lib ",libName)
+                        if hasattr(val, "paramDescr"):
+                            setattr(val, "pConst", {})
+                            ii = 0
+                            for desc in val.paramDescr:
+                                val.pConst[desc[0]] = ii
+                                ii += 1
+
+                        if hasattr(val, "varDescr"):
+                            setattr(val, "vConst", {})
+                            ii = 0
+                            for desc in val.varDescr:
+                                val.vConst[desc[0]] = ii
+                                ii += 1
 
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(val, "build"):

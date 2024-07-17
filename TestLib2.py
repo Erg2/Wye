@@ -222,33 +222,33 @@ class TestLib2:
                  ("WyeCore.libs.TestLib.makeVec", (None, "[]"), (None, "[-3]"), (None, "[15]"), (None, "[0]")),
                  (None, "(.5,.5,.5)")),
                 ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[0]"), (None, "(1,0,0,1)")),
-                (None, "print('TestCompiledPar stream0 zero Wait For Click case ',frame.PC)"),
+                #(None, "print('TestCompiledPar stream0 zero Wait For Click case ',frame.PC)"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[2]")),
-                (None, "print('TestCompiledPar stream0 one case ',frame.PC)"),
+                #(None, "print('TestCompiledPar stream0 one case ',frame.PC)"),
                 ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[0]"), (None, "(0,1,0,1)")),
-                (None, "print('TestCompiledPar stream0 set color (0,1,0,1)')"),
+                #(None, "print('TestCompiledPar stream0 set color (0,1,0,1)')"),
                 (None, "frame.status = Wye.status.SUCCESS")   # trap execution here in loop
             ),
             (
                 ("WyeCore.libs.WyeLib.loadModel", (None, "frame.vars[3]"), (None, "frame.vars[4]")),
                 ("WyeCore.libs.WyeLib.makePickable", (None, "frame.vars[5]"), (None, 'frame.vars[3]')),
                 ("WyeCore.libs.WyeLib.showModel", (None, "frame.vars[3]"), (None, "(-2,15,0)"), (None, "(.5,.5,.5)")),
-                (None, "print('TestCompiledPar stream1 zero Wait For Click case ',frame.PC)"),
+                #(None, "print('TestCompiledPar stream1 zero Wait For Click case ',frame.PC)"),
                 ("Label", "Reset"),
-                (None, "print('TestCompiledPar stream1 start color sequence')"),
+                #(None, "print('TestCompiledPar stream1 start color sequence')"),
                 ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(1,1,0,1)")),
 
                 ("Label", "DoClick"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[5]")),
-                (None, "print('TestCompiledPar stream1 one case ',frame.PC, ' loopVar', frame.vars[6][0])"),
+                #(None, "print('TestCompiledPar stream1 one case ',frame.PC, ' loopVar', frame.vars[6][0])"),
                 (None, "frame.vars[6][0] += 1"),
 
                 ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(frame.vars[6][0]*(1/10),1,0,1)")),
-                (None, "print('TestCompiledPar stream1 set color', (frame.vars[6][0]*(1/10),1,0,1))"),
+                #(None, "print('TestCompiledPar stream1 set color', (frame.vars[6][0]*(1/10),1,0,1))"),
 
                 ("IfGoTo", "frame.vars[6][0] < 10", "DoClick"),
                 ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(1,1,1,1)")),
-                (None, "print('TestCompiledPar stream1 done')"),
+                #(None, "print('TestCompiledPar stream1 done')"),
                 (None, "frame.vars[6][0] = 1"),
                 ("GoTo", "Reset"),
                 ("Label", "Done")
@@ -291,12 +291,12 @@ class TestLib2:
             ("WyeCore.libs.WyeLib.showModel", (None, "frame.vars[3]"), (None, "(1,15,0)"), (None, "(.5,.5,.5)")),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(0,1,1,1)")),
 
-            (None, "print('testMCycle zero Wait For Click case ',frame.PC)"),
+            #(None, "print('testMCycle zero Wait For Click case ',frame.PC)"),
             ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[2]")),
-            (None, "print('testMCycle one case ',frame.PC)"),
+            #(None, "print('testMCycle one case ',frame.PC)"),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[0]"), (None, "(0,1,0,1)")),
 
-            (None, "print('testMCycle vars=',frame.vars)"),
+            #(None, "print('testMCycle vars=',frame.vars)"),
 
             ("TestLib2.testMCycle2", (None, "frame.vars[3]"), (None, "frame.vars[5]")),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(0,1,0,1)"))
@@ -323,11 +323,11 @@ class TestLib2:
         codeDescr = (
             (None, "frame.vars[0][0] = frame.params[0][0]"),
             (None, "frame.vars[2][0] = frame.params[1][0]"),
-            (None, "print('testMCycle2 tag=',frame.vars[2][0])"),
+            #(None, "print('testMCycle2 tag=',frame.vars[2][0])"),
 
-            (None, "print('testMCycle2 zero Wait For Click case ',frame.PC)"),
+            #(None, "print('testMCycle2 zero Wait For Click case ',frame.PC)"),
             ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[2]")),
-            (None, "print('testMCycle2 one case ',frame.PC)"),
+            #(None, "print('testMCycle2 one case ',frame.PC)"),
         )
 
         def build():

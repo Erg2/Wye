@@ -315,18 +315,18 @@ class WyeUI(Wye.staticObj):
                 if not hier is None:
                     hier.append(dialogFrame)
 
-            print("FocusManager openDialog", WyeUI.FocusManager.dialogHierarchies)
+            #print("FocusManager openDialog", WyeUI.FocusManager.dialogHierarchies)
 
 
         # Remove the given dialog from the display hierarchy
         def closeDialog(dialogFrame):
             hier = WyeUI.FocusManager.findDialogHier(dialogFrame)
-            print("FocusManager closeDialog remove ", dialogFrame, " from len ", len(hier), ", ", hier)
+            #print("FocusManager closeDialog remove ", dialogFrame, " from len ", len(hier), ", ", hier)
             del hier[-1]    # remove dialog from hierarchy
             if len(hier) == 0:  # if that was the last dialog, remove hierarchy too
-                print(" hier empty, remove it")
+                #print(" hier empty, remove it")
                 WyeUI.FocusManager.dialogHierarchies.remove(hier)
-            print("FocusManager closeDialog", WyeUI.FocusManager.dialogHierarchies)
+            #print("FocusManager closeDialog", WyeUI.FocusManager.dialogHierarchies)
 
         # User clicked on object
         # call each leaf dialog to see if obj belongs to it.
@@ -335,10 +335,10 @@ class WyeUI(Wye.staticObj):
         def doSelect(id):
             status = False
             for hier in WyeUI.FocusManager.dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
-                print("FocusManager doSelect hier=", hier)
+                #print("FocusManager doSelect hier=", hier)
                 if len(hier) > 0:
                     frm = hier[-1]
-                    print("FocusManager doSelect", frm, ", ", id)
+                    #print("FocusManager doSelect", frm, ", ", id)
                     if frm.verb.doSelect(frm, id):
                         status = True
             return status
@@ -365,7 +365,7 @@ class WyeUI(Wye.staticObj):
                     for hier in WyeUI.FocusManager.dialogHierarchies:
                         if len(hier) > 0:
                             frm = hier[-1]
-                            print("FocusManager doKey", frm, " ,", key)
+                            #print("FocusManager doKey", frm, " ,", key)
                             if frm.verb.doKey(frm, key):
                                 return True
                     return False
