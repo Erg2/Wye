@@ -48,7 +48,7 @@ class TestLib3:
             return TestLib3.TestLib3_rt.doitButton_start_rt(stack)        # run compiled start code to build parallel code stacks
 
         def run(frame):
-            WyeCore.Utils.runParallelCode(frame)      # run compiled run code
+            frame.runParallel(frame)      # run compiled run code
 
     # Input field classes
     # Each input run method just returns its frame as p0
@@ -111,14 +111,13 @@ class TestLib3:
         varDescr = (("currPos", Wye.dType.INTEGER, 0),      # 0
                     ("gWidget", Wye.dType.OBJECT, None),    # 1 associated graphic widget
                     ("verb", Wye.dType.OBJECT, None),       # 2 verb to call
-                    ("verbFrame", Wye.dType.OBJECT, None),  # 3 verb frame for call
-                    ("clickCount", Wye.dType.INTEGER, 0),   # 4 button depressed count
-                    ("verbStack", Wye.dType.OBJECT_LIST, None), # 5 verb callback stack
+                    ("clickCount", Wye.dType.INTEGER, 0),   # 3 button depressed count
+                    ("verbStack", Wye.dType.OBJECT_LIST, None), # 4 verb callback stack
                     )
 
         def start(stack):
             frm = Wye.codeFrame(TestLib3.ButtonInput, stack)
-            frm.vars[TestLib3.ButtonInput.vConst["verbStack"]][0] = []
+            frm.vars[TestLib3.ButtonInput.vConst.verbStack][0] = []
             return frm
 
         def run(frame):
@@ -129,10 +128,12 @@ class TestLib3:
 
 
     # Dialog object.
-    # Display and
+    # Display and run input fields
+    # Note: Dialog is a one-stream parallel so pushbuttons can add parallel multi-cycle tasks
     class Dialog:
-        mode = Wye.mode.MULTI_CYCLE
+        mode = Wye.mode.PARALLEL
         dataType = Wye.dType.OBJECT
+        parTermType = Wye.parTermType.FIRST_FAIL
         paramDescr = (("frame", Wye.dType.OBJECT, Wye.access.REFERENCE),    # 0 return own frame
                       ("title", Wye.dType.STRING, Wye.access.REFERENCE),    # 1 user supplied title for dialog
                       ("position", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # 2 user supplied position
@@ -150,26 +151,37 @@ class TestLib3:
         def start(stack):
             #print("Dialog start")
 
-            frame = Wye.codeFrame(TestLib3.Dialog, stack)
+            frame = Wye.parallelFrame(TestLib3.Dialog, stack)
             frame.vars[1][0] = []
             frame.vars[2][0] = []
             frame.vars[3][0] = {}
             frame.vars[5][0] = []
+            frame.stacks.append([])   # initially just the one stack
+
+            fS0 = Wye.codeFrame(WyeCore.ParallelStream, frame.stacks[0])
+            fS0.vars = frame.vars       # so parallel code can access parent frame's data
+            fS0.params = frame.params   # so parallel code can access parent frame's data
+            fS0.parentFrame = frame     # so multicycle/parallel callbacks can be put on dialog's parallel processing list
+            fS0.run = TestLib3.Dialog.Dialog_stream0
+            frame.stacks[0].append(fS0)
             return frame
 
         def run(frame):
+            frame.runParallel()
+
+        def Dialog_stream0(frame):
             match frame.PC:
                 case 0:     # Start up case - set up all the fields
                     #print("Dialog pConst", TestLib3.Dialog.pConst)
                     #print("Dialog vConst", TestLib3.Dialog.vConst)
-                    #print("Dialog Add dialog", frame.params[TestLib3.Dialog.pConst["title"]][0], ", ", frame, "to focus manager")
+                    #print("Dialog Add dialog", frame.params[TestLib3.Dialog.pConst.title][0], ", ", frame, "to focus manager")
                     WyeCore.libs.WyeUI.FocusManager.openDialog(frame, None)
 
-                    print("Dialog run: TestLib3.Dialog.pConst['frame']=", TestLib3.Dialog.pConst["frame"])
+                    print("Dialog run: TestLib3.Dialog.pConst.frame=", TestLib3.Dialog.pConst.frame)
                     print("Dialog run: frame.params:", frame.params)
-                    frame.params[TestLib3.Dialog.pConst["frame"]][0] = frame  # self referential!
+                    frame.params[TestLib3.Dialog.pConst.frame][0] = frame  # self referential!
                     #print("Dialog put frame in param[0][0]", frame)
-                    frame.vars[TestLib3.Dialog.vConst["position"]] = (frame.params[2])        # save display position
+                    frame.vars[TestLib3.Dialog.vConst.position] = (frame.params[2])        # save display position
                     # return frame
 
                     #print("Dialog display: pos=frame.params[2]", frame.params[2])
@@ -235,25 +247,28 @@ class TestLib3:
                     frame.PC += 1
 
                 case 1:
-                    # do click-blink for buttons
+                    # do end of click-blink for buttons
                     delLst = []
                     # decrement blink count.  if zero, turn off button highlight
-                    for btnFrm in frame.vars[TestLib3.Dialog.vConst["clickedBtns"]][0]:
-                        btnFrm.vars[TestLib3.ButtonInput.vConst["clickCount"]][0] -= 1
-                        if btnFrm.vars[TestLib3.ButtonInput.vConst["clickCount"]][0] <= 0:
-                            print("Dialog run: Done click flash for button ", btnFrm.verb.__name__)
+                    for btnFrm in frame.vars[TestLib3.Dialog.vConst.clickedBtns][0]:
+                        #print("button ", btnFrm.verb.__name__, " count ", btnFrm.vars[TestLib3.ButtonInput.vConst.clickCount][0])
+                        btnFrm.vars[TestLib3.ButtonInput.vConst.clickCount][0] -= 1
+                        if btnFrm.vars[TestLib3.ButtonInput.vConst.clickCount][0] <= 0:
+                            #print("Dialog run: Done click flash for button ", btnFrm.verb.__name__)
                             delLst.append(btnFrm)
                             btnFrm.vars[1][0].setColor((0, 0, 0, 1))
                     # remove any buttons whose count is finished
                     for btnFrm in delLst:
-                        print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
-                        frame.vars[TestLib3.Dialog.vConst["clickedBtns"]][0].remove(btnFrm)
+                        #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
+                        frame.vars[TestLib3.Dialog.vConst.clickedBtns][0].remove(btnFrm)
 
         def doSelect(frame, tag):
             #print("Dialog doSelect: ", frame.verb, " tag", tag)
             prevSel = frame.vars[4][0]      # get current selection
             # if tag is input field in this dialog, select it
             closing = False
+
+
 
             # if clicked on input field
             if tag in frame.vars[3][0]:        # do we have a matching tag?
@@ -264,40 +279,38 @@ class TestLib3:
                     inWidg = inFrm.vars[3][0]
                     #print("  found ix", ix, " inWdg", inWidg, " Set selected color")
                     inWidg.setColor((0,.25,0,1))        # set input background to "has focus" color
-                    frame.vars[TestLib3.Dialog.vConst["currInp"]][0] = ix           # save as current input focus
+                    frame.vars[TestLib3.Dialog.vConst.currInp][0] = ix           # save as current input focus
                 # button callback
                 elif inFrm.verb is TestLib3.ButtonInput:
                     callVerb = inFrm.vars[2][0]
                     inFrm.vars[1][0].setColor((0, .25, 0, 1)) # set button color pressed
-                    if inFrm.vars[TestLib3.ButtonInput.vConst["clickCount"]][0] == 0:
-                        inFrm.vars[TestLib3.ButtonInput.vConst["clickCount"]][0] = 10       # start click count down (in display frames)
-                        frame.vars[TestLib3.Dialog.vConst["clickedBtns"]][0].append(inFrm)    # stash button for flash countdown
-                    # if there
+                    if inFrm.vars[TestLib3.ButtonInput.vConst.clickCount][0] <= 0:
+                        #print("Dialog doSelect: Start click count for", inFrm.verb.__name__)
+                        inFrm.vars[TestLib3.ButtonInput.vConst.clickCount][0] = 10       # start click count down (in display frames)
+                        frame.vars[TestLib3.Dialog.vConst.clickedBtns][0].append(inFrm)    # stash button for flash countdown
+                    #else:
+                    #    print("Dialog doSelect: click count already at", inFrm.vars[TestLib3.ButtonInput.vConst.clickCount][0])
+
+                    # if something to call
                     if not callVerb is None:
                         print("Dialog doSelect: clicked btn, verb ", callVerb.__name__)
-                        print("Dialog frame.params", frame.params)
-                        if inFrm.vars[TestLib3.ButtonInput.vConst["verbFrame"]][0] is None:
-                            print("       start verb", callVerb.__name__)
-                            inFrm.vars[TestLib3.ButtonInput.vConst["verbFrame"]][0] = callVerb.start([])
+                        #print("Dialog frame.params", frame.params)
+                        # start the verb
+                        verbFrm = callVerb.start(frame.SP)
+                        # if not single cycle, then put up as parallel path
+                        if callVerb.mode != Wye.mode.SINGLE_CYCLE:
+                            print("Dialog doSelect verb mode is ", Wye.mode.tostring(callVerb.mode))
+                            if hasattr(frame, "parentFrame"):
+                                print("doSelect put ", callVerb.__name__, " on parentFrame stack multi/parallel verb ", frame.parentFrame.verb.__name__)
+                                frame.parentFrame.addStream(verbFrm)
+                            else:
+                                print("doSelect put ", callVerb.__name__, " on frame stack multi/parallel verb ", frame.verb.__name__)
+                                frame.addStream(verbFrm)
                         else:
-                            print("       already have verb frame", inFrm.vars[TestLib3.ButtonInput.vConst["verbFrame"]][0].verb.__name__)
-                        verbFrm = inFrm.vars[TestLib3.ButtonInput.vConst["verbFrame"]][0]
-                        # if there's something on the callback verb's stack, call it
-                        if len(verbFrm.SP) > 0:
-                            print("       verb stack len", len(verbFrm.SP), " run top of stack", verbFrm.SP[-1].verb.__name__)
-                            runFrm = verbFrm.SP[-1]
-                            runFrm.verb.run(runFrm)
-                        else:
-                            # nothing on stack, just call verb
-                            print("       nothing on verb stack, run verb", verbFrm.verb.__name__)
+                            print("doSelect call single cycle verb ", verbFrm.verb.__name__)
                             verbFrm.verb.run(verbFrm)
-                        if verbFrm.status != Wye.status.CONTINUE:
-                            print("       verb done, status", Wye.status.tostring(verbFrm.status))
-                            inFrm.vars[TestLib3.ButtonInput.vConst["verbFrame"]][0] = None
-                        else:
-                            print("       verb run done, status CONTINUE")
-                        print("Dialog doSelect done, frame.params", frame.params)
-                    frame.vars[TestLib3.Dialog.vConst["currInp"]][0] = -1       # no input has focus
+
+                    frame.vars[TestLib3.Dialog.vConst.currInp][0] = -1       # no input has focus
 
             # if clicked on OK or Cancel
             elif tag in frame.vars[2][0]:
@@ -387,9 +400,9 @@ class TestLib3:
             return Wye.codeFrame(TestLib3.BtnCallback, stack)
 
         def run(frame):
-            print("BtnCallback! count = ", frame.vars[TestLib3.BtnCallback.vConst["count"]][0])
-            frame.vars[TestLib3.BtnCallback.vConst["count"]][0] += 1
-            if frame.vars[TestLib3.BtnCallback.vConst["count"]][0] > 5:
+            print("BtnCallback! count = ", frame.vars[TestLib3.BtnCallback.vConst.count][0])
+            frame.vars[TestLib3.BtnCallback.vConst.count][0] += 1
+            if frame.vars[TestLib3.BtnCallback.vConst.count][0] > 5:
                 frame.status = Wye.status.SUCCESS
 
     class BtnCallback2:
@@ -419,11 +432,11 @@ class TestLib3:
               (None, "frame.vars[5]")
               ),
              ("TestLib3.ButtonInput", (None, "frame.vars[6]"),
-              (None, "['Click Me!']"),
+              (None, "['Click Me counter']"),
               (None, "[TestLib3.BtnCallback]")
               ),
              ),
-            ("Label", "Done"),
+            #("Label", "Done"),
             (None, "print('Callback 2 done with SUCCESS')"),
             (None, "frame.status = Wye.status.SUCCESS")
         )
@@ -464,7 +477,7 @@ class TestLib3:
         codeDescr = (
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("TestLib3.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-                                (None, "(-1,10,0)"), (None, "None"),
+                                (None, "(-2,10,0)"), (None, "None"),
                                 ("TestLib3.TextInput", (None, "frame.vars[2]"),
                                   (None, "['T1Label']"),
                                   (None, "frame.vars[3]")
@@ -474,14 +487,14 @@ class TestLib3:
                                  (None, "frame.vars[5]")
                                 ),
                                 ("TestLib3.ButtonInput", (None, "frame.vars[12]"),
-                                  (None, "['Click Me!']"),
+                                  (None, "['Click Me for Dialog']"),
                                   (None, "[TestLib3.BtnCallback2]")
                                 ),
              ),
             #(None, "print('DlgTst frame 1 vars', frame.vars)"),
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("TestLib3.Dialog", (None, "frame.vars[6]"), (None, "frame.vars[7]"),
-                               (None, "(1,10,0)"), (None, "None"),
+                               (None, "(2,10,0)"), (None, "None"),
                                ("TestLib3.TextInput", (None, "frame.vars[8]"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars[9]")

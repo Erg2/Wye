@@ -126,6 +126,7 @@ class TestLib2:
             fS0 = Wye.codeFrame(WyeCore.ParallelStream, f.stacks[0])
             fS0.vars = f.vars
             fS0.params = f.params
+
             fS0.run = TestLib2.testPar.Stream0
             f.stacks[0].append(fS0)
 
@@ -265,7 +266,7 @@ class TestLib2:
             return TestLib2.TestLib2_rt.testCompiledPar_start_rt(stack)        # run compiled start code to build parallel code stacks
 
         def run(frame):
-            WyeCore.Utils.runParallelCode(frame)      # run compiled run code
+            frame.runParallel()      # run compiled run code
 
 
     class testMCycle:

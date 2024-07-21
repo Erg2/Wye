@@ -339,8 +339,12 @@ class WyeUI(Wye.staticObj):
                 if len(hier) > 0:
                     frm = hier[-1]
                     #print("FocusManager doSelect", frm, ", ", id)
-                    if frm.verb.doSelect(frm, id):
-                        status = True
+                    if hasattr(frm, "parentFrame"):
+                        if frm.parentFrame.verb.doSelect(frm, id):
+                            status = True
+                    else:
+                        if frm.verb.doSelect(frm, id):
+                            status = True
             return status
 
         def doKey(key):
@@ -366,8 +370,13 @@ class WyeUI(Wye.staticObj):
                         if len(hier) > 0:
                             frm = hier[-1]
                             #print("FocusManager doKey", frm, " ,", key)
-                            if frm.verb.doKey(frm, key):
-                                return True
+                            # todo - figure out how to get rid of parentFrame hack
+                            if hasattr(frm, "parentFrame"):
+                                if frm.parentFrame.verb.doKey(frm, key):
+                                    return True
+                            else:
+                                if frm.verb.doKey(frm, key):
+                                    return True
                     return False
 
 

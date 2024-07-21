@@ -240,7 +240,8 @@ class Wye:
                 #self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
                 self.vars = []
                 for varDef in verb.varDescr:
-                    self.vars.append([varDef[2]])
+                    if len(varDef) > 1:
+                        self.vars.append([varDef[2]])
             except:
                 print("ERROR Wye codeFrame: verb ",verb.__name__," varDef failed to parse:", varDef, " in ", verb.varDescr)
             self.PC = 0         # used by async verbs to track location in executing code
@@ -252,10 +253,92 @@ class Wye:
             self.debug = ""
             # print("codeFrame for verb", verb, " verb.varDescr =", verb.varDescr, " vars =", self.vars)
 
+    # used by verbs that run parallel streams
     class parallelFrame(codeFrame): # used by any object with parallel execution (multiple stacks)
         def __init__(self, verb, stack):
             super().__init__(verb, stack)
             self.stacks = []        # callee must fill in empty lists for appropriate number of stacks
+
+        # run the top of each parallel stack
+        def runParallel(frame):
+            dbgIx = 0
+            status = Wye.status.CONTINUE  # assume we'll keep going
+            foundFail = False
+            foundSuccess = False
+            foundContinue = False
+
+            # DEBUG: print out all the stacks
+            # print("parallel run: frame.stacks:")
+            # for sIx in range(len(frame.stacks)):
+            # print(" stack:", sIx, WyeCore.Utils.stackToString(frame.stacks[sIx]))
+
+            # Each parallel code block has its own stack
+            # Loop through each stack until termination conditions met (based on parTermType for parallel verb)
+            delLst = []
+            for stack in frame.stacks:
+
+                # if there's a frame, there's something to do
+                if len(stack) > 0:
+                    f = stack[-1]  # grab the bottom frame
+
+                    # if it's still running, run it again
+                    if f.status == Wye.status.CONTINUE:
+                        f.verb.run(f)
+                        foundContinue = True
+
+                    # if it terminated, if there's a parent, call it to clean up completed child
+                    else:
+                        # have a parent
+                        if len(stack) > 1:
+                            f = stack[-2]
+                            f.verb.run(f)  # run parent (will test child status, remove from stack, and continue)
+                            foundContinue = True  # technically we haven't checked, but we will next time
+                        # no parent, atatus not CONTINUE, we're done with stream
+                        else:
+                            if f.status == Wye.status.FAIL:
+                                foundFail = True
+                            elif f.status == Wye.status.SUCCESS:
+                                foundSuccess = True
+                            else:
+                                foundContinue = True
+                            if (foundFail and frame.verb.parTermType == Wye.parTermType.FIRST_FAIL) or \
+                                    (foundSuccess and frame.verb.parTermType == Wye.parTermType.FIRST_SUCCESS) or \
+                                    ((
+                                             foundFail or foundSuccess) and frame.verb.parTermType == Wye.parTermType.FIRST_ANY):
+                                #print("stream complete with status ", f.status)
+                                status = f.status
+                                break;
+                            # we're done with this stack, remove it
+                            delLst.append(stack)
+                    dbgIx += 1
+                # remove empty stack
+                else:
+                    delLst.append(stack)
+            # if there are completed streams, remove their stacks
+            for stack in delLst:
+                frame.stacks.remove(stack)
+
+            # If we're done, figure out whether we succeeded or failed
+            if status == Wye.status.CONTINUE and not foundContinue:  # all streams completed without triggering an exit
+                if frame.verb.parTermType == Wye.parTermType.FIRST_FAIL:
+                    #print("stream done, all succeeded")
+                    status = Wye.status.SUCCESS  # FIRST_FAIL didn't have any failures - yay!
+                else:
+                    #print("stream done, all failed")
+                    status = Wye.status.FAIL  # FIRST_SUCCESS and didn't have any successes - boo :-(
+            frame.status = status  # return whatever status we have
+
+        # create additional parallel stream at runtime
+        def addStream(self, frame):
+            sp = [frame]
+            frame.SP = sp
+            self.stacks.append(sp)
+
+        # remove parallel stream
+        # NOTE: can't do it here 'cause prolly running from runParallel loop, above
+        # so queue for deleting at end of run
+        def removeStream(self, frame):
+            self.delLst.append(frame.SP)
 
     # object template class for editing new Wye objects
     # note that this object will be used as the template for creating a new

@@ -21,6 +21,10 @@ import sys, os
 # used to make unique ids
 _nextId = 0
 
+# minimal object to tack verb param and var offset constants onto
+class VerbConst:
+    def __init__(self):
+        pass
 
 class WyeCore(Wye.staticObj):
     # used to detect first call for initialization
@@ -702,6 +706,7 @@ class WyeCore(Wye.staticObj):
                 parFnText += "  fs = Wye.codeFrame(WyeCore.ParallelStream, stk)\n" # frame for stream
                 parFnText += "  fs.vars = f.vars\n"
                 parFnText += "  fs.params = f.params\n"
+                parFnText += "  fs.parentFrame = f\n"
                 parFnText += "  fs.run = " + libName + "."  + libName + "_rt." + verbName + "_stream"+str(ix)+"_run_rt\n"
                 parFnText += "  stk.append(fs)\n"   # put stream frame at top of stream's stack
                 parFnText += "  f.stacks.append(stk)\n" # put stack on our frame's list of stream stacks
@@ -804,18 +809,20 @@ class WyeCore(Wye.staticObj):
                     if inspect.isclass(val):
                         #print("build class ",attr," in lib ",libName)
                         if hasattr(val, "paramDescr"):
-                            setattr(val, "pConst", {})
+                            setattr(val, "pConst", VerbConst())
                             ii = 0
                             for desc in val.paramDescr:
-                                val.pConst[desc[0]] = ii
-                                ii += 1
+                                if len(desc) > 0:
+                                    setattr(val.pConst, desc[0], ii)
+                                    ii += 1
 
                         if hasattr(val, "varDescr"):
-                            setattr(val, "vConst", {})
+                            setattr(val, "vConst", VerbConst())
                             ii = 0
                             for desc in val.varDescr:
-                                val.vConst[desc[0]] = ii
-                                ii += 1
+                                if len(desc) > 0:
+                                    setattr(val.vConst, desc[0], ii)
+                                    ii += 1
 
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(val, "build"):
@@ -848,66 +855,6 @@ class WyeCore(Wye.staticObj):
 
                 code = compile(codeStr, "<string>", "exec")
                 exec(code, {libName:libClass, "Wye":Wye, "WyeCore":WyeCore})
-
-        # default runtime code for parallel verb
-        # handles logic for parTermTypes FIRST_FAIL, FIRST_SUCCESS, FIRST_ANY
-        def runParallelCode(frame):
-            dbgIx = 0
-            status = Wye.status.CONTINUE  # assume we'll keep going
-            foundFail = False
-            foundSuccess = False
-            foundContinue = False
-
-            # DEBUG: print out all the stacks
-            #print("parallel run: frame.stacks:")
-            #for sIx in range(len(frame.stacks)):
-            # print(" stack:", sIx, WyeCore.Utils.stackToString(frame.stacks[sIx]))
-
-            # Each parallel code block has its own stack
-            # Loop through each stack until termination conditions met (based on parTermType for parallel verb)
-            for stack in frame.stacks:
-                # print("testPar stack ", dbgIx, " depth", len(stack))
-
-                # if there's a frame, there's something to do
-                if len(stack) > 0:
-                    f = stack[-1]       # grab the bottom frame
-
-                    # if it's still running, run it again
-                    if f.status == Wye.status.CONTINUE:
-                        # print("testPar stack ", dbgIx," run ", f.verb.__name__)
-                        f.verb.run(f)
-                        foundContinue = True
-
-                    # if it terminated, if there's a parent, call it to clean up completed child
-                    else:
-                        # have a parent
-                        if len(stack) > 1:
-                            f = stack[-2]
-                            f.verb.run(f)   # run parent (will test child status, remove from stack, and continue)
-                            foundContinue = True    # technically we haven't checked, but we will next time
-                        # no parent, atatus not CONTINUE, we're done with stream
-                        else:
-                            if f.status == Wye.status.FAIL:
-                                foundFail = True
-                            elif f.status == Wye.status.SUCCESS:
-                                foundSuccess = True
-                            else:
-                                foundContinue = True
-                            if (foundFail and frame.verb.parTermType == Wye.parTermType.FIRST_FAIL) or \
-                                    (foundSuccess and frame.verb.parTermType == Wye.parTermType.FIRST_SUCCESS) or \
-                                    ((foundFail or foundSuccess) and frame.verb.parTermType == Wye.parTermType.FIRST_ANY):
-                                print("stream complete with status ", f.status)
-                                status = f.status
-                                break;
-                    dbgIx += 1
-            if status == Wye.status.CONTINUE and not foundContinue:  # all streams completed without triggering an exit
-                if frame.verb.parTermType == Wye.parTermType.FIRST_FAIL:
-                    print("stream done, all succeeded")
-                    status = Wye.status.SUCCESS  # FIRST_FAIL didn't have any failures - yay!
-                else:
-                    print("stream done, all failed")
-                    status = Wye.status.FAIL  # FIRST_SUCCESS and didn't have any successes - boo :-(
-            frame.status = status  # return whatever status we have
 
         # do we already have a UI input focus manager?
         def haveFocusManager():
@@ -951,4 +898,4 @@ class WyeCore(Wye.staticObj):
         def start(stack):
             return Wye.codeFrame()
         def run(frame):
-           frame.run(frame)
+            frame.run(frame)
