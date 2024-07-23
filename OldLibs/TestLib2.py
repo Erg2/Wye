@@ -41,7 +41,7 @@ class TestLib2:
 
     class testObj3():
         mode = Wye.mode.MULTI_CYCLE
-        #autoStart = True
+        autoStart = True
         dataType = Wye.dType.NONE
         paramDescr = ()
         #varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))

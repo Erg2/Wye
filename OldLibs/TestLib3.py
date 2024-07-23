@@ -8,7 +8,7 @@ class TestLib3:
 
     class doitButton:
         cType = Wye.cType.OBJECT
-        #autoStart = True
+        autoStart = True
         mode = Wye.mode.PARALLEL
         parTermType = Wye.parTermType.FIRST_FAIL
         dataType = Wye.dType.NONE
@@ -48,7 +48,7 @@ class TestLib3:
             return TestLib3.TestLib3_rt.doitButton_start_rt(stack)        # run compiled start code to build parallel code stacks
 
         def run(frame):
-            frame.runParallel(frame)      # run compiled run code
+            frame.runParallel()      # run compiled run code
 
     class DlgTst:
         cType = Wye.cType.OBJECT

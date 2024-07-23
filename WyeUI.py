@@ -31,8 +31,8 @@ class WyeUI(Wye.staticObj):
     def _displayCommand(cmd, coord):
         txt = str([str(e) for e in cmd])
         txtCoord = list(coord)
-        # elements.append(WyeCore.libs.WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
-        WyeCore.libs.WyeUI._label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]),
+        # elements.append(WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
+        WyeUI._label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]),
                                    scale=(.2, .2, .2))
         txtCoord[2] -= WyeUI.LINE_HEIGHT
         return txtCoord[2]
@@ -62,8 +62,8 @@ class WyeUI(Wye.staticObj):
                     print("lib", lib.__name__, " verb", verb.__name__)
                     txt = lib.__name__ + "." +verb.__name__
                     txtCoord[2] -= WyeUI.LINE_HEIGHT
-                    #elements.append(WyeCore.libs.WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
-                    WyeCore.libs.WyeUI._label3d(txt, color=WyeUI.TEXT_COLOR, pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=WyeUI.TEXT_SCALE)
+                    #elements.append(WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
+                    WyeUI._label3d(txt, color=WyeUI.TEXT_COLOR, pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=WyeUI.TEXT_SCALE)
                     txtCoord[2] -= WyeUI.LINE_HEIGHT
                     if hasattr(verb, "codeDescr"):
                         txtCoord[2] = WyeUI._displayVerb(verb, txtCoord)
@@ -74,7 +74,13 @@ class WyeUI(Wye.staticObj):
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
     # Changing the text requires regenerating the card and 3d node
     class _label3d:
-        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
+        global render
+
+        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1), parent=None):
+            if parent is None:
+                self.parent = render
+            else:
+                self.parent = parent
             self.marginL = .1
             self.marginR = .2
             self.marginB = .1
@@ -82,11 +88,12 @@ class WyeUI(Wye.staticObj):
             #
             self.text = None
             self.card = None
-            self._label3d = None
+            self._nodePath = None
             #
             self._genTextObj(text, color)
             self._genCardObj()
             self._gen3dTextObj(pos, scale, bg)
+
             # txtNode.setAlign(TextNode.ACenter)
             # txtNode.setFrameColor(0, 0, 1, 1)
             # txtNode.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
@@ -96,7 +103,7 @@ class WyeUI(Wye.staticObj):
 
         # update the frame color
         def setFrameColor(self, color):
-            self._label3d.setColor(color)
+            self._nodePath.setColor(color)
 
         # update the margin spacing
         def setFrameAsMargin(self, marginL, marginR, marginB, marginT):
@@ -112,13 +119,13 @@ class WyeUI(Wye.staticObj):
             self._regen3d()
 
         def setPos(self, val):
-            self._label3d.setPos(val)
+            self._nodePath.setPos(val)
 
         def setColor(self, val):
-            self._label3d.setColor(val)
+            self._nodePath.setColor(val)
 
         def setScale(self, val):
-            self._label3d.setScale(val)
+            self._nodePath.setScale(val)
 
         def setWordWrap(self):
             return self.text.getWordwrap()
@@ -127,13 +134,13 @@ class WyeUI(Wye.staticObj):
             return self.text.getText()
 
         def getPos(self):
-            return self._label3d.getPos()
+            return self._nodePath.getPos()
 
         def getColor(self):
-            return self._label3d.getColor()
+            return self._nodePath.getColor()
 
         def getScale(self):
-            return self._label3d.getScale()
+            return self._nodePath.getScale()
 
         def getWordWrap(self):
             return self.text.setWordwrap()
@@ -145,7 +152,10 @@ class WyeUI(Wye.staticObj):
             return self.text.getAlign()
 
         def getFrameColor(self):
-            return self._label3d.getColor()
+            return self._nodePath.getColor()
+
+        def getNodePath(self):
+            return self._nodePath
 
         # update the margin spacing
         def getFrameAsMargin(self):
@@ -153,11 +163,11 @@ class WyeUI(Wye.staticObj):
 
         # rebuild card and path for updated text object
         def _regen3d(self):
-            bg = self._label3d.getColor()
-            pos = self._label3d.getPos()
-            scale = self._label3d.getScale()
+            bg = self._nodePath.getColor()
+            pos = self._nodePath.getPos()
+            scale = self._nodePath.getScale()
             self._genCardObj()                     # generate new card obj for updated text object
-            self._label3d.detachNode()                # detach 3d node path to old card
+            self._nodePath.detachNode()             # detach 3d node path from old card
             self._gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
 
         # internal rtn to gen text object with unique wyeTag name
@@ -187,23 +197,21 @@ class WyeUI(Wye.staticObj):
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
-            global render
+            self._nodePath = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
+            self._nodePath.attachNewNode(self.text)
+            self._nodePath.setEffect(DecalEffect.make())        # glue text onto card
+            self._nodePath.reparentTo(self.parent)
+            WyeCore.picker.makePickable(self._nodePath)         # make selectable
+            self._nodePath.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
+            self._nodePath.setPos(pos)
+            self._nodePath.setScale(scale)
 
-            self._label3d = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
-            self._label3d.attachNewNode(self.text)
-            self._label3d.setEffect(DecalEffect.make())        # glue text onto card
-            self._label3d.reparentTo(render)
-            WyeCore.picker.makePickable(self._label3d)         # make selectable
-            self._label3d.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
-            self._label3d.setPos(pos)
-            self._label3d.setScale(scale)
-
-            self._label3d.setBillboardPointWorld(0.)           # always face the camera
-            self._label3d.setLightOff()                        # unaffected by world lighting
-            self._label3d.setColor(bg)
+            self._nodePath.setBillboardPointWorld(0.)           # always face the camera
+            self._nodePath.setLightOff()                        # unaffected by world lighting
+            self._nodePath.setColor(bg)
 
         def removeNode(self):
-            self._label3d.removeNode()
+            self._nodePath.removeNode()
 
 
     # text entry verb
@@ -499,7 +507,7 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog pConst", WyeUI.Dialog.pConst)
                     #print("Dialog vConst", WyeUI.Dialog.vConst)
                     #print("Dialog Add dialog", frame.params[WyeUI.Dialog.pConst.title][0], ", ", frame, "to focus manager")
-                    WyeCore.libs.WyeUI.FocusManager.openDialog(frame, None)
+                    WyeUI.FocusManager.openDialog(frame, None)
 
                     print("Dialog run: WyeUI.Dialog.pConst.frame=", WyeUI.Dialog.pConst.frame)
                     print("Dialog run: frame.params:", frame.params)
@@ -509,10 +517,10 @@ class WyeUI(Wye.staticObj):
                     # return frame
 
                     #print("Dialog display: pos=frame.params[2]", frame.params[2])
-                    dlg = WyeCore.libs.WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2], scale=(.2, .2, .2))
-                    frame.vars[1][0].append(dlg)
+                    dlgHeader = WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2], scale=(.2, .2, .2))
+                    frame.vars[1][0].append(dlgHeader)
 
-                    pos = [x for x in frame.params[2]]    # copy position
+                    pos = [0, 0, 0] # [x for x in frame.params[2]]    # copy position
 
                     # do user inputs
                     # Note that input returns its frame as parameter value
@@ -520,7 +528,7 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog ", nInputs, " user widgets. nParams=", len(frame.params))
                     # draw user- supplied label and text inputs
                     for ii in range(nInputs):
-                        pos[2] -= .3
+                        pos[2] -= 1.5
 
                         #print("Dialog input", ii, " param ", 4+(ii*2))
                         inFrm = frame.params[4+ii][0]
@@ -530,23 +538,23 @@ class WyeUI(Wye.staticObj):
 
                         if inFrm.verb is WyeUI.LabelInput:
                             print("Input is LabelInput")
-                            lbl = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
-                                                              scale=(.2, .2, .2))
+                            lbl = WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
+                                                              scale=(1,1,1), parent=dlgHeader.getNodePath())
                             frame.vars[1][0].append(lbl)  # save graphic widget for deleting on dialog close
 
                         elif inFrm.verb is WyeUI.TextInput:
                             print("Input is TextInput")
-                            lbl = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
-                                                          scale=(.2, .2, .2))
+                            lbl = WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
+                                                          scale=(1,1,1), parent=dlgHeader.getNodePath())
                             frame.vars[1][0].append(lbl)    # save graphic widget for deleting on dialog close
 
                             # add tag, input index to dictionary
                             frame.vars[3][0][lbl.getTag()] = ii     # tag => inp index dictionary (both label and entry fields point to inp frm)
                             # offset 3d input field past end of 3d label
                             lblGFrm = lbl.text.getFrameActual()
-                            width = (lblGFrm[1] - lblGFrm[0]) * .2 + .1
-                            txt = WyeCore.libs.WyeUI._label3d(inFrm.vars[1][0], (1, 0, 0, 1),
-                                                              pos=(pos[0] + width, pos[1], pos[2]), scale=(.2, .2, .2))
+                            width = (lblGFrm[1] - lblGFrm[0]) * 1 + .5
+                            txt = WyeUI._label3d(inFrm.vars[1][0], (1, 0, 0, 1),
+                                                              pos=(pos[0] + width, pos[1], pos[2]), scale=(1,1,1), parent=dlgHeader.getNodePath())
                             #print("    Dialog inWdg", txt)
                             frame.vars[1][0].append(txt)    # save graphic widget for deleting on dialog close
                             inFrm.vars[3][0] = txt          # stash graphic obj in input's frame
@@ -554,8 +562,8 @@ class WyeUI(Wye.staticObj):
                         elif inFrm.verb is WyeUI.ButtonInput:
                             print("Input is ButtonInput")
 
-                            btn = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
-                                                              scale=(.2, .2, .2))
+                            btn = WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
+                                                              scale=(1,1,1), parent=dlgHeader.getNodePath())
                             frame.vars[1][0].append(btn)  # save for deleting on dialog close
                             frame.vars[3][0][btn.getTag()] = ii  # add tag and inp param index to dict (so evt can find inp frame)
                             inFrm.vars[1][0] = btn  # stash graphic obj in input's frame
@@ -565,13 +573,13 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog has input widgets", frame.vars[3])
 
                     # display OK, Cancel buttons
-                    pos[2] -= .3
-                    txt = WyeCore.libs.WyeUI._label3d("OK", color=(1, 1, 1, 1), pos=tuple(pos), scale=(.2, .2, .2))
+                    pos[2] -= 1.5
+                    txt = WyeUI._label3d("OK", color=(1, 1, 1, 1), pos=tuple(pos), scale=(1,1,1), parent=dlgHeader.getNodePath())
                     frame.vars[1][0].append(txt)
                     frame.vars[2][0].append(txt.getTag())
-                    pos[0] += .5
-                    txt = WyeCore.libs.WyeUI._label3d("Cancel", color=(1, 1, 1, 1), pos=tuple(pos),
-                                                      scale=(.2, .2, .2))
+                    pos[0] += 2.5
+                    txt = WyeUI._label3d("Cancel", color=(1, 1, 1, 1), pos=tuple(pos),
+                                                      scale=(1,1,1), parent=dlgHeader.getNodePath())
                     frame.vars[1][0].append(txt)
                     frame.vars[2][0].append(txt.getTag())
                     # done setup, go to next case to process events
@@ -661,7 +669,7 @@ class WyeUI(Wye.staticObj):
                 # clean up dialog
                 #print("Close dialog")
                 # remove dialog from active dialog list
-                WyeCore.libs.WyeUI.FocusManager.closeDialog(frame)
+                WyeUI.FocusManager.closeDialog(frame)
                 # delete the graphic widgets associated with the dialog
                 for wdg in frame.vars[1][0]:
                     #print("del ctl ", wdg.text.name)
