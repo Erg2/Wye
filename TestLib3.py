@@ -129,11 +129,9 @@ class TestLib3:
 
     # Dialog object.
     # Display and run input fields
-    # Note: Dialog is a one-stream parallel so pushbuttons can add parallel multi-cycle tasks
     class Dialog:
-        mode = Wye.mode.PARALLEL
+        mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.OBJECT
-        parTermType = Wye.parTermType.FIRST_FAIL
         paramDescr = (("frame", Wye.dType.OBJECT, Wye.access.REFERENCE),    # 0 return own frame
                       ("title", Wye.dType.STRING, Wye.access.REFERENCE),    # 1 user supplied title for dialog
                       ("position", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # 2 user supplied position
@@ -151,27 +149,22 @@ class TestLib3:
         def start(stack):
             #print("Dialog start")
 
-            frame = Wye.parallelFrame(TestLib3.Dialog, stack)
+            frame = Wye.codeFrame(TestLib3.Dialog, stack)
             frame.vars[1][0] = []
             frame.vars[2][0] = []
             frame.vars[3][0] = {}
             frame.vars[5][0] = []
-            frame.stacks.append([])   # initially just the one stack
 
-            fS0 = Wye.codeFrame(WyeCore.ParallelStream, frame.stacks[0])
+            fS0 = Wye.codeFrame(TestLib3.Dialog, frame.SP)
             fS0.vars = frame.vars       # so parallel code can access parent frame's data
             fS0.params = frame.params   # so parallel code can access parent frame's data
             fS0.parentFrame = frame     # so multicycle/parallel callbacks can be put on dialog's parallel processing list
-            fS0.run = TestLib3.Dialog.Dialog_stream0
-            frame.stacks[0].append(fS0)
             return frame
 
         def run(frame):
-            frame.runParallel()
-
-        def Dialog_stream0(frame):
             match frame.PC:
                 case 0:     # Start up case - set up all the fields
+                    frame.params[0][0] = frame      # return own frame as p0
                     #print("Dialog pConst", TestLib3.Dialog.pConst)
                     #print("Dialog vConst", TestLib3.Dialog.vConst)
                     #print("Dialog Add dialog", frame.params[TestLib3.Dialog.pConst.title][0], ", ", frame, "to focus manager")
@@ -299,15 +292,11 @@ class TestLib3:
                         verbFrm = callVerb.start(frame.SP)
                         # if not single cycle, then put up as parallel path
                         if callVerb.mode != Wye.mode.SINGLE_CYCLE:
-                            print("Dialog doSelect verb mode is ", Wye.mode.tostring(callVerb.mode))
-                            if hasattr(frame, "parentFrame"):
-                                print("doSelect put ", callVerb.__name__, " on parentFrame stack multi/parallel verb ", frame.parentFrame.verb.__name__)
-                                frame.parentFrame.addStream(verbFrm)
-                            else:
-                                print("doSelect put ", callVerb.__name__, " on frame stack multi/parallel verb ", frame.verb.__name__)
-                                frame.addStream(verbFrm)
+                            # call every display cycle
+                            WyeCore.World.setRepeatEventCallback("Display", verbFrm, None)
                         else:
-                            print("doSelect call single cycle verb ", verbFrm.verb.__name__)
+                            # call once
+                            #print("doSelect call single cycle verb ", verbFrm.verb.__name__)
                             verbFrm.verb.run(verbFrm)
 
                     frame.vars[TestLib3.Dialog.vConst.currInp][0] = -1       # no input has focus
