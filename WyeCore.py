@@ -854,7 +854,7 @@ class WyeCore(Wye.staticObj):
                         lnIx += 1
 
                 code = compile(codeStr, "<string>", "exec")
-                exec(code, {libName:libClass, "Wye":Wye, "WyeCore":WyeCore})
+                exec(code, {libName:libClass, "Wye":Wye, "WyeCore":WyeCore, "WyeUI":WyeCore.libs.WyeUI})
 
         # do we already have a UI input focus manager?
         def haveFocusManager():
