@@ -66,12 +66,12 @@ class TestLib3:
     class LabelInput:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
-        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
-                      ("label", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied label for field
+        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # 0 return own frame
+                      ("label", Wye.dType.STRING, Wye.access.REFERENCE))  # 1 user supplied label for field
         varDescr = (("currPos", Wye.dType.INTEGER, 0),)  # 0
 
         def start(stack):
-            return Wye.codeFrame(TestLib3.TextInput, stack)
+            return Wye.codeFrame(TestLib3.LabelInput, stack)
 
         def run(frame):
             frame.params[0][0] = frame  # self referential!
@@ -195,9 +195,16 @@ class TestLib3:
                         inFrm = frame.params[4+ii][0]
                         #print("    Dialog input ", ii, " inFrm", inFrm)
                         #print("       inFrm.params[1]", inFrm.params[1])
-                        print("")
-                        if inFrm.verb is TestLib3.TextInput:
-                            #print("Input is TextInput")
+                        #print("")
+
+                        if inFrm.verb is TestLib3.LabelInput:
+                            print("Input is LabelInput")
+                            lbl = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
+                                                              scale=(.2, .2, .2))
+                            frame.vars[1][0].append(lbl)  # save graphic widget for deleting on dialog close
+
+                        elif inFrm.verb is TestLib3.TextInput:
+                            print("Input is TextInput")
                             lbl = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
                                                           scale=(.2, .2, .2))
                             frame.vars[1][0].append(lbl)    # save graphic widget for deleting on dialog close
@@ -214,7 +221,7 @@ class TestLib3:
                             inFrm.vars[3][0] = txt          # stash graphic obj in input's frame
                             frame.vars[3][0][txt.getTag()] = ii     # add tag and inp param index to dict (so evt can find inp frame)
                         elif inFrm.verb is TestLib3.ButtonInput:
-                            #print("Input is ButtonInput")
+                            print("Input is ButtonInput")
 
                             btn = WyeCore.libs.WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
                                                               scale=(.2, .2, .2))
@@ -460,13 +467,16 @@ class TestLib3:
                     ("text2ID2", Wye.dType.STRING, ""),  # 10
                     ("text2Val2", Wye.dType.STRING, "<val2>"),  # 11
 
-                    ("id1", Wye.dType.OBJECT, None), # 12
+                    ("id1", Wye.dType.OBJECT, None),  # 12
+
+                    ("labelId", Wye.dType.OBJECT, None), # 13
                     )
 
         codeDescr = (
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("TestLib3.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
                                 (None, "(-2,10,0)"), (None, "None"),
+                                ("TestLib3.LabelInput", (None, "frame.vars[13]"), (None, "['LabelInput']")),
                                 ("TestLib3.TextInput", (None, "frame.vars[2]"),
                                   (None, "['T1Label']"),
                                   (None, "frame.vars[3]")
