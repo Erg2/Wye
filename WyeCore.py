@@ -18,6 +18,63 @@ import sys, os
 # editing one of the contained libList will create an external file for just that lib.
 # Incorporating the result requires external editing.
 
+
+'''
+Wye Overview
+
+libraries and words in them are static
+All refs to a lib or word within a lib or word have to be 3rd person (lib.word.xxx) rather than self.
+because there is no instantiated class so there is no self.
+All context (local variables, parameters passed in, and PC (which is used by multi-pass word) is in the 
+stack frame that is returned by word.start.
+
+Basic concept for executing a word in a library:
+    wordFrame =  word.start(stack)
+        The frame holds the local storage for this exec of word.  The most used attributes are the
+        calling params and local variable values.
+
+        if a word uses local variables the word's frame.vars is built automatically from the
+        word's varDescr.  
+
+        Each variable is a separate list so it can be passed to another word in that word's 
+        stackframe.params and the var can be updated by that word.
+        All vars are filled in with initial values by the frame on instantiation.
+        example: wordFrame.vars = [[0],[1],["two"]]
+    wordFrame.params.append( [p1], .. )
+        If the word being called requires any params passed in, the caller has to set them up.
+        Each parameter is wrapped in a list so that its value can be changed
+        functions return their value in the first parameter
+    word.run(wordFrame)
+        If the word is a function, the return value is in wordFrame.params[0][0]
+
+Compiling 
+    Two stages, first translating Wye code to Python code, and then compiling Python code to runtime code.  This is 
+    done on library load so the overhead of compiling is done once.  
+
+    If there is a codeDescr = (..wye-code..) then the code will be translated to Python.
+
+    Wye code is in nested tuples in the form ("lib.word", (..param..), (..param..)) where the param list can be
+    zero or more params.  Note that a tuple or list with just one entry must end with a comma (entry,) or python will 
+    optimize the tuple or list away.
+    (..param..) can be either (None, a-constant) or ("lib.word", (..param..)) to recurse to a function that will
+    supply the parameter.
+
+    The Python output is put in a string under code.
+
+    All code attributes found in classes in the library are compiled to methods under the dynamically created 
+    class libName_rt.  Each word's runtime is def'd as wordName_run_rt.  
+
+    The word itself has a run method that calls libName_rt.wordName_run_rt(frame)
+
+    Note: there is the risk that the string holding the
+    Python code will get too long (the internal limit is not clearly defined).  If that happens then the compile loop
+    could compile each word's code individually, but that would be much slower.  Or it could process words in chunks
+    that are small enough to fit within the string limit.
+
+    Note: a runtime optimization would be to reparent the rt attributes back to each word so there was no indirection
+    on the call.
+'''
+
 # used to make unique ids
 _nextId = 0
 
@@ -362,13 +419,13 @@ class WyeCore(Wye.staticObj):
                     # run bottom of stack unless done
                     if frame.status == Wye.status.CONTINUE:
                         #print("repEventObj run: evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
-                        frame.eventData = (evtID, evt[1])        # user data
+                        frame.eventData = (evtID, evt[2])        # user data
                         frame.verb.run(frame)
                     # bottom of stack done, run next up on stack if any
                     elif len(evt[0]) > 1:
                         frame = evt[0][-2]
                         #print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
-                        frame.eventData = (evtID, evt[1])        # user data
+                        frame.eventData = (evtID, evt[2])        # user data
                         frame.verb.run(frame)
                         # On parent error, bail out - TODO - consider letting its parent handle error
                         if frame.status == Wye.status.FAIL and len(evt[0]) > 1:

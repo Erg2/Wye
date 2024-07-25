@@ -35,7 +35,7 @@ class TestLib:
                 #(None, "print('doitButton: top of key loop')"),
                 #(None, "print('doitButton: wait for char')"),
                 ("WyeCore.libs.WyeLib.waitChar", (None, "frame.vars[2]"), (None, "frame.vars[1]")),
-                (None, "print('received char=', frame.vars[2][0])"),
+                #(None, "print('received char=', frame.vars[2][0])"),
                 ("GoTo", "Loop")
             )
         )
@@ -50,24 +50,88 @@ class TestLib:
         def run(frame):
             frame.runParallel()      # run compiled run code
 
+
+    class BtnCallback:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("count", Wye.dType.INTEGER, 0),)
+
+        def start(stack):
+            return Wye.codeFrame(TestLib.BtnCallback, stack)
+
+        def run(frame):
+            print("BtnCallback! count = ", frame.vars[TestLib.BtnCallback.vConst.count][0])
+            frame.vars[TestLib.BtnCallback.vConst.count][0] += 1
+            if frame.vars[TestLib.BtnCallback.vConst.count][0] > 5:
+                frame.status = Wye.status.SUCCESS
+
+    class BtnCallback2:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("tstDlg3Frm", Wye.dType.OBJECT, None),                 # 0
+                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),    # 1
+                    ("text1frm", Wye.dType.STRING, ""),              # 2
+                    ("text1Val", Wye.dType.STRING, ""),        # 3
+                    ("text2frm", Wye.dType.STRING, ""),              # 4
+                    ("text2Val", Wye.dType.STRING, "<val1>"),        # 5
+
+                    ("id1", Wye.dType.OBJECT, None),  # 6
+        )
+
+        codeDescr = (
+            (None, "print('Callback 2, create dialog. parent ', frame.eventData[1])"),
+            (None, "print('           frame.eventData ', frame.eventData)"),
+            ("WyeUI.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
+             (None, "(.5,-1,-.5)"), (None, "[frame.eventData[1]]"),
+             ("WyeUI.TextInput", (None, "frame.vars[2]"),
+              (None, "['TextLabel']"),
+              (None, "frame.vars[3]")
+              ),
+             ("WyeUI.TextInput", (None, "frame.vars[4]"),
+              (None, "['Text2Label']"),
+              (None, "frame.vars[5]")
+              ),
+             ("WyeUI.ButtonInput", (None, "frame.vars[6]"),
+              (None, "['Click Me counter']"),
+              (None, "[TestLib.BtnCallback]")
+              ),
+             ),
+            #("Label", "Done"),
+            (None, "print('Callback 2 done with SUCCESS')"),
+            (None, "frame.status = Wye.status.SUCCESS")
+        )
+
+        def build():
+            return WyeCore.Utils.buildCodeText("BtnCallback2", TestLib.BtnCallback2.codeDescr)
+
+        def start(stack):
+            return Wye.codeFrame(TestLib.BtnCallback2, stack)
+
+        def run(frame):
+            TestLib.TestLib_rt.BtnCallback2_run_rt(frame)
+
+
+
     class DlgTst:
         cType = Wye.cType.OBJECT
         autoStart = True
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = ()
-        varDescr = (("id", Wye.dType.OBJECT, None),                 # 0
+        varDescr = (("Dlg1Frm", Wye.dType.OBJECT, None),                 # 0
                     ("Title", Wye.dType.INTEGER, "Test Dialog 1"),    # 1
-                    ("text1ID", Wye.dType.STRING, ""),              # 2
+                    ("text1frm", Wye.dType.STRING, ""),              # 2
                     ("text1Val", Wye.dType.STRING, ""),        # 3
-                    ("text2ID", Wye.dType.STRING, ""),              # 4
+                    ("text2frm", Wye.dType.STRING, ""),              # 4
                     ("text2Val", Wye.dType.STRING, "<val1>"),        # 5
 
-                    ("id2", Wye.dType.OBJECT, None),  # 6
+                    ("Dlg2Frm", Wye.dType.OBJECT, None),  # 6
                     ("Title2", Wye.dType.INTEGER, "Test Dialog 2"),  # 7
-                    ("text1ID2", Wye.dType.STRING, ""),  # 8
+                    ("text1frm2", Wye.dType.STRING, ""),  # 8
                     ("text1Val2", Wye.dType.STRING, ""),  # 9
-                    ("text2ID2", Wye.dType.STRING, ""),  # 10
+                    ("text2frm2", Wye.dType.STRING, ""),  # 10
                     ("text2Val2", Wye.dType.STRING, "<val2>"),  # 11
 
                     ("id1", Wye.dType.OBJECT, None),  # 12
@@ -78,7 +142,7 @@ class TestLib:
         codeDescr = (
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-                                (None, "(-2,10,0)"), (None, "None"),
+                                (None, "(-2,10,0)"), (None, "[None]"),
                                 ("WyeUI.LabelInput", (None, "frame.vars[13]"), (None, "['LabelInput']")),
                                 ("WyeUI.TextInput", (None, "frame.vars[2]"),
                                   (None, "['T1Label']"),
@@ -90,13 +154,14 @@ class TestLib:
                                 ),
                                 ("WyeUI.ButtonInput", (None, "frame.vars[12]"),
                                   (None, "['Click Me for Dialog']"),
-                                  (None, "[WyeUI.BtnCallback2]")
+                                  (None, "[TestLib.BtnCallback2]"),
+                                  (None, "frame.vars[0]")
                                 ),
              ),
             #(None, "print('DlgTst frame 1 vars', frame.vars)"),
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars[6]"), (None, "frame.vars[7]"),
-                               (None, "(2,10,0)"), (None, "None"),
+                               (None, "(2,10,0)"), (None, "[None]"),
                                ("WyeUI.TextInput", (None, "frame.vars[8]"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars[9]")
@@ -117,3 +182,20 @@ class TestLib:
 
         def run(frame):
             TestLib.TestLib_rt.DlgTst_run_rt(frame)
+
+
+    class editor:
+        cType = Wye.cType.OBJECT
+        autoStart = True
+        mode = Wye.mode.MULTI_CYCLE
+        paramDescr = ()
+        varDescr = (("objs", Wye.dType.OBJECT_LIST, None),     # 0
+                    )
+
+        def start(stack):
+            frame = Wye.codeFrame(TestLib.editor, stack)
+            frame.vars[0][0] = []    # init object list
+            return frame
+
+        def run(frame):
+            pass

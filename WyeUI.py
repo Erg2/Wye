@@ -62,7 +62,6 @@ class WyeUI(Wye.staticObj):
                     print("lib", lib.__name__, " verb", verb.__name__)
                     txt = lib.__name__ + "." +verb.__name__
                     txtCoord[2] -= WyeUI.LINE_HEIGHT
-                    #elements.append(WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
                     WyeUI._label3d(txt, color=WyeUI.TEXT_COLOR, pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=WyeUI.TEXT_SCALE)
                     txtCoord[2] -= WyeUI.LINE_HEIGHT
                     if hasattr(verb, "codeDescr"):
@@ -242,9 +241,6 @@ class WyeUI(Wye.staticObj):
         #def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
         #    label = WyeUI._label3d(text, color, pos, scale, bg)
 
-    # class displayDialog:
-    # todo - move here from test lib
-
 
 
     # Widget focus manager singleton
@@ -319,7 +315,8 @@ class WyeUI(Wye.staticObj):
 
             # if has parent then add it to the parent's hierarchy
             else:
-                hier = WyeUI.FocusManager.findDialog(parentFrame)
+                print("openDialog find parentFrame ", parentFrame)
+                hier = WyeUI.FocusManager.findDialogHier(parentFrame)
                 if not hier is None:
                     hier.append(dialogFrame)
 
@@ -446,7 +443,9 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.OBJECT
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # 0 return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # 1 user supplied label for field
-                      ("verb", Wye.dType.STRING, Wye.access.REFERENCE))   # 2 verb to call when button clicked
+                      ("verb", Wye.dType.STRING, Wye.access.REFERENCE),   # 2 verb to call when button clicked
+                      ("optData", Wye.dType.ANY, Wye.access.REFERENCE),   # 3 optional data
+                      )
         varDescr = (("currPos", Wye.dType.INTEGER, 0),      # 0
                     ("gWidget", Wye.dType.OBJECT, None),    # 1 associated graphic widget
                     ("verb", Wye.dType.OBJECT, None),       # 2 verb to call
@@ -474,7 +473,7 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("frame", Wye.dType.OBJECT, Wye.access.REFERENCE),    # 0 return own frame
                       ("title", Wye.dType.STRING, Wye.access.REFERENCE),    # 1 user supplied title for dialog
                       ("position", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # 2 user supplied position
-                      ("parent", Wye.dType.STRING, Wye.access.REFERENCE),   # 3 parent dialog, if any
+                      ("parent", Wye.dType.STRING, Wye.access.REFERENCE),   # 3 parent dialog frame, if any
                       ("inputs", Wye.dType.VARIABLE, Wye.access.REFERENCE)) # 4+ variable length list of input control frames
                       # input widgets go here (Input fields, Buttons, and who knows what all cool stuff that may come
 
@@ -484,6 +483,7 @@ class WyeUI(Wye.staticObj):
                     ("inpTags", Wye.dType.OBJECT, None),                    # 3 dictionary return param ix of input by graphic tag
                     ("currInp", Wye.dType.INTEGER, -1),                     # 4 index to current focus widget, if any
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # 5 list of buttons that need to be unclicked
+                    ("topGObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj (to hang sub dlgs off)
                     )
         def start(stack):
             #print("Dialog start")
@@ -504,21 +504,22 @@ class WyeUI(Wye.staticObj):
             match frame.PC:
                 case 0:     # Start up case - set up all the fields
                     frame.params[0][0] = frame      # return own frame as p0
-                    #print("Dialog pConst", WyeUI.Dialog.pConst)
-                    #print("Dialog vConst", WyeUI.Dialog.vConst)
-                    #print("Dialog Add dialog", frame.params[WyeUI.Dialog.pConst.title][0], ", ", frame, "to focus manager")
-                    WyeUI.FocusManager.openDialog(frame, None)
-
-                    print("Dialog run: WyeUI.Dialog.pConst.frame=", WyeUI.Dialog.pConst.frame)
-                    print("Dialog run: frame.params:", frame.params)
+                    parent = frame.params[3][0]
+                    WyeUI.FocusManager.openDialog(frame, parent)  # pass parent, if any
                     frame.params[WyeUI.Dialog.pConst.frame][0] = frame  # self referential!
                     #print("Dialog put frame in param[0][0]", frame)
                     frame.vars[WyeUI.Dialog.vConst.position] = (frame.params[2])        # save display position
                     # return frame
 
                     #print("Dialog display: pos=frame.params[2]", frame.params[2])
-                    dlgHeader = WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2], scale=(.2, .2, .2))
+                    if parent is None:
+                        dlgHeader = WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2], scale=(.2, .2, .2))
+                    else:
+                        dlgHeader = WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2],
+                                                   scale=(1,1,1), parent=parent.vars[6][0].getNodePath())
+
                     frame.vars[1][0].append(dlgHeader)
+                    frame.vars[6][0] = dlgHeader
 
                     pos = [0, 0, 0] # [x for x in frame.params[2]]    # copy position
 
@@ -537,13 +538,11 @@ class WyeUI(Wye.staticObj):
                         #print("")
 
                         if inFrm.verb is WyeUI.LabelInput:
-                            print("Input is LabelInput")
                             lbl = WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
                                                               scale=(1,1,1), parent=dlgHeader.getNodePath())
                             frame.vars[1][0].append(lbl)  # save graphic widget for deleting on dialog close
 
                         elif inFrm.verb is WyeUI.TextInput:
-                            print("Input is TextInput")
                             lbl = WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
                                                           scale=(1,1,1), parent=dlgHeader.getNodePath())
                             frame.vars[1][0].append(lbl)    # save graphic widget for deleting on dialog close
@@ -560,7 +559,6 @@ class WyeUI(Wye.staticObj):
                             inFrm.vars[3][0] = txt          # stash graphic obj in input's frame
                             frame.vars[3][0][txt.getTag()] = ii     # add tag and inp param index to dict (so evt can find inp frame)
                         elif inFrm.verb is WyeUI.ButtonInput:
-                            print("Input is ButtonInput")
 
                             btn = WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
                                                               scale=(1,1,1), parent=dlgHeader.getNodePath())
@@ -623,27 +621,30 @@ class WyeUI(Wye.staticObj):
                 elif inFrm.verb is WyeUI.ButtonInput:
                     callVerb = inFrm.vars[2][0]
                     inFrm.vars[1][0].setColor((0, .25, 0, 1)) # set button color pressed
-                    if inFrm.vars[WyeUI.ButtonInput.vConst.clickCount][0] <= 0:
+                    if inFrm.vars[WyeUI.ButtonInput.vConst.clickCount][0] <= 0:     # if not in an upclick count, process click
                         #print("Dialog doSelect: Start click count for", inFrm.verb.__name__)
-                        inFrm.vars[WyeUI.ButtonInput.vConst.clickCount][0] = 10       # start click count down (in display frames)
-                        frame.vars[WyeUI.Dialog.vConst.clickedBtns][0].append(inFrm)    # stash button for flash countdown
-                    #else:
-                    #    print("Dialog doSelect: click count already at", inFrm.vars[WyeUI.ButtonInput.vConst.clickCount][0])
+                        inFrm.vars[WyeUI.ButtonInput.vConst.clickCount][0] = 10       # start flash countdown (in display frames)
+                        frame.vars[WyeUI.Dialog.vConst.clickedBtns][0].append(inFrm)  # stash button for flash countdown
 
-                    # if something to call
-                    if not callVerb is None:
-                        print("Dialog doSelect: clicked btn, verb ", callVerb.__name__)
-                        #print("Dialog frame.params", frame.params)
-                        # start the verb
-                        verbFrm = callVerb.start(frame.SP)
-                        # if not single cycle, then put up as parallel path
-                        if callVerb.mode != Wye.mode.SINGLE_CYCLE:
-                            # call every display cycle
-                            WyeCore.World.setRepeatEventCallback("Display", verbFrm, None)
-                        else:
-                            # call once
-                            #print("doSelect call single cycle verb ", verbFrm.verb.__name__)
-                            verbFrm.verb.run(verbFrm)
+                        # if something to call
+                        if not callVerb is None:
+                            #print("Dialog doSelect: clicked btn, verb ", callVerb.__name__)
+                            # start the verb
+                            verbFrm = callVerb.start(frame.SP)
+                            # handle user data
+                            if len(inFrm.params) > 3:
+                                data = inFrm.params[3][0]
+                            else:
+                                data = None
+                            # if not single cycle, then put up as parallel path
+                            if callVerb.mode != Wye.mode.SINGLE_CYCLE:
+                                # call every display cycle
+                                WyeCore.World.setRepeatEventCallback("Display", verbFrm, data)
+                            else:
+                                # call once
+                                #print("doSelect call single cycle verb ", verbFrm.verb.__name__)
+                                verbFrm.eventData = (tag, data)  # pass along user supplied event data, if any
+                                verbFrm.verb.run(verbFrm)
 
                     frame.vars[WyeUI.Dialog.vConst.currInp][0] = -1       # no input has focus
 
@@ -724,64 +725,3 @@ class WyeUI(Wye.staticObj):
                 inWidg = inFrm.vars[3][0]
                 #print("  set text", txt," ix", ix, " txtWidget", inWidg)
                 inWidg.setText(txt)
-
-    class BtnCallback:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.STRING
-        paramDescr = ()
-        varDescr = (("count", Wye.dType.INTEGER, 0),)
-
-        def start(stack):
-            return Wye.codeFrame(WyeUI.BtnCallback, stack)
-
-        def run(frame):
-            print("BtnCallback! count = ", frame.vars[WyeUI.BtnCallback.vConst.count][0])
-            frame.vars[WyeUI.BtnCallback.vConst.count][0] += 1
-            if frame.vars[WyeUI.BtnCallback.vConst.count][0] > 5:
-                frame.status = Wye.status.SUCCESS
-
-    class BtnCallback2:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.STRING
-        paramDescr = ()
-        varDescr = (("id", Wye.dType.OBJECT, None),                 # 0
-                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),    # 1
-                    ("text1ID", Wye.dType.STRING, ""),              # 2
-                    ("text1Val", Wye.dType.STRING, ""),        # 3
-                    ("text2ID", Wye.dType.STRING, ""),              # 4
-                    ("text2Val", Wye.dType.STRING, "<val1>"),        # 5
-
-                    ("id1", Wye.dType.OBJECT, None),  # 6
-        )
-
-        codeDescr = (
-            (None, "print('Callback 2, create dialog')"),
-            ("WyeUI.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-             (None, "(0,10,0)"), (None, "None"),
-             ("WyeUI.TextInput", (None, "frame.vars[2]"),
-              (None, "['TextLabel']"),
-              (None, "frame.vars[3]")
-              ),
-             ("WyeUI.TextInput", (None, "frame.vars[4]"),
-              (None, "['Text2Label']"),
-              (None, "frame.vars[5]")
-              ),
-             ("WyeUI.ButtonInput", (None, "frame.vars[6]"),
-              (None, "['Click Me counter']"),
-              (None, "[WyeUI.BtnCallback]")
-              ),
-             ),
-            #("Label", "Done"),
-            (None, "print('Callback 2 done with SUCCESS')"),
-            (None, "frame.status = Wye.status.SUCCESS")
-        )
-
-        def build():
-            return WyeCore.Utils.buildCodeText("BtnCallback2", WyeUI.BtnCallback2.codeDescr)
-
-        def start(stack):
-            return Wye.codeFrame(WyeUI.BtnCallback2, stack)
-
-        def run(frame):
-            WyeUI.WyeUI_rt.BtnCallback2_run_rt(frame)
-
