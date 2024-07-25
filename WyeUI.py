@@ -166,7 +166,7 @@ class WyeUI(Wye.staticObj):
             pos = self._nodePath.getPos()
             scale = self._nodePath.getScale()
             self._genCardObj()                     # generate new card obj for updated text object
-            self._nodePath.detachNode()             # detach 3d node path from old card
+            self._nodePath.detachNode()            # detach 3d node path from old card
             self._gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
 
         # internal rtn to gen text object with unique wyeTag name
@@ -181,7 +181,7 @@ class WyeUI(Wye.staticObj):
         # internal rtn to gen 3d Card clickable background object
         def _genCardObj(self):
             #print("initial txtNode frame ", self.text.getFrameActual())
-            self.card = CardMaker("My Card")
+            self.card = CardMaker("Txt Card")
             gFrame = self.text.getFrameActual()
             if gFrame[1] == 0:      # if empty frame
                 gFrame[1] = 1
@@ -484,6 +484,7 @@ class WyeUI(Wye.staticObj):
                     ("currInp", Wye.dType.INTEGER, -1),                     # 4 index to current focus widget, if any
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # 5 list of buttons that need to be unclicked
                     ("topGObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj (to hang sub dlgs off)
+                    ("bgndGObj", Wye.dType.OBJECT, None),                   # 7 background card
                     )
         def start(stack):
             #print("Dialog start")
@@ -518,8 +519,8 @@ class WyeUI(Wye.staticObj):
                         dlgHeader = WyeUI._label3d(text=frame.params[1][0], color=(1, 1, 1, 1), pos=frame.params[2],
                                                    scale=(1,1,1), parent=parent.vars[6][0].getNodePath())
 
-                    frame.vars[1][0].append(dlgHeader)
-                    frame.vars[6][0] = dlgHeader
+                    frame.vars[1][0].append(dlgHeader)  # save graphic for dialog delete
+                    frame.vars[6][0] = dlgHeader        # save graphic for parenting sub dialogs
 
                     pos = [0, 0, 0] # [x for x in frame.params[2]]    # copy position
 
@@ -583,6 +584,28 @@ class WyeUI(Wye.staticObj):
                     # done setup, go to next case to process events
                     frame.PC += 1
 
+                    # make a background for entire dialog
+                    if parent is None:
+                        scMult = 5
+                    else:
+                        scMult = 1
+                    dlgNodePath = frame.vars[6][0].getNodePath()
+                    dlgBounds = dlgNodePath.getTightBounds()
+                    card = CardMaker("Dlg Bgnd")
+                    gFrame = LVecBase4f(0, 0, 0, 0)
+                    # print("gFrame", gFrame)
+                    ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
+                    wd = (dlgBounds[1][0] - dlgBounds[0][0]) * scMult + 1
+                    gFrame[0] = 0                                  # marginL
+                    gFrame[1] = wd  # marginR
+                    gFrame[2] = 0  # marginB
+                    gFrame[3] = ht # marginT
+                    # print("initial adjusted gFrame", gFrame)
+                    card.setFrame(gFrame)
+                    cardPath = NodePath(card.generate())
+                    cardPath.reparentTo(dlgNodePath)
+                    cardPath.setPos((-.5, .1, 1.2 - ht))
+
                 case 1:
                     # do end of click-blink for buttons
                     delLst = []
@@ -605,10 +628,10 @@ class WyeUI(Wye.staticObj):
             # if tag is input field in this dialog, select it
             closing = False
 
-
-
             # if clicked on input field
             if tag in frame.vars[3][0]:        # do we have a matching tag?
+                print("Dialog header bounds", frame.vars[6][0].getNodePath().getTightBounds())
+
                 ix = frame.vars[3][0][tag]     # Yes
                 inFrm = frame.params[4+ix][0]
                 # if is text input make it selected

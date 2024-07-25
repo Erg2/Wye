@@ -84,7 +84,7 @@ class TestLib:
             (None, "print('Callback 2, create dialog. parent ', frame.eventData[1])"),
             (None, "print('           frame.eventData ', frame.eventData)"),
             ("WyeUI.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-             (None, "(.5,-1,-.5)"), (None, "[frame.eventData[1]]"),
+             (None, "(1,-1,-1)"), (None, "[frame.eventData[1]]"),
              ("WyeUI.TextInput", (None, "frame.vars[2]"),
               (None, "['TextLabel']"),
               (None, "frame.vars[3]")
@@ -184,18 +184,34 @@ class TestLib:
             TestLib.TestLib_rt.DlgTst_run_rt(frame)
 
 
-    class editor:
+    class editProto:
         cType = Wye.cType.OBJECT
-        autoStart = True
+        #autoStart = True
         mode = Wye.mode.MULTI_CYCLE
         paramDescr = ()
         varDescr = (("objs", Wye.dType.OBJECT_LIST, None),     # 0
                     )
 
         def start(stack):
-            frame = Wye.codeFrame(TestLib.editor, stack)
+            frame = Wye.codeFrame(TestLib.editProto, stack)
             frame.vars[0][0] = []    # init object list
             return frame
 
         def run(frame):
-            pass
+            match(frame.PC):
+                case 0:
+                    tgt = TestLib.DlgTst
+                    tgtFrm = TestLib.DlgTst.start(frame.SP)
+                    # generate text inputs for header info
+
+                    # generate click inputs for params
+
+                    # generate click inputs for vars
+
+                    # generate click inputs for code
+
+                    # open dialog
+                case 1:
+                    pass
+                    # get here when dialog done
+                    # if success, add/replace new dlg object
