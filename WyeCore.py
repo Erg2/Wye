@@ -811,12 +811,12 @@ class WyeCore(Wye.staticObj):
             return pStr
 
         def listToString(lst):
-            print("lst", lst)
+            #print("listToString lst:", lst)
             pStr = ""
             if len(lst) > 0:
                 for ii in range(len(lst)):
                     pStr += str(lst[ii])
-                    if ii < len(lst)-2:
+                    if ii < len(lst)-1:
                         pStr += ", "
             else:
                 pStr = "<empty>"

@@ -114,6 +114,46 @@ class TestLib:
 
 
 
+    class BtnCallback3:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("tstDlg3Frm", Wye.dType.OBJECT, None),                 # 0
+                    ("Title", Wye.dType.INTEGER, "DropDown"),    # 1
+                    ("text1frm", Wye.dType.STRING, ""),              # 2
+                    ("text1Val", Wye.dType.STRING, ""),        # 3
+                    ("text2frm", Wye.dType.STRING, ""),              # 4
+                    ("text2Val", Wye.dType.STRING, "<val1>"),        # 5
+
+                    ("id1", Wye.dType.OBJECT, None),  # 6
+        )
+
+        codeDescr = (
+            (None, "print('Callback 3, create dropdown. parent ', frame.eventData[1])"),
+            (None, "print('           frame.eventData ', frame.eventData)"),
+            ("WyeUI.DropDown", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
+             (None, "(1,-1,-1.5*5)"), (None, "[frame.eventData[1]]"),
+             (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
+             ),
+            #("Label", "Done"),
+            (None, "print('Callback 2 done with SUCCESS')"),
+            (None, "frame.status = Wye.status.SUCCESS")
+        )
+
+        def build():
+            print("Build BtnCallback3")
+            return WyeCore.Utils.buildCodeText("BtnCallback3", TestLib.BtnCallback3.codeDescr)
+
+        def start(stack):
+            print("Start BtnCallback3")
+            return Wye.codeFrame(TestLib.BtnCallback3, stack)
+
+        def run(frame):
+            print("Run BtnCallback3")
+            TestLib.TestLib_rt.BtnCallback3_run_rt(frame)
+
+
+
     class DlgTst:
         cType = Wye.cType.OBJECT
         autoStart = True
@@ -137,6 +177,7 @@ class TestLib:
                     ("id1", Wye.dType.OBJECT, None),  # 12
 
                     ("labelId", Wye.dType.OBJECT, None), # 13
+                    ("clidk2ID", Wye.dType.OBJECT, None),  # 14
                     )
 
         codeDescr = (
@@ -155,6 +196,11 @@ class TestLib:
                                 ("WyeUI.ButtonInput", (None, "frame.vars[12]"),
                                   (None, "['Click Me for Dialog']"),
                                   (None, "[TestLib.BtnCallback2]"),
+                                  (None, "frame.vars[0]")
+                                ),
+                                ("WyeUI.ButtonInput", (None, "frame.vars[14]"),
+                                  (None, "['Click Me for Dropdown']"),
+                                  (None, "[TestLib.BtnCallback3]"),
                                   (None, "frame.vars[0]")
                                 ),
              ),

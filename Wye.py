@@ -243,7 +243,7 @@ class Wye:
                     if len(varDef) > 1:
                         self.vars.append([varDef[2]])
             except:
-                print("ERROR Wye codeFrame: verb ",verb.__name__," varDef failed to parse:", varDef, " in ", verb.varDescr)
+                print("ERROR Wye codeFrame: verb ", verb.__name__, " varDef failed to parse:", varDef, " in ", verb.varDescr)
             self.PC = 0         # used by async verbs to track location in executing code
             self.SP = stack      # points to stack list this frame is on
             if verb.mode == Wye.mode.MULTI_CYCLE or verb.mode == Wye.mode.PARALLEL:
