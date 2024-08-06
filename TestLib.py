@@ -52,7 +52,7 @@ class TestLib:
 
 
     class BtnCallback:
-        mode = Wye.mode.MULTI_CYCLE
+        mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
         paramDescr = ()
         varDescr = (("count", Wye.dType.INTEGER, 0),)
@@ -62,19 +62,23 @@ class TestLib:
 
         def run(frame):
             print("BtnCallback data=", frame.eventData, " count = ", frame.vars[TestLib.BtnCallback.vConst.count][0])
-            frame.vars[TestLib.BtnCallback.vConst.count][0] += 1
+            #frame.vars[TestLib.BtnCallback.vConst.count][0] += 1
 
             # really bad coding / wizardry required here
             inFrm = frame.eventData[1][0]
+            var = frame.eventData[1][1]
+            print("*** data [1]", frame.eventData[1][1], " var", var)
             dlgFrm = inFrm.parentFrame
             print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params[1][0])
 
+            var[0] += 1
+
             inWidg = dlgFrm.vars[1][0][6]
-            txt = "Count " + str(frame.vars[TestLib.BtnCallback.vConst.count][0])
+            txt = "Count " + str(var[0])
             # print("  set text", txt," ix", ix, " txtWidget", inWidg)
             inWidg.setText(txt)
 
-            if frame.vars[TestLib.BtnCallback.vConst.count][0] > 5:
+            if var[0] > 10:
                 frame.status = Wye.status.SUCCESS
 
     class BtnCallback2:
@@ -86,9 +90,10 @@ class TestLib:
                     ("txt1ID", Wye.dType.STRING, ""),                   # 2
                     ("text1Val", Wye.dType.STRING, ""),                 # 3
                     ("txt2IO", Wye.dType.STRING, ""),                   # 4
-                    ("text2Val", Wye.dType.STRING, "starting text"),           # 5
+                    ("text2Val", Wye.dType.STRING, "starting text"),    # 5
                     ("BtnID", Wye.dType.OBJECT, None),                  # 6
-                    ("lblID", Wye.dType.OBJECT, None)                   # 7
+                    ("lblID", Wye.dType.OBJECT, None),                  # 7
+                    ("clickCt", Wye.dType.INTEGER, 0),                  # 8
         )
 
         codeDescr = (
@@ -107,7 +112,7 @@ class TestLib:
              ("WyeUI.ButtonInput", (None, "frame.vars[6]"),
               (None, "['Click Me counter']"),
               (None, "[TestLib.BtnCallback]"),
-              (None, "[f1.params[0]]")
+              (None, "[[f1,frame.vars[8]]]")
               ),
              ("WyeUI.LabelInput", (None, "frame.vars[7]"), (None, "['Count -1']")),
              ),

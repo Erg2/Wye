@@ -532,7 +532,7 @@ class WyeUI(Wye.staticObj):
                         pos[2] -= 1.5
 
                         #print("Dialog input", ii, " param ", 4+(ii*2))
-                        inFrm = frame.params[4+ii][0]
+                        inFrm = frame.params[WyeUI.Dialog.pConst.inputs+ii][0]
                         #print("    Dialog input ", ii, " inFrm", inFrm)
                         #print("       inFrm.params[1]", inFrm.params[1])
                         #print("")
@@ -636,7 +636,7 @@ class WyeUI(Wye.staticObj):
                 ix = frame.vars[3][0][tag]     # Yes
                 # process dialog inputs
                 if frame.verb is WyeUI.Dialog:
-                    inFrm = frame.params[4+ix][0]
+                    inFrm = frame.params[WyeUI.Dialog.pConst.inputs+ix][0]
                     # if is text input make it selected
                     if inFrm.verb is WyeUI.TextInput:
                         inWidg = inFrm.vars[3][0]
@@ -688,7 +688,7 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog", frame.params[1][0], " OK Button pressed")
                     nInputs = (len(frame.params) - 4)
                     for ii in range(nInputs):
-                        inFrm = frame.params[4+ii][0]
+                        inFrm = frame.params[WyeUI.Dialog.pConst.inputs+ii][0]
                         # for any text inputs, copy working string to return string
                         if inFrm.verb is WyeUI.TextInput:
                             #print("input", ii, " frame", inFrm, "\n", WyeCore.Utils.frameToString(inFrm))
@@ -717,7 +717,7 @@ class WyeUI(Wye.staticObj):
             # If there was a diff selection before, fix that
             # (if closing dialog, nevermind)
             if prevSel > -1 and prevSel != frame.vars[4][0] and not closing:
-                inFrm =frame.params[4+prevSel][0]
+                inFrm =frame.params[WyeUI.Dialog.pConst.inputs+prevSel][0]
                 if inFrm.verb is WyeUI.TextInput:
                     inWidg = inFrm.vars[3][0]
                     inWidg.setColor((0,0,0, 1))
@@ -726,7 +726,7 @@ class WyeUI(Wye.staticObj):
             # if we have an input with focus
             ix = frame.vars[4][0]
             if ix >= 0:
-                inFrm = frame.params[4 + ix][0]
+                inFrm = frame.params[WyeUI.Dialog.pConst.inputs + ix][0]
                 txt = inFrm.vars[1][0]
                 insPt = inFrm.vars[2][0]
                 preTxt = txt[:insPt]
