@@ -61,8 +61,19 @@ class TestLib:
             return Wye.codeFrame(TestLib.BtnCallback, stack)
 
         def run(frame):
-            print("BtnCallback! count = ", frame.vars[TestLib.BtnCallback.vConst.count][0])
+            print("BtnCallback data=", frame.eventData, " count = ", frame.vars[TestLib.BtnCallback.vConst.count][0])
             frame.vars[TestLib.BtnCallback.vConst.count][0] += 1
+
+            # really bad coding / wizardry required here
+            inFrm = frame.eventData[1][0]
+            dlgFrm = inFrm.parentFrame
+            print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params[1][0])
+
+            inWidg = dlgFrm.vars[1][0][6]
+            txt = "Count " + str(frame.vars[TestLib.BtnCallback.vConst.count][0])
+            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
+            inWidg.setText(txt)
+
             if frame.vars[TestLib.BtnCallback.vConst.count][0] > 5:
                 frame.status = Wye.status.SUCCESS
 
@@ -70,14 +81,14 @@ class TestLib:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         paramDescr = ()
-        varDescr = (("tstDlg3Frm", Wye.dType.OBJECT, None),                 # 0
-                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),    # 1
-                    ("text1frm", Wye.dType.STRING, ""),              # 2
-                    ("text1Val", Wye.dType.STRING, ""),        # 3
-                    ("text2frm", Wye.dType.STRING, ""),              # 4
-                    ("text2Val", Wye.dType.STRING, "<val1>"),        # 5
-
-                    ("id1", Wye.dType.OBJECT, None),  # 6
+        varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),              # 0
+                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),      # 1
+                    ("txt1ID", Wye.dType.STRING, ""),                   # 2
+                    ("text1Val", Wye.dType.STRING, ""),                 # 3
+                    ("txt2IO", Wye.dType.STRING, ""),                   # 4
+                    ("text2Val", Wye.dType.STRING, "starting text"),           # 5
+                    ("BtnID", Wye.dType.OBJECT, None),                  # 6
+                    ("lblID", Wye.dType.OBJECT, None)                   # 7
         )
 
         codeDescr = (
@@ -95,8 +106,10 @@ class TestLib:
               ),
              ("WyeUI.ButtonInput", (None, "frame.vars[6]"),
               (None, "['Click Me counter']"),
-              (None, "[TestLib.BtnCallback]")
+              (None, "[TestLib.BtnCallback]"),
+              (None, "[f1.params[0]]")
               ),
+             ("WyeUI.LabelInput", (None, "frame.vars[7]"), (None, "['Count -1']")),
              ),
             #("Label", "Done"),
             (None, "print('Callback 2 done with SUCCESS')"),
@@ -124,7 +137,6 @@ class TestLib:
                     ("text1Val", Wye.dType.STRING, ""),        # 3
                     ("text2frm", Wye.dType.STRING, ""),              # 4
                     ("text2Val", Wye.dType.STRING, "<val1>"),        # 5
-
                     ("id1", Wye.dType.OBJECT, None),  # 6
         )
 
@@ -172,7 +184,7 @@ class TestLib:
                     ("text1frm2", Wye.dType.STRING, ""),  # 8
                     ("text1Val2", Wye.dType.STRING, ""),  # 9
                     ("text2frm2", Wye.dType.STRING, ""),  # 10
-                    ("text2Val2", Wye.dType.STRING, "<val2>"),  # 11
+                    ("text2Val2", Wye.dType.STRING, "initial value"),  # 11
 
                     ("id1", Wye.dType.OBJECT, None),  # 12
 
@@ -186,11 +198,11 @@ class TestLib:
                                 (None, "(-2,10,0)"), (None, "[None]"),
                                 ("WyeUI.LabelInput", (None, "frame.vars[13]"), (None, "['LabelInput']")),
                                 ("WyeUI.TextInput", (None, "frame.vars[2]"),
-                                  (None, "['T1Label']"),
+                                  (None, "['Enter Text 1']"),
                                   (None, "frame.vars[3]")
                                 ),
                                 ("WyeUI.TextInput", (None, "frame.vars[4]"),
-                                 (None, "['T2Label']"),
+                                 (None, "['Enter Text 2']"),
                                  (None, "frame.vars[5]")
                                 ),
                                 ("WyeUI.ButtonInput", (None, "frame.vars[12]"),

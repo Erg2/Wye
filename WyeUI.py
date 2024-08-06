@@ -309,6 +309,9 @@ class WyeUI(Wye.staticObj):
 
                 # sign up for events
 
+            # connect to parent frame
+            dialogFrame.parentFrame = parentFrame
+
             # if starting new dialog hierarchy
             if parentFrame is None:
                 WyeUI.FocusManager.dialogHierarchies.append([dialogFrame])
@@ -343,8 +346,8 @@ class WyeUI(Wye.staticObj):
                 #print("FocusManager doSelect hier=", hier)
                 if len(hier) > 0:
                     frm = hier[-1]
-                    #print("FocusManager doSelect", frm, ", ", id)
-                    if hasattr(frm, "parentFrame"):
+                    #print("FocusManager doSelect", frm, ",", frm.params[1][0], ",", id)
+                    if not frm.parentFrame is None:
                         if frm.parentFrame.verb.doSelect(frm, id):
                             status = True
                     else:
@@ -460,7 +463,7 @@ class WyeUI(Wye.staticObj):
 
         def run(frame):
             frame.vars[2][0] = frame.params[2][0]       # save verb to call
-            frame.params[0] = [frame]  # self referential!
+            frame.params[0][0] = frame  # self referential!
             # return frame and success, caller dialog will use frame as placeholder for input
             frame.status = Wye.status.SUCCESS
 
@@ -533,6 +536,8 @@ class WyeUI(Wye.staticObj):
                         #print("    Dialog input ", ii, " inFrm", inFrm)
                         #print("       inFrm.params[1]", inFrm.params[1])
                         #print("")
+
+                        inFrm.parentFrame = frame
 
                         if inFrm.verb is WyeUI.LabelInput:
                             lbl = WyeUI._label3d(inFrm.params[1][0], (1, 0, 0, 1), pos=tuple(pos),
@@ -643,7 +648,7 @@ class WyeUI(Wye.staticObj):
                         callVerb = inFrm.vars[2][0]
                         inFrm.vars[1][0].setColor((0, .25, 0, 1)) # set button color pressed
                         if inFrm.vars[WyeUI.ButtonInput.vConst.clickCount][0] <= 0:     # if not in an upclick count, process click
-                            #print("Dialog doSelect: Start click count for", inFrm.verb.__name__)
+                            #print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
                             inFrm.vars[WyeUI.ButtonInput.vConst.clickCount][0] = 10       # start flash countdown (in display frames)
                             frame.vars[WyeUI.Dialog.vConst.clickedBtns][0].append(inFrm)  # stash button for flash countdown
 
@@ -654,6 +659,7 @@ class WyeUI(Wye.staticObj):
                                 verbFrm = callVerb.start(frame.SP)
                                 # handle user data
                                 if len(inFrm.params) > 3:
+                                    print("Button callback", callVerb.__name__, " user data", inFrm.params[3][0])
                                     data = inFrm.params[3][0]
                                 else:
                                     data = None
@@ -726,14 +732,14 @@ class WyeUI(Wye.staticObj):
                 preTxt = txt[:insPt]
                 postTxt = txt[insPt:]
                 # delete key
-                if key == '\u0008':
+                if key == '\u0008':         # delete key
                     if insPt > 0:
                         preTxt = preTxt[:-1]
                         insPt -= 1
                         inFrm.vars[2][0] = insPt
                     txt = preTxt + postTxt
                 # arrow keys
-                elif key == Wye.ctlKeys.LEFT:
+                elif key == Wye.ctlKeys.LEFT:   # arrow keys
                     if insPt > 0:
                         insPt -= 1
                         inFrm.vars[2][0] = insPt
@@ -747,7 +753,7 @@ class WyeUI(Wye.staticObj):
                 else:
                     txt = preTxt + key + postTxt
                     insPt += 1
-                    inFrm.vars[2][0] = insPt
+                    inFrm.vars[2][0] = insPt        # set text insert point after new char
                 inFrm.vars[1][0] = txt
                 inWidg = inFrm.vars[3][0]
                 #print("  set text", txt," ix", ix, " txtWidget", inWidg)
