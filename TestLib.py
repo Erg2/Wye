@@ -51,6 +51,8 @@ class TestLib:
             frame.runParallel()      # run compiled run code
 
 
+    # Test Dialog 3 "Click Me counter" button callback
+    # Increment variable in parent dialog and show value in text label
     class BtnCallback:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
@@ -62,24 +64,28 @@ class TestLib:
 
         def run(frame):
             print("BtnCallback data=", frame.eventData, " count = ", frame.vars[TestLib.BtnCallback.vConst.count][0])
-            #frame.vars[TestLib.BtnCallback.vConst.count][0] += 1
 
             # really bad coding / wizardry required here
+            # Get the text widget of the
             inFrm = frame.eventData[1][0]
             var = frame.eventData[1][1]
-            print("*** data [1]", frame.eventData[1][1], " var", var)
+            #print("data [1]", frame.eventData[1][1], " var", var)
             dlgFrm = inFrm.parentFrame
-            print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params[1][0])
+            #print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params[1][0])
 
             var[0] += 1
 
-            inWidg = dlgFrm.vars[1][0][6]
+            # get label input's frame from parent dialog
+            lblFrame = dlgFrm.params[WyeCore.libs.WyeUI.Dialog.pConst.inputs+3][0]
+
+            # supreme hackery - look up the display label in the label's graphic widget list
+            inWidg = lblFrame.vars[0][0][0]
             txt = "Count " + str(var[0])
             # print("  set text", txt," ix", ix, " txtWidget", inWidg)
             inWidg.setText(txt)
 
-            if var[0] > 10:
-                frame.status = Wye.status.SUCCESS
+            if var[0] >= 10:
+                var[0] = 0
 
     class BtnCallback2:
         mode = Wye.mode.MULTI_CYCLE
@@ -101,20 +107,20 @@ class TestLib:
             (None, "print('           frame.eventData ', frame.eventData)"),
             ("WyeUI.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
              (None, "(1,-1,-1)"), (None, "[frame.eventData[1]]"),
-             ("WyeUI.TextInput", (None, "frame.vars[2]"),
+             ("WyeUI.InputText", (None, "frame.vars[2]"),
               (None, "['TextLabel']"),
               (None, "frame.vars[3]")
               ),
-             ("WyeUI.TextInput", (None, "frame.vars[4]"),
+             ("WyeUI.InputText", (None, "frame.vars[4]"),
               (None, "['Text2Label']"),
               (None, "frame.vars[5]")
               ),
-             ("WyeUI.ButtonInput", (None, "frame.vars[6]"),
+             ("WyeUI.InputButton", (None, "frame.vars[6]"),
               (None, "['Click Me counter']"),
               (None, "[TestLib.BtnCallback]"),
               (None, "[[f1,frame.vars[8]]]")
               ),
-             ("WyeUI.LabelInput", (None, "frame.vars[7]"), (None, "['Count -1']")),
+             ("WyeUI.InputLabel", (None, "frame.vars[7]"), (None, "['Count -1']")),
              ),
             #("Label", "Done"),
             (None, "print('Callback 2 done with SUCCESS')"),
@@ -201,21 +207,21 @@ class TestLib:
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
                                 (None, "(-2,10,0)"), (None, "[None]"),
-                                ("WyeUI.LabelInput", (None, "frame.vars[13]"), (None, "['LabelInput']")),
-                                ("WyeUI.TextInput", (None, "frame.vars[2]"),
+                                ("WyeUI.InputLabel", (None, "frame.vars[13]"), (None, "['InputLabel']")),
+                                ("WyeUI.InputText", (None, "frame.vars[2]"),
                                   (None, "['Enter Text 1']"),
                                   (None, "frame.vars[3]")
                                 ),
-                                ("WyeUI.TextInput", (None, "frame.vars[4]"),
+                                ("WyeUI.InputText", (None, "frame.vars[4]"),
                                  (None, "['Enter Text 2']"),
                                  (None, "frame.vars[5]")
                                 ),
-                                ("WyeUI.ButtonInput", (None, "frame.vars[12]"),
+                                ("WyeUI.InputButton", (None, "frame.vars[12]"),
                                   (None, "['Click Me for Dialog']"),
                                   (None, "[TestLib.BtnCallback2]"),
                                   (None, "frame.vars[0]")
                                 ),
-                                ("WyeUI.ButtonInput", (None, "frame.vars[14]"),
+                                ("WyeUI.InputButton", (None, "frame.vars[14]"),
                                   (None, "['Click Me for Dropdown']"),
                                   (None, "[TestLib.BtnCallback3]"),
                                   (None, "frame.vars[0]")
@@ -225,11 +231,11 @@ class TestLib:
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars[6]"), (None, "frame.vars[7]"),
                                (None, "(2,10,0)"), (None, "[None]"),
-                               ("WyeUI.TextInput", (None, "frame.vars[8]"),
+                               ("WyeUI.InputText", (None, "frame.vars[8]"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars[9]")
                                ),
-                               ("WyeUI.TextInput", (None, "frame.vars[10]"),
+                               ("WyeUI.InputText", (None, "frame.vars[10]"),
                                   (None, "['T4Label']"),
                                   (None, "frame.vars[11]")
                                )

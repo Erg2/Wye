@@ -79,16 +79,16 @@ class TestLib3:
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
                                 (None, "(-2,10,0)"), (None, "None"),
-                                ("WyeUI.LabelInput", (None, "frame.vars[13]"), (None, "['LabelInput']")),
-                                ("WyeUI.TextInput", (None, "frame.vars[2]"),
+                                ("WyeUI.InputLabel", (None, "frame.vars[13]"), (None, "['InputLabel']")),
+                                ("WyeUI.InputText", (None, "frame.vars[2]"),
                                   (None, "['T1Label']"),
                                   (None, "frame.vars[3]")
                                 ),
-                                ("WyeUI.TextInput", (None, "frame.vars[4]"),
+                                ("WyeUI.InputText", (None, "frame.vars[4]"),
                                  (None, "['T2Label']"),
                                  (None, "frame.vars[5]")
                                 ),
-                                ("WyeUI.ButtonInput", (None, "frame.vars[12]"),
+                                ("WyeUI.InputButton", (None, "frame.vars[12]"),
                                   (None, "['Click Me for Dialog']"),
                                   (None, "[WyeUI.BtnCallback2]")
                                 ),
@@ -97,11 +97,11 @@ class TestLib3:
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars[6]"), (None, "frame.vars[7]"),
                                (None, "(2,10,0)"), (None, "None"),
-                               ("WyeUI.TextInput", (None, "frame.vars[8]"),
+                               ("WyeUI.InputText", (None, "frame.vars[8]"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars[9]")
                                ),
-                               ("WyeUI.TextInput", (None, "frame.vars[10]"),
+                               ("WyeUI.InputText", (None, "frame.vars[10]"),
                                   (None, "['T4Label']"),
                                   (None, "frame.vars[11]")
                                )
