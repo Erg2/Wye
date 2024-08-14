@@ -911,6 +911,8 @@ class WyeUI(Wye.staticObj):
                 case 1:
                     # if click event set status, we're done, clean up
                     if frame.vars[WyeUI.Dialog.vConst.currInp][0] > -1:
+                        frame.params[0][0] = frame.vars[WyeUI.Dialog.vConst.currInp][0]
+                        print("DropDown got click event.  CurrInp", frame.vars[WyeUI.Dialog.vConst.currInp][0], " ")
                         # remove dialog from active dialog list
                         WyeUI.FocusManager.closeDialog(frame)
                         # delete the graphic widgets associated with the dialog
