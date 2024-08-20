@@ -6,6 +6,10 @@ class TestLib:
     def build():
         WyeCore.Utils.buildLib(TestLib)
 
+    class showAvailLibs:
+        cType = Wye.cType.VERB
+        mode = Wye.mode.MULTI_CYCLE
+
     class doitButton:
         cType = Wye.cType.OBJECT
         autoStart = True
@@ -26,7 +30,7 @@ class TestLib:
             ),
             (
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[1]")),
-                (None, "WyeCore.libs.WyeUI._displayLib(WyeCore.libs.TestLib, (.1,10,.8))"),
+                (None, "WyeCore.libs.WyeUI._displayLib((0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
                 ("Label", "Done")
             ),
             (
