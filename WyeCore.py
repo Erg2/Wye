@@ -625,7 +625,8 @@ class WyeCore(Wye.staticObj):
                     # single cycle verbs create code that runs immediately when called
                     case Wye.mode.SINGLE_CYCLE:
                         eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
-                        codeText += "    "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                        codeText += "    if not hasattr(frame,'"+eff+"'):\n     setattr(frame,'"+eff+"',None)\n"
+                        codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
                         #print("parseWyeTuple: 1 codeText =", codeText[0])
                         if len(wyeTuple) > 1:
                             for paramIx in range(1, len(wyeTuple)):
@@ -634,17 +635,17 @@ class WyeCore(Wye.staticObj):
                                 #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
                                 if paramDesc[0] is None:        # constant/var (leaf node)
                                     #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
-                                    codeText += "    "+eff+".params.append(" + paramDesc[1] + ")\n"
+                                    codeText += "    frame."+eff+".params.append(" + paramDesc[1] + ")\n"
                                     #print("parseWyeTuple: 3 codeText=", codeText[0])
                                 else:                           # recurse to parse nested code tuple
                                     cdTxt, fnTxt = WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList)
                                     # NOTE: Assumes that IDE ensured verb is a function!
-                                    cdTxt += "    "+eff+".params.append(f"+str(fNum+1)+".params[0])\n"
+                                    cdTxt += "    frame."+eff+".params.append(frame.f"+str(fNum+1)+".params[0])\n"
                                     codeText += cdTxt
                                     parFnText += fnTxt
-                        codeText += "    "+wyeTuple[0] + ".run("+eff+")\n    if "+eff+".status == Wye.status.FAIL:\n"
+                        codeText += "    "+wyeTuple[0] + ".run(frame."+eff+")\n    if frame."+eff+".status == Wye.status.FAIL:\n"
                         #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
-                        codeText += "     frame.status = "+eff+".status\n     return\n"
+                        codeText += "     frame.status = frame."+eff+".status\n     return\n"
 
                     # multi-cycle verbs create code that pushes a new frame on the stack which will run on the next display cycle and
                     # generates a new case statement in this verb that will pick up when the pushed frame completes
@@ -652,7 +653,8 @@ class WyeCore(Wye.staticObj):
                     case Wye.mode.MULTI_CYCLE | Wye.mode.PARALLEL:
                         #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
                         eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
-                        codeText += "    "+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                        codeText += "    if not hasattr(frame,'" + eff + "'):\n     setattr(frame,'" + eff + "',None)\n"
+                        codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
                         #print("parseWyeTuple: 1 codeText =", codeText[0])
                         if len(wyeTuple) > 1:
                             for paramIx in range(1, len(wyeTuple)):
@@ -661,21 +663,21 @@ class WyeCore(Wye.staticObj):
                                 #print("parseWyeTuple: 2 parse paramDesc ", paramDesc)
                                 if paramDesc[0] is None:        # constant/var (leaf node)
                                     #print("parseWyeTuple: 3a add paramDesc[1]=", paramDesc[1])
-                                    codeText += "    "+eff+".params.append(" + paramDesc[1] + ")\n"
+                                    codeText += "    frame."+eff+".params.append(" + paramDesc[1] + ")\n"
                                     #print("parseWyeTuple: 3 codeText=", codeText[0])
                                 else:                           # recurse to parse nested code tuple
                                     #caseNumList[0] += 1
                                     cdTxt, fnTxt = WyeCore.Utils.parseWyeTuple(paramDesc, fNum+1, caseNumList)
-                                    cdTxt += "    "+eff+".params.append(" + "f"+str(fNum+1)+".params[0])\n"
+                                    cdTxt += "    frame."+eff+".params.append(" + "frame.f"+str(fNum+1)+".params[0])\n"
                                     codeText += cdTxt
                                     parFnText += fnTxt
-                        codeText += "    frame.SP.append("+eff+")\n    frame.PC += 1\n"
+                        codeText += "    frame.SP.append(frame."+eff+")\n    frame.PC += 1\n"
                         caseNumList[0] += 1
-                        #codeText += "   case "+str(caseNumList[0])+":\n    pass\n    "+eff+"=frame.SP.pop()\n"
-                        codeText += "   case "+str(caseNumList[0])+":\n    "+eff+"=frame.SP.pop()\n"
-                        codeText += "    if "+eff+".status == Wye.status.FAIL:\n"
-                        #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
-                        codeText += "     frame.status = "+eff+".status\n     return\n"
+                        #codeText += "   case "+str(caseNumList[0])+":\n    pass\n    frame."+eff+"=frame.SP.pop()\n"
+                        codeText += "   case "+str(caseNumList[0])+":\n    frame."+eff+"=frame.SP.pop()\n"
+                        codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
+                        #codeText += "     print('verb ',frame."+eff+".verb.__name__, ' failed')\n"
+                        codeText += "     frame.status = frame."+eff+".status\n     return\n"
                         pass
 
 

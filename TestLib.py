@@ -122,7 +122,7 @@ class TestLib:
              ("WyeUI.InputButton", (None, "frame.vars[6]"),
               (None, "['Click Me counter']"),
               (None, "[TestLib.BtnCallback]"),
-              (None, "[[f1,frame.vars[8]]]")
+              (None, "[[frame.f1,frame.vars[8]]]")
               ),
              ("WyeUI.InputLabel", (None, "frame.vars[7]"), (None, "['Count -1']")),
              ),
@@ -159,17 +159,17 @@ class TestLib:
         codeDescr = (
             (None, "print('Callback 3, create dropdown. parent ', frame.eventData[1])"),
             (None, "print('           frame.eventData ', frame.eventData)"),
-            #("WyeCore.libs.WyeLib.setEqual",
-            #    (None, "frame.vars[7]"),
-            #    ("WyeUI.DropDown", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-            #     (None, "(1,-1,-1.5*5)"), (None, "[frame.eventData[1]]"),
-            #     (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
-            #    )
-            # ),
-            ("WyeUI.DropDown", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
-              (None, "(1,-1,-1.5*5)"), (None, "[frame.eventData[1]]"),
-              (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
-            ),
+            ("WyeCore.libs.WyeLib.setEqual",
+                (None, "frame.vars[7]"),
+                ("WyeUI.DropDown", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
+                 (None, "(1,-1,-1.5*5)"), (None, "[frame.eventData[1]]"),
+                 (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
+                )
+             ),
+            #("WyeUI.DropDown", (None, "frame.vars[0]"), (None, "frame.vars[1]"),
+            #  (None, "(1,-1,-1.5*5)"), (None, "[frame.eventData[1]]"),
+            #  (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
+            #),
             #("Label", "Done"),
             (None, "print('Callback 3 dropDown done with SUCCESS.  User picked entry', frame.vars[0][0])"),
             (None, "frame.status = Wye.status.SUCCESS")
