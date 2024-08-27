@@ -257,7 +257,7 @@ class WyeCore(Wye.staticObj):
                         #    print("worldRunner ERROR: stack # ", stackNum, " depth", len(stack)," stack[-1] frame = None")
                         #    exit(1)
                         if frame.status == Wye.status.CONTINUE:
-                            # print("worldRunner run: stack ", stackNum, " verb", frame.verb.__name__, " PC ", frame.PC)
+                            #print("worldRunner run: stack ", stackNum, " verb", frame.verb.__name__, " PC ", frame.PC)
                             frame.verb.run(frame)
                             # if frame.status != Wye.status.CONTINUE:
                             #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
@@ -761,14 +761,14 @@ class WyeCore(Wye.staticObj):
             #parFnText +=     "  print('" + verbName + "_start_rt')\n"
             parFnText +=     "  f = Wye.parallelFrame(" + libName + "." + verbName + ",stack)\n"
             for ix in range(nStreams):
-                parFnText += "  stk = []\n"     # stack for parallel stream
+                parFnText += "  stk = []\n"                 # stack for parallel stream
                 parFnText += "  fs = Wye.codeFrame(WyeCore.ParallelStream, stk)\n" # frame for stream
                 parFnText += "  fs.vars = f.vars\n"
                 parFnText += "  fs.params = f.params\n"
                 parFnText += "  fs.parentFrame = f\n"
                 parFnText += "  fs.run = " + libName + "."  + libName + "_rt." + verbName + "_stream"+str(ix)+"_run_rt\n"
-                parFnText += "  stk.append(fs)\n"   # put stream frame at top of stream's stack
-                parFnText += "  f.stacks.append(stk)\n" # put stack on our frame's list of stream stacks
+                parFnText += "  stk.append(fs)\n"           # put stream frame at top of stream's stack
+                parFnText += "  f.stacks.append(stk)\n"     # put stack on our frame's list of stream stacks
 
             #parFnText +=     "  print('f.stacks', f.stacks)\n"
             #parFnText +=     "  print('f.verb', f.verb)\n"
@@ -776,82 +776,6 @@ class WyeCore(Wye.staticObj):
 
             # print("buildParallelText complete.  parFnText=\n"+parFnText[0])
             return ("", parFnText)
-
-        def frameToString(frame):
-            fStr = ""
-            fStr += "frame: "+str(frame)+"\n"
-            if hasattr(frame, "verb"):
-                if hasattr(frame.verb, "__name__"):
-                    fStr += "  verb "+frame.verb.__name__+"\n"
-                else:
-                    fStr += "  verb has no name"+"\n"
-            else:
-                fStr += "  frame has no verb"+"\n"
-            if hasattr(frame, "PC"):
-                fStr += "  PC="+str(frame.PC)+"\n"
-            else:
-                fStr += "  <no PC>"+"\n"
-            if hasattr(frame, "SP"):
-                fStr += "  SP="+WyeCore.Utils.frameListSummary(frame.SP)+"\n"
-            else:
-                fStr += "  <no SP>"+"\n"
-            fStr += "  params:" + WyeCore.Utils.paramsToString(frame)+"\n"
-            fStr += "  vars:" + WyeCore.Utils.varsToString(frame)
-
-            return fStr
-
-        def frameListSummary(lst):
-            pStr = ""
-            if len(lst) > 0:
-                for ii in range(len(lst)):
-                    frm = lst[ii]
-                    pStr += str(frm.verb.__name__)
-                    if ii < len(lst)-2:
-                        pStr += ", "
-            else:
-                pstr = "<empty>"
-            return pStr
-
-        def listToString(lst):
-            #print("listToString lst:", lst)
-            pStr = ""
-            if len(lst) > 0:
-                for ii in range(len(lst)):
-                    pStr += str(lst[ii])
-                    if ii < len(lst)-1:
-                        pStr += ", "
-            else:
-                pStr = "<empty>"
-            return pStr
-
-        # return params concanated
-        def paramsToString(frame):
-            return WyeCore.Utils.listToString(frame.params)
-
-        # return vars concanated
-        def varsToString(frame):
-            return WyeCore.Utils.listToString(frame.vars)
-
-        # return status as string
-        def statusToString(stat):
-            match stat:
-                case Wye.status.CONTINUE:
-                    return "CONTINUE"
-                case Wye.status.SUCCESS:
-                    return "SUCCESS"
-                case Wye.status.FAIL:
-                    return "FAIL"
-
-        # return stack in reverse order
-        def stackToString(stack):
-            sLen = len(stack)
-            stkStr = "\n stack len=" + str(sLen)
-            if sLen > 0:
-                for ix in range(sLen-1, -1, -1):
-                    frame = stack[ix]
-                    stkStr += "\n  ["+str(ix)+"] verb=" + frame.verb.__name__ + " status " + WyeCore.Utils.statusToString(frame.status) + \
-                              " PC=" + str(frame.PC)+ " params: " + str(frame.params)
-            return stkStr
 
         # build a runtime library function for this library
         def buildLib(libClass):
@@ -954,7 +878,10 @@ class WyeCore(Wye.staticObj):
         paramDescr = ()
         varDescr = ()
 
-        def start(stack):
-            return Wye.codeFrame()
+        def start(self, stack):
+            #print("ParallelStream start: stack ", stack)
+            return Wye.codeFrame(WyeCore.ParallelStream, stack)
+
         def run(frame):
+            #print("ParallelStream run: frame", frame.tostring())
             frame.run(frame)

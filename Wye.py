@@ -253,13 +253,82 @@ class Wye:
             self.debug = ""
             # print("codeFrame for verb", verb, " verb.varDescr =", verb.varDescr, " vars =", self.vars)
 
+
+        def tostring(frame):
+            fStr = ""
+            fStr += "frame: "+str(frame)+"\n"
+            if hasattr(frame, "verb"):
+                if hasattr(frame.verb, "__name__"):
+                    fStr += "  verb "+frame.verb.__name__+"\n"
+                else:
+                    fStr += "  verb has no name"+"\n"
+            else:
+                fStr += "  frame has no verb"+"\n"
+            if hasattr(frame, "PC"):
+                fStr += "  PC="+str(frame.PC)+"\n"
+            else:
+                fStr += "  <no PC>"+"\n"
+            if hasattr(frame, "SP"):
+                fStr += "  SP len: " + str(len(frame.SP)) + ", stack:"+frame.frameListSummary(frame.SP)+"\n"
+            else:
+                fStr += "  <no SP>"+"\n"
+            fStr += "  params:" + frame.paramsToString()+"\n"
+            fStr += "  vars:" + frame.varsToString()
+
+            return fStr
+
+        def frameListSummary(self, lst):
+            pStr = ""
+            if len(lst) > 0:
+                for ii in range(len(lst)):
+                    frm = lst[ii]
+                    pStr += str(frm.verb.__name__)
+                    if ii < len(lst)-1:
+                        pStr += ", "
+            else:
+                pstr = "<empty>"
+            return pStr
+
+        def listToString(self, lst):
+            #print("listToString lst:", lst)
+            pStr = ""
+            if len(lst) > 0:
+                for ii in range(len(lst)):
+                    pStr += str(lst[ii])
+                    if ii < len(lst)-1:
+                        pStr += ", "
+            else:
+                pStr = "<empty>"
+            return pStr
+
+        # return params concanated
+        def paramsToString(frame):
+            return frame.listToString(frame.params)
+
+        # return vars concanated
+        def varsToString(frame):
+            return frame.listToString(frame.vars)
+
+        # return stack in reverse order
+        def stackToString(stack):
+            sLen = len(stack)
+            stkStr = "\n stack len=" + str(sLen)
+            if sLen > 0:
+                for ix in range(sLen-1, -1, -1):
+                    frame = stack[ix]
+                    stkStr += "\n  ["+str(ix)+"] verb=" + frame.verb.__name__ + " status " + Wye.status.tostring(frame.status) + \
+                              " PC=" + str(frame.PC)+ " params: " + str(frame.params)
+            return stkStr
+
+
     # used by verbs that run parallel streams
     class parallelFrame(codeFrame): # used by any object with parallel execution (multiple stacks)
         def __init__(self, verb, stack):
             super().__init__(verb, stack)
+            print("parallelFrame init: verb", verb.__name__," stack", stack)
             self.stacks = []        # callee must fill in empty lists for appropriate number of stacks
 
-        # run the top of each parallel stack
+        # run the top of each parallel stack once
         def runParallel(frame):
             dbgIx = 0
             status = Wye.status.CONTINUE  # assume we'll keep going
@@ -272,8 +341,10 @@ class Wye:
             # for sIx in range(len(frame.stacks)):
             # print(" stack:", sIx, WyeCore.Utils.stackToString(frame.stacks[sIx]))
 
-            # Each parallel code block has its own stack
-            # Loop through each stack until termination conditions met (based on parTermType for parallel verb)
+            # Each parallel code block (aka stream) has its own stack.
+            # For each stack, process frame at end of stack.
+            # When stacks complete (single remaining frame generates a non-CONTINUE status),
+            # handle termination based on condition in parallel verb's parTermType.
             delLst = []
             for stack in frame.stacks:
 
@@ -288,7 +359,7 @@ class Wye:
 
                     # if it terminated, if there's a parent, call it to clean up completed child
                     else:
-                        # have a parent
+                        # have a parent on stack
                         if len(stack) > 1:
                             f = stack[-2]
                             f.verb.run(f)  # run parent (will test child status, remove from stack, and continue)
@@ -307,7 +378,7 @@ class Wye:
                                              foundFail or foundSuccess) and frame.verb.parTermType == Wye.parTermType.FIRST_ANY):
                                 #print("stream complete with status ", f.status)
                                 status = f.status
-                                break;
+                                break
                             # we're done with this stack, remove it
                             delLst.append(stack)
                     dbgIx += 1

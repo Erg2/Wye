@@ -63,7 +63,7 @@ class TestLib2:
 
                     # demonstrate WyeCore function that returns params as a string
                     f.params[1][0] = 3
-                    print(WyeCore.Utils.paramsToString(f))
+                    print(f.paramsToString())
 
                     # put up 3d text
                     txt = WyeCore.libs.WyeUI._label3d("Text String 1", (1,0,0,1), pos=(-.5,10,0), scale=(.2,.2,.2))

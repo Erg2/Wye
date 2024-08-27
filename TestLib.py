@@ -29,17 +29,17 @@ class TestLib:
                 (None, "frame.status = Wye.status.SUCCESS")
             ),
             (
+                ("Label", "Loop"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars[1]")),
-                (None, "WyeCore.libs.WyeUI._displayLib((0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
+                #(None, "print('doitButton call _displayLib with frame', frame.tostring())"),
+                (None, "WyeCore.libs.WyeUI._displayLib(frame, (0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
+                ("GoTo", "Loop"),
                 ("Label", "Done")
             ),
             (
-                #(None, "print('doitButton: before key loop')"),
                 ("Label", "Loop"),
-                #(None, "print('doitButton: top of key loop')"),
-                #(None, "print('doitButton: wait for char')"),
                 ("WyeCore.libs.WyeLib.waitChar", (None, "frame.vars[2]"), (None, "frame.vars[1]")),
-                #(None, "print('received char=', frame.vars[2][0])"),
+                (None, "print('doitButton received char', frame.vars[2][0])"),
                 ("GoTo", "Loop")
             )
         )
@@ -171,7 +171,7 @@ class TestLib:
             #  (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
             #),
             #("Label", "Done"),
-            (None, "print('Callback 3 dropDown done with SUCCESS.  User picked entry', frame.vars[0][0])"),
+            (None, "print('Callback 3 dropDown done with SUCCESS.  User picked entry', frame.vars[7][0])"),
             (None, "frame.status = Wye.status.SUCCESS")
         )
 
