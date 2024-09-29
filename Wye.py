@@ -5,6 +5,7 @@
 # contains constants (static classes)
 #    structures (regular classes)
 #    and factories (lib, obj)
+import collections
 
 # Wye container class that holds Wye classes
 class Wye:
@@ -164,6 +165,8 @@ class Wye:
                     return "OBJECT_LIST"
                 case Wye.dType.STRING_LIST:
                     return "STRING_LIST"
+                case Wye.dType.VARIABLE:
+                    return "VARIABLE"
 
                 case _:
                     return "--unknown data dType value " + str(dataType) + "--"
@@ -226,24 +229,48 @@ class Wye:
     #
     ###########################################################################
 
+    # Need an empty class to put all the params and vars on
+    class mpty:
+        def __init__(self):
+            self._dummy = None      # force a dictionary?
+            #self.vars = None
+            #self.params = None
+
     # Code frame - for any verb defined by WyeCode rather than compiled Python
     # note: each variable is wrapped in its own list so that it can be passed
     # as a parameter by reference
+    # Frame creates a params attribute for each param in paramDescr with value set to an empty list
+    # Frame creates a vars attribute for each var in varDescr with the value being the varDescr value in a list
+    # Wrapping each param and var value in a list allows it to be passed by reference
     class codeFrame:      # Used by any verb with Wye code
         def __init__(self, verb, stack):
             self.verb = verb    # the static verb that we're holding runtime data for
-            #print("codeFrame ", self, " for verb ", verb.__name__)
-            self.params = []  # caller will fill in params
-            try:
-                if not hasattr(verb, "varDescr"):
-                    print("verb",verb, " has no varDescr")
+            print("codeFrame ", self, " for verb ", verb.__name__)
+            # TODO FIX THIS
+            self.params = Wye.mpty()  # caller will fill in params
+            self.vars = Wye.mpty()
+            #try:
+            if True:
+                #if not hasattr(verb, "varDescr"):
+                #    print("verb",verb, " has no varDescr")
                 #self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
-                self.vars = []
-                for varDef in verb.varDescr:
-                    if len(varDef) > 1:
-                        self.vars.append([varDef[2]])
-            except:
-                print("ERROR Wye codeFrame: verb ", verb.__name__, " varDef failed to parse:", varDef, " in ", verb.varDescr)
+                if hasattr(verb, "varDescr"):
+                    for varDef in verb.varDescr:
+                        if len(varDef) > 1:
+                            #print("  vars attr ", varDef[0], "=", varDef[2])
+                            setattr(self.vars, varDef[0], [varDef[2]])
+                            #print("  set vars '", varDef[0], "' to '", str(getattr(self.vars, varDef[0])))
+                if hasattr(verb, "paramDescr"):
+                    for paramDef in verb.paramDescr:
+                        if len(paramDef) > 1:
+                            #print("  params attr ", paramDef[0])
+                            if paramDef[1] != Wye.dType.VARIABLE:
+                                setattr(self.params, paramDef[0], [])
+                            else:
+                                setattr(self.params, paramDef[0], [[]])
+
+            #except:
+            #    print("ERROR Wye codeFrame: verb ", verb.__name__, " varDef failed to parse:", varDef, " in ", verb.varDescr)
             self.PC = 0         # used by async verbs to track location in executing code
             self.SP = stack      # points to stack list this frame is on
             if verb.mode == Wye.mode.MULTI_CYCLE or verb.mode == Wye.mode.PARALLEL:
@@ -253,6 +280,24 @@ class Wye:
             self.debug = ""
             # print("codeFrame for verb", verb, " verb.varDescr =", verb.varDescr, " vars =", self.vars)
 
+        def firstParamName(self):
+            if hasattr(self.verb, "paramDescr") and len(self.verb.paramDescr) > 0:
+                name = self.verb.paramDescr[0][0]
+                return name
+            else:
+                print("Wye.codeFrame.firstParamName: Warning: verb ", self.verb.__name__, " does not have a first param")
+                return None
+
+        # go through the gyrations required to find the first parameter and get its value
+        def firstParamVal(self):
+            if hasattr(self.verb, "paramDescr") and len(self.verb.paramDescr) > 0:
+                name = self.verb.paramDescr[0][0]
+                val = getattr(self.params, name)
+                return val
+            # don't have one
+            else:
+                print("Wye.codeFrame.firstParamVal: Warning: verb ", self.verb.__name__, " does not have a first param")
+                return 0
 
         def tostring(frame):
             fStr = ""

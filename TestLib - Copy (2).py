@@ -55,8 +55,7 @@ class TestLib:
             frame.runParallel()      # run compiled run code
 
 
-    class BtnCallback:
-        pass
+
 
     class test:
         mode = Wye.mode.MULTI_CYCLE
@@ -78,22 +77,25 @@ class TestLib:
         codeDescr = (
             (None, "print('test, create param list ')"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
-             (None, "(1,-1,-1)"), (None, "[None]"),
-             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),
-              (None, "['TextLabel']"),
-              (None, "frame.vars.text1Val")
-              ),
-             ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
-              (None, "['Text2Label']"),
-              (None, "frame.vars.text2Val")
-              ),
-             ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
-              (None, "['Click Me counter']"),
-              (None, "[TestLib.BtnCallback]"),
-              (None, "[[frame.f1,frame.vars.clickCt]]")
-              ),
-             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
-              ),
+             (None, "(1,-1,-1)"), (None, "[frame.eventData[1]]"),
+             ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.retList"),
+
+                 ("WyeUI.InputText", (None, "frame.vars.txt1ID"),
+                  (None, "['TextLabel']"),
+                  (None, "frame.vars.text1Val")
+                  ),
+                 ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
+                  (None, "['Text2Label']"),
+                  (None, "frame.vars.text2Val")
+                  ),
+                 ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
+                  (None, "['Click Me counter']"),
+                  (None, "[TestLib.BtnCallback]"),
+                  (None, "[[frame.f1,frame.vars.clickCt]]")
+                  ),
+                 ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
+              )
+             ),
             ("WyeCore.libs.WyeLib.setEqual",
                 (None, "frame.vars.retList"),
                 (None, "[10]"),

@@ -455,10 +455,10 @@ class TestLib:
         codeDescr = (
             #(None, "print('test inline code')"),
             # call loadModel with testLoader3 params 0 and 1
-            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params[0]"), (None, "frame.params[1]")),
-            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params[4]"), (None, "frame.params[0]")),
-            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params[0]"), (None, "frame.params[5]")),
-            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params[0]"), (None, "frame.params[2]"), (None, "frame.params[3]"))
+            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.obj"), (None, "frame.params.file")),
+            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.obj")),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.obj"), (None, "frame.params.colorVec")),
+            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.obj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec"))
         )
         code = None
 
