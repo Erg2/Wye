@@ -24,15 +24,15 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._label3d(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._label3d(text='Click',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 (None, "frame.status = Wye.status.SUCCESS")
             ),
             (
                 ("Label", "Loop"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                #(None, "print('doitButton call _displayLib with frame', frame.tostring())"),
-                #(None, "WyeCore.libs.WyeUI._displayLib(frame, (0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
+                (None, "print('doitButton call _displayLib with frame', frame.tostring())"),
+                (None, "WyeCore.libs.WyeUI._displayLib(frame, (1,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
                 ("GoTo", "Loop"),
                 ("Label", "Done")
             ),
@@ -56,7 +56,39 @@ class TestLib:
 
 
     class BtnCallback:
-        pass
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("count", Wye.dType.INTEGER, 0),)
+
+        def start(stack):
+            return Wye.codeFrame(TestLib.BtnCallback, stack)
+
+        def run(frame):
+            print("BtnCallback data=", frame.eventData, " count = ", frame.vars.count[0])
+
+            # really bad coding / wizardry required here
+            # Get the text widget of the
+            inFrm = frame.eventData[1][0]
+            var = frame.eventData[1][1]
+            # print("data [1]", frame.eventData[1][1], " var", var)
+            dlgFrm = inFrm.parentFrame
+            # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
+
+            var[0] += 1
+
+            # todo - revisit this after changing over vars and params
+            #        # get label input's frame from parent dialog
+            lblFrame = dlgFrm.params.inputs[0][3][0]
+
+            # supreme hackery - look up the display label in the label's graphic widget list
+            inWidg = lblFrame.vars.gWidgetStack[0][0]
+            txt = "Count " + str(var[0])
+            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
+            inWidg.setText(txt)
+
+            if var[0] >= 10:
+                var[0] = 0
 
     class test:
         mode = Wye.mode.MULTI_CYCLE
@@ -76,10 +108,12 @@ class TestLib:
         )
 
         codeDescr = (
-            (None, "print('test, create param list ')"),
-            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
-             (None, "(1,-1,-1)"), (None, "[None]"),
-             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),
+            #(None, "print('test, create param list ')"),
+            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
+             (None, "frame.vars.Title"),                        # title
+             (None, "(-3,8,1)"),                                # position
+             (None, "[None]"),                                  # parent
+             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
               (None, "['TextLabel']"),
               (None, "frame.vars.text1Val")
               ),
@@ -92,8 +126,9 @@ class TestLib:
               (None, "[TestLib.BtnCallback]"),
               (None, "[[frame.f1,frame.vars.clickCt]]")
               ),
-             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
+             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")
               ),
+            ),
             ("WyeCore.libs.WyeLib.setEqual",
                 (None, "frame.vars.retList"),
                 (None, "[10]"),
@@ -107,10 +142,10 @@ class TestLib:
             return WyeCore.Utils.buildCodeText("test", TestLib.test.codeDescr)
 
         def start(stack):
-            print("Start test")
+            #print("test object start")
             return Wye.codeFrame(TestLib.test, stack)
 
         def run(frame):
-            print("Run test_run_rt")
+            #print("Run test_run_rt")
             TestLib.TestLib_rt.test_run_rt(frame)
 

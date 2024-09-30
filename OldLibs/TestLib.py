@@ -32,10 +32,11 @@ Basic concept for executing a word in a library:
         stackframe.params and the var can be updated by that word.
         All vars are filled in with initial values by the frame on instantiation.
         example: wordFrame.vars = [[0],[1],["two"]]
-    wordFrame.params.append( [p1], .. )
-        If the word being called requires any params passed in, the caller has to set them up.
+    wordFrame.params.xxx
+        If the word being called requires any params passed in, the caller has to set them up
+        as attributes on frames.params
         Each parameter is wrapped in a list so that its value can be changed
-        functions return their value in the first parameter
+        functions return their value in the first parameter (as defined in the verb's paramDescr list)
     word.run(wordFrame)
         If the word is a function, the return value is in wordFrame.params[0][0]
         
@@ -384,7 +385,7 @@ class TestLib:
             #print("testLoader")
             f = WyeCore.libs.WyeLib.loadModel.start(frame.SP)
             #print("testLoader run: load model ", f.vars[1][0])
-            f.params.append(frame.vars[0])
+            f.params.append(frame.vars.obj)
             f.params.append(frame.vars[1])
             WyeCore.libs.WyeLib.loadModel.run(f)
             if f.status != Wye.status.SUCCESS:

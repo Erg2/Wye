@@ -229,12 +229,10 @@ class Wye:
     #
     ###########################################################################
 
-    # Need an empty class to put all the params and vars on
+    # Need minimal class to hang all the params and vars on
     class mpty:
-        def __init__(self):
-            self._dummy = None      # force a dictionary?
-            #self.vars = None
-            #self.params = None
+        pass
+
 
     # Code frame - for any verb defined by WyeCode rather than compiled Python
     # note: each variable is wrapped in its own list so that it can be passed
@@ -245,32 +243,27 @@ class Wye:
     class codeFrame:      # Used by any verb with Wye code
         def __init__(self, verb, stack):
             self.verb = verb    # the static verb that we're holding runtime data for
-            print("codeFrame ", self, " for verb ", verb.__name__)
-            # TODO FIX THIS
             self.params = Wye.mpty()  # caller will fill in params
             self.vars = Wye.mpty()
-            #try:
-            if True:
-                #if not hasattr(verb, "varDescr"):
-                #    print("verb",verb, " has no varDescr")
-                #self.vars = [[varDef[2]] for varDef in verb.varDescr]  # create vars and fill with initial values
-                if hasattr(verb, "varDescr"):
-                    for varDef in verb.varDescr:
-                        if len(varDef) > 1:
-                            #print("  vars attr ", varDef[0], "=", varDef[2])
-                            setattr(self.vars, varDef[0], [varDef[2]])
-                            #print("  set vars '", varDef[0], "' to '", str(getattr(self.vars, varDef[0])))
-                if hasattr(verb, "paramDescr"):
-                    for paramDef in verb.paramDescr:
-                        if len(paramDef) > 1:
-                            #print("  params attr ", paramDef[0])
-                            if paramDef[1] != Wye.dType.VARIABLE:
-                                setattr(self.params, paramDef[0], [])
-                            else:
-                                setattr(self.params, paramDef[0], [[]])
 
-            #except:
-            #    print("ERROR Wye codeFrame: verb ", verb.__name__, " varDef failed to parse:", varDef, " in ", verb.varDescr)
+            #print("code frame for verb ", verb.__name__)
+            if hasattr(verb, "varDescr"):
+                for varDef in verb.varDescr:
+                    if len(varDef) > 1:
+                        #print("  vars attr ", varDef[0], "=", varDef[2])
+                        setattr(self.vars, varDef[0], [varDef[2]])
+                        #print("  set vars '", varDef[0], "' to '", str(getattr(self.vars, varDef[0])))
+            #else:
+            #    print("verb",verb, " has no varDescr")
+            if hasattr(verb, "paramDescr"):
+                for paramDef in verb.paramDescr:
+                    if len(paramDef) > 1:
+                        #print("  params attr ", paramDef[0])
+                        if paramDef[1] != Wye.dType.VARIABLE:
+                            setattr(self.params, paramDef[0], [])
+                        else:
+                            setattr(self.params, paramDef[0], [[]])
+
             self.PC = 0         # used by async verbs to track location in executing code
             self.SP = stack      # points to stack list this frame is on
             if verb.mode == Wye.mode.MULTI_CYCLE or verb.mode == Wye.mode.PARALLEL:
@@ -346,13 +339,16 @@ class Wye:
                 pStr = "<empty>"
             return pStr
 
+        def attribToString(self, obj):
+            return ",".join([x for x in dir(obj) if x[0] != '_'])
+
         # return params concanated
         def paramsToString(frame):
-            return frame.listToString(frame.params)
+            return frame.attribToString(frame.params)
 
         # return vars concanated
         def varsToString(frame):
-            return frame.listToString(frame.vars)
+            return frame.attribToString(frame.vars)
 
         # return stack in reverse order
         def stackToString(stack):
@@ -370,7 +366,7 @@ class Wye:
     class parallelFrame(codeFrame): # used by any object with parallel execution (multiple stacks)
         def __init__(self, verb, stack):
             super().__init__(verb, stack)
-            print("parallelFrame init: verb", verb.__name__," stack", stack)
+            #print("parallelFrame init: verb", verb.__name__," stack", stack)
             self.stacks = []        # callee must fill in empty lists for appropriate number of stacks
 
         # run the top of each parallel stack once

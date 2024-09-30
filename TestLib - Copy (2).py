@@ -75,7 +75,7 @@ class TestLib:
         )
 
         codeDescr = (
-            (None, "print('test, create param list ')"),
+            #(None, "print('test, create param list ')"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
              (None, "(1,-1,-1)"), (None, "[frame.eventData[1]]"),
              ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.retList"),
@@ -113,6 +113,6 @@ class TestLib:
             return Wye.codeFrame(TestLib.test, stack)
 
         def run(frame):
-            print("Run test_run_rt")
+            #print("Run test_run_rt")
             TestLib.TestLib_rt.test_run_rt(frame)
 

@@ -694,7 +694,7 @@ class WyeCore(Wye.staticObj):
                         #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
                         eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
                         codeText += "    if not hasattr(frame,'" + eff + "'):\n"
-                        codeText += "     print('create frame attr "+eff+"')\n"
+                        #codeText += "     print('create frame attr "+eff+"')\n"
                         codeText += "     setattr(frame,'" + eff + "',None)\n"
                         codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
                         print("parseWyeTuple MULTI|PARA: 1 codeText =", codeText[0], " wyeTuple", wyeTuple)
@@ -708,7 +708,9 @@ class WyeCore(Wye.staticObj):
                                     print(" parseWyeTuple: skip 0th entry in wyeTuple")
                                     continue
 
-                                if paramTuple[0] is None:        # constant/var (leaf node)
+                                # param starts with None, is a python code snippet returning a value
+                                # (const, frame var ref, other expression)
+                                if paramTuple[0] is None:
                                     #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
 
                                     # debug
@@ -719,7 +721,9 @@ class WyeCore(Wye.staticObj):
                                     else:
                                         codeText += "    frame." + eff + ".params." + verbClass.paramDescr[paramIx - 1][0] + "=" + paramTuple[1] + "\n"
                                     #print("parseWyeTuple: 3 codeText=", codeText[0])
-                                else:                           # recurse to parse nested code tuple
+
+                                # param tuple starts with library word
+                                else: # recurse to parse nested code tuple
                                     #caseNumList[0] += 1
                                     cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList)
 
@@ -841,7 +845,7 @@ class WyeCore(Wye.staticObj):
             for ix in range(nStreams):
                 parFnText += "  stk = []\n"                 # stack for parallel stream
                 parFnText += "  fs = Wye.codeFrame(WyeCore.ParallelStream, stk)\n" # frame for stream
-                parFnText += "  print('gen parallel frame.  Old frame var: ', dir(f.vars))\n  print('   new frame var: ', dir(fs.vars))\n"
+                #parFnText += "  print('gen parallel frame.  Old frame var: ', dir(f.vars))\n  print('   new frame var: ', dir(fs.vars))\n"
                 parFnText += "  fs.vars = f.vars\n"
                 parFnText += "  fs.params = f.params\n"
                 parFnText += "  fs.parentFrame = f\n"

@@ -63,7 +63,7 @@ class WyeLib:
     class waitChar:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
-        paramDescr = (("ret", Wye.dType.STRING, Wye.access.REFERENCE),
+        paramDescr = (("char", Wye.dType.STRING, Wye.access.REFERENCE),
                       ("tag", Wye.dType.STRING, Wye.access.REFERENCE),)
         varDescr = ()
         codeDescr = ()
@@ -140,7 +140,7 @@ class WyeLib:
     class loadModel:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
-        paramDescr = (("ret", Wye.dType.OBJECT, Wye.access.REFERENCE),
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
                       ("objectFileName", Wye.dType.STRING, Wye.access.REFERENCE))
         varDescr = ()
 
@@ -173,7 +173,7 @@ class WyeLib:
     class makePickable:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.STRING, 0),     # return object id string
+        paramDescr = (("id", Wye.dType.STRING, 0),     # return object id string
                       ("loadedObject", Wye.dType.OBJECT, Wye.access.REFERENCE))
         varDescr = ()
 
