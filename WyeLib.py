@@ -232,7 +232,7 @@ class WyeLib:
         def run(frame):
             #print("setObjPos run: params ", frame.params)
             gObj = frame.params.obj[0]
-            vec = frame.params.posVec
+            vec = frame.params.posVec[0]
             #print("setObjPos set obj", gObj, "to", vec)
             gObj.setPos(vec[0], vec[1], vec[2])
 
@@ -254,7 +254,7 @@ class WyeLib:
             #print('execute setObjAngle, params', frame.params, ' vars', frame.vars)
 
             gObj = frame.params.obj[0]
-            vec = frame.params.angle
+            vec = frame.params.angle[0]
 
             #hpr = frame.params.obj[0].getHpr()
             #print("Current HPR ", hpr)

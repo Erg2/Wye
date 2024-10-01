@@ -3,6 +3,7 @@ from WyeCore import WyeCore
 import sys
 import traceback
 from direct.showbase import Audio3DManager
+import math
 
 class TestLib:
 
@@ -99,7 +100,7 @@ class TestLib:
     class testDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
-        autoStart = True
+        #autoStart = True
         paramDescr = ()
         varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),
                     ("Title", Wye.dType.INTEGER, "Test Dialog 3"),
@@ -154,6 +155,81 @@ class TestLib:
         def run(frame):
             #print("Run testDialog")
             TestLib.TestLib_rt.testDialog_run_rt(frame)
+
+
+    class fishDialog:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = True
+        paramDescr = ()
+        varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),
+                    ("XAngleID", Wye.dType.STRING, ""),
+                    ("XAngle", Wye.dType.STRING, ""),
+                    ("YAngleID", Wye.dType.STRING, ""),
+                    ("YAngle", Wye.dType.STRING, ""),
+                    ("ZAngleID", Wye.dType.STRING, ""),
+                    ("ZAngle", Wye.dType.STRING, ""),
+                    ("target", Wye.dType.OBJECT, None)
+        )
+
+        codeDescr = (
+            ("Label", "PopDialog"),
+            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
+             (None, "['Fish Angle Dialog']"),                        # title
+             (None, "(-3,8,1)"),                                # position
+             (None, "[None]"),                                  # parent
+             ("WyeUI.InputText", (None, "frame.vars.XAngleID"),   # inputs (variable length)
+              (None, "['XAngle']"),
+              (None, "frame.vars.XAngle")
+              ),
+             ("WyeUI.InputText", (None, "frame.vars.YAngleID"),
+              (None, "['YAngle']"),
+              (None, "frame.vars.YAngle")
+              ),
+             ("WyeUI.InputText", (None, "frame.vars.ZAngleID"),
+              (None, "['ZAngle']"),
+              (None, "frame.vars.ZAngle")
+              ),
+
+             ),
+
+            (None, "print('fishDialog XAngle', frame.vars.XAngle, ' YAngle', frame.vars.YAngle, ' ZAngle', frame.vars.ZAngle)"),
+            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"), (None, "[TestLib.fishDialog.findActiveObj('testObj2')]")),
+            ("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
+            (None, "print('testObj2 frm', frame.vars.target[0].verb.__name__)"),
+            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.target[0].vars.obj"),
+                (None, "[[int(frame.vars.XAngle[0]),int(frame.vars.YAngle[0]),int(frame.vars.ZAngle[0])]]")),
+            ("GoTo", "PopDialog")
+        )
+
+        def build():
+            print("Build fishDialog")
+            return WyeCore.Utils.buildCodeText("fishDialog", TestLib.fishDialog.codeDescr)
+
+        def start(stack):
+            #print("fishDialog object start")
+            return Wye.codeFrame(TestLib.fishDialog, stack)
+
+        def run(frame):
+            #print("Run testDialogfishDialog")
+            TestLib.TestLib_rt.fishDialog_run_rt(frame)
+
+        # Find first active instance of object with given name
+        def findActiveObj(name):
+            print(WyeCore.World.objStacks)
+            stkIx = 0
+            for stk in WyeCore.World.objStacks:
+                if len(stk) > 0:
+                    print("stack", stkIx)
+                    for frm in stk:
+                        print(" frm", frm)
+                        if hasattr(frm, "verb"):
+                            print("  verb", frm.verb.__name__)
+                            if frm.verb.__name__ == name:
+                                print("   Found", frm.verb, " matching ", name)
+                                return frm
+                stkIx += 1
+            return None
 
     # generated code for
     # load model passed in at loc, scale passed in
@@ -355,6 +431,8 @@ class TestLib:
         varDescr = (("fish", Wye.dType.OBJECT, None),
                     ("fishTag", Wye.dType.STRING, "obj1Tag"),
                     ("pos", Wye.dType.STRING, [0,5,0]),
+                    ("angle", Wye.dType.STRING, [0,90,0]),
+                    ("piAngle", Wye.dType.FLOAT, 0.),
                     ("sound", Wye.dType.OBJECT, None))  # var 4
 
         codeDescr=(
@@ -367,30 +445,54 @@ class TestLib:
                 (None, "frame.vars.fishTag"),
                 (None, "[1,0,0,1]")
             ),
+
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
+            ("Label", "StartLoop"),
+            #(None, "print('angle', frame.vars.angle)"),
+            (None, "frame.vars.angle[0][0] += 1"),
+            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "frame.vars.angle")),
+            (None, "from math import pi"),
+            (None, "from math import cos"),
+            (None, "from math import sin"),
+            (None, "frame.vars.piAngle[0] = pi/-2 + pi * 2 * frame.vars.angle[0][0] / 360"),
+            (None, "frame.vars.pos[0][0] = -sin(frame.vars.piAngle[0])*2"),
+            (None, "frame.vars.pos[0][1] = 10+cos(frame.vars.piAngle[0]*2)"),
+            #(None, "print('frame.vars.pos after sin', frame.vars.pos)"),
+            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos")),
 
-            ("Label", "Right"),
-            (None, "frame.vars.pos[0][0] += .01"),
-            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-            ("IfGoTo", "frame.vars.pos[0][0] < 1", "Right"),
+            ("IfGoTo", "frame.vars.angle[0][0] < 360", "StartLoop"),
+            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.angle"), (None, "[[0,90,0]]")),
+            #(None, "print('angle', frame.vars.angle)"),
+            ("GoTo", "StartLoop")
 
-            ("Label", "Back"),
-            (None, "frame.vars.pos[0][1] += .01"),
-            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-            ("IfGoTo", "frame.vars.pos[0][1] < 6", "Back"),
-
-            ("Label", "Left"),
-            ("IfGoTo", "frame.vars.pos[0][0] < -1", "Front"),
-            (None, "frame.vars.pos[0][0] -= .01"),
-            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-            ("IfGoTo", "frame.vars.pos[0][0] > -1", "Left"),
-
-            ("Label", "Front"),
-            (None, "frame.vars.pos[0][1] -= .01"),
-            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-            ("IfGoTo", "frame.vars.pos[0][1] > 5", "Front"),
-
-            ("GoTo", "Right"),   # Back to the top
+#            ("Label", "Right"),
+#            (None, "frame.vars.pos[0][0] += .01"),
+#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+#            ("IfGoTo", "frame.vars.pos[0][0] < 1", "Right"),
+#
+#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[0,0,-90]]")),
+#
+#            ("Label", "Back"),
+#            (None, "frame.vars.pos[0][1] += .01"),
+#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+#            ("IfGoTo", "frame.vars.pos[0][1] < 6", "Back"),
+#
+#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[0,0,90]]")),
+#
+#            ("Label", "Left"),
+#            ("IfGoTo", "frame.vars.pos[0][0] < -1", "Front"),
+#            (None, "frame.vars.pos[0][0] -= .01"),
+#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+#            ("IfGoTo", "frame.vars.pos[0][0] > -1", "Left"),
+#
+#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[-90,0,-90]]")),
+#
+#            ("Label", "Front"),
+#            (None, "frame.vars.pos[0][1] -= .01"),
+#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+#            ("IfGoTo", "frame.vars.pos[0][1] > 5", "Front"),
+#
+#            ("GoTo", "Start"),   # Back to the top
         )
 
         def build():
@@ -412,27 +514,27 @@ class TestLib:
         dataType = Wye.dType.INTEGER
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
-        varDescr = (("obj1", Wye.dType.OBJECT, None),
-                    ("obj2", Wye.dType.OBJECT, None),
-                    ("obj1Tag", Wye.dType.STRING, "obj1Tag"),
-                    ("obj2Tag", Wye.dType.STRING, "obj2Tag"),
+        varDescr = (("obj", Wye.dType.OBJECT, None),
+                    ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None))  # var 4
 
         codeDescr=(
             (None, ("print('testObj2 case 0: start - set up object')")),
             ("TestLib.testLoader",
-                (None, "frame.vars.obj1"),
+                (None, "frame.vars.obj"),
                 (None, "['flyer_01.glb']"),
                 (None, "[-1,5,-.5]"),
                 (None, "[.75,.75,.75]"),
-                (None, "frame.vars.obj1Tag"),
+                (None, "frame.vars.objTag"),
                 (None, "[0,1,0,1]")
             ),
-            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
+            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.obj"), (None, "[[-90,90,0]]")),
+
+            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj"),(None, "[0,5,-.5]")),
             (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
-            ("TestLib.clickWiggle", (None, "frame.vars.obj1"), (None, "frame.vars.obj1Tag"), (None, "[1]")),
-            #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.obj1Tag")),
+            ("TestLib.clickWiggle", (None, "frame.vars.obj"), (None, "frame.vars.objTag"), (None, "[1]")),
+            #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.objTag")),
             ("GoTo", "Repeat")
         )
 

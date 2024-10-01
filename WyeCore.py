@@ -210,7 +210,7 @@ class WyeCore(Wye.staticObj):
                         stk = []
                         f = obj.start(stk)  # start the object and get its stack frame
                         stk.append(f)  # create a stack for it
-                        f.params = [[0], ]  # place to put return param
+                        #f.params = [[0], ]  # place to put return param
                         WyeCore.World.objStacks.append(stk)  # put obj's stack on list and put obj's frame on the stack
                     else:
                         print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
