@@ -39,7 +39,6 @@ class WyeLib:
 
         # TODO - make multi-cycle
         def run(frame):
-            #print('execute spin, params', frame.params, ' vars', frame.vars)
             match frame.PC:
                 case 0:
                     #print("waitClick: set event for tag ", frame.params.tag[0])
@@ -74,7 +73,6 @@ class WyeLib:
 
         # TODO - make multi-cycle
         def run(frame):
-            #print('execute spin, params', frame.params, ' vars', frame.vars)
             match frame.PC:
                 case 0:
                     #print("waitChar: set event for tag ", frame.params.tag[0])
@@ -111,7 +109,6 @@ class WyeLib:
 
         # TODO - make multi-cycle
         def run(frame):
-            #print('execute spin, params', frame.params, ' vars', frame.vars)
             match frame.PC:
                 case 0:
                     frame.PC = 2    # go start the wait loop
@@ -191,7 +188,7 @@ class WyeLib:
                 tag = "wyeTag" + str(WyeCore.Utils.getId())     # generate unique tag for object
                 obj.setTag("wyeTag", tag)
             WyeCore.picker.makePickable(obj)                # just be sure it's pickable
-            getattr(frame.params, frame.firstParamName())[0] = tag                        # return tag to caller
+            frame.params.id[0] = tag                        # return tag to caller
 
     class showModel:
         mode = Wye.mode.SINGLE_CYCLE

@@ -67,7 +67,7 @@ class TestLib:
             return Wye.codeFrame(TestLib.BtnCallback, stack)
 
         def run(frame):
-            print("BtnCallback data=", frame.eventData, " count = ", frame.vars.count[0])
+            #print("BtnCallback data=", frame.eventData, " count = ", frame.vars.count[0])
 
             # really bad coding / wizardry required here
             # Get the text widget of the

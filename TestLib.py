@@ -1,5 +1,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
+import sys
+import traceback
 
 class TestLib:
 
@@ -59,96 +61,295 @@ class TestLib:
             frame.runParallel()      # run compiled run code
 
 
-#    class BtnCallback:
-#        mode = Wye.mode.SINGLE_CYCLE
-#        dataType = Wye.dType.STRING
-#        paramDescr = ()
-#        varDescr = (("count", Wye.dType.INTEGER, 0),)
-#
-#        def start(stack):
-#            return Wye.codeFrame(TestLib.BtnCallback, stack)
-#
-#        def run(frame):
-#            print("BtnCallback data=", frame.eventData, " count = ", frame.vars.count[0])
-#
-#            # really bad coding / wizardry required here
-#            # Get the text widget of the
-#            inFrm = frame.eventData[1][0]
-#            var = frame.eventData[1][1]
-#            # print("data [1]", frame.eventData[1][1], " var", var)
-#            dlgFrm = inFrm.parentFrame
-#            # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
-#
-#            var[0] += 1
-#
-#            # get label input's frame from parent dialog
-#            lblFrame = dlgFrm.params.inputs[0][3][0]
-#
-#            # supreme hackery - look up the display label in the label's graphic widget list
-#            inWidg = lblFrame.vars.gWidgetStack[0][0]
-#            txt = "Count " + str(var[0])
-#            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
-#            inWidg.setText(txt)
-#
-#            if var[0] >= 10:
-#                var[0] = 0
-#
-#    class test:
-#        mode = Wye.mode.MULTI_CYCLE
-#        dataType = Wye.dType.STRING
-#        #autoStart = True
-#        paramDescr = ()
-#        varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),
-#                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),
-#                    ("txt1ID", Wye.dType.STRING, ""),
-#                    ("text1Val", Wye.dType.STRING, ""),
-#                    ("txt2IO", Wye.dType.STRING, ""),
-#                    ("text2Val", Wye.dType.STRING, "starting text"),
-#                    ("BtnID", Wye.dType.OBJECT, None),
-#                    ("lblID", Wye.dType.OBJECT, None),
-#                    ("clickCt", Wye.dType.INTEGER, 0),
-#                    ("retList", Wye.dType.INTEGER, -1),
-#        )
-#
-#        codeDescr = (
-#            #(None, "print('test, create param list ')"),
-#            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
-#             (None, "frame.vars.Title"),                        # title
-#             (None, "(-3,8,1)"),                                # position
-#             (None, "[None]"),                                  # parent
-#             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
-#              (None, "['TextLabel']"),
-#              (None, "frame.vars.text1Val")
-#              ),
-#             ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
-#              (None, "['Text2Label']"),
-#              (None, "frame.vars.text2Val")
-#              ),
-#             ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
-#              (None, "['Click Me counter']"),
-#              (None, "[TestLib.BtnCallback]"),
-#              (None, "[[frame.f1,frame.vars.clickCt]]")
-#              ),
-#             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")
-#              ),
-#            ),
-#            ("WyeCore.libs.WyeLib.setEqual",
-#                (None, "frame.vars.retList"),
-#                (None, "[10]"),
-#             ),
-#            (None, "print('test retList=', frame.vars.retList[0])"),
-#            (None, "frame.status = Wye.status.SUCCESS")
-#        )
-#
-#        def build():
-#            print("Build test")
-#            return WyeCore.Utils.buildCodeText("test", TestLib.test.codeDescr)
-#
-#        def start(stack):
-#            #print("test object start")
-#            return Wye.codeFrame(TestLib.test, stack)
-#
-#        def run(frame):
-#            #print("Run test_run_rt")
-#            TestLib.TestLib_rt.test_run_rt(frame)
+    class BtnCallback:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("count", Wye.dType.INTEGER, 0),)
 
+        def start(stack):
+            return Wye.codeFrame(TestLib.BtnCallback, stack)
+
+        def run(frame):
+            #print("BtnCallback data=", frame.eventData, " count = ", frame.vars.count[0])
+
+            # really bad coding / wizardry required here
+            # Get the text widget of the
+            inFrm = frame.eventData[1][0]
+            var = frame.eventData[1][1]
+            # print("data [1]", frame.eventData[1][1], " var", var)
+            dlgFrm = inFrm.parentFrame
+            # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
+
+            var[0] += 1
+
+            # get label input's frame from parent dialog
+            lblFrame = dlgFrm.params.inputs[0][3][0]
+
+            # supreme hackery - look up the display label in the label's graphic widget list
+            inWidg = lblFrame.vars.gWidgetStack[0][0]
+            txt = "Count " + str(var[0])
+            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
+            inWidg.setText(txt)
+
+            if var[0] >= 10:
+                var[0] = 0
+
+    class testDialog:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = True
+        paramDescr = ()
+        varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),
+                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),
+                    ("txt1ID", Wye.dType.STRING, ""),
+                    ("text1Val", Wye.dType.STRING, ""),
+                    ("txt2IO", Wye.dType.STRING, ""),
+                    ("text2Val", Wye.dType.STRING, "starting text"),
+                    ("BtnID", Wye.dType.OBJECT, None),
+                    ("lblID", Wye.dType.OBJECT, None),
+                    ("clickCt", Wye.dType.INTEGER, 0),
+                    ("retList", Wye.dType.INTEGER, -1),
+        )
+
+        codeDescr = (
+            #(None, "print('testDialog, create param list ')"),
+            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
+             (None, "frame.vars.Title"),                        # title
+             (None, "(-3,8,1)"),                                # position
+             (None, "[None]"),                                  # parent
+             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
+              (None, "['TextLabel']"),
+              (None, "frame.vars.text1Val")
+              ),
+             ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
+              (None, "['Text2Label']"),
+              (None, "frame.vars.text2Val")
+              ),
+             ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
+              (None, "['Click Me counter']"),
+              (None, "[TestLib.BtnCallback]"),
+              (None, "[[frame.f1,frame.vars.clickCt]]")
+              ),
+             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")
+              ),
+            ),
+            ("WyeCore.libs.WyeLib.setEqual",
+                (None, "frame.vars.retList"),
+                (None, "[10]"),
+             ),
+            (None, "print('testDialog retList=', frame.vars.retList[0])"),
+            (None, "frame.status = Wye.status.SUCCESS")
+        )
+
+        def build():
+            print("Build testDialog")
+            return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr)
+
+        def start(stack):
+            #print("testDialog object start")
+            return Wye.codeFrame(TestLib.testDialog, stack)
+
+        def run(frame):
+            #print("Run testDialog")
+            TestLib.TestLib_rt.testDialog_run_rt(frame)
+
+    # generated code for
+    # load model passed in at loc, scale passed in
+    class testLoader3:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NONE
+
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("file", Wye.dType.STRING, Wye.access.REFERENCE),
+                      ("posVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE),
+                      ("scaleVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE),
+                      ("tag", Wye.dType.STRING, Wye.access.REFERENCE),
+                      ("colorVec", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
+        varDescr = ()
+        codeDescr = (
+            #(None, "print('test inline code')"),
+            # call loadModel with testLoader3 params 0 and 1
+            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.obj"), (None, "frame.params.file")),
+             ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.obj")),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.obj"), (None, "frame.params.colorVec")),
+            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.obj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec"))
+        )
+        code = None
+
+        def build():
+            return WyeCore.Utils.buildCodeText("testLoader3", TestLib.testLoader3.codeDescr)
+
+        def start(stack):
+            return Wye.codeFrame(TestLib.testLoader3, stack)
+
+        def run(frame):
+            TestLib.TestLib_rt.testLoader3_run_rt(frame)
+
+
+
+    # spin object back and forth
+    class spin:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("axis", Wye.dType.INTEGER, Wye.access.REFERENCE))
+        varDescr = (("rotCt", Wye.dType.INTEGER, 0),)
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(TestLib.spin, stack)
+
+        # TODO - make multi-cycle
+        def run(frame):
+            gObj = frame.params.obj[0]
+            vec = gObj.getHpr()
+            axis = frame.params.axis[0]
+            #print("Current HPR ", vec)
+            match frame.PC:
+                case 0:
+                    vec[axis] += 5
+                    #print("spin (pos) obj", gObj, "to", vec)
+                    gObj.setHpr(vec[0], vec[1], vec[2])
+                    if frame.vars.rotCt[0] < 4:  # wiggle this many times, then exit
+                        if vec[axis] > 45:  # end of swing this way
+                            frame.vars.rotCt[0] += 1  # count cycles
+                            frame.PC += 1   # go to next state
+                    else:   # last spin cycle, stop at zero
+                        #print("spin: done")
+                        if vec[axis] >= 0:  # end of swing this way
+                            frame.PC = -1  # undefined case value so will go to default to exit
+
+
+                    frame.status = Wye.status.CONTINUE
+
+                case 1:
+                    vec[axis] -= 5
+                    #print("spin (neg) obj ", gObj, "to", vec)
+                    gObj.setHpr(vec[0], vec[1], vec[2])
+                    if vec[axis] < -45:    # end of swing other way
+                        frame.PC -= 1   # go to previous state
+
+                    frame.status = Wye.status.CONTINUE
+
+                case _:
+                    frame.status = Wye.status.SUCCESS
+
+
+
+    class testObj2:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.INTEGER
+        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
+        varDescr = (("obj1", Wye.dType.OBJECT, None),
+                    ("obj2", Wye.dType.OBJECT, None),
+                    ("obj1Tag", Wye.dType.STRING, "obj1Tag"),
+                    ("obj2Tag", Wye.dType.STRING, "obj2Tag"),
+                    ("sound", Wye.dType.OBJECT, None))  # var 4
+
+        codeString = '''
+def f():
+  match frame.PC:
+    case 0:
+        #print("testObj2 case 0: start - set up object")
+
+        # create object from parameters
+        f1 = TestLib.testLoader3.start(frame.SP)
+        # position doesn't matter - explicitly set, below
+        f1.params.obj = frame.vars.obj1
+        f1.params.file = ["flyer_01.glb"]
+        f1.params.posVec = [0,0,0]
+        f1.params.scaleVec = [.75,.75,.75]
+        f1.params.tag = frame.vars.obj1Tag
+        f1.params.colorVec = [0,1,0,1]
+        TestLib.testLoader3.run(f1)
+        if f1.status != Wye.status.SUCCESS:
+            print("Exit testObj2 code on file load error")
+            frame.status = f1.status
+            return
+        #print("testObj2 after testLoader3: frame.vars", frame.varsToString(frame))
+
+        # move object
+        f2 = WyeCore.libs.WyeLib.setObjPos.start(frame.SP)
+        f2.params.obj = frame.vars.obj1
+        f2.params.posVec = [0,5,-.5]
+        WyeCore.libs.WyeLib.setObjPos.run(f2)
+
+        # load click sound
+        frame.vars.sound[0] = base.loader.loadSfx("WyePew.wav")
+        #audio3d = base.Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
+        #frame.vars.sound[0] = audio3d.loadSfx("WyePop.wav")
+        #audio3d.attachSoundToObject(frame.vars.sound[0], frame.params[0][0])
+        #audio3d.attachSoundToObject(frame.vars.sound[0], frame.params[1][0])
+
+        frame.PC += 1
+
+    case 1:
+        #print("testObj2 case 1: start spin")        
+        f4 = TestLib.spin.start(frame.SP)       # create multi-cycle verb (frame default status is CONTINUE
+        f4.params.obj = frame.vars.obj1
+        f4.params.axis = [1]    # pass obj, rotation axis to spin
+        frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
+        #print("testObj2, frame.SP", frame.SP)
+        #print("testObj2, stack contains ", WyeCore.Utils.stackToString(frame.SP))
+
+        frame.PC = 3 # jump over delay to waitClick                    # bump forward a step - when spin completes we'll pick up at the next case
+
+    case 2:
+        #print("testObj2 case 2: done spin")
+        # we won't get here until spin completes
+        # spin's frame is at the bottom of the stack
+        f = frame.SP.pop()
+        #print("testObj2: spin returned p0 ", f.params.obj[0], " status ", WyeCore.status.tostring(f.status))
+        #frame.status = Wye.status.SUCCESS   # we're done
+
+        #print("testObj2 case 2 start delay")
+        f = WyeCore.libs.WyeLib.delay.start(frame.SP)
+        f.params.startCt = [200]
+        frame.SP.append(f)
+        # when we get back here after delay, we'll pick up at case 3
+        frame.PC += 1       # when delay done, go pop frame
+
+    case 3:
+        frame.SP.pop()  # remove delay frame
+
+        f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)       # create multi-cycle verb (frame default status is CONTINUE
+        f.params.tag = frame.vars.obj1Tag    # pass tag to waitClick
+        frame.SP.append(f)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
+        #print("tstObj2 Obj waiting for click")
+        frame.PC += 1                   # bump forward a step - when event happens we'll pick up at the next case
+
+    case 4:
+        # get here when waitClick detects event
+        frame.vars.sound[0].play()
+        f = frame.SP.pop()  # remove event frame
+        #print("tstObj2: got click on obj ", f.eventData[0])
+        frame.PC = 1   # Set PC back so next cycle we do it all again
+
+  #print("testObj2 cycle")
+f()
+        '''
+        code = None
+
+        def start(stack):
+            if not TestLib.testObj2.code:  # if object not compiled, compile it
+                # print("testObj2 compile codeString:"+TestLib.testObj.codeString)
+                TestLib.testObj2.code = compile(TestLib.testObj2.codeString, "<string>", "exec")
+            return Wye.codeFrame(TestLib.testObj2, stack)
+
+        def run(frame):
+            # print("testObj2 run frame ",frame, " frame params ", frame.params, " debug '", frame.debug, "'")
+            # print("testObj2 codeString ", TestLib.testObj.code)
+            # print("testObj2 exec code")
+            try:
+                exec(TestLib.testObj2.code,
+                     {"TestLib": TestLib, "frame": frame, "Wye": Wye, "WyeCore": WyeCore, "WyeUI": WyeCore.libs.WyeUI})
+            except:
+                # print("testObj2 run error:")
+                frame.status = Wye.status.FAIL
+                ex = sys.exception()
+                traceback.print_exception(ex)
+                # exit(1)
