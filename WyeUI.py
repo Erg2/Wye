@@ -123,12 +123,12 @@ class WyeUI(Wye.staticObj):
 
         # build dialog frame params list of input frames
         attrIx = 0
-        print("_displayLib: process library", lib.__name__)
+        #print("_displayLib: process library", lib.__name__)
         for attr in dir(lib):
             if attr != "__class__":
                 verb = getattr(lib, attr)
                 if inspect.isclass(verb):
-                    print("lib", lib.__name__, " verb", verb.__name__)
+                    #print("lib", lib.__name__, " verb", verb.__name__)
                     btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
                     dlgFrm.params.inputs[0].append([btnFrm])
 
@@ -367,11 +367,11 @@ class WyeUI(Wye.staticObj):
                 # if found it, add to hierarchy list
                 if len(hier) > 0 and hier[-1] == dialogFrame:
                     retHier = hier
-                    break;  # found it, break out of loop
+                    break  # found it, break out of loop
 
-                if retHier is None:
-                    print("Error: WyeUI FocusManager openDialog - dialog not found")
-                    print("  dialog ", dialogFrame.params.title[0])
+            if retHier is None:
+                print("Error: WyeUI FocusManager findDialogHier - dialog not found")
+                print("  dialog title", dialogFrame.params.title[0])
             return retHier
 
 
@@ -392,26 +392,30 @@ class WyeUI(Wye.staticObj):
             # if starting new dialog hierarchy
             if parentFrame is None:
                 WyeUI.FocusManager.dialogHierarchies.append([dialogFrame])
+                #print("Wye UI FocusManager openDialog: no parent, add dialog", dialogFrame," to hierarchy list", WyeUI.FocusManager.dialogHierarchies)
 
             # if has parent then add it to the parent's hierarchy
             else:
-                print("openDialog find parentFrame ", parentFrame)
+                #print("WyeUI FocusManager openDialog find parentFrame ", parentFrame)
                 hier = WyeUI.FocusManager.findDialogHier(parentFrame)
                 if not hier is None:
                     hier.append(dialogFrame)
+                else:
+                    print("Error: WyeUI FocusManager openDialog - did not find parent dialog", parentFrame, " in", WyeUI.FocusManager.dialogHierarchies)
 
             #print("FocusManager openDialog", WyeUI.FocusManager.dialogHierarchies)
 
 
         # Remove the given dialog from the display hierarchy
         def closeDialog(dialogFrame):
+            #print("FocusManager closeDialog", dialogFrame)
             hier = WyeUI.FocusManager.findDialogHier(dialogFrame)
-            #print("FocusManager closeDialog remove ", dialogFrame, " from len ", len(hier), ", ", hier)
+            #print("FocusManager closeDialog remove", dialogFrame, " from len", len(hier), ", hier", hier)
             del hier[-1]    # remove dialog from hierarchy
             if len(hier) == 0:  # if that was the last dialog, remove hierarchy too
-                #print(" hier empty, remove it")
+                #print(" hier now empty, remove it")
                 WyeUI.FocusManager.dialogHierarchies.remove(hier)
-            #print("FocusManager closeDialog", WyeUI.FocusManager.dialogHierarchies)
+            #print("FocusManager closeDialog complete: hierarchies", WyeUI.FocusManager.dialogHierarchies)
 
         # User clicked on object
         # call each leaf dialog to see if obj belongs to it.
@@ -609,7 +613,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgHeader, pos):
-            print("InputButton display: pos", pos)
+            #print("InputButton display: pos", pos)
             pos[2] -= WyeUI.LINE_HEIGHT * 5       # update position for next widget
             btn = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
@@ -647,8 +651,6 @@ class WyeUI(Wye.staticObj):
                     ("bgndGObj", Wye.dType.OBJECT, None),                   # 7 background card
                     )
         def start(stack):
-            #print("Dialog start")
-
             frame = Wye.codeFrame(WyeUI.Dialog, stack)
             # give frame unique lists
             frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
@@ -825,7 +827,7 @@ class WyeUI(Wye.staticObj):
                 if tag == frame.vars.dlgTags[0][0]:
                     #print("Dialog", frame.params[1][0], " OK Button pressed")
                     nInputs = (len(frame.params.inputs[0]))
-                    print("dialog ok: nInputs",nInputs," inputs",frame.params.inputs[0])
+                    #print("dialog ok: nInputs",nInputs," inputs",frame.params.inputs[0])
                     for ii in range(nInputs):
                         inFrm = frame.params.inputs[0][ii][0]
                         # for any text inputs, copy working string to return string
@@ -840,8 +842,6 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog", frame.params[1][0], " Cancel Button pressed")
                     frame.status = Wye.status.FAIL
 
-                # clean up dialog
-                #print("Close dialog")
                 # remove dialog from active dialog list
                 WyeUI.FocusManager.closeDialog(frame)
 
@@ -924,9 +924,9 @@ class WyeUI(Wye.staticObj):
             return frame
 
         def run(frame):
-            match(frame.PC):
+            match frame.PC:
                 case 0:  # Start up case - set up all the fields
-                    print("DropDown frame ", frame.tostring())
+                    #print("DropDown frame ", frame.tostring())
                     frame.params.frame[0] = frame  # return own frame as p0
                     parent = frame.params.parent[0]
                     WyeUI.FocusManager.openDialog(frame, parent)  # pass parent, if any
@@ -935,7 +935,7 @@ class WyeUI(Wye.staticObj):
                     # return frame
 
                     lines = frame.params.inputs[0]
-                    print("DropDown lines ", len(lines), ":", lines)
+                    #print("DropDown lines ", len(lines), ":", lines)
                     # first line becomes header that rest hang off of
                     if parent is None:
                         dlgHeader = WyeUI._label3d(text=lines[0], color=(1, 1, 0, 1), pos=frame.params.position,
@@ -988,7 +988,7 @@ class WyeUI(Wye.staticObj):
                     # if click event set status, we're done, clean up
                     if frame.vars.currInp[0] > -1:
                         frame.params.frame.append(frame.vars.currInp[0])
-                        print("DropDown got click event.  CurrInp", frame.vars.currInp[0], " ")
+                        #print("DropDown got click event.  CurrInp", frame.vars.currInp[0], " ")
                         # remove dialog from active dialog list
                         WyeUI.FocusManager.closeDialog(frame)
                         # delete the graphic widgets associated with the dialog

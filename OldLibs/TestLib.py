@@ -637,7 +637,7 @@ f()
 
         codeString = '''
 def f():
-  match(frame.PC):
+  match frame.PC:
     case 0:
         #print("testObj2 case 0: start - set up object")
 

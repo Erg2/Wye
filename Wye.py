@@ -5,7 +5,8 @@
 # contains constants (static classes)
 #    structures (regular classes)
 #    and factories (lib, obj)
-import collections
+
+# import collections
 
 # Wye container class that holds Wye classes
 class Wye:
@@ -46,7 +47,7 @@ class Wye:
         FAIL = 2
 
         def tostring(status):        # static print function
-            match(status):
+            match status:
                 case Wye.status.CONTINUE:
                     return "CONTINUE"
                 case Wye.status.SUCCESS:
@@ -61,7 +62,7 @@ class Wye:
         OPTIONAL = 1
 
         def tostring(pType):
-            match(pType):
+            match pType:
                 case Wye.status.REQUIRED:
                     return "REQUIRED"
 
@@ -79,7 +80,7 @@ class Wye:
         VERB = "V"          # regular verb (default)
         
         def tostring(val):            # static print function
-            match(val):
+            match val:
                 case Wye.mode.FUNCTION:
                     return "FUNCTION"
                 case Wye.mode.OBJECT:
@@ -98,7 +99,7 @@ class Wye:
 
 
         def tostring(mode):            # static print function
-            match(mode):
+            match mode:
                 case Wye.mode.PARALLEL:
                     return "PARALLEL"
                 case Wye.mode.SINGLE_CYCLE:
@@ -108,7 +109,7 @@ class Wye:
                 case _:
                     return "--unknown mode value " + str(mode) + "--"
 
-    # parallel completion rquirement
+    # parallel completion requirement
     class parTermType:
         FIRST_FAIL = "F"        # done when any fails or all succeed
         FIRST_SUCCESS = "S"     # done when any succeeds or all fail
@@ -134,7 +135,7 @@ class Wye:
         VARIABLE =      "V"
 
         def tostring(dataType):            # static print function
-            match(dataType):
+            match dataType:
                 case Wye.dType.NONE:
                     return "NONE"
                 case Wye.dType.ANY:
@@ -178,7 +179,7 @@ class Wye:
         # decide if worth doing OUT = 2
 
         def tostring(access):            # static print function
-            match(access):
+            match access:
                 case Wye.dType.VALUE:
                     return "VALUE"
                 case Wye.dType.REFERENCE:
@@ -203,23 +204,23 @@ class Wye:
         SHIFT_UP = -8
 
         def tostring(key):
-            match(key):
+            match key:
                 case Wye.ctlKyes.RIGHT:
-                    return("RIGHT")
+                    return "RIGHT"
                 case Wye.ctlKyes.LEFT:
-                    return("LEFT")
+                    return "LEFT"
                 case Wye.ctlKyes.UP:
-                    return("UP")
+                    return "UP"
                 case Wye.ctlKyes.DOWN:
-                    return("DOWN")
+                    return "DOWN"
                 case Wye.ctlKyes.CTL_DOWN:
-                    return("CTL_DOWN")
+                    return "CTL_DOWN"
                 case Wye.ctlKyes.CTL_UP:
-                    return("CTL_UP")
+                    return "CTL_UP"
                 case Wye.ctlKyes.SHIFT_DOWN:
-                    return("SHIFT_DOWN")
+                    return "SHIFT_DOWN"
                 case Wye.ctlKyes.SHIFT_UP:
-                    return("SHIFT_UP")
+                    return "SHIFT_UP"
 
     ###########################################################################
     #
@@ -310,6 +311,10 @@ class Wye:
                 fStr += "  SP len: " + str(len(frame.SP)) + ", stack:"+frame.frameListSummary(frame.SP)+"\n"
             else:
                 fStr += "  <no SP>"+"\n"
+            if hasattr(frame, "status"):
+                fStr += "  status:" + Wye.status.tostring(frame.status) + "\n"
+            else:
+                fStr += "  <no status>\n"
             fStr += "  params:" + frame.paramsToString()+"\n"
             fStr += "  vars:" + frame.varsToString()
 
@@ -324,7 +329,7 @@ class Wye:
                     if ii < len(lst)-1:
                         pStr += ", "
             else:
-                pstr = "<empty>"
+                pStr = "<empty>"
             return pStr
 
         def listToString(self, lst):
@@ -342,7 +347,7 @@ class Wye:
         def attribToString(self, obj):
             return ",".join([x for x in dir(obj) if x[0] != '_'])
 
-        # return params concanated
+        # return params concatenated
         def paramsToString(frame):
             return frame.attribToString(frame.params)
 
@@ -358,19 +363,20 @@ class Wye:
                 for ix in range(sLen-1, -1, -1):
                     frame = stack[ix]
                     stkStr += "\n  ["+str(ix)+"] verb=" + frame.verb.__name__ + " status " + Wye.status.tostring(frame.status) + \
-                              " PC=" + str(frame.PC)+ " params: " + str(frame.params)
+                              " PC=" + str(frame.PC) + " params: " + str(frame.params)
             return stkStr
 
 
     # used by verbs that run parallel streams
     class parallelFrame(codeFrame): # used by any object with parallel execution (multiple stacks)
+
         def __init__(self, verb, stack):
             super().__init__(verb, stack)
             #print("parallelFrame init: verb", verb.__name__," stack", stack)
             self.stacks = []        # callee must fill in empty lists for appropriate number of stacks
 
         # run the top of each parallel stack once
-        def runParallel(frame):
+        def runParallel(self):
             dbgIx = 0
             status = Wye.status.CONTINUE  # assume we'll keep going
             foundFail = False
@@ -387,36 +393,41 @@ class Wye:
             # When stacks complete (single remaining frame generates a non-CONTINUE status),
             # handle termination based on condition in parallel verb's parTermType.
             delLst = []
-            for stack in frame.stacks:
-
+            dbgStkNum = 0
+            for stack in self.stacks:
+                #print("runParallel stack", dbgStkNum)
                 # if there's a frame, there's something to do
                 if len(stack) > 0:
                     f = stack[-1]  # grab the bottom frame
 
                     # if it's still running, run it again
                     if f.status == Wye.status.CONTINUE:
+                        #print("  frame", f.verb.__name__, " status CONTINUE, PC", f.PC, " run frame")
                         f.verb.run(f)
                         foundContinue = True
 
                     # if it terminated, if there's a parent, call it to clean up completed child
                     else:
+                        #print("  frame", f.verb.__name__," status", Wye.status.tostring(f.status), ", PC", f.PC)
                         # have a parent on stack
                         if len(stack) > 1:
-                            f = stack[-2]
-                            f.verb.run(f)  # run parent (will test child status, remove from stack, and continue)
+                            fp = stack[-2]
+                            #print("    run parent", fp.verb.__name__)
+                            fp.verb.run(fp)  # run parent (will test child status, remove from stack, and continue)
                             foundContinue = True  # technically we haven't checked, but we will next time
                         # no parent, atatus not CONTINUE, we're done with stream
                         else:
+                            #print("    no parent, process status and remove stack")
                             if f.status == Wye.status.FAIL:
                                 foundFail = True
                             elif f.status == Wye.status.SUCCESS:
                                 foundSuccess = True
                             else:
                                 foundContinue = True
-                            if (foundFail and frame.verb.parTermType == Wye.parTermType.FIRST_FAIL) or \
-                                    (foundSuccess and frame.verb.parTermType == Wye.parTermType.FIRST_SUCCESS) or \
+                            if (foundFail and self.verb.parTermType == Wye.parTermType.FIRST_FAIL) or \
+                                    (foundSuccess and self.verb.parTermType == Wye.parTermType.FIRST_SUCCESS) or \
                                     ((
-                                             foundFail or foundSuccess) and frame.verb.parTermType == Wye.parTermType.FIRST_ANY):
+                                             foundFail or foundSuccess) and self.verb.parTermType == Wye.parTermType.FIRST_ANY):
                                 #print("stream complete with status ", f.status)
                                 status = f.status
                                 break
@@ -425,20 +436,24 @@ class Wye:
                     dbgIx += 1
                 # remove empty stack
                 else:
+                    #print("  stack depth 0, remove stack")
                     delLst.append(stack)
+
+                dbgStkNum += 1
+
             # if there are completed streams, remove their stacks
             for stack in delLst:
-                frame.stacks.remove(stack)
+                self.stacks.remove(stack)
 
             # If we're done, figure out whether we succeeded or failed
             if status == Wye.status.CONTINUE and not foundContinue:  # all streams completed without triggering an exit
-                if frame.verb.parTermType == Wye.parTermType.FIRST_FAIL:
+                if self.verb.parTermType == Wye.parTermType.FIRST_FAIL:
                     #print("stream done, all succeeded")
                     status = Wye.status.SUCCESS  # FIRST_FAIL didn't have any failures - yay!
                 else:
                     #print("stream done, all failed")
                     status = Wye.status.FAIL  # FIRST_SUCCESS and didn't have any successes - boo :-(
-            frame.status = status  # return whatever status we have
+            self.status = status  # return whatever status we have
 
         # create additional parallel stream at runtime
         def addStream(self, frame):

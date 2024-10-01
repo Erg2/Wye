@@ -280,7 +280,7 @@ class TestLib:
             return frame
 
         def run(frame):
-            match(frame.PC):
+            match frame.PC:
                 case 0:
                     tgt = TestLib.DlgTst
                     tgtFrm = TestLib.DlgTst.start(frame.SP)

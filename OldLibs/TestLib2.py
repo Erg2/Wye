@@ -153,7 +153,7 @@ class TestLib2:
                     dbgIx += 1
 
         def Stream0(frame):
-            match(frame.PC):
+            match frame.PC:
                 case 0:
                     # put up 3d text
                     txt = WyeCore.libs.WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(2,10,2), scale=(.2,.2,.2))
@@ -177,7 +177,7 @@ class TestLib2:
                     pass    # just hang out here for now
 
         def Stream1(frame):
-            match(frame.PC):
+            match frame.PC:
                 case 0:
                     # put up 3d text
                     txt = WyeCore.libs.WyeUI._label3d("Stream 1", color=(0, 1, 0, 1), pos=(-2,10,2), scale=(.2,.2,.2))
@@ -354,7 +354,7 @@ class TestLib2:
             return Wye.codeFrame(TestLib2.testMObj, stack)
         
         def run(frame):
-            match(frame.PC):
+            match frame.PC:
                 case 0:
                     #print("testMObj: case 0, Start TestCompiledPar, get frame")
                     f = TestLib2.testCompiledPar.start(frame.SP)
