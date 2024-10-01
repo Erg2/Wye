@@ -230,8 +230,10 @@ class Wye:
     #
     ###########################################################################
 
-    # Need minimal class to hang all the params and vars on
-    class mpty:
+    # minimal classes to hang all the params and vars on
+    class params:
+        pass
+    class vars:
         pass
 
 
@@ -244,8 +246,8 @@ class Wye:
     class codeFrame:      # Used by any verb with Wye code
         def __init__(self, verb, stack):
             self.verb = verb    # the static verb that we're holding runtime data for
-            self.params = Wye.mpty()  # caller will fill in params
-            self.vars = Wye.mpty()
+            self.params = Wye.params()  # caller will fill in params
+            self.vars = Wye.vars()
 
             #print("code frame for verb ", verb.__name__)
             if hasattr(verb, "varDescr"):

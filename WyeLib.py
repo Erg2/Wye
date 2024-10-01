@@ -210,7 +210,7 @@ class WyeLib:
             pos = frame.params.position
             scale = frame.params.scale
             #tag = frame.params.tag[0]
-            print("showModel pos ", pos, " scale ", scale) #, " tag ", tag)
+            #print("showModel pos ", pos, " scale ", scale) #, " tag ", tag)
             model.reparentTo(render)
             model.setScale(scale[0], scale[1], scale[2])
             model.setPos(pos[0], pos[1], pos[2])

@@ -179,15 +179,14 @@ class WyeCore(Wye.staticObj):
 
                 ###########
 
-# DEBUG DON'T START REPEAT EVENTS
-#                # put rep exec obj on obj list
-#                WyeCore.World.objs.append(WyeCore.World.repeatEventExecObj)
-#                stk = []
-#                f = WyeCore.World.repeatEventExecObj.start(stk)  # start the object and get its stack frame
-#                stk.append(f)  # create a stack for it
-#                f.SP = stk  # put ptr to stack in frame
-#                f.params = [[0], ]  # place to put return param
-#                WyeCore.World.objStacks.append(stk)
+                # put rep exec obj on obj list
+                WyeCore.World.objs.append(WyeCore.World.repeatEventExecObj)
+                stk = []
+                f = WyeCore.World.repeatEventExecObj.start(stk)  # start the object and get its stack frame
+                stk.append(f)  # create a stack for it
+                f.SP = stk  # put ptr to stack in frame
+                f.params = [[0], ]  # place to put return param
+                WyeCore.World.objStacks.append(stk)
 
                 # build list of known libraries (so can ref them during build)
                 for lib in WyeCore.World.libList:
@@ -796,6 +795,8 @@ class WyeCore(Wye.staticObj):
             caseNumList = [0]   # list so called fn can increment it.  This is Python pass by reference
             labelDict = {}
             fwdLabelDict = {}
+            glideThruLabel = True   # If true (normal) creating a Label case will auto increment the PC to go to that case
+                                    # Set False by IfGoTo
             # define runtime method for this function
             codeText = " def " + name + "_run_rt(frame):\n  match frame.PC:\n   case 0:\n"
             parFnText = ""
@@ -806,7 +807,11 @@ class WyeCore(Wye.staticObj):
                     if wyeTuple[0] == "Label":
                         caseNumList[0] += 1
                         labelDict[wyeTuple[1]] = caseNumList[0]
-                        codeText += "    frame.PC += 1\n   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
+
+                        if glideThruLabel:
+                            codeText += "    frame.PC += 1\n"
+                        codeText += "   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
+                        glideThruLabel = True
 
                         # if this is the resolution of any forward label references
                         lblStr = wyeTuple[1]
@@ -828,11 +833,13 @@ class WyeCore(Wye.staticObj):
                                 fwdLabelDict[wyeTuple[2]] = 1  # count positions that need fixing when we know the label location
                             else:
                                 fwdLabelDict[wyeTuple[2]] += 1
-                                # mark label location that needs fixing
-                                codeText += "     frame.PC = >>>FWDLABEL_" + wyeTuple[2] + "<<< #GoToLabel " + wyeTuple[2] + "\n"
+                            # mark label location that needs fixing
+                            codeText += "    if (" + wyeTuple[1] + "):\n"
+                            codeText += "     frame.PC = >>>FWDLABEL_" + wyeTuple[2] + "<<< #GoToLabel " + wyeTuple[2] + "\n"
+                        glideThruLabel = False      # don't auto inc PC when get to next label
+                        #caseNumList[0] += 1
+                        #codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
 
-                            caseNumList[0] += 1
-                            codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
 
                     elif wyeTuple[0] == "GoTo":
                         # if label is behind this position (we've seen it already), it's easy
@@ -937,7 +944,7 @@ class WyeCore(Wye.staticObj):
                         # if this class is an object that should be added to the world's active object list
                         if hasattr(val, "autoStart"):
                             classStr = libName + "." + libName + "." + val.__name__
-                            #print("Startobj: ", classStr)
+                            print("buildLib Startobj: ", classStr)
                             WyeCore.World.startObjs.append(classStr)
 
             # if there's code to build for the library, doit

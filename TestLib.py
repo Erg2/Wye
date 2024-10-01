@@ -2,6 +2,7 @@ from Wye import Wye
 from WyeCore import WyeCore
 import sys
 import traceback
+from direct.showbase import Audio3DManager
 
 class TestLib:
 
@@ -113,7 +114,7 @@ class TestLib:
         )
 
         codeDescr = (
-            #(None, "print('testDialog, create param list ')"),
+            (None, "print('testDialog, startup - create param list ')"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
              (None, "frame.vars.Title"),                        # title
              (None, "(-3,8,1)"),                                # position
@@ -156,7 +157,7 @@ class TestLib:
 
     # generated code for
     # load model passed in at loc, scale passed in
-    class testLoader3:
+    class testLoader:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
 
@@ -169,7 +170,7 @@ class TestLib:
         varDescr = ()
         codeDescr = (
             #(None, "print('test inline code')"),
-            # call loadModel with testLoader3 params 0 and 1
+            # call loadModel with testLoader params 0 and 1
             ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.obj"), (None, "frame.params.file")),
             ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.obj")),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.obj"), (None, "frame.params.colorVec")),
@@ -178,14 +179,85 @@ class TestLib:
         code = None
 
         def build():
-            return WyeCore.Utils.buildCodeText("testLoader3", TestLib.testLoader3.codeDescr)
+            return WyeCore.Utils.buildCodeText("testLoader", TestLib.testLoader.codeDescr)
 
         def start(stack):
-            return Wye.codeFrame(TestLib.testLoader3, stack)
+            return Wye.codeFrame(TestLib.testLoader, stack)
 
         def run(frame):
-            TestLib.TestLib_rt.testLoader3_run_rt(frame)
+            TestLib.TestLib_rt.testLoader_run_rt(frame)
 
+
+    # when clicked, spin object back and forth
+    class clickWiggle:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("tag", Wye.dType.STRING, Wye.access.REFERENCE),
+                      ("axis", Wye.dType.INTEGER, Wye.access.REFERENCE))
+        varDescr = (("rotCt", Wye.dType.INTEGER, 0),
+                    ("sound", Wye.dType.OBJECT, None))
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(TestLib.clickWiggle, stack)
+
+        def run(frame):
+            global base
+            #print('execute spin, params', frame.params, ' vars', frame.vars)
+
+            gObj = frame.params.obj[0]
+            vec = gObj.getHpr()
+            axis = frame.params.axis[0]
+            #print("Current HPR ", vec)
+            match frame.PC:
+                case 0:
+                    WyeCore.World.setEventCallback("click", frame.params.tag[0], frame)
+                    # frame.vars.sound[0] = base.loader.loadSfx("WyePop.wav")
+                    audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
+                    frame.vars.sound[0] = audio3d.loadSfx("WyePew.wav")
+                    audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
+                    frame.PC += 1
+                    #print("clickWiggle waiting for event 'click' on tag ", frame.params.tag[0])
+                case 1:
+                    pass
+                    # do nothing until event occurs
+
+                case 2:
+                    frame.vars.sound[0].play()
+                    frame.PC += 1
+
+                case 3:
+                    vec[axis] += 5
+                    #print("spin (pos) obj", gObj, "to", vec)
+                    gObj.setHpr(vec[0], vec[1], vec[2])
+                    if vec[axis] > 45:   # end of swing this way
+                        frame.PC += 1  # go to next state
+
+                case 4:
+                    vec[axis] -= 5
+                    #print("spin (neg) obj ", gObj, "to", vec)
+                    gObj.setHpr(vec[0], vec[1], vec[2])
+                    if vec[axis] < -45:    # end of swing other way
+                        frame.PC += 1   # go to previous state
+
+                case 5:
+                    frame.vars.rotCt[0] += 1  # count cycles
+                    if frame.vars.rotCt[0] < 2:  # wiggle this many times, then exit
+                        frame.PC = 3    # go do another wiggle
+                    else:
+                        # finish by coming back to zero
+                        vec[axis] += 5
+                        #print("spin (neg) obj ", gObj, "to", vec)
+                        gObj.setHpr(vec[0], vec[1], vec[2])
+                        if vec[axis] >= 0:    # end of swing other way
+                            #print("clickWiggle: done")
+                            frame.status = Wye.status.SUCCESS
+
+
+                case _:
+                    frame.status = Wye.status.SUCCESS
 
 
     # spin object back and forth
@@ -201,7 +273,6 @@ class TestLib:
         def start(stack):
             return Wye.codeFrame(TestLib.spin, stack)
 
-        # TODO - make multi-cycle
         def run(frame):
             gObj = frame.params.obj[0]
             vec = gObj.getHpr()
@@ -236,6 +307,104 @@ class TestLib:
                 case _:
                     frame.status = Wye.status.SUCCESS
 
+    class fish:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.NONE
+        paramDescr = ()
+        varDescr = (("fish", Wye.dType.OBJECT, None),
+                    ("fishTag", Wye.dType.STRING, "obj1Tag"),
+                    ("pos", Wye.dType.STRING, [0,0,0]),
+                    ("sound", Wye.dType.OBJECT, None))  # var 4
+        codeDescr=(
+            (None, ("print('fish case 0: set up object')")),
+            ("TestLib.testLoader",
+                (None, "frame.vars.fish"),
+                (None, "['flyer_02.glb']"),
+                (None, "[1,5,-.5]"),
+                (None, "[.75,.75,.75]"),
+                (None, "frame.vars.fishTag"),
+                (None, "[1,1,0,1]")
+            ),
+            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
+            #(None, "frame.vars.sound[0] = base.loader.loadSfx('WyePew.wav')"),
+            ("Label", "Repeat"),
+            ("TestLib.clickWiggle", (None, "frame.vars.fish"), (None, "frame.vars.fishTag"), (None, "[1]")),
+            #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.fishTag")),
+            ("GoTo", "Repeat")
+        )
+
+        def build():
+            print("Build fish")
+            return WyeCore.Utils.buildCodeText("fish", TestLib.fish.codeDescr)
+
+        def start(stack):
+            print("fish object start")
+            return Wye.codeFrame(TestLib.fish, stack)
+
+        def run(frame):
+            #print("Run fish")
+            TestLib.TestLib_rt.fish_run_rt(frame)
+
+
+    class leaderFish:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.INTEGER
+        paramDescr = ()
+        varDescr = (("fish", Wye.dType.OBJECT, None),
+                    ("fishTag", Wye.dType.STRING, "obj1Tag"),
+                    ("pos", Wye.dType.STRING, [0,5,0]),
+                    ("sound", Wye.dType.OBJECT, None))  # var 4
+
+        codeDescr=(
+            (None, ("print('leaderFish case 0: set up object')")),
+            ("TestLib.testLoader",
+                (None, "frame.vars.fish"),
+                (None, "['flyer_02.glb']"),
+                (None, "[0,5,-.5]"),
+                (None, "[.75,.75,.75]"),
+                (None, "frame.vars.fishTag"),
+                (None, "[1,0,0,1]")
+            ),
+            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
+
+            ("Label", "Right"),
+            ("IfGoTo", "frame.vars.pos[0][0] > 1", "Back"),
+            (None, "frame.vars.pos[0][0] += .01"),
+            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+
+
+            ("Label", "Back"),
+            ("IfGoTo", "frame.vars.pos[0][1] > 6", "Left"),
+            (None, "frame.vars.pos[0][1] += .01"),
+            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+
+
+            ("Label", "Left"),
+            ("IfGoTo", "frame.vars.pos[0][0] < -1", "Front"),
+            (None, "frame.vars.pos[0][0] -= .01"),
+            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+
+
+            ("Label", "Front"),
+            ("IfGoTo", "frame.vars.pos[0][1] < 5", "Right"),
+            (None, "frame.vars.pos[0][1] -= .01"),
+            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
+
+        )
+
+        def build():
+            print("Build leaderFish")
+            return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr)
+
+        def start(stack):
+            print("leaderFish object start")
+            return Wye.codeFrame(TestLib.leaderFish, stack)
+
+        def run(frame):
+            #print("Run leaderFish")
+            TestLib.TestLib_rt.leaderFish_run_rt(frame)
 
 
     class testObj2:
@@ -252,7 +421,7 @@ class TestLib:
 
         codeDescr=(
             (None, ("print('testObj2 case 0: start - set up object')")),
-            ("TestLib.testLoader3",
+            ("TestLib.testLoader",
                 (None, "frame.vars.obj1"),
                 (None, "['flyer_01.glb']"),
                 (None, "[-1,5,-.5]"),
@@ -263,8 +432,8 @@ class TestLib:
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
             (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
-            ("TestLib.spin", (None, "frame.vars.obj1"), (None, "[1]")),
-            ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.obj1Tag")),
+            ("TestLib.clickWiggle", (None, "frame.vars.obj1"), (None, "frame.vars.obj1Tag"), (None, "[1]")),
+            #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.obj1Tag")),
             ("GoTo", "Repeat")
         )
 
@@ -279,3 +448,5 @@ class TestLib:
         def run(frame):
             #print("Run testObj2")
             TestLib.TestLib_rt.testObj2_run_rt(frame)
+
+
