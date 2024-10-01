@@ -825,6 +825,7 @@ class WyeCore(Wye.staticObj):
                         if wyeTuple[2] in labelDict:
                             codeText += "    if (" + wyeTuple[1] + "):\n"
                             codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #GoToLabel " + wyeTuple[2] + "\n"
+                            codeText += "     return\n"     # skips any code following a successful If
                         # else this is a forward ref to a label we've not seen yet.
                         # Put a placeholder in the code and make a note to fix it later
                         else:
@@ -836,6 +837,7 @@ class WyeCore(Wye.staticObj):
                             # mark label location that needs fixing
                             codeText += "    if (" + wyeTuple[1] + "):\n"
                             codeText += "     frame.PC = >>>FWDLABEL_" + wyeTuple[2] + "<<< #GoToLabel " + wyeTuple[2] + "\n"
+                            codeText += "     return\n"     # skips any code following a successful If
                         glideThruLabel = False      # don't auto inc PC when get to next label
                         #caseNumList[0] += 1
                         #codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"

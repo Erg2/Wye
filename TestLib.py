@@ -374,24 +374,20 @@ class TestLib:
             (None, "frame.vars.pos[0][0] += .01"),
             ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
 
-
             ("Label", "Back"),
             ("IfGoTo", "frame.vars.pos[0][1] > 6", "Left"),
             (None, "frame.vars.pos[0][1] += .01"),
             ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-
 
             ("Label", "Left"),
             ("IfGoTo", "frame.vars.pos[0][0] < -1", "Front"),
             (None, "frame.vars.pos[0][0] -= .01"),
             ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
 
-
             ("Label", "Front"),
             ("IfGoTo", "frame.vars.pos[0][1] < 5", "Right"),
             (None, "frame.vars.pos[0][1] -= .01"),
             ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-
         )
 
         def build():
