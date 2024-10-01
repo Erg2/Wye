@@ -795,8 +795,6 @@ class WyeCore(Wye.staticObj):
             caseNumList = [0]   # list so called fn can increment it.  This is Python pass by reference
             labelDict = {}
             fwdLabelDict = {}
-            glideThruLabel = True   # If true (normal) creating a Label case will auto increment the PC to go to that case
-                                    # Set False by IfGoTo
             # define runtime method for this function
             codeText = " def " + name + "_run_rt(frame):\n  match frame.PC:\n   case 0:\n"
             parFnText = ""
@@ -808,10 +806,8 @@ class WyeCore(Wye.staticObj):
                         caseNumList[0] += 1
                         labelDict[wyeTuple[1]] = caseNumList[0]
 
-                        if glideThruLabel:
-                            codeText += "    frame.PC += 1\n"
+                        codeText += "    frame.PC += 1\n"
                         codeText += "   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
-                        glideThruLabel = True
 
                         # if this is the resolution of any forward label references
                         lblStr = wyeTuple[1]
