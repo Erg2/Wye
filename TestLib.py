@@ -171,7 +171,7 @@ class TestLib:
             #(None, "print('test inline code')"),
             # call loadModel with testLoader3 params 0 and 1
             ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.obj"), (None, "frame.params.file")),
-             ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.obj")),
+            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.obj")),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.obj"), (None, "frame.params.colorVec")),
             ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.obj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec"))
         )
@@ -250,106 +250,32 @@ class TestLib:
                     ("obj2Tag", Wye.dType.STRING, "obj2Tag"),
                     ("sound", Wye.dType.OBJECT, None))  # var 4
 
-        codeString = '''
-def f():
-  match frame.PC:
-    case 0:
-        #print("testObj2 case 0: start - set up object")
+        codeDescr=(
+            (None, ("print('testObj2 case 0: start - set up object')")),
+            ("TestLib.testLoader3",
+                (None, "frame.vars.obj1"),
+                (None, "['flyer_01.glb']"),
+                (None, "[-1,5,-.5]"),
+                (None, "[.75,.75,.75]"),
+                (None, "frame.vars.obj1Tag"),
+                (None, "[0,1,0,1]")
+            ),
+            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
+            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePew.wav')"),
+            ("Label", "Repeat"),
+            ("TestLib.spin", (None, "frame.vars.obj1"), (None, "[1]")),
+            ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.obj1Tag")),
+            ("GoTo", "Repeat")
+        )
 
-        # create object from parameters
-        f1 = TestLib.testLoader3.start(frame.SP)
-        # position doesn't matter - explicitly set, below
-        f1.params.obj = frame.vars.obj1
-        f1.params.file = ["flyer_01.glb"]
-        f1.params.posVec = [0,0,0]
-        f1.params.scaleVec = [.75,.75,.75]
-        f1.params.tag = frame.vars.obj1Tag
-        f1.params.colorVec = [0,1,0,1]
-        TestLib.testLoader3.run(f1)
-        if f1.status != Wye.status.SUCCESS:
-            print("Exit testObj2 code on file load error")
-            frame.status = f1.status
-            return
-        #print("testObj2 after testLoader3: frame.vars", frame.varsToString(frame))
-
-        # move object
-        f2 = WyeCore.libs.WyeLib.setObjPos.start(frame.SP)
-        f2.params.obj = frame.vars.obj1
-        f2.params.posVec = [0,5,-.5]
-        WyeCore.libs.WyeLib.setObjPos.run(f2)
-
-        # load click sound
-        frame.vars.sound[0] = base.loader.loadSfx("WyePew.wav")
-        #audio3d = base.Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
-        #frame.vars.sound[0] = audio3d.loadSfx("WyePop.wav")
-        #audio3d.attachSoundToObject(frame.vars.sound[0], frame.params[0][0])
-        #audio3d.attachSoundToObject(frame.vars.sound[0], frame.params[1][0])
-
-        frame.PC += 1
-
-    case 1:
-        #print("testObj2 case 1: start spin")        
-        f4 = TestLib.spin.start(frame.SP)       # create multi-cycle verb (frame default status is CONTINUE
-        f4.params.obj = frame.vars.obj1
-        f4.params.axis = [1]    # pass obj, rotation axis to spin
-        frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
-        #print("testObj2, frame.SP", frame.SP)
-        #print("testObj2, stack contains ", WyeCore.Utils.stackToString(frame.SP))
-
-        frame.PC = 3 # jump over delay to waitClick                    # bump forward a step - when spin completes we'll pick up at the next case
-
-    case 2:
-        #print("testObj2 case 2: done spin")
-        # we won't get here until spin completes
-        # spin's frame is at the bottom of the stack
-        f = frame.SP.pop()
-        #print("testObj2: spin returned p0 ", f.params.obj[0], " status ", WyeCore.status.tostring(f.status))
-        #frame.status = Wye.status.SUCCESS   # we're done
-
-        #print("testObj2 case 2 start delay")
-        f = WyeCore.libs.WyeLib.delay.start(frame.SP)
-        f.params.startCt = [200]
-        frame.SP.append(f)
-        # when we get back here after delay, we'll pick up at case 3
-        frame.PC += 1       # when delay done, go pop frame
-
-    case 3:
-        frame.SP.pop()  # remove delay frame
-
-        f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)       # create multi-cycle verb (frame default status is CONTINUE
-        f.params.tag = frame.vars.obj1Tag    # pass tag to waitClick
-        frame.SP.append(f)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
-        #print("tstObj2 Obj waiting for click")
-        frame.PC += 1                   # bump forward a step - when event happens we'll pick up at the next case
-
-    case 4:
-        # get here when waitClick detects event
-        frame.vars.sound[0].play()
-        f = frame.SP.pop()  # remove event frame
-        #print("tstObj2: got click on obj ", f.eventData[0])
-        frame.PC = 1   # Set PC back so next cycle we do it all again
-
-  #print("testObj2 cycle")
-f()
-        '''
-        code = None
+        def build():
+            print("Build testObj2")
+            return WyeCore.Utils.buildCodeText("testObj2", TestLib.testObj2.codeDescr)
 
         def start(stack):
-            if not TestLib.testObj2.code:  # if object not compiled, compile it
-                # print("testObj2 compile codeString:"+TestLib.testObj.codeString)
-                TestLib.testObj2.code = compile(TestLib.testObj2.codeString, "<string>", "exec")
+            #print("testObj2 object start")
             return Wye.codeFrame(TestLib.testObj2, stack)
 
         def run(frame):
-            # print("testObj2 run frame ",frame, " frame params ", frame.params, " debug '", frame.debug, "'")
-            # print("testObj2 codeString ", TestLib.testObj.code)
-            # print("testObj2 exec code")
-            try:
-                exec(TestLib.testObj2.code,
-                     {"TestLib": TestLib, "frame": frame, "Wye": Wye, "WyeCore": WyeCore, "WyeUI": WyeCore.libs.WyeUI})
-            except:
-                # print("testObj2 run error:")
-                frame.status = Wye.status.FAIL
-                ex = sys.exception()
-                traceback.print_exception(ex)
-                # exit(1)
+            #print("Run testObj2")
+            TestLib.TestLib_rt.testObj2_run_rt(frame)

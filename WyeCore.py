@@ -645,6 +645,10 @@ class WyeCore(Wye.staticObj):
                                 # first tuple element is not a param
                                 if paramIx == 0:
                                     paramIx += 1
+                                    if paramIx > len(wyeTuple):
+                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
+
                                     #print(" parseWyeTuple: skip 0th entry in wyeTuple")
                                     continue
 
@@ -682,6 +686,10 @@ class WyeCore(Wye.staticObj):
                                 # if we get a VARIABLE param, all succeeding params belong to it
                                 if verbClass.paramDescr[paramIx-1][1] != Wye.dType.VARIABLE:
                                     paramIx += 1
+                                    if paramIx > len(wyeTuple):
+                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
+
 
                             #print("*** parseWyeTuple: finished params")
                         codeText += "    "+wyeTuple[0] + ".run(frame."+eff+")\n    if frame."+eff+".status == Wye.status.FAIL:\n"
@@ -706,6 +714,9 @@ class WyeCore(Wye.staticObj):
                                 #print("parseWyeTuple: 2 parse paramTuple ", paramTuple)
                                 if paramIx == 0:
                                     paramIx += 1
+                                    if paramIx > len(wyeTuple):
+                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
                                     #print(" parseWyeTuple: skip 0th entry in wyeTuple")
                                     continue
 
@@ -743,6 +754,9 @@ class WyeCore(Wye.staticObj):
                                 # if we get a VARIABLE param, all succeeding params belong to it
                                 if verbClass.paramDescr[paramIx - 1][1] != Wye.dType.VARIABLE:
                                     paramIx += 1
+                                    if paramIx > len(wyeTuple):
+                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
 
                         codeText += "    frame.SP.append(frame."+eff+")\n    frame.PC += 1\n"
                         caseNumList[0] += 1
@@ -781,6 +795,7 @@ class WyeCore(Wye.staticObj):
         def buildCodeText(name, codeDescr):
             caseNumList = [0]   # list so called fn can increment it.  This is Python pass by reference
             labelDict = {}
+            fwdLabelDict = {}
             # define runtime method for this function
             codeText = " def " + name + "_run_rt(frame):\n  match frame.PC:\n   case 0:\n"
             parFnText = ""
@@ -792,13 +807,48 @@ class WyeCore(Wye.staticObj):
                         caseNumList[0] += 1
                         labelDict[wyeTuple[1]] = caseNumList[0]
                         codeText += "    frame.PC += 1\n   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
+
+                        # if this is the resolution of any forward label references
+                        lblStr = wyeTuple[1]
+                        if lblStr in fwdLabelDict:
+                            fwdLabelDict.pop(lblStr)        # remove label from fwd ref dict
+                            codeText = codeText.replace(">>>FWDLABEL_"+lblStr+"<<<", str(caseNumList[0]))
+                            #print(">>>>Found forward ref", lblStr, " and replaced it with", caseNumList[0])
+
                     elif wyeTuple[0] == "IfGoTo":
-                        codeText += "    if (" + wyeTuple[1] + "):\n"
-                        codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #GoToLabel " + wyeTuple[2] + "\n"
-                        caseNumList[0] += 1
-                        codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
-                    elif wyeTuple[0] == "GoTo":     # note: can only go to labels already seen
-                        codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #GoToLabel " + wyeTuple[1] + "\n"
+                        # if label is behind this position (we've seen it already), it's easy
+                        if wyeTuple[2] in labelDict:
+                            codeText += "    if (" + wyeTuple[1] + "):\n"
+                            codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #GoToLabel " + wyeTuple[2] + "\n"
+                        # else this is a forward ref to a label we've not seen yet.
+                        # Put a placeholder in the code and make a note to fix it later
+                        else:
+                            # print(">>> ifgoto found fwd ref to label", wyeTuple[1])
+                            if not wyeTuple[2] in fwdLabelDict:
+                                fwdLabelDict[wyeTuple[2]] = 1  # count positions that need fixing when we know the label location
+                            else:
+                                fwdLabelDict[wyeTuple[2]] += 1
+                                # mark label location that needs fixing
+                                codeText += "     frame.PC = >>>FWDLABEL_" + wyeTuple[2] + "<<< #GoToLabel " + wyeTuple[2] + "\n"
+
+                            caseNumList[0] += 1
+                            codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
+
+                    elif wyeTuple[0] == "GoTo":
+                        # if label is behind this position (we've seen it already), it's easy
+                        if wyeTuple[1] in labelDict:
+                            codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #GoToLabel " + wyeTuple[1] + "\n"
+                        # else this is a forward ref to a label we've not seen yet.
+                        # Put a placeholder in the code and make a note to fix it later
+                        else:
+                            #print(">>> goto found fwd ref to label", wyeTuple[1])
+                            if not wyeTuple[1] in fwdLabelDict:
+                                fwdLabelDict[wyeTuple[1]] = 1       # count positions that need fixing when we know the label location
+                            else:
+                                fwdLabelDict[wyeTuple[1]] += 1
+                            # mark label location that needs fixing
+                            codeText += "    frame.PC = >>>FWDLABEL_" + wyeTuple[1] + "<<< #GoToLabel " + wyeTuple[1] + "\n"
+
                         caseNumList[0] += 1
                         # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
                         codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
