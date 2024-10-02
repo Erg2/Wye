@@ -11,7 +11,7 @@
 # Wye container class that holds Wye classes
 class Wye:
 
-    version = "0.2"
+    version = "0.3"
     #############################################
     #
     #  Static Wye Classes

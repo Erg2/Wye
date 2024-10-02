@@ -13,9 +13,8 @@ import traceback
 
 
 from WyeCore import WyeCore
+from Wye import Wye
 import sys, os
-
-version = "0.2"
 
 libLoadList = ["WyeLib.py", "WyeUI.py"] # list of lib files to load on start.  libList on cmd line added to it
 startObjList = []           # list of lib objs from command line to load on start
@@ -40,7 +39,7 @@ class PandaRunner(ShowBase):
 #print("Start")
 loadPrcFileData('', 'win-size 1200 800')           # set size of window
 loadPrcFileData('', 'show-frame-rate-meter #t')    # turn on frame rate display
-loadPrcFileData('', 'window-title Wye V'+version)
+loadPrcFileData('', 'window-title Wye V'+Wye.version)
 
 
 # if the user supplied a list of libList and or start objs

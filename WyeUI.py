@@ -6,13 +6,14 @@ from Wye import Wye
 from WyeCore import WyeCore
 import inspect      # for debugging
 from panda3d.core import *
-from functools import partial
+#from functools import partial
+#import traceback
+#import sys
+#from sys import exit
+#from direct.showbase import Audio3DManager
 
-#import partial
-import traceback
-import sys
-from sys import exit
-from direct.showbase import Audio3DManager
+#for 3d geometry (input cursor)
+from direct.showbase.ShowBase import ShowBase
 
 from direct.showbase.DirectObject import DirectObject
 
@@ -26,6 +27,67 @@ class WyeUI(Wye.staticObj):
     LABEL_COLOR = (1, 0, 0, 1)
     BACKGROUND_COLOR = (0, 0, 0, 1)
 
+    # create a piece of geometry
+    # this is a real class that gets instantiated
+    class _geom3d:
+
+        def __init__(self, size):
+            # Instantiate a vertex buffer
+            # https://stackoverflow.com/questions/75774821/how-to-create-three-dimensional-geometric-shapes-in-panda3d-in-python
+            # https://docs.panda3d.org/1.10/python/programming/internal-structures/procedural-generation/creating-vertex-data
+            format = GeomVertexFormat.getV3c4()
+            format = GeomVertexFormat.registerFormat(format)
+            vdata = GeomVertexData("name", format, Geom.UHStatic)
+            vertex = GeomVertexWriter(vdata, "vertex")
+            color = GeomVertexWriter(vdata, "color")
+
+            # Add vertices and colors
+            vertex.addData3f(-1*size[0], -1*size[1], -1*size[2])
+            color.addData4f(0, 0, 0, 1)
+
+            vertex.addData3f(-1*size[0], -1*size[1], 1*size[2])
+            color.addData4f(0, 0, 1, 1)
+
+            vertex.addData3f(-1*size[0], 1*size[1], -1*size[2])
+            color.addData4f(0, 1, 0, 1)
+
+            vertex.addData3f(-1*size[0], 1*size[1], 1*size[2])
+            color.addData4f(0, 1, 1, 1)
+
+            vertex.addData3f(1*size[0], -1*size[1], -1*size[2])
+            color.addData4f(1, 0, 0, 1)
+
+            vertex.addData3f(1*size[0], -1*size[1], 1*size[2])
+            color.addData4f(1, 0, 1, 1)
+
+            vertex.addData3f(1*size[0], 1*size[1], -1*size[2])
+            color.addData4f(1, 1, 0, 1)
+
+            vertex.addData3f(1*size[0], 1*size[1], 1*size[2])
+            color.addData4f(1, 1, 1, 1)
+
+            # Create the triangles (2 per face)
+            # https://docs.panda3d.org/1.10/python/programming/internal-structures/procedural-generation/creating-primitives
+            prim = GeomTriangles(Geom.UHStatic)
+            prim.addVertices(0, 1, 2)
+            prim.addVertices(2, 1, 3)
+            prim.addVertices(2, 3, 6)
+            prim.addVertices(6, 3, 7)
+            prim.addVertices(6, 7, 4)
+            prim.addVertices(4, 7, 5)
+            prim.addVertices(4, 5, 0)
+            prim.addVertices(0, 5, 1)
+            prim.addVertices(1, 5, 3)
+            prim.addVertices(3, 5, 7)
+            prim.addVertices(6, 4, 2)
+            prim.addVertices(2, 4, 0)
+
+            geom = Geom(vdata)
+            geom.addPrimitive(prim)
+            node = GeomNode("node")
+            node.addGeom(geom)
+
+            self.node = node
 
     # Build run_rt methods on each class
     def build():
@@ -524,14 +586,15 @@ class WyeUI(Wye.staticObj):
     class InputText:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.OBJECT
-        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # 0 return own frame
-                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # 1 user supplied label for field
-                      ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # 2 user supplied var to return value in
-        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, 0),           # 0 list of objects to delete on exit
-                    ("currPos", Wye.dType.INTEGER, 0),                    # 1 3d pos
-                    ("currVal", Wye.dType.STRING, ""),                    # 2 current string value
-                    ("currInsPt", Wye.dType.INTEGER, 0),                  # 3 text insertion point
-                    ("gWidget", Wye.dType.OBJECT, None)                   # 4 stashed graphic widget
+        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
+                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
+                      ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
+        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, 0),           # list of objects to delete on exit
+                    ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
+                    ("currVal", Wye.dType.STRING, ""),                    # current string value
+                    ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
+                    ("gWidget", Wye.dType.OBJECT, None),                  # stashed graphic widget
+                    ("Cursor", Wye.dType.OBJECT, None)                    # input cursor graphic widget
                     )
         def start(stack):
             frame = Wye.codeFrame(WyeUI.InputText, stack)

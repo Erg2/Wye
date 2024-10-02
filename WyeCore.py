@@ -281,6 +281,23 @@ class WyeCore(Wye.staticObj):
 
             return Task.cont  # tell panda3d we want to run next frame too
 
+        # Find first active instance of object with given name
+        def findActiveObj(name):
+            #print(WyeCore.World.objStacks)
+            #stkIx = 0
+            for stk in WyeCore.World.objStacks:
+                if len(stk) > 0:
+                    #print("stack", stkIx)
+                    for frm in stk:
+                        #print(" frm", frm)
+                        if hasattr(frm, "verb"):
+                            #print("  verb", frm.verb.__name__)
+                            if frm.verb.__name__ == name:
+                                #print("   Found", frm.verb, " matching ", name)
+                                return frm
+                #stkIx += 1
+            return None
+
         ##########################
         # Event Manager
         #
@@ -627,7 +644,8 @@ class WyeCore(Wye.staticObj):
                     # or
                     #  (None, "python code to inline")
                     case Wye.mode.SINGLE_CYCLE:
-                        eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
+                        eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
+                        # put local frames on the parent frame as attributes to keep local scope
                         codeText += "    if not hasattr(frame,'"+eff+"'):\n     setattr(frame,'"+eff+"',None)\n"
                         codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
                         #print("parseWyeTuple: verbClass", verbClass.__name__, " paramDescr", verbClass.paramDescr)
@@ -649,7 +667,7 @@ class WyeCore(Wye.staticObj):
                                         print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
 
                                     #print(" parseWyeTuple: skip 0th entry in wyeTuple")
-                                    continue
+                                    continue        # skip processing any more of this tuple parameter
 
                                 #print(" parseWyeTuple: 2 parse paramTuple ", paramTuple)
                                 if paramTuple[0] is None:        # constant/var (leaf node)
@@ -700,7 +718,8 @@ class WyeCore(Wye.staticObj):
                     # Note that a parallel verb is a multi-cycle verb from the caller's perspective
                     case Wye.mode.MULTI_CYCLE | Wye.mode.PARALLEL:
                         #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
-                        eff = "f"+str(fNum)         # eff is frame var.  fNum keeps frame var names unique in nested code
+                        eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
+                        # put local frames on the parent frame as attributes to keep local scope across display cycles
                         codeText += "    if not hasattr(frame,'" + eff + "'):\n"
                         #codeText += "     print('create frame attr "+eff+"')\n"
                         codeText += "     setattr(frame,'" + eff + "',None)\n"
@@ -777,7 +796,10 @@ class WyeCore(Wye.staticObj):
             # Tuple has no verb, just raw Python code
             else:
                 if len(wyeTuple) > 1:
-                    codeText += "    "+wyeTuple[1]+"\n"
+                    # if multi-line block of code, offset it all correctly
+                    codeLines = wyeTuple[1].split('\n')
+                    for line in codeLines:
+                        codeText += "    "+line+"\n"
                 else:
                     print("Wye Warning - parseTuple null verb but no raw code supplied")
 

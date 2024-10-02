@@ -21,7 +21,6 @@ class WyeLib:
     def build():
         WyeCore.Utils.buildLib(WyeLib)
 
-
     # Wait for click on graphic object
     # caller puts wyeTag of graphic obj in waitClick param[0]
     # caller pushes waitClick frame on stack and updates frame.PC to state it wants to go to when click happens
@@ -235,6 +234,26 @@ class WyeLib:
             vec = frame.params.posVec[0]
             #print("setObjPos set obj", gObj, "to", vec)
             gObj.setPos(vec[0], vec[1], vec[2])
+
+    # set model pos rel to model orientation
+    class setObjRelPos:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                     ("posVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE))
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setObjPos, stack)
+
+        def run(frame):
+            #print("setObjPos run: params ", frame.params)
+            gObj = frame.params.obj[0]
+            vec = frame.params.posVec[0]
+            #print("setObjPos set obj", gObj, "to", vec)
+            gObj.setPos(gObj, vec[0], vec[1], vec[2])
 
     # set object to given angle
     class setObjAngle:
