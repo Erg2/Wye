@@ -31,7 +31,7 @@ class WyeUI(Wye.staticObj):
     # this is a real class that gets instantiated
     class _geom3d:
 
-        def __init__(self, size):
+        def __init__(self, size, pos=[0,0,0]):
             # Instantiate a vertex buffer
             # https://stackoverflow.com/questions/75774821/how-to-create-three-dimensional-geometric-shapes-in-panda3d-in-python
             # https://docs.panda3d.org/1.10/python/programming/internal-structures/procedural-generation/creating-vertex-data
@@ -88,6 +88,9 @@ class WyeUI(Wye.staticObj):
             node.addGeom(geom)
 
             self.node = node
+
+            self.path = render.attachNewNode(self.node)
+            self.path.setPos(pos[0], pos[1], pos[2])
 
     # Build run_rt methods on each class
     def build():
@@ -614,6 +617,9 @@ class WyeUI(Wye.staticObj):
             gTags = []      # clickable graphic object tags assoc with this input
             lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
+
+            #tmp = WyeUI._geom3d([.1,.1,1])
+            #render.attachNewNode(tmp.node)
 
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 

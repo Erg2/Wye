@@ -115,7 +115,7 @@ class TestLib:
         )
 
         codeDescr = (
-            (None, "print('testDialog, startup - create param list ')"),
+            #(None, "print('testDialog, startup - create param list ')"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
              (None, "frame.vars.Title"),                        # title
              (None, "(-3,8,1)"),                                # position
@@ -140,7 +140,7 @@ class TestLib:
                 (None, "frame.vars.retList"),
                 (None, "[10]"),
              ),
-            (None, "print('testDialog retList=', frame.vars.retList[0])"),
+            #(None, "print('testDialog retList=', frame.vars.retList[0])"),
             (None, "frame.status = Wye.status.SUCCESS")
         )
 
@@ -410,48 +410,67 @@ class TestLib:
         autoStart = True
         dataType = Wye.dType.NONE
         paramDescr = ()
-        varDescr = (("fish", Wye.dType.OBJECT, None),
-                    ("fishTag", Wye.dType.STRING, "obj1Tag"),
+        varDescr = (("fishes", Wye.dType.OBJECT_LIST, None),        # fish graphic objs
+                    ("fishTags", Wye.dType.STRING, ""),
                     ("pos", Wye.dType.STRING, [0,0,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -0.02]),
                     ("angle", Wye.dType.FLOAT_LIST, [0., 90., 0.]),
-                    ("target", Wye.dType.OBJECT, None),
+                    ("target", Wye.dType.OBJECT, None),             # leader fish Wye obj frame
                     ("tgtDist", Wye.dType.FLOAT, 0),
+                    ("count", Wye.dType.INTEGER, 0),        # loop counter
+                    ("nFish", Wye.dType.INTEGER, 3),        # total number of fish
+                    ("objAhead", Wye.dType.OBJECT, None),   # object in front of this one in train
                     )
         codeDescr=(
-            (None, ("print('fish case 0: set up object')")),
-            ("TestLib.testLoader",
-                (None, "frame.vars.fish"),
-                (None, "['flyer_02.glb']"),
-                (None, "[1,5,-.5]"),
+            #(None, ("print('fish case 0: set up object')")),
+            # initialize arrays
+            (None, "frame.vars.fishes = []"),
+            (None, "frame.vars.fishTags = []"),
+            #(None, "print('fishes init', frame.vars.fishes)"),
+            #(None, "print('fishTags', frame.vars.fishTags)"),
+
+            ("Label", "MakeFish"),
+            #(None, "print('makeFish loop start: count', frame.vars.count[0])"),
+            (None, "frame.vars.fishes.append([None])"),     # create entry for fish
+            (None, "frame.vars.fishTags.append([''])"),
+            #(None, "print('fishes before load', frame.vars.fishes)"),
+            #(None, "print('fishTags', frame.vars.fishTags)"),
+            (None, "objNm = 'flyer_0'+str(frame.vars.count[0]+2)+'.glb'"),
+            ("TestLib.testLoader",                          # generate fish to put in entry
+                (None, "frame.vars.fishes[frame.vars.count[0]]"),
+                (None, "[objNm]"),
+                (None, "[frame.vars.count[0] ,5, -.5]"),
                 (None, "[.75,.75,.75]"),
-                (None, "frame.vars.fishTag"),
+                (None, "frame.vars.fishTags[frame.vars.count[0]]"),
                 (None, "[1,1,0,1]")
             ),
+            #(None, "print('fishes after load', frame.vars.fishes)"),
+            #(None, "print('fishTags', frame.vars.fishTags)"),
+            (None, "frame.vars.count[0] += 1"),     # next fish
+            ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "MakeFish"),      # if not done, loop for next fish
 
-            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"),
-             (None, "[WyeCore.World.findActiveObj('leaderFish')]")),
-            ("Label", "Start"),
-            #("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
-            # (None, "print('testObj2 frm', frame.vars.target[0].verb.__name__)"),
+            # prep for swim loop
+            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"),       # Find leader fish
+              (None, "[WyeCore.World.findActiveObj('leaderFish')]")),
 
-            (None, "frame.vars.fish[0].lookAt(frame.vars.target[0].vars.fish[0])"),  # get delta pos
-            (None, "frame.vars.fish[0].setHpr(frame.vars.fish[0], 10, 90, 0)"),      # flip to face up
-            #("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
-            (None, "frame.vars.tgtDist[0] = (frame.vars.fish[0].getPos().getXy() - frame.vars.target[0].vars.fish[0].getPos().getXy()).length()"),
-            (None, "frame.vars.dPos[0] = [0, 0, (1 - frame.vars.tgtDist[0]) * .01]"),
-            #(None, "frame.vars.dPos[0] = [0, 0, .01]"),
-            #(None, "print('tgtDist', frame.vars.tgtDist[0], ' dPos', frame.vars.dPos[0])"),
-            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
+            (None, "frame.vars.count[0] = 0"),
+            (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
 
-            #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"),(None, "frame.vars.angle")),
-            #("GoTo", "PopDialog")
+            ("Label", "SwimLoop"),    # top of loop moving each fish
+            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),  # orient toward fish in front
+            (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*40, 90, 0)"),      # flip to face up
+            #(None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], 0, 90, 0)"),      # flip to face up
+            (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos().getXy() - frame.vars.objAhead[0].getPos().getXy()).length()"),
+            (None, "frame.vars.dPos[0] = [0, 0, (1.5 - frame.vars.tgtDist[0])]"),
+            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
 
+            (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
 
-            # #old code: static click wiggle
-            # ("Label", "Repeat"),
-            # ("TestLib.clickWiggle", (None, "frame.vars.fish"), (None, "frame.vars.fishTag"), (None, "[1]")),
-            # ("GoTo", "Repeat"),
+            (None, "frame.vars.count[0] += 1"),     # next fish
+            ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "SwimLoop"),  # if not done, loop for next fish
+            (None, "frame.vars.count[0] = 0"),
+            (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
+            ("GoTo", "SwimLoop")
         )
 
         def build():
@@ -468,9 +487,11 @@ class TestLib:
 
 
     class leaderFish:
-        mode = Wye.mode.MULTI_CYCLE
+        cType = Wye.cType.OBJECT
+        mode = Wye.mode.PARALLEL
+        parTermType = Wye.parTermType.FIRST_FAIL
         autoStart = True
-        dataType = Wye.dType.INTEGER
+        dataType = Wye.dType.NONE
         paramDescr = ()
         varDescr = (("fish", Wye.dType.OBJECT, None),
                     ("fishTag", Wye.dType.STRING, "obj1Tag"),
@@ -479,120 +500,105 @@ class TestLib:
                     ("tgtDist", Wye.dType.FLOAT, 1.),
                     ("currDist", Wye.dType.FLOAT, 0.),
                     ("dDist", Wye.dType.FLOAT, 0.),
-                    ("prevDDist", Wye.dType.FLOAT, 0.),
-                    ("dPos", Wye.dType.FLOAT_LIST, [0.,0.,-0.03]),
-                    ("angle", Wye.dType.FLOAT_LIST, [0.,90.,0.]),
+                    ("prevDist", Wye.dType.FLOAT, 0.),
+                    ("dPos", Wye.dType.FLOAT_LIST, [0.,0.,0]),
+                    ("posStep", Wye.dType.FLOAT, .03),
+                    ("angle", Wye.dType.FLOAT_LIST, [0.,0.,0.]),
                     ("dAngle", Wye.dType.FLOAT, 1.),
-                    ("fudge", Wye.dType.FLOAT, .1),
+                    ("fudge", Wye.dType.FLOAT, 10),
                     ("piAngle", Wye.dType.FLOAT, 0.),
                     ("sound", Wye.dType.OBJECT, None),
+                    ("box", Wye.dType.OBJECT, None),
                 )
 
         codeDescr=(
-            #(None, ("print('leaderFish case 0: set up object')")),
-            ("TestLib.testLoader",
-                (None, "frame.vars.fish"),
-                (None, "['flyer_02.glb']"),
-                (None, "[0,5,-.5]"),
-                (None, "[.75,.75,.75]"),
-                (None, "frame.vars.fishTag"),
-                (None, "[1,0,0,1]")
+                (
+                #(None, ("print('leaderFish case 0: set up object')")),
+                ("TestLib.testLoader",
+                    (None, "frame.vars.fish"),
+                    (None, "['flyer_01.glb']"),
+                    (None, "[0,5,-.5]"),
+                    (None, "[.75,.75,.75]"),
+                    (None, "frame.vars.fishTag"),
+                    (None, "[1,0,0,1]")
+                ),
+
+                #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
+                (None, "from panda3d.core import LPoint3f"),
+                (None, "frame.vars.tgtPos[0] = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])"),
+                (None, "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
+                ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "[[0,90,0]]")),
+                (None, "frame.vars.box[0] = WyeCore.libs.WyeUI._geom3d([.1,.1,.1], frame.vars.tgtPos[0])"),
+
+                ("Label", "StartLoop"),
+                #(None, "print('angle', frame.vars.angle)"),
+
+                ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "frame.vars.angle")),
+                ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
+
+
+                # get difference from ideal distance
+
+                (None, "frame.vars.pos[0] = frame.vars.fish[0].getPos()"),
+                # get horizontal distance from target position, ignore height
+                (None, "frame.vars.currDist[0] = (frame.vars.pos[0].getXy() - frame.vars.tgtPos[0].getXy()).length()"),
+                # get change from last distance to target.  If increasing, turn faster.  If decreasing turn slower
+                # (i.e. if you're going the wrong way, turn around!
+                (None, "frame.vars.dDist[0] = round(frame.vars.currDist[0] - frame.vars.prevDist[0], 5)"),
+                (None, "from random import random"),
+                #(None, "frame.vars.fudge[0] = frame.vars.fudge[0] * (-1 if random() > .995 else 1)"),
+                (None, "frame.vars.prevDist[0] = frame.vars.currDist[0]"),
+                #(None, "print('dDist', frame.vars.dDist[0], ' angle', frame.vars.angle[0][0])"),
+
+                # adjust angle based on distance from ideal
+
+                (None, "frame.vars.dAngle[0] = round((frame.vars.dDist[0] + frame.vars.posStep[0]) * frame.vars.fudge[0], 5)"),
+                (None, "frame.vars.angle[0][2] = frame.vars.dAngle[0]"),
+                #(None, "print('currDist', frame.vars.currDist[0], ' dDist', frame.vars.dDist[0],' dAngle', frame.vars.dAngle[0])"),
+                #(None, "print(' dDist', frame.vars.dDist[0],' dAngle', frame.vars.dAngle[0])"),
+
+                #("IfGoTo", "0 < frame.vars.angle[0][0] < 360", "StartLoop"),                           # if within 0-360, fine.
+                #("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.angle"), (None, "[[0,90,0]]")),     # outside range, reset to 0 angle
+                #(None, "print('reset angle', frame.vars.angle)"),
+
+
+                (None, "from random import random"),
+                ("IfGoTo", "random() < .9995", "StartLoop"),
+
+                (None, "from panda3d.core import LPoint3f"),
+                (None, "frame.vars.tgtPos[0] = LPoint3f((random()-.5)*5, (random()-.5)*5, 0)"),
+                (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
+                (None, "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
+                (None, "print('>>>>>>>>>>set new target point', frame.vars.tgtPos[0])"),
+
+                ("GoTo", "StartLoop")
+
             ),
+            (
+                ("Label", "top"),
+                ("IfGoTo", "frame.vars.fishTag[0] == ''", "top"),
+                ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.fishTag")),
+                (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
+                (None, "print('clicked leaderFish')"),
 
-            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
-            (None, "from panda3d.core import LPoint3f"),
-            (None, "frame.vars.tgtPos[0] = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])"),
-            ("Label", "StartLoop"),
-            #(None, "print('angle', frame.vars.angle)"),
-
-            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "frame.vars.angle")),
-            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
-
-
-            # get difference from ideal distance
-
-            (None, "frame.vars.pos[0] = frame.vars.fish[0].getPos()"),
-            # get horizontal distance from target position, ignore height
-            #(None, "from math import sqrt"),
-            #(None, "frame.vars.currDist[0] = sqrt(frame.vars.pos[0][0]*frame.vars.pos[0][0]+frame.vars.pos[0][1]*frame.vars.pos[0][1])"),
-            (None, "frame.vars.currDist[0] = (frame.vars.pos[0].getXy() - frame.vars.tgtPos[0].getXy()).length()"),
-            # get change from last distance to target.  If increasing, turn faster.  If decreasing turn slower
-            # (i.e. if you're going the wrong way, turn around!
-            (None, "frame.vars.dDist[0] = round(frame.vars.currDist[0] - frame.vars.tgtDist[0], 2)"),
-            (None, "from random import random"),
-            (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * (-1 if random() > .99 and frame.vars.dDist[0] < 1 else 1)"),
-#            (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * (-1 if frame.vars.dDist[0] > 0 and frame.vars.prevDDist[0] < 0 else 1)"),
-            (None, "frame.vars.prevDDist[0] = frame.vars.dDist[0]"),
-
-            # adjust angle based on distance from ideal
-
-            (None, "frame.vars.dAngle[0] = round(frame.vars.dDist[0] * frame.vars.fudge[0], 2)"),
-            (None, "frame.vars.angle[0][0] += frame.vars.dAngle[0]"),
-            #(None, "print('dDist', frame.vars.dDist[0],' dAngle', frame.vars.dAngle[0])"),
-
-            ("IfGoTo", "abs(frame.vars.angle[0][0]) < 360", "StartLoop"),                           # if within 0-360, fine.
-            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.angle"), (None, "[[0,90,0]]")),     # outside range, reset to 0 angle
-            #(None, "print('angle', frame.vars.angle)"),
-            ("GoTo", "StartLoop")
-
-
-
-
-            # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "frame.vars.angle")),
-            # (None, "from math import pi"),      # apparently import has to be within the match case
-            # (None, "from math import cos"),     # it doesn't stick between cycles
-            # (None, "from math import sin"),
-            # (None, "frame.vars.piAngle[0] = pi/2 + pi * -2 * frame.vars.angle[0][0] / 360"),
-            # (None, "frame.vars.piAngle[0] = round(frame.vars.piAngle[0] if frame.vars.piAngle[0] < (2*pi) else frame.vars.piAngle[0] - 2*pi, 2)"),
-            # (None, "frame.vars.pos[0][0] = round(sin(frame.vars.piAngle[0])*2, 2)"),
-            # (None, "frame.vars.pos[0][1] = round(10+cos(frame.vars.piAngle[0])*2, 2)"),
-            # (None, "print('angle', frame.vars.angle[0], ' sin', round(sin(frame.vars.piAngle[0]),2), ' cos', round(cos(frame.vars.piAngle[0]),2))"),
-            # (None, "print('angle', frame.vars.angle[0], ' piAngle', frame.vars.piAngle[0], ' pos', frame.vars.pos[0])"),
-            # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos")),
-
-            # (None, "frame.vars.angle[0][0] += 1"),
-
-            #            ("Label", "Right"),
-#            (None, "frame.vars.pos[0][0] += .01"),
-#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-#            ("IfGoTo", "frame.vars.pos[0][0] < 1", "Right"),
-#
-#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[0,0,-90]]")),
-#
-#            ("Label", "Back"),
-#            (None, "frame.vars.pos[0][1] += .01"),
-#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-#            ("IfGoTo", "frame.vars.pos[0][1] < 6", "Back"),
-#
-#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[0,0,90]]")),
-#
-#            ("Label", "Left"),
-#            ("IfGoTo", "frame.vars.pos[0][0] < -1", "Front"),
-#            (None, "frame.vars.pos[0][0] -= .01"),
-#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-#            ("IfGoTo", "frame.vars.pos[0][0] > -1", "Left"),
-#
-#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[-90,0,-90]]")),
-#
-#            ("Label", "Front"),
-#            (None, "frame.vars.pos[0][1] -= .01"),
-#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-#            ("IfGoTo", "frame.vars.pos[0][1] > 5", "Front"),
-#
-#            ("GoTo", "Start"),   # Back to the top
+                ("GoTo", "top")
+            )
         )
 
         def build():
             print("Build leaderFish")
-            return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr)
+            #return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr)
+            return WyeCore.Utils.buildParallelText("TestLib", "leaderFish", TestLib.leaderFish.codeDescr)
 
         def start(stack):
             print("leaderFish object start")
-            return Wye.codeFrame(TestLib.leaderFish, stack)
+            #return Wye.codeFrame(TestLib.leaderFish, stack)
+            return TestLib.TestLib_rt.leaderFish_start_rt(stack)        # run compiled start code to build parallel code stacks
 
         def run(frame):
             #print("Run leaderFish")
-            TestLib.TestLib_rt.leaderFish_run_rt(frame)
+            #TestLib.TestLib_rt.leaderFish_run_rt(frame)
+            frame.runParallel()
 
 
     class testObj2:
@@ -606,7 +612,7 @@ class TestLib:
                     ("sound", Wye.dType.OBJECT, None))  # var 4
 
         codeDescr=(
-            (None, ("print('testObj2 case 0: start - set up object')")),
+            #(None, ("print('testObj2 case 0: start - set up object')")),
             ("TestLib.testLoader",
                 (None, "frame.vars.obj"),
                 (None, "['flyer_01.glb']"),

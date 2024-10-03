@@ -284,6 +284,35 @@ class WyeLib:
             hpr = frame.params.obj[0].getHpr()
             #print("New HPR ", hpr)
 
+        # set object to given angle
+
+    class setObjRelAngle:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("angle", Wye.dType.FLOAT_LIST, [0, 0, 0]))
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setObjAngle, stack)
+
+        # TODO - make multi-cycle
+        def run(frame):
+            # print('execute setObjAngle, params', frame.params, ' vars', frame.vars)
+
+            gObj = frame.params.obj[0]
+            vec = frame.params.angle[0]
+
+            # hpr = frame.params.obj[0].getHpr()
+            # print("Current HPR ", hpr)
+
+            #print("setObjRelAngle obj", gObj, "to", vec)
+            gObj.setHpr(gObj, vec[0], vec[1], vec[2])
+
+            hpr = frame.params.obj[0].getHpr()
+            # print("New HPR ", hpr)
 
     # set object to given color (r,g,b,a, values 0..1.0)
     class setObjColor:
