@@ -531,45 +531,41 @@ class TestLib:
                 (None, "frame.vars.box[0] = WyeCore.libs.WyeUI._geom3d([.1,.1,.1], frame.vars.tgtPos[0])"),
 
                 ("Label", "StartLoop"),
-                #(None, "print('angle', frame.vars.angle)"),
 
-                ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "frame.vars.angle")),
-                ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
+                (None,'''
+fish = frame.vars.fish[0]
+dist = (frame.vars.fish[0].getPos().getXy() - frame.vars.tgtPos[0].getXy()).length()
+if dist > 2:
+    fishHPR = fish.getHpr()     # get fish orientation
+    fish.lookAt(frame.vars.tgtPos[0])
+    tgtHPR = fish.getHpr()      # get target orientation (hack!)
+    dAngle = tgtHPR[0] - fishHPR[0]
+    if dAngle > 180:
+        dAngle = 360 - dAngle
+    if dAngle < -180:
+        dAngle = 360 + dAngle
+    moveAngle = max(min(dAngle, .5), -.5)
+    fishHPR[0] += moveAngle
+    #if -.01 > moveAngle or moveAngle > 0.1:
+    #    print("tgtHPR", round(tgtHPR[0], 1), " fishHPR", round(fishHPR[0], 1), " dAngle", round(dAngle, 1), end="")
+    #    print(" moveAngle", moveAngle, " fishHPR", fishHPR[0])
+    fish.setHpr(fishHPR)
+                '''),
+
+                #("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "frame.vars.angle")),
+               ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
 
 
-                # get difference from ideal distance
-
-                (None, "frame.vars.pos[0] = frame.vars.fish[0].getPos()"),
-                # get horizontal distance from target position, ignore height
-                (None, "frame.vars.currDist[0] = (frame.vars.pos[0].getXy() - frame.vars.tgtPos[0].getXy()).length()"),
-                # get change from last distance to target.  If increasing, turn faster.  If decreasing turn slower
-                # (i.e. if you're going the wrong way, turn around!
-                (None, "frame.vars.dDist[0] = round(frame.vars.currDist[0] - frame.vars.prevDist[0], 5)"),
-                (None, "from random import random"),
-                #(None, "frame.vars.fudge[0] = frame.vars.fudge[0] * (-1 if random() > .995 else 1)"),
-                (None, "frame.vars.prevDist[0] = frame.vars.currDist[0]"),
-                #(None, "print('dDist', frame.vars.dDist[0], ' angle', frame.vars.angle[0][0])"),
-
-                # adjust angle based on distance from ideal
-
-                (None, "frame.vars.dAngle[0] = round((frame.vars.dDist[0] + frame.vars.posStep[0]) * frame.vars.fudge[0], 5)"),
-                (None, "frame.vars.angle[0][2] = frame.vars.dAngle[0]"),
-                #(None, "print('currDist', frame.vars.currDist[0], ' dDist', frame.vars.dDist[0],' dAngle', frame.vars.dAngle[0])"),
-                #(None, "print(' dDist', frame.vars.dDist[0],' dAngle', frame.vars.dAngle[0])"),
-
-                #("IfGoTo", "0 < frame.vars.angle[0][0] < 360", "StartLoop"),                           # if within 0-360, fine.
-                #("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.angle"), (None, "[[0,90,0]]")),     # outside range, reset to 0 angle
-                #(None, "print('reset angle', frame.vars.angle)"),
 
 
                 (None, "from random import random"),
-                ("IfGoTo", "random() < .9995", "StartLoop"),
+                ("IfGoTo", "random() < .998", "StartLoop"),
 
                 (None, "from panda3d.core import LPoint3f"),
                 (None, "frame.vars.tgtPos[0] = LPoint3f((random()-.5)*5, (random()-.5)*5, 0)"),
                 (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
                 (None, "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
-                (None, "print('>>>>>>>>>>set new target point', frame.vars.tgtPos[0])"),
+                #(None, "print('>>>>>>>>>>set new target point', frame.vars.tgtPos[0])"),
 
                 ("GoTo", "StartLoop")
 
@@ -584,6 +580,30 @@ class TestLib:
                 ("GoTo", "top")
             )
         )
+
+        #                # get difference from ideal distance
+
+        #                (None, "frame.vars.pos[0] = frame.vars.fish[0].getPos()"),
+        #                # get horizontal distance from target position, ignore height
+        #                (None, "frame.vars.currDist[0] = (frame.vars.pos[0].getXy() - frame.vars.tgtPos[0].getXy()).length()"),
+        #                # get change from last distance to target.  If increasing, turn faster.  If decreasing turn slower
+        #                # (i.e. if you're going the wrong way, turn around!
+        #                (None, "frame.vars.dDist[0] = round(frame.vars.currDist[0] - frame.vars.prevDist[0], 5)"),
+        #                (None, "from random import random"),
+        #                #(None, "frame.vars.fudge[0] = frame.vars.fudge[0] * (-1 if random() > .995 else 1)"),
+        #                (None, "frame.vars.prevDist[0] = frame.vars.currDist[0]"),
+        #                #(None, "print('dDist', frame.vars.dDist[0], ' angle', frame.vars.angle[0][0])"),
+
+        #                # adjust angle based on distance from ideal
+
+        #                (None, "frame.vars.dAngle[0] = round((frame.vars.dDist[0] + frame.vars.posStep[0]) * frame.vars.fudge[0], 5)"),
+        #                (None, "frame.vars.angle[0][2] = frame.vars.dAngle[0]"),
+        #                #(None, "print('currDist', frame.vars.currDist[0], ' dDist', frame.vars.dDist[0],' dAngle', frame.vars.dAngle[0])"),
+        #                #(None, "print(' dDist', frame.vars.dDist[0],' dAngle', frame.vars.dAngle[0])"),
+
+        #                #("IfGoTo", "0 < frame.vars.angle[0][0] < 360", "StartLoop"),                           # if within 0-360, fine.
+        #                #("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.angle"), (None, "[[0,90,0]]")),     # outside range, reset to 0 angle
+        #                #(None, "print('reset angle', frame.vars.angle)"),
 
         def build():
             print("Build leaderFish")

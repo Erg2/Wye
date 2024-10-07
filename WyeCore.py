@@ -508,6 +508,7 @@ class WyeCore(Wye.staticObj):
                 print("'", obj, "' has no known tags")
 
         # this function finds the closest object to the camera that has been hit by our ray
+        # TODO it does not take camera orientation into account. Fails once the camera moves
         def getObjectHit(self, mpos):  # mpos is the position of the mouse on the screen
             global render
 
