@@ -505,7 +505,7 @@ class TestLib:
                     ("posStep", Wye.dType.FLOAT, .03),
                     ("angle", Wye.dType.FLOAT_LIST, [0.,0.,0.]),
                     ("dAngle", Wye.dType.FLOAT, 1.),
-                    ("fudge", Wye.dType.FLOAT, 10),
+                    ("fudge", Wye.dType.FLOAT, .5),
                     ("piAngle", Wye.dType.FLOAT, 0.),
                     ("sound", Wye.dType.OBJECT, None),
                     ("box", Wye.dType.OBJECT, None),
@@ -528,10 +528,12 @@ class TestLib:
                 (None, "frame.vars.tgtPos[0] = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])"),
                 (None, "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
                 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "[[0,90,0]]")),
-                (None, "frame.vars.box[0] = WyeCore.libs.WyeUI._geom3d([.1,.1,.1], frame.vars.tgtPos[0])"),
+                #(None, "frame.vars.box[0] = WyeCore.libs.WyeUI._geom3d([.1,.1,.1], frame.vars.tgtPos[0])"),
+                (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
 
                 ("Label", "StartLoop"),
 
+                # Test code block
                 (None,'''
 fish = frame.vars.fish[0]
 dist = (frame.vars.fish[0].getPos().getXy() - frame.vars.tgtPos[0].getXy()).length()
@@ -544,7 +546,7 @@ if dist > 2:
         dAngle = 360 - dAngle
     if dAngle < -180:
         dAngle = 360 + dAngle
-    moveAngle = max(min(dAngle, .5), -.5)
+    moveAngle = max(min(dAngle, frame.vars.fudge[0]), -frame.vars.fudge[0])
     fishHPR[0] += moveAngle
     #if -.01 > moveAngle or moveAngle > 0.1:
     #    print("tgtHPR", round(tgtHPR[0], 1), " fishHPR", round(fishHPR[0], 1), " dAngle", round(dAngle, 1), end="")
@@ -559,13 +561,13 @@ if dist > 2:
 
 
                 (None, "from random import random"),
-                ("IfGoTo", "random() < .998", "StartLoop"),
+                ("IfGoTo", "random() < .999", "StartLoop"),
 
                 (None, "from panda3d.core import LPoint3f"),
-                (None, "frame.vars.tgtPos[0] = LPoint3f((random()-.5)*5, (random()-.5)*5, 0)"),
+                (None, "frame.vars.tgtPos[0] = LPoint3f((random()-.5)*5, (random()-.5)*5 + 10, 0)"),
                 (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
-                (None, "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
-                #(None, "print('>>>>>>>>>>set new target point', frame.vars.tgtPos[0])"),
+                #(None, "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
+                #(None, "print('new target point', frame.vars.tgtPos[0])"),
 
                 ("GoTo", "StartLoop")
 
@@ -575,6 +577,7 @@ if dist > 2:
                 ("IfGoTo", "frame.vars.fishTag[0] == ''", "top"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.fishTag")),
                 (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
+                (None, "frame.vars.sound[0].play()"),
                 (None, "print('clicked leaderFish')"),
 
                 ("GoTo", "top")
