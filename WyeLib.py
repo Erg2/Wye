@@ -362,7 +362,7 @@ class WyeLib:
     class delay:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
-        paramDescr = (("startCt", Wye.dType.INTEGER),)
+        paramDescr = (("startCt", Wye.dType.INTEGER), Wye.access.REFERENCE)
         varDescr = (("delayCt", Wye.dType.INTEGER, 0),)
         codeDescr = ()
         code = None

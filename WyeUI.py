@@ -26,6 +26,8 @@ class WyeUI(Wye.staticObj):
     SELECTED_COLOR = (0,.4,0,1)
     LABEL_COLOR = (1, 0, 0, 1)
     BACKGROUND_COLOR = (0, 0, 0, 1)
+    HEADER_COLOR = (1,1,1,1)
+    CURSOR_COLOR = (1,1,1,1)
 
     # create a piece of geometry
     # this is a real class that gets instantiated
@@ -719,6 +721,9 @@ class WyeUI(Wye.staticObj):
                     ("topGObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj (to hang sub dlgs off)
                     ("bgndGObj", Wye.dType.OBJECT, None),                   # 7 background card
                     )
+
+        _cursor = None      # 3d TextInput cursor
+
         def start(stack):
             frame = Wye.codeFrame(WyeUI.Dialog, stack)
             # give frame unique lists
@@ -726,6 +731,10 @@ class WyeUI(Wye.staticObj):
             frame.vars.dlgTags[0] = []         # not used
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "blinked"
+
+            # If we don't have a text input cursor, make one
+            if WyeUI.Dialog._cursor is None:
+                WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.1, .1, .5], [0,0,0])
             return frame
 
         def run(frame):
@@ -742,9 +751,9 @@ class WyeUI(Wye.staticObj):
                     if parent is None:
                         #print("Dialog title", frame.params.title[0]," pos", frame.params.position)
                         #print("  params.inputs", frame.params.inputs)
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(1, 1, 1, 1), pos=frame.params.position, scale=(.2, .2, .2))
+                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(WyeUI.HEADER_COLOR), pos=frame.params.position, scale=(.2, .2, .2))
                     else:
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(1, 1, 1, 1), pos=frame.params.position,
+                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(WyeUI.HEADER_COLOR), pos=frame.params.position,
                                                    scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
 
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
@@ -779,12 +788,12 @@ class WyeUI(Wye.staticObj):
 
                     # display OK, Cancel buttons
                     pos[2] -= 1.5
-                    txt = WyeUI._label3d("OK", color=(1, 1, 1, 1), pos=tuple(pos), scale=(1,1,1), parent=dlgHeader.getNodePath())
+                    txt = WyeUI._label3d("OK", color=(WyeUI.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1), parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
                     pos[0] += 2.5
                     #print("Dialog Cancel btn at", pos)
-                    txt = WyeUI._label3d("Cancel", color=(1, 1, 1, 1), pos=tuple(pos),
+                    txt = WyeUI._label3d("Cancel", color=(WyeUI.HEADER_COLOR), pos=tuple(pos),
                                                       scale=(1,1,1), parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
@@ -834,6 +843,7 @@ class WyeUI(Wye.staticObj):
             prevSel = frame.vars.currInp[0]      # get current selection
             # if tag is input field in this dialog, select it
             closing = False
+            activeTextInput = False
 
             # if clicked on input field
             if tag in frame.vars.inpTags[0]:        # do we have a matching tag?
@@ -850,7 +860,9 @@ class WyeUI(Wye.staticObj):
                         inWidg = inFrm.vars.gWidget[0]
                         #print("  found ix", ix, " inWdg", inWidg, " Set selected color")
                         inWidg.setColor(WyeUI.SELECTED_COLOR)        # set input background to "has focus" color
+                        WyeUI.Dialog.drawCursor(inFrm)
                         frame.vars.currInp[0] = ix           # save as current input focus
+                        activeTextInput = True
 
                     # button callback
                     elif inFrm.verb is WyeUI.InputButton:
@@ -935,12 +947,13 @@ class WyeUI(Wye.staticObj):
             # (if closing dialog, nevermind)
             if prevSel > -1 and prevSel != frame.vars.currInp[0] and not closing:
                 inFrm =frame.params.inputs[0][prevSel][0]
-                if inFrm.verb is WyeUI.InputText:
+                if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputButton:
                     inWidg = inFrm.vars.gWidget[0]
-                    inWidg.setColor((.2,.2,.2, 1))
-                elif inFrm.verb is WyeUI.InputButton:
-                    inWidg = inFrm.vars.gWidget[0]
-                    inWidg.setColor((.2,.2,.2, 1))
+                    inWidg.setColor(WyeUI.TEXT_COLOR)
+
+            if not activeTextInput:
+                WyeUI.Dialog._cursor.path.hide()
+
 
         def doKey(frame, key):
             # if we have an input with focus
@@ -964,14 +977,19 @@ class WyeUI(Wye.staticObj):
                         if insPt > 0:
                             insPt -= 1
                             inFrm.vars.currInsPt[0] = insPt
+                        # place insert cursor
+                        WyeUI.Dialog.drawCursor(inFrm)
                         return
                     elif key == Wye.ctlKeys.RIGHT:
                         if insPt < len(txt):
                             insPt += 1
                             inFrm.vars.currInsPt[0] = insPt
+                        # place insert cursor
+                        WyeUI.Dialog.drawCursor(inFrm)
                         return
                     # printable key, insert it in the string
                     else:
+
                         txt = preTxt + key + postTxt
                         insPt += 1
                         inFrm.vars.currInsPt[0] = insPt        # set text insert point after new char
@@ -979,6 +997,31 @@ class WyeUI(Wye.staticObj):
                     inWidg = inFrm.vars.gWidget[0]
                     #print("  set text", txt," ix", ix, " txtWidget", inWidg)
                     inWidg.setText(txt)
+
+                    # place insert cursor
+                    WyeUI.Dialog.drawCursor(inFrm)
+
+        # draw text cursor at InputText frame's currInsPt
+        def drawCursor(inFrm):
+            insPt = inFrm.vars.currInsPt[0]
+            xOff = 0    # init x offset to cursor
+            inWidg = inFrm.vars.gWidget[0]
+            wPos = inWidg.getPos()
+            print("text pos", wPos, " cursor pos", insPt)
+            WyeUI.Dialog._cursor.path.reparentTo(inWidg._nodePath)
+            WyeUI.Dialog._cursor.path.setColor(WyeUI.CURSOR_COLOR)
+            # If cursor not at beginning of text in widget,
+            # get length of text before insert pt by generating temp text obj
+            # and getting its width
+            if insPt > 0:
+                txt = inWidg.getText()
+                tmp = TextNode("tempNode")
+                tmp.setText(txt[0:insPt])
+                tFrm = tmp.getFrameActual()
+                xOff = tFrm[1] - tFrm[0]
+            # put cursor after current character
+            WyeUI.Dialog._cursor.path.setPos(xOff, -.1, .2)
+            WyeUI.Dialog._cursor.path.show()
 
 
     # dropdown menu

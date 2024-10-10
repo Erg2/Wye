@@ -167,6 +167,7 @@ class TestLib:
         varDescr = (("doitBtn", Wye.dType.OBJECT, None),                # 0
                     ("doitId", Wye.dType.STRING, ""),                   # 1
                     ("retChar", Wye.dType.STRING, ""),                   # 2
+                    ("dlgStatus", Wye.dType.INTEGER, 0)
                     )
 
         codeDescr = (
@@ -175,10 +176,11 @@ class TestLib:
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 ("Label", "ClickLoop"),
-                #(None, "print('fishbutton: waitclick')"),
+                (None, "print('fishbutton: waitclick')"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                #(None, "print('fishbutton: open fishDialog')"),
-                ("TestLib.fishDialog",),
+                (None, "print('fishbutton: open fishDialog')"),
+                ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.dlgStatus"), ("TestLib.fishDialog",(None, "[1]"))),
+                (None, "print('passed fishDialog, loop')"),
                 ("GoTo", "ClickLoop")
             )
 
@@ -199,7 +201,7 @@ class TestLib:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         #autoStart = True
-        paramDescr = ()
+        paramDescr = (("dummy", Wye.dType.INTEGER,  Wye.access.REFERENCE),)
         varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),
                     ("XAngleID", Wye.dType.STRING, ""),
                     ("XAngle", Wye.dType.STRING, "0"),
