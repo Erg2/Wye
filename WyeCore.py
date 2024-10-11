@@ -968,6 +968,9 @@ class WyeCore(Wye.staticObj):
                             print("buildLib Startobj: ", classStr)
                             WyeCore.World.startObjs.append(classStr)
 
+                        # add pointer from verb class to parent library class
+                        setattr(val, "library", libClass)
+
             # if there's code to build for the library, doit
             if doBuild:
                 codeStr += parFnStr         # tack parallel code on end of regular code
@@ -981,7 +984,10 @@ class WyeCore(Wye.staticObj):
                         print("%2d "%lnIx, ln)
                         lnIx += 1
 
+                # compile the runtime class containing methods for all the verb runtimes
                 code = compile(codeStr, "<string>", "exec")
+                # exec the lib method - contains one line to setattr the lib_rt class to the library
+                # so all the verb functions are available at runtime
                 exec(code, {libName:libClass, "Wye":Wye, "WyeCore":WyeCore, "WyeUI":WyeCore.libs.WyeUI})
 
         # do we already have a UI input focus manager?
@@ -996,6 +1002,16 @@ class WyeCore(Wye.staticObj):
 
         def getFocusManager():
             return WyeCore.focusManager
+
+        # return all the verbs in a library
+        def getLibEntries(lib):
+            retLst = []
+            for attr in dir(lib):
+                if attr != "__class__":
+                    verb = getattr(lib, attr)
+                    if inspect.isclass(verb) and hasattr(verb, "mode"):
+                        retLst.append(verb)
+            return retLst
 
     # Very special verb  used to execute parallel code
     # Each parallel stream needs its own stack and its own parent frame with stack pointer.

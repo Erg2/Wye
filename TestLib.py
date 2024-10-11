@@ -4,6 +4,7 @@ import sys
 import traceback
 from direct.showbase import Audio3DManager
 import math
+import inspect      # for debugging
 
 class TestLib:
 
@@ -14,50 +15,108 @@ class TestLib:
         cType = Wye.cType.VERB
         mode = Wye.mode.MULTI_CYCLE
 
-    class doitButton:
+    class libDialog:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        # autoStart = True
+        paramDescr = (("retStat", Wye.dType.INTEGER, Wye.access.REFERENCE),
+                      ("coord", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
+        varDescr = (("dlgFrm", Wye.dType.OBJECT, [None]),
+                    ("selVerb", Wye.dType.INTEGER, -1),)
+
+        def start(stack):
+            return Wye.codeFrame(TestLib.libDialog, stack)
+
+        def run(frame):
+            match (frame.PC):
+                case 0:
+                    print("libDialog, put up lib dropdown")
+                    lib = WyeCore.libs.TestLib
+                    dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
+
+                    dlgFrm.params.retVal = frame.params.retStat
+                    dlgFrm.params.title = [lib.__name__]
+                    dlgFrm.params.position = frame.params.coord[0]
+                    dlgFrm.params.parent = [None]
+                    frame.vars.dlgFrm[0] = dlgFrm
+
+                    # build dialog frame params list of input frames
+                    attrIx = 0
+                    # print("_displayLib: process library", lib.__name__)
+                    for attr in dir(lib):
+                        if attr != "__class__":
+                            verb = getattr(lib, attr)
+                            if inspect.isclass(verb):
+                                # print("lib", lib.__name__, " verb", verb.__name__)
+                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                                dlgFrm.params.inputs[0].append([btnFrm])
+
+                                txt = lib.__name__ + "." + verb.__name__
+                                btnFrm.params.frame = [None]
+                                btnFrm.params.parent = [None]  # return value
+                                btnFrm.params.label = [txt]  # button label is verb name
+                                btnFrm.params.verb = [WyeCore.libs.WyeUI.DropdownCallback]  # button callback
+                                btnFrm.params.optData = [(attrIx, frame)]  # button data - offset to button
+                                WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+                                attrIx += 1
+
+                    # WyeUI.Dialog.run(dlgFrm)
+                    frame.SP.append(dlgFrm)     # push dialog so it runs next cycle
+
+                    frame.PC += 1               # on return from dialog, run next case
+
+                case 1:
+                    frame.SP.pop()  # remove dialog frame from stack
+                    print("libDialog: returned status", frame.params.retStat[0]) # Wye.status.tostring(frame.))
+                    frame.status = Wye.status.SUCCESS  # done
+                    #frame.PC = 0    # do it again
+
+
+    class libButton:
         cType = Wye.cType.OBJECT
         autoStart = True
         mode = Wye.mode.PARALLEL
         parTermType = Wye.parTermType.FIRST_FAIL
         dataType = Wye.dType.NONE
         paramDescr = ()
-        varDescr = (("doitBtn", Wye.dType.OBJECT, None),                # 0
+        varDescr = (("libButton", Wye.dType.OBJECT, None),                # 0
                     ("doitId", Wye.dType.STRING, ""),                   # 1
                     ("retChar", Wye.dType.STRING, ""),                   # 2
+                    ("retStat", Wye.dType.INTEGER, -1),                   # 2
                     )
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._label3d(text='Display Library',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
-                (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
-                #(None, "print('doitbutton frame0: loaded button & id vars')"),
+                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._label3d(text='Display Library',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
+                #(None, "print('libButton frame0: loaded button & id vars')"),
                 (None, "frame.status = Wye.status.SUCCESS")
             ),
             (
                 ("Label", "ClickLoop"),
-                #(None, "print('doitbutton stream1: waitclick. status=', Wye.status.tostring(frame.status))"),
+                (None, "print('libButton wait for click')"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                (None, "WyeCore.libs.WyeUI._displayLib(frame, (1,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
-                ("Label", "Dummy"),         # display pushed a dialog frame.  label creates a case
-                (None, "frame.SP.pop()"),   # when return from stack, pop display's pushed frame
+                (None, "print('libButton put up lib dialog')"),
+                ("WyeCore.libs.TestLib.libDialog", (None, "frame.vars.retStat"), (None, "[(.1,10,.8)]")),
+                (None, "print('libButton returned from libDialog. retVal', frame.vars.retStat)"),
                 ("GoTo", "ClickLoop"),
-                ("Label", "Done"),
             ),
         #    (
         #        ("Label", "TextLoop"),
-        #        #(None, "print('doitbutton stream2: wait for char')"),
+        #        #(None, "print('libButton stream2: wait for char')"),
         #        ("WyeCore.libs.WyeLib.waitChar", (None, "frame.vars.retChar"), (None, "frame.vars.doitId")),
-        #        (None, "print('doitButton stream2: received char', frame.vars.retChar[0])"),
+        #        (None, "print('libButton stream2: received char', frame.vars.retChar[0])"),
         #        ("GoTo", "TextLoop")
         #    )
         )
 
         def build():
             #print("Testlib2 build testCompiledPar")
-            return WyeCore.Utils.buildParallelText("TestLib", "doitButton", TestLib.doitButton.codeDescr)
+            return WyeCore.Utils.buildParallelText("TestLib", "libButton", TestLib.libButton.codeDescr)
 
         def start(stack):
-            return TestLib.TestLib_rt.doitButton_start_rt(stack)        # run compiled start code to build parallel code stacks
+            return TestLib.TestLib_rt.libButton_start_rt(stack)        # run compiled start code to build parallel code stacks
 
         def run(frame):
             frame.runParallel()      # run compiled run code
@@ -99,10 +158,10 @@ class TestLib:
 
     class testDialog:
         mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.STRING
-        #autoStart = True
+        dataType = Wye.dType.INTEGER
+        autoStart = True
         paramDescr = ()
-        varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),
+        varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
                     ("Title", Wye.dType.INTEGER, "Test Dialog 3"),
                     ("txt1ID", Wye.dType.STRING, ""),
                     ("text1Val", Wye.dType.STRING, ""),
@@ -116,7 +175,7 @@ class TestLib:
 
         codeDescr = (
             #(None, "print('testDialog, startup - create param list ')"),
-            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
+            ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
              (None, "frame.vars.Title"),                        # title
              (None, "(-3,8,1)"),                                # position
              (None, "[None]"),                                  # parent
@@ -159,12 +218,12 @@ class TestLib:
 
     class fishDlgButton:
         cType = Wye.cType.OBJECT
-        autoStart = True
+        #autoStart = True
         mode = Wye.mode.MULTI_CYCLE
         #parTermType = Wye.parTermType.FIRST_FAIL
         dataType = Wye.dType.NONE
         paramDescr = ()
-        varDescr = (("doitBtn", Wye.dType.OBJECT, None),                # 0
+        varDescr = (("libButton", Wye.dType.OBJECT, None),                # 0
                     ("doitId", Wye.dType.STRING, ""),                   # 1
                     ("retChar", Wye.dType.STRING, ""),                   # 2
                     ("dlgStatus", Wye.dType.INTEGER, 0)
@@ -172,15 +231,16 @@ class TestLib:
 
         codeDescr = (
 
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._label3d(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
-                (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
-                #(None, "print('doitbutton frame0: loaded button & id vars')"),
+                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._label3d(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
+                #(None, "print('libButton frame0: loaded button & id vars')"),
+
                 ("Label", "ClickLoop"),
                 (None, "print('fishbutton: waitclick')"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
                 (None, "print('fishbutton: open fishDialog')"),
                 ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.dlgStatus"), ("TestLib.fishDialog",(None, "[1]"))),
-                (None, "print('passed fishDialog, loop')"),
+                (None, "print('passed fishDialog. Status', frame.vars.dlgStatus[0], ' go loop')"),
                 ("GoTo", "ClickLoop")
             )
 
@@ -197,12 +257,13 @@ class TestLib:
             TestLib.TestLib_rt.fishDlgButton_run_rt(frame)
 
 
+            
     class fishDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         #autoStart = True
         paramDescr = (("dummy", Wye.dType.INTEGER,  Wye.access.REFERENCE),)
-        varDescr = (("tstDlg3ID", Wye.dType.OBJECT, None),
+        varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
                     ("XAngleID", Wye.dType.STRING, ""),
                     ("XAngle", Wye.dType.STRING, "0"),
                     ("YAngleID", Wye.dType.STRING, ""),
@@ -214,7 +275,7 @@ class TestLib:
 
         codeDescr = (
             ("Label", "PopDialog"),
-            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
+            ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
              (None, "['Fish Angle Dialog']"),                        # title
              (None, "(-3,8,1)"),                                # position
              (None, "[None]"),                                  # parent
