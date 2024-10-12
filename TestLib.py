@@ -88,7 +88,7 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._label3d(text='Display Library',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._label3d(text='Display Library',color=(1,1,1,1), pos=(1.5,10,2), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
                 #(None, "print('libButton frame0: loaded button & id vars')"),
                 (None, "frame.status = Wye.status.SUCCESS")
@@ -98,7 +98,7 @@ class TestLib:
                 (None, "print('libButton wait for click')"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
                 (None, "print('libButton put up lib dialog')"),
-                ("WyeCore.libs.TestLib.libDialog", (None, "frame.vars.retStat"), (None, "[(.1,10,.8)]")),
+                ("WyeCore.libs.TestLib.libDialog", (None, "frame.vars.retStat"), (None, "[(1.5,10,1.5)]")),
                 (None, "print('libButton returned from libDialog. retVal', frame.vars.retStat)"),
                 ("GoTo", "ClickLoop"),
             ),
@@ -177,7 +177,7 @@ class TestLib:
             #(None, "print('testDialog, startup - create param list ')"),
             ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
              (None, "frame.vars.Title"),                        # title
-             (None, "(-3,8,1)"),                                # position
+             (None, "(-1,11,1)"),                                # position
              (None, "[None]"),                                  # parent
              ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
               (None, "['TextLabel']"),
@@ -256,12 +256,31 @@ class TestLib:
             #print("Run testDialog")
             TestLib.TestLib_rt.fishDlgButton_run_rt(frame)
 
+    class UpdateCallback:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("count", Wye.dType.INTEGER, 0),)
 
-            
+        def start(stack):
+            return Wye.codeFrame(TestLib.UpdateCallback, stack)
+
+        def run(frame):
+            print("UpdateCallback data=", frame.eventData, " verb", frame.eventData[1].verb.__name__)
+
+            dlgFrm = frame.eventData[1]
+            # print("UpdateCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
+            print("Update x", int(dlgFrm.vars.XAngle[0]), " y", int(dlgFrm.vars.YAngle[0]), " z", int(dlgFrm.vars.ZAngle[0]))
+            dlgFrm.vars.target[0].vars.obj[0].setHpr(int(dlgFrm.vars.XAngle[0]), int(dlgFrm.vars.YAngle[0]), int(dlgFrm.vars.ZAngle[0]))
+            print("  hpr", dlgFrm.vars.target[0].vars.obj[0].getHpr())
+
+
+
+    # find and set angle of wiggle fish (testObj2)
     class fishDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
-        #autoStart = True
+        autoStart = True
         paramDescr = (("dummy", Wye.dType.INTEGER,  Wye.access.REFERENCE),)
         varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
                     ("XAngleID", Wye.dType.STRING, ""),
@@ -270,11 +289,24 @@ class TestLib:
                     ("YAngle", Wye.dType.STRING, "0"),
                     ("ZAngleID", Wye.dType.STRING, ""),
                     ("ZAngle", Wye.dType.STRING, "0"),
-                    ("target", Wye.dType.OBJECT, None)
-        )
+                    ("updateBtnId", Wye.dType.OBJECT, None),
+                    ("dlgButton", Wye.dType.OBJECT, None),
+                    ("doitId", Wye.dType.OBJECT, None),
+                    ("target", Wye.dType.OBJECT, None),
+                    )
 
         codeDescr = (
+
+
+            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
+            (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
+
             ("Label", "PopDialog"),
+            ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
+
+            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"),
+             (None, "[WyeCore.World.findActiveObj('testObj2')]")),
+            ("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
             ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
              (None, "['Fish Angle Dialog']"),                        # title
              (None, "(-3,8,1)"),                                # position
@@ -291,13 +323,15 @@ class TestLib:
               (None, "['ZAngle']"),
               (None, "frame.vars.ZAngle")
               ),
-
+             ("WyeUI.InputButton", (None, "frame.vars.updateBtnId"),
+              (None, "['Update']"),
+              (None, "[TestLib.UpdateCallback]"),
+              (None, "[frame]")
+              ),
              ),
-
-            #(None, "print('fishDialog XAngle', frame.vars.XAngle, ' YAngle', frame.vars.YAngle, ' ZAngle', frame.vars.ZAngle)"),
-            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"), (None, "[WyeCore.World.findActiveObj('testObj2')]")),
-            ("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
-            #(None, "print('testObj2 frm', frame.vars.target[0].verb.__name__)"),
+            (None, "print('fishDialog closed. status', frame.vars.dlgRetVal[0])"),
+            ("IfGoTo", "frame.vars.dlgRetVal[0] != Wye.status.SUCCESS", "PopDialog"),
+            (None, "print('fishDialog OK, set angle')"),
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.target[0].vars.obj"),
                 (None, "[[int(frame.vars.XAngle[0]),int(frame.vars.YAngle[0]),int(frame.vars.ZAngle[0])]]")),
             ("GoTo", "PopDialog")
@@ -316,7 +350,7 @@ class TestLib:
             TestLib.TestLib_rt.fishDialog_run_rt(frame)
 
 
-    # generated code for
+
     # load model passed in at loc, scale passed in
     class testLoader:
         mode = Wye.mode.SINGLE_CYCLE
@@ -349,7 +383,7 @@ class TestLib:
             TestLib.TestLib_rt.testLoader_run_rt(frame)
 
 
-    # when clicked, spin object back and forth
+    # when clicked, use spin to wiggle object back and forth
     class clickWiggle:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
@@ -468,6 +502,7 @@ class TestLib:
                 case _:
                     frame.status = Wye.status.SUCCESS
 
+    # school of fish chase leaderFish
     class fish:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
@@ -548,7 +583,7 @@ class TestLib:
             #print("Run fish")
             TestLib.TestLib_rt.fish_run_rt(frame)
 
-
+    # fish chases target
     class leaderFish:
         cType = Wye.cType.OBJECT
         mode = Wye.mode.PARALLEL
@@ -686,7 +721,7 @@ if dist > 2:
             #TestLib.TestLib_rt.leaderFish_run_rt(frame)
             frame.runParallel()
 
-
+    # Put up "clickWiggle" fish
     class testObj2:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True

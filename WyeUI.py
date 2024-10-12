@@ -349,7 +349,8 @@ class WyeUI(Wye.staticObj):
             self._nodePath.setPos(pos)
             self._nodePath.setScale(scale)
 
-            #self._nodePath.setBillboardPointWorld(0.)           # always face the camera
+            self._nodePath.setBillboardPointWorld(0.)           # always face the camera
+            self._nodePath.setBillboardAxis()
             self._nodePath.setLightOff()                        # unaffected by world lighting
             self._nodePath.setColor(bg)
 
@@ -490,6 +491,7 @@ class WyeUI(Wye.staticObj):
         # else return False (someone else can use it)
         def doSelect(id):
             status = False
+            WyeUI.Dialog.hideCursor()
             for hier in WyeUI.FocusManager.dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
                 #print("FocusManager doSelect hier=", hier)
                 if len(hier) > 0:
@@ -593,7 +595,7 @@ class WyeUI(Wye.staticObj):
     # text input field
     class InputText:
         mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.dType.OBJECT
+        dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
                       ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
@@ -634,7 +636,7 @@ class WyeUI(Wye.staticObj):
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
             txt = WyeUI._label3d(frame.vars.currVal[0], WyeUI.LABEL_COLOR,
-                                 pos=(pos[0] + width, pos[1], pos[2]), scale=(1, 1, 1), parent=dlgHeader.getNodePath())
+                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
             txt.setColor(WyeUI.TEXT_COLOR)
             # print("    Dialog inWdg", txt)
             gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
@@ -841,6 +843,10 @@ class WyeUI(Wye.staticObj):
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
                         frame.vars.clickedBtns[0].remove(btnFrm)
 
+                    # rotate toward viewer
+                    #topPath = frame.vars.topGObj[0].getNodePath()
+                    #topPath.lookAt
+
         def doSelect(frame, tag):
             #print("Dialog doSelect: ", frame.verb, " tag", tag)
             prevSel = frame.vars.currInp[0]      # get current selection
@@ -919,12 +925,13 @@ class WyeUI(Wye.staticObj):
                             #print("input", ii, " frame", inFrm, "\n", WyeCore.Utils.frameToString(inFrm))
                             #print("input old val '"+ inFrm.params[2][0]+ "' replaced with '"+ inFrm.vars[1][0]+"'")
                             inFrm.params.value[0] = inFrm.vars.currVal[0]
-                    setattr(frame.params, frame.firstParamName(), Wye.status.SUCCESS)
+                    frame.params.retVal[0] = Wye.status.SUCCESS
+                    print("doSelect OK button, return status", frame.params.retVal)
 
                 # else is Cancel button
                 else:
                     #print("Dialog", frame.params[1][0], " Cancel Button pressed")
-                    setattr(frame.params, frame.firstParamName(), Wye.status.FAIL)
+                    frame.params.retVal[0] =  Wye.status.FAIL
 
                 # Done with dialog
                 frame.status = Wye.status.SUCCESS
@@ -944,6 +951,7 @@ class WyeUI(Wye.staticObj):
                     wdg.removeNode()
 
                 closing = True
+                print("Closing dialog.  Status", frame.status)
 
             # selected graphic tag not recognized as a control in this dialog
             else:
@@ -957,8 +965,9 @@ class WyeUI(Wye.staticObj):
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(WyeUI.TEXT_COLOR)
 
-            if not activeTextInput:
-                WyeUI.Dialog._cursor.path.hide()
+            #TODO figure out how to do this only if NO dialog has a text box with focus
+            #if not activeTextInput:
+            #    WyeUI.Dialog._cursor.path.hide()
 
 
         def doKey(frame, key):
@@ -995,7 +1004,7 @@ class WyeUI(Wye.staticObj):
                         return
                     # not special control, if printable insert it in the string
                     else:
-                        if key.isalnum():  # ignore unprintble keys
+                        if key.isalnum() or key == ' ':  # ignore unprintble keys
                             txt = preTxt + key + postTxt
                             insPt += 1
                             inFrm.vars.currInsPt[0] = insPt        # set text insert point after new char
@@ -1004,16 +1013,18 @@ class WyeUI(Wye.staticObj):
                     inWidg = inFrm.vars.gWidget[0]
                     #print("  set text", txt," ix", ix, " txtWidget", inWidg)
                     inWidg.setText(txt)
-
+                    # update return value
+                    inFrm.params.value[0] = inFrm.vars.currVal[0]
                     # place insert cursor
                     WyeUI.Dialog.drawCursor(inFrm)
 
         # draw text cursor at InputText frame's currInsPt
         def drawCursor(inFrm):
             insPt = inFrm.vars.currInsPt[0]
-            xOff = 0    # init x offset to cursor
+
             inWidg = inFrm.vars.gWidget[0]
-            wPos = inWidg.getPos()
+            #wPos = inWidg.getPos()
+            xOff = 0
             WyeUI.Dialog._cursor.path.reparentTo(inWidg._nodePath)
             WyeUI.Dialog._cursor.path.setColor(WyeUI.CURSOR_COLOR)
             # If cursor not at beginning of text in widget,
@@ -1025,10 +1036,13 @@ class WyeUI(Wye.staticObj):
                 tmp.setText(txt[0:insPt])
                 tFrm = tmp.getFrameActual()
                 xOff = tFrm[1] - tFrm[0]
+            print("drawCurso xOff", xOff)
             # put cursor after current character
             WyeUI.Dialog._cursor.path.setPos(xOff + .01, -.1, .3)
             WyeUI.Dialog._cursor.path.show()
 
+        def hideCursor():
+            WyeUI.Dialog._cursor.path.hide()
 
     # dropdown menu
     # subclass of Dialog so FocusManager can handle focus properly

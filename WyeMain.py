@@ -28,6 +28,8 @@ class PandaRunner(ShowBase):
         taskMgr.add(WyeCore.World.worldRun)
         WyeCore.base = self      # world needs this to do panda3d stuff
 
+        WyeCore.base.disableMouse() # turn off default mouse move
+
         #props = WindowProperties()
         #props.setTitle("Wye V" + version)
         #WyeCore.base.win.requestProperties(props)
