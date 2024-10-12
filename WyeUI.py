@@ -793,13 +793,14 @@ class WyeUI(Wye.staticObj):
 
                     # display OK, Cancel buttons
                     pos[2] -= 1.5
-                    txt = WyeUI._label3d("OK", color=(WyeUI.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1), parent=dlgHeader.getNodePath())
+                    txt = WyeUI._label3d("OK", color=(WyeUI.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
+                                         parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
-                    pos[0] += 2.5
+                    pos[0] += 2.5       # shove Cancel to the right of OK
                     #print("Dialog Cancel btn at", pos)
-                    txt = WyeUI._label3d("Cancel", color=(WyeUI.HEADER_COLOR), pos=tuple(pos),
-                                                      scale=(1,1,1), parent=dlgHeader.getNodePath())
+                    txt = WyeUI._label3d("Cancel", color=(WyeUI.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
+                                        parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
                     # done setup, go to next case to process events
@@ -914,7 +915,13 @@ class WyeUI(Wye.staticObj):
             # if clicked on OK or Cancel
             elif tag in frame.vars.dlgTags[0]:
                 # if is OK button
-                if tag == frame.vars.dlgTags[0][0]:
+                if tag == frame.vars.dlgTags[0][-1]:    # if cancel button
+                    frame.params.retVal[0] = Wye.status.FAIL
+                    print("Dialog", frame.params.title[0], " Cancel Button pressed, return status", frame.params.retVal)
+
+
+                # else is OK button
+                else:
                     #print("Dialog", frame.params[1][0], " OK Button pressed")
                     nInputs = (len(frame.params.inputs[0]))
                     #print("dialog ok: nInputs",nInputs," inputs",frame.params.inputs[0])
@@ -927,11 +934,6 @@ class WyeUI(Wye.staticObj):
                             inFrm.params.value[0] = inFrm.vars.currVal[0]
                     frame.params.retVal[0] = Wye.status.SUCCESS
                     print("doSelect OK button, return status", frame.params.retVal)
-
-                # else is Cancel button
-                else:
-                    #print("Dialog", frame.params[1][0], " Cancel Button pressed")
-                    frame.params.retVal[0] =  Wye.status.FAIL
 
                 # Done with dialog
                 frame.status = Wye.status.SUCCESS
@@ -1036,7 +1038,6 @@ class WyeUI(Wye.staticObj):
                 tmp.setText(txt[0:insPt])
                 tFrm = tmp.getFrameActual()
                 xOff = tFrm[1] - tFrm[0]
-            print("drawCurso xOff", xOff)
             # put cursor after current character
             WyeUI.Dialog._cursor.path.setPos(xOff + .01, -.1, .3)
             WyeUI.Dialog._cursor.path.show()
@@ -1046,7 +1047,7 @@ class WyeUI(Wye.staticObj):
 
     # dropdown menu
     # subclass of Dialog so FocusManager can handle focus properly
-    # Returns tuple: (zero based selected row index, verb)
+    # Returns index of selected line or -1
     class DropDown(Dialog):
         def start(stack):
             frame = Wye.codeFrame(WyeUI.DropDown, stack)
@@ -1061,27 +1062,15 @@ class WyeUI(Wye.staticObj):
         def run(frame):
             match frame.PC:
                 case 0:  # Start up case - set up all the fields
-                    print("DropDown frame ", frame.tostring())
-                    frame.params.retVal[0] = (-1, None)  # set default return value
+                    #print("DropDown frame ", frame.tostring())
+                    frame.params.retVal[0] = -1           # set default return value
                     parent = frame.params.parent[0]
                     WyeUI.FocusManager.openDialog(frame, parent)  # pass parent, if any
                     # print("DropDown put frame in param[0][0]", frame)
                     frame.vars.position = (frame.params.position)  # save display position
                     # return frame
 
-                    lines = frame.params.inputs[0]
-                    #print("DropDown lines ", len(lines), ":", lines)
-                    # first line becomes header that rest hang off of
-#                    if parent is None:
-#                        dlgHeader = WyeUI._label3d(text=lines[0], color=(1, 1, 0, 1), pos=frame.params.position,
-#                                                   scale=(.2, .2, .2))
-#                    else:
-#                        dlgHeader = WyeUI._label3d(text=lines[0], color=(1, 1, 0, 1), pos=frame.params.position,
-#                                                   scale=(1, 1, 1), parent=parent.vars.topGObj[0].getNodePath())
-#
-#                    frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for DropDown delete
-#                    frame.vars.topGObj[0] = dlgHeader  # save graphic for parenting sub dialogs
-#                    frame.vars.inpTags[0][dlgHeader.getTag()] = 0  # tag => inp index dictionary (both label and entry fields point to inp frm)
+                    # handle scale and parent obj, if any
                     if parent is None:
                         dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(WyeUI.HEADER_COLOR), pos=frame.params.position, scale=(.2, .2, .2))
                     else:
@@ -1109,6 +1098,7 @@ class WyeUI(Wye.staticObj):
 
                         setattr(inFrm, "parentFrame", frame)
 
+                        # tell input to display itself.  Collect returned objects to close when dlg closes
                         if inFrm.verb in [WyeUI.InputLabel, WyeUI.InputButton]:
                             for lbl in inFrm.verb.display(inFrm, dlgHeader, pos):  # displays label, updates pos, returns selection tags
                                 frame.vars.inpTags[0][lbl] = ii
@@ -1116,19 +1106,14 @@ class WyeUI(Wye.staticObj):
                         else:
                             print("Dialog: Error. Only Label and Button allowed in dropdown", inFrm.verb.__class__)
 
+                    # Cancel button
+                    pos[2] -= 1.5
+                    #print("Dialog Cancel btn at", pos)
+                    txt = WyeUI._label3d("Cancel", color=(WyeUI.HEADER_COLOR), pos=tuple(pos),
+                                                      scale=(1,1,1), parent=dlgHeader.getNodePath())
+                    frame.vars.dlgWidgets[0].append(txt)
+                    frame.vars.dlgTags[0].append(txt.getTag())
 
-#                    nLines = len(lines)
-#                    if nLines > 1:
-#                        for ii in range(1, nLines):
-#                            pos[2] -= 1.5
-#                            lbl = WyeUI._label3d(lines[ii], (1, 1, 0, 1), pos=tuple(pos),
-#                                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
-#                            frame.vars.dlgWidgets[0].append(lbl)  # save graphic widget for deleting on DropDown close
-#                            frame.vars.inpTags[0][lbl.getTag()] = ii  # tag => inp index dictionary (both label and entry fields point to inp frm)
-#
-#                    # done setup, go to next case to process events
-#                    frame.PC += 1
-#
                     # make a background for entire DropDown
                     if parent is None:
                         scMult = 5  # no parent, everything has been scaled by .2
@@ -1151,13 +1136,14 @@ class WyeUI(Wye.staticObj):
                     cardPath.reparentTo(dlgNodePath)
                     cardPath.setPos((-.5, .1, 1.2 - ht))
 
+
                     frame.PC += 1
 
                 case 1:
                     #print("DropDown case 1")
                     # if click event, callback set status to selected row, clean up dialog
                     if frame.vars.currInp[0] > -1:
-                        print("DropDown got click event.  CurrInp", frame.vars.currInp[0], " ")
+                        #print("DropDown got click event.  CurrInp", frame.vars.currInp[0], " ")
                         frame.params.retVal[0] = frame.vars.currInp[0]
                         # remove dialog from active dialog list
                         WyeUI.FocusManager.closeDialog(frame)

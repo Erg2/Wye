@@ -30,7 +30,7 @@ class TestLib:
         def run(frame):
             match (frame.PC):
                 case 0:
-                    print("libDialog, put up lib dropdown")
+                    #print("libDialog, put up lib dropdown")
                     lib = WyeCore.libs.TestLib
                     dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
 
@@ -95,11 +95,11 @@ class TestLib:
             ),
             (
                 ("Label", "ClickLoop"),
-                (None, "print('libButton wait for click')"),
+                #(None, "print('libButton wait for click')"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                (None, "print('libButton put up lib dialog')"),
+                #(None, "print('libButton put up lib dialog')"),
                 ("WyeCore.libs.TestLib.libDialog", (None, "frame.vars.retStat"), (None, "[(1.5,10,1.5)]")),
-                (None, "print('libButton returned from libDialog. retVal', frame.vars.retStat)"),
+                #(None, "print('libButton returned from libDialog. retVal', frame.vars.retStat)"),
                 ("GoTo", "ClickLoop"),
             ),
         #    (
@@ -266,13 +266,13 @@ class TestLib:
             return Wye.codeFrame(TestLib.UpdateCallback, stack)
 
         def run(frame):
-            print("UpdateCallback data=", frame.eventData, " verb", frame.eventData[1].verb.__name__)
+            #print("UpdateCallback data=", frame.eventData, " verb", frame.eventData[1].verb.__name__)
 
             dlgFrm = frame.eventData[1]
             # print("UpdateCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
-            print("Update x", int(dlgFrm.vars.XAngle[0]), " y", int(dlgFrm.vars.YAngle[0]), " z", int(dlgFrm.vars.ZAngle[0]))
+            #print("Update x", int(dlgFrm.vars.XAngle[0]), " y", int(dlgFrm.vars.YAngle[0]), " z", int(dlgFrm.vars.ZAngle[0]))
             dlgFrm.vars.target[0].vars.obj[0].setHpr(int(dlgFrm.vars.XAngle[0]), int(dlgFrm.vars.YAngle[0]), int(dlgFrm.vars.ZAngle[0]))
-            print("  hpr", dlgFrm.vars.target[0].vars.obj[0].getHpr())
+            #print("  hpr", dlgFrm.vars.target[0].vars.obj[0].getHpr())
 
 
 
@@ -329,9 +329,9 @@ class TestLib:
               (None, "[frame]")
               ),
              ),
-            (None, "print('fishDialog closed. status', frame.vars.dlgRetVal[0])"),
+            #(None, "print('fishDialog closed. status', frame.vars.dlgRetVal[0])"),
             ("IfGoTo", "frame.vars.dlgRetVal[0] != Wye.status.SUCCESS", "PopDialog"),
-            (None, "print('fishDialog OK, set angle')"),
+            #(None, "print('fishDialog OK, set angle')"),
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.target[0].vars.obj"),
                 (None, "[[int(frame.vars.XAngle[0]),int(frame.vars.YAngle[0]),int(frame.vars.ZAngle[0])]]")),
             ("GoTo", "PopDialog")
@@ -572,11 +572,11 @@ class TestLib:
         )
 
         def build():
-            print("Build fish")
+            #print("Build fish")
             return WyeCore.Utils.buildCodeText("fish", TestLib.fish.codeDescr)
 
         def start(stack):
-            print("fish object start")
+            #print("fish object start")
             return Wye.codeFrame(TestLib.fish, stack)
 
         def run(frame):
@@ -676,7 +676,7 @@ if dist > 2:
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.fishTag")),
                 (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
                 (None, "frame.vars.sound[0].play()"),
-                (None, "print('clicked leaderFish')"),
+                #(None, "print('clicked leaderFish')"),
 
                 ("GoTo", "top")
             )
@@ -707,12 +707,12 @@ if dist > 2:
         #                #(None, "print('reset angle', frame.vars.angle)"),
 
         def build():
-            print("Build leaderFish")
+            #print("Build leaderFish")
             #return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr)
             return WyeCore.Utils.buildParallelText("TestLib", "leaderFish", TestLib.leaderFish.codeDescr)
 
         def start(stack):
-            print("leaderFish object start")
+            #print("leaderFish object start")
             #return Wye.codeFrame(TestLib.leaderFish, stack)
             return TestLib.TestLib_rt.leaderFish_start_rt(stack)        # run compiled start code to build parallel code stacks
 

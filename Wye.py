@@ -44,7 +44,7 @@ class Wye:
     class status:
         CONTINUE = 0
         SUCCESS = 1
-        FAIL = 2
+        FAIL = -1
 
         def tostring(status):        # static print function
             match status:
