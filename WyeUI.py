@@ -1098,9 +1098,10 @@ class WyeUI(Wye.staticObj):
                         print("verb is", inFrm.verb.__name__)
                         if inFrm.verb is WyeUI.InputInteger:
                             if key in "-0123456789":
-                                txt = preTxt + key + postTxt
-                                insPt += 1
-                                inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
+                                if key != '-' or insPt == 0:
+                                    txt = preTxt + key + postTxt
+                                    insPt += 1
+                                    inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
 
                         elif key.isalnum() or key == ' ':  # ignore unprintble keys
                             txt = preTxt + key + postTxt
