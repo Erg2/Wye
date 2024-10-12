@@ -75,7 +75,7 @@ class TestLib:
 
     class libButton:
         cType = Wye.cType.OBJECT
-        #autoStart = True
+        autoStart = True
         mode = Wye.mode.PARALLEL
         parTermType = Wye.parTermType.FIRST_FAIL
         dataType = Wye.dType.NONE
@@ -284,11 +284,11 @@ class TestLib:
         paramDescr = (("dummy", Wye.dType.INTEGER,  Wye.access.REFERENCE),)
         varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
                     ("XAngleID", Wye.dType.STRING, ""),
-                    ("XAngle", Wye.dType.INTEGER, 0),
+                    ("XAngle", Wye.dType.STRING, "0"),
                     ("YAngleID", Wye.dType.STRING, ""),
-                    ("YAngle", Wye.dType.INTEGER, 0),
+                    ("YAngle", Wye.dType.STRING, "0"),
                     ("ZAngleID", Wye.dType.STRING, ""),
-                    ("ZAngle", Wye.dType.INTEGER, 0),
+                    ("ZAngle", Wye.dType.STRING, "0"),
                     ("updateBtnId", Wye.dType.OBJECT, None),
                     ("dlgButton", Wye.dType.OBJECT, None),
                     ("doitId", Wye.dType.OBJECT, None),
@@ -311,15 +311,15 @@ class TestLib:
              (None, "['Fish Angle Dialog']"),                        # title
              (None, "(-3,8,1)"),                                # position
              (None, "[None]"),                                  # parent
-             ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
+             ("WyeUI.InputText", (None, "frame.vars.XAngleID"),   # inputs (variable length)
               (None, "['XAngle']"),
               (None, "frame.vars.XAngle")
               ),
-             ("WyeUI.InputInteger", (None, "frame.vars.YAngleID"),
+             ("WyeUI.InputText", (None, "frame.vars.YAngleID"),
               (None, "['YAngle']"),
               (None, "frame.vars.YAngle")
               ),
-             ("WyeUI.InputInteger", (None, "frame.vars.ZAngleID"),
+             ("WyeUI.InputText", (None, "frame.vars.ZAngleID"),
               (None, "['ZAngle']"),
               (None, "frame.vars.ZAngle")
               ),

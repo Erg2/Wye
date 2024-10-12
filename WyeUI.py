@@ -13,9 +13,12 @@ from panda3d.core import *
 #from direct.showbase import Audio3DManager
 
 #for 3d geometry (input cursor)
-from direct.showbase.ShowBase import ShowBase
+#from direct.showbase.ShowBase import ShowBase
+
+from functools import partial
 
 from direct.showbase.DirectObject import DirectObject
+from pandac.PandaModules import MouseButton
 
 # 3d UI element library
 class WyeUI(Wye.staticObj):
@@ -386,7 +389,39 @@ class WyeUI(Wye.staticObj):
         #def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
         #    label = WyeUI._label3d(text, color, pos, scale, bg)
 
+    class CameraControl(DirectObject):
+        def __init__(self):
+            self.m1Down = False
+            self.m2Down = False
+            self.m3Down = False
 
+            self.accept('mouse1', self.mouseEvt)
+            self.accept('mouse2', self.mouseEvt)
+            self.accept('mouse3', self.mouseEvt)
+            self.accept('mouse1-up', self.mouseEvt)
+            self.accept('mouse2-up', self.mouseEvt)
+            self.accept('mouse3-up', self.mouseEvt)
+            self.accept('wheel-up', partial(self.mouseWheel, 1))
+            self.accept('wheel-down', partial(self.mouseWheel, -1))
+
+
+        def mouseEvt(self):
+            global base
+            evt = WyeCore.base.mouseWatcherNode.getMouse()
+            self.m1Down = base.mouseWatcherNode.isButtonDown(MouseButton.one())
+            self.m2Down = base.mouseWatcherNode.isButtonDown(MouseButton.two())
+            self.m3Down = base.mouseWatcherNode.isButtonDown(MouseButton.three())
+            print("CameraControl mouseEvt: m1Down", self.m1Down, " m2Down", self.m2Down, " m3Down", self.m3Down)
+
+        def mouseMove(self, x, y):
+            #print("CameraControl mousemove:", x, ",", y)
+            if self.m1Down:
+                pass
+            elif self.m2Down:
+                pass
+
+        def mouseWheel(self, dir):
+            pass
 
     # Widget focus manager singleton
     # Maintains a list of dialog hierarchies where the most recently added member of each hierarchy is the only one
@@ -402,30 +437,30 @@ class WyeUI(Wye.staticObj):
     #
     class FocusManager:
         dialogHierarchies = []          # list of open dialog hierarchies (dialog frame lists)
-        _mouseHandler = None
+        #_mouseHandler = None
 
         shiftDown = False
         ctlDown = False
 
         # Mouse event delivery requires an instantiated class
-        class _MouseHandler(DirectObject):
-            def __init__(self):
-                #print("WyeUI FocusManager openDialog set mouse event")
-                self.accept('mouse1', self.mouseEvt)
+        #class _MouseHandler(DirectObject):
+        #    def __init__(self):
+        #        #print("WyeUI FocusManager openDialog set mouse event")
+        #        self.accept('mouse1', self.mouseEvt)
 
-                ## reference - events
-                # "escape", "f" + "1-12"(e.g.
-                # "f1", "f2", ...
-                # "f12"), "print_screen",
-                # "scroll_lock", "backspace", "insert", "home", "page_up", "num_lock",
-                # "tab", "delete", "end", "page_down", "caps_lock", "enter", "arrow_left",
-                # "arrow_up", "arrow_down", "arrow_right", "shift", "lshift", "rshift",
-                # "control", "alt", "lcontrol", "lalt", "space", "ralt", "rcontrol"
-                ## end reference
+        #        ## reference - events
+        #        # "escape", "f" + "1-12"(e.g.
+        #        # "f1", "f2", ...
+        #        # "f12"), "print_screen",
+        #        # "scroll_lock", "backspace", "insert", "home", "page_up", "num_lock",
+        #        # "tab", "delete", "end", "page_down", "caps_lock", "enter", "arrow_left",
+        #        # "arrow_up", "arrow_down", "arrow_right", "shift", "lshift", "rshift",
+        #        # "control", "alt", "lcontrol", "lalt", "space", "ralt", "rcontrol"
+        #        ## end reference
 
-            def mouseEvt(self):
-                evt = WyeCore.base.mouseWatcherNode.getMouse()
-                #print("FocusManager mouseEvt:", evt)
+        #    def mouseEvt(self):
+        #        evt = WyeCore.base.mouseWatcherNode.getMouse()
+        #        #print("FocusManager mouseEvt:", evt)
 
 
         # find dialogFrame in leaf nodes of dialog hierarchies
@@ -655,6 +690,59 @@ class WyeUI(Wye.staticObj):
         def setText(frame, text):
             frame.vars.frame[0][1].setText(text)
 
+    class InputInteger(InputText):
+
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
+                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
+                      ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
+        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, 0),           # list of objects to delete on exit
+                    ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
+                    ("currVal", Wye.dType.STRING, ""),                    # current string value
+                    ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
+                    ("gWidget", Wye.dType.OBJECT, None),                  # stashed graphic widget
+                    ("Cursor", Wye.dType.OBJECT, None)                    # input cursor graphic widget
+                    )
+
+        def start(stack):
+            frame = Wye.codeFrame(WyeUI.InputInteger, stack)
+            frame.vars.gWidgetStack[0] = []
+            return frame
+
+        def display(frame, dlgHeader, pos):
+
+            pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
+
+            gTags = []      # clickable graphic object tags assoc with this input
+            lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
+                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
+
+            #tmp = WyeUI._geom3d([.1,.1,1])
+            #render.attachNewNode(tmp.node)
+
+            frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
+
+            # add tag, input index to dictionary
+            gTags.append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
+            # offset 3d input field right past end of 3d label
+            lblGFrm = lbl.text.getFrameActual()
+            width = (lblGFrm[1] - lblGFrm[0]) + .5
+            txt = WyeUI._label3d(str(frame.vars.currVal[0]), WyeUI.LABEL_COLOR,
+                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
+            txt.setColor(WyeUI.TEXT_COLOR)
+            # print("    Dialog inWdg", txt)
+            gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
+            frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
+            frame.vars.gWidget[0] = txt
+
+            return gTags
+
+        def setLabel(frame, text):
+            frame.vars.frame[0][0].setText(text)
+
+        def setText(frame, text):
+            frame.vars.frame[0][1].setText(str(text))
 
 
     # text input field
@@ -782,12 +870,12 @@ class WyeUI(Wye.staticObj):
 
                         setattr(inFrm, "parentFrame", frame)
 
-                        if inFrm.verb in [WyeUI.InputLabel, WyeUI.InputText, WyeUI.InputButton]:
+                        if inFrm.verb in [WyeUI.InputLabel, WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputButton]:
                             for lbl in inFrm.verb.display(inFrm, dlgHeader, pos):  # displays label, updates pos, returns selection tags
                                 frame.vars.inpTags[0][lbl] = ii
 
                         else:
-                            print("Dialog: Error. Unknown input verb", inFrm.verb.__class__)
+                            print("Dialog: Error. Unknown input verb", inFrm.verb.__name__)
 
                     #print("Dialog has input widgets", frame.vars.inpTags[0])
 
@@ -866,7 +954,7 @@ class WyeUI(Wye.staticObj):
                     inFrm = frame.params.inputs[0][ix][0]
 
                     # if is text input make it selected
-                    if inFrm.verb is WyeUI.InputText:
+                    if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
                         inWidg = inFrm.vars.gWidget[0]
                         #print("  found ix", ix, " inWdg", inWidg, " Set selected color")
                         inWidg.setColor(WyeUI.SELECTED_COLOR)        # set input background to "has focus" color
@@ -928,7 +1016,7 @@ class WyeUI(Wye.staticObj):
                     for ii in range(nInputs):
                         inFrm = frame.params.inputs[0][ii][0]
                         # for any text inputs, copy working string to return string
-                        if inFrm.verb is WyeUI.InputText:
+                        if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
                             #print("input", ii, " frame", inFrm, "\n", WyeCore.Utils.frameToString(inFrm))
                             #print("input old val '"+ inFrm.params[2][0]+ "' replaced with '"+ inFrm.vars[1][0]+"'")
                             inFrm.params.value[0] = inFrm.vars.currVal[0]
@@ -963,7 +1051,7 @@ class WyeUI(Wye.staticObj):
             # (if closing dialog, nevermind)
             if prevSel > -1 and prevSel != frame.vars.currInp[0] and not closing:
                 inFrm =frame.params.inputs[0][prevSel][0]
-                if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputButton:
+                if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputButton]:
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(WyeUI.TEXT_COLOR)
 
@@ -977,8 +1065,9 @@ class WyeUI(Wye.staticObj):
             ix = frame.vars.currInp[0]
             if ix >= 0:
                 inFrm = frame.params.inputs[0][ix][0]
-                if inFrm.verb is WyeUI.InputText:
-                    txt = inFrm.vars.currVal[0]
+                if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
+
+                    txt = str(inFrm.vars.currVal[0])    # handle either text or integer
                     insPt = inFrm.vars.currInsPt[0]
                     preTxt = txt[:insPt]
                     postTxt = txt[insPt:]
@@ -1006,7 +1095,14 @@ class WyeUI(Wye.staticObj):
                         return
                     # not special control, if printable insert it in the string
                     else:
-                        if key.isalnum() or key == ' ':  # ignore unprintble keys
+                        print("verb is", inFrm.verb.__name__)
+                        if inFrm.verb is WyeUI.InputInteger:
+                            if key in "-0123456789":
+                                txt = preTxt + key + postTxt
+                                insPt += 1
+                                inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
+
+                        elif key.isalnum() or key == ' ':  # ignore unprintble keys
                             txt = preTxt + key + postTxt
                             insPt += 1
                             inFrm.vars.currInsPt[0] = insPt        # set text insert point after new char
@@ -1035,9 +1131,9 @@ class WyeUI(Wye.staticObj):
             if insPt > 0:
                 txt = inWidg.getText()
                 tmp = TextNode("tempNode")
-                tmp.setText(txt[0:insPt])
+                tmp.setText(txt[0:insPt]+'.')  # '.' - hack to force trailing spaces to be included
                 tFrm = tmp.getFrameActual()
-                xOff = tFrm[1] - tFrm[0]
+                xOff = tFrm[1] - tFrm[0] - .2  # get width of text. Subtract off trailing period hack
             # put cursor after current character
             WyeUI.Dialog._cursor.path.setPos(xOff + .01, -.1, .3)
             WyeUI.Dialog._cursor.path.show()

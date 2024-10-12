@@ -106,6 +106,7 @@ class WyeCore(Wye.staticObj):
         codeDescr = ()
 
         keyHandler = None
+        mouseHandler = None
 
         # universe specific
         libList = []
@@ -218,6 +219,8 @@ class WyeCore(Wye.staticObj):
                 # set up for text input events
                 WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
 
+                WyeCore.World.mouseHandler = WyeCore.libs.WyeUI.CameraControl()
+
                 # create picker object for object selection events
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
@@ -239,6 +242,12 @@ class WyeCore(Wye.staticObj):
                 #         print("     frame for obj ", frm.verb.__name__)
                 #     stkNum += 1
                 # # END DEBUG
+
+                if WyeCore.World.mouseHandler:
+                    if base.mouseWatcherNode.hasMouse():
+                        x = base.mouseWatcherNode.getMouseX()
+                        y = base.mouseWatcherNode.getMouseY()
+                        WyeCore.World.mouseHandler.mouseMove(x,y)
 
                 # debug
                 stackNum = 0
