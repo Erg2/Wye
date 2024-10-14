@@ -401,8 +401,7 @@ class WyeUI(Wye.staticObj):
             self.accept('mouse1-up', self.mouseEvt)
             self.accept('mouse2-up', self.mouseEvt)
             self.accept('mouse3-up', self.mouseEvt)
-            self.accept('wheel-up', partial(self.mouseWheel, 1))
-            self.accept('wheel-down', partial(self.mouseWheel, -1))
+
 
 
         def mouseEvt(self):
@@ -422,8 +421,6 @@ class WyeUI(Wye.staticObj):
                 # move viewpoint
                 pass
 
-        def mouseWheel(self, dir):
-            pass
 
     # Widget focus manager singleton
     # Maintains a list of dialog hierarchies where the most recently added member of each hierarchy is the only one
@@ -438,37 +435,44 @@ class WyeUI(Wye.staticObj):
     # focus.  For now, simplicity wins over optimization
     #
     class FocusManager:
-        dialogHierarchies = []          # list of open dialog hierarchies (dialog frame lists)
+
+        _dialogHierarchies = []          # list of open dialog hierarchies (dialog frame lists)
         #_mouseHandler = None
 
-        shiftDown = False
-        ctlDown = False
+        _shiftDown = False
+        _ctlDown = False
 
-        # Mouse event delivery requires an instantiated class
-        #class _MouseHandler(DirectObject):
-        #    def __init__(self):
-        #        #print("WyeUI FocusManager openDialog set mouse event")
-        #        self.accept('mouse1', self.mouseEvt)
+        _activeDialog = None
+        _mouseHandler = None
 
-        #        ## reference - events
-        #        # "escape", "f" + "1-12"(e.g.
-        #        # "f1", "f2", ...
-        #        # "f12"), "print_screen",
-        #        # "scroll_lock", "backspace", "insert", "home", "page_up", "num_lock",
-        #        # "tab", "delete", "end", "page_down", "caps_lock", "enter", "arrow_left",
-        #        # "arrow_up", "arrow_down", "arrow_right", "shift", "lshift", "rshift",
-        #        # "control", "alt", "lcontrol", "lalt", "space", "ralt", "rcontrol"
-        #        ## end reference
+        class MouseHandler(DirectObject):
+            def __init__(self):
+                print("FocusManager create MouseHandler")
+                self.accept('wheel-up', partial(self.mouseWheel, 1))
+                self.accept('wheel-down', partial(self.mouseWheel, -1))
 
-        #    def mouseEvt(self):
-        #        evt = WyeCore.base.mouseWatcherNode.getMouse()
-        #        #print("FocusManager mouseEvt:", evt)
+                ## reference - events
+                # "escape", "f" + "1-12"(e.g.
+                # "f1", "f2", ...
+                # "f12"), "print_screen",
+                # "scroll_lock", "backspace", "insert", "home", "page_up", "num_lock",
+                # "tab", "delete", "end", "page_down", "caps_lock", "enter", "arrow_left",
+                # "arrow_up", "arrow_down", "arrow_right", "shift", "lshift", "rshift",
+                # "control", "alt", "lcontrol", "lalt", "space", "ralt", "rcontrol"
+                ## end reference
+
+            # if there's an active dialog, pass it mousewheel events
+            def mouseWheel(self, dir):
+                print("mouseWheel", dir)
+                if WyeUI.FocusManager._activeDialog:
+                    print("MouseHandler: mouseWheel", dir)
+                    WyeUI.FocusManager._activeDialog.doWheel(dir)
 
 
         # find dialogFrame in leaf nodes of dialog hierarchies
         def findDialogHier(dialogFrame):
             retHier = None
-            for hier in WyeUI.FocusManager.dialogHierarchies:
+            for hier in WyeUI.FocusManager._dialogHierarchies:
                 # if found it, add to hierarchy list
                 if len(hier) > 0 and hier[-1] == dialogFrame:
                     retHier = hier
@@ -487,17 +491,17 @@ class WyeUI(Wye.staticObj):
             # if no focus manager set to catch selected objects, fix that
             if WyeCore.Utils.getFocusManager() is None:
                 WyeCore.Utils.setFocusManager(WyeUI.FocusManager)
-                #WyeUI.FocusManager._mouseHandler = WyeUI.FocusManager._MouseHandler()
-
-                # sign up for events
+                
+            if WyeUI.FocusManager._mouseHandler is None:
+                WyeUI.FocusManager._mouseHandler = WyeUI.FocusManager.MouseHandler()
 
             # connect to parent frame
             dialogFrame.parentFrame = parentFrame
 
             # if starting new dialog hierarchy
             if parentFrame is None:
-                WyeUI.FocusManager.dialogHierarchies.append([dialogFrame])
-                #print("Wye UI FocusManager openDialog: no parent, add dialog", dialogFrame," to hierarchy list", WyeUI.FocusManager.dialogHierarchies)
+                WyeUI.FocusManager._dialogHierarchies.append([dialogFrame])
+                #print("Wye UI FocusManager openDialog: no parent, add dialog", dialogFrame," to hierarchy list", WyeUI.FocusManager._dialogHierarchies)
 
             # if has parent then add it to the parent's hierarchy
             else:
@@ -506,9 +510,9 @@ class WyeUI(Wye.staticObj):
                 if not hier is None:
                     hier.append(dialogFrame)
                 else:
-                    print("Error: WyeUI FocusManager openDialog - did not find parent dialog", parentFrame, " in", WyeUI.FocusManager.dialogHierarchies)
+                    print("Error: WyeUI FocusManager openDialog - did not find parent dialog", parentFrame, " in", WyeUI.FocusManager._dialogHierarchies)
 
-            #print("FocusManager openDialog", WyeUI.FocusManager.dialogHierarchies)
+            #print("FocusManager openDialog", WyeUI.FocusManager._dialogHierarchies)
 
 
         # Remove the given dialog from the display hierarchy
@@ -519,26 +523,31 @@ class WyeUI(Wye.staticObj):
             del hier[-1]    # remove dialog from hierarchy
             if len(hier) == 0:  # if that was the last dialog, remove hierarchy too
                 #print(" hier now empty, remove it")
-                WyeUI.FocusManager.dialogHierarchies.remove(hier)
-            #print("FocusManager closeDialog complete: hierarchies", WyeUI.FocusManager.dialogHierarchies)
+                WyeUI.FocusManager._dialogHierarchies.remove(hier)
+            #print("FocusManager closeDialog complete: hierarchies", WyeUI.FocusManager._dialogHierarchies)
+            if dialogFrame == WyeUI.FocusManager._activeDialog:
+                WyeUI.FocusManager._activeDialog = None
 
-        # User clicked on object
+            # User clicked on object
         # call each leaf dialog to see if obj belongs to it.
         # If so, return True (we used it)
         # else return False (someone else can use it)
         def doSelect(id):
             status = False
             WyeUI.Dialog.hideCursor()
-            for hier in WyeUI.FocusManager.dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
+            WyeUI.FocusManager._activeDialog = None
+            for hier in WyeUI.FocusManager._dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
                 #print("FocusManager doSelect hier=", hier)
                 if len(hier) > 0:
                     frm = hier[-1]
                     #print("FocusManager doSelect", frm, ",", frm.params.title[0], ",", id)
                     if not frm.parentFrame is None:
                         if frm.parentFrame.verb.doSelect(frm, id):
+                            WyeUI.FocusManager._activeDialog = frm.parentFrame
                             status = True
                     else:
                         if frm.verb.doSelect(frm, id):
+                            WyeUI.FocusManager._activeDialog = frm.parentFrame
                             status = True
             return status
 
@@ -548,24 +557,24 @@ class WyeUI(Wye.staticObj):
             match key:
                 # check for control codes
                 case Wye.ctlKeys.CTL_DOWN:
-                    WyeUI.FocusManager.ctlDown = True
+                    WyeUI.FocusManager._ctlDown = True
                     return True
                 case Wye.ctlKeys.CTL_UP:
-                    WyeUI.FocusManager.ctlDown = False
+                    WyeUI.FocusManager._ctlDown = False
                     return True
                 case Wye.ctlKeys.SHIFT_DOWN:
-                    WyeUI.FocusManager.shiftDown = True
+                    WyeUI.FocusManager._shiftDown = True
                     return True
                 case Wye.ctlKeys.SHIFT_UP:
-                    WyeUI.FocusManager.shiftDown = True
+                    WyeUI.FocusManager._shiftDown = True
                     return True
                 # any other key
                 case _:
-                    if isinstance(key, str) and 'a' <= key and key <= 'z' and WyeUI.FocusManager.shiftDown:
+                    if isinstance(key, str) and 'a' <= key and key <= 'z' and WyeUI.FocusManager._shiftDown:
                         key = key.upper()
                     # pass key to next lowest (?) in every dialog hierarchy
                     # key will be handled by the one that currently has focus
-                    for hier in WyeUI.FocusManager.dialogHierarchies:
+                    for hier in WyeUI.FocusManager._dialogHierarchies:
                         if len(hier) > 0:
                             frm = hier[-1]
                             #print("FocusManager doKey", frm, " ,", key)
@@ -796,7 +805,8 @@ class WyeUI(Wye.staticObj):
             frame.vars.frame[0][0].setText(text)
 
     # Dialog object.
-    # Display and run input fields
+    # Display dialog and fields
+    # Update fields on events
     class Dialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.OBJECT
@@ -818,6 +828,7 @@ class WyeUI(Wye.staticObj):
                     )
 
         _cursor = None      # 3d TextInput cursor
+        _activeInputInteger = None  # used for wheel up/down events
 
         def start(stack):
             frame = Wye.codeFrame(WyeUI.Dialog, stack)
@@ -832,6 +843,8 @@ class WyeUI(Wye.staticObj):
                 WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0,0,0])
             return frame
 
+        # first time, draw dialog and all its fields
+        # after that, process any buttons being flashed to show user they were clicked on
         def run(frame):
             match frame.PC:
                 case 0:     # Start up case - set up all the fields
@@ -934,13 +947,13 @@ class WyeUI(Wye.staticObj):
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
                         frame.vars.clickedBtns[0].remove(btnFrm)
 
-
+        # process field selection event (user clicked on a tag, figure out which field and do its thing)
         def doSelect(frame, tag):
             #print("Dialog doSelect: ", frame.verb, " tag", tag)
             prevSel = frame.vars.currInp[0]      # get current selection
             # if tag is input field in this dialog, select it
             closing = False
-            activeTextInput = False
+            WyeUI.Dialog._activeInputInteger = None
 
             # if clicked on input field
             if tag in frame.vars.inpTags[0]:        # do we have a matching tag?
@@ -959,7 +972,9 @@ class WyeUI(Wye.staticObj):
                         inWidg.setColor(WyeUI.SELECTED_COLOR)        # set input background to "has focus" color
                         WyeUI.Dialog.drawCursor(inFrm)
                         frame.vars.currInp[0] = ix           # save as current input focus
-                        activeTextInput = True
+
+                        if inFrm.verb is WyeUI.InputInteger:
+                            WyeUI.Dialog._activeInputInteger = inFrm
 
                     # button callback
                     elif inFrm.verb is WyeUI.InputButton:
@@ -1054,11 +1069,19 @@ class WyeUI(Wye.staticObj):
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(WyeUI.TEXT_COLOR)
 
-            #TODO figure out how to do this only if NO dialog has a text box with focus
-            #if not activeTextInput:
-            #    WyeUI.Dialog._cursor.path.hide()
+        # inc/dec InputInteger on wheel event
+        def doWheel(dir):
+            print("doWheel")
+            if not WyeUI.Dialog._activeInputInteger is None:
+                print("doWheel update input")
+                inFrm = WyeUI.Dialog._activeInputInteger
+                inFrm.vars.currVal[0] += dir
+                txt = str()
+                inWidg = inFrm.vars.gWidget[0]
+                inWidg.setText(txt)
+                WyeUI.Dialog.drawCursor(inFrm)
 
-
+        # update InputText/InputInteger on key event
         def doKey(frame, key):
             # if we have an input with focus
             ix = frame.vars.currInp[0]
