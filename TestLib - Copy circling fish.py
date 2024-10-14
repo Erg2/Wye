@@ -508,26 +508,26 @@ class TestLib:
             ("GoTo", "StartLoop")
 
 #            ("Label", "Right"),
-#            (None, "frame.vars.pos[0][0] += .01"),
-#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-#            ("IfGoTo", "frame.vars.pos[0][0] < 1", "Right"),
+#            (None, "frame.vars.pos[0] += .01"),
+#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos")),
+#            ("IfGoTo", "frame.vars.pos[0] < 1", "Right"),
 #
-#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[0,0,-90]]")),
+#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[0,0,-90]")),
 #
 #            ("Label", "Back"),
-#            (None, "frame.vars.pos[0][1] += .01"),
-#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-#            ("IfGoTo", "frame.vars.pos[0][1] < 6", "Back"),
+#            (None, "frame.vars.pos[0] += .01"),
+#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos")),
+#            ("IfGoTo", "frame.vars.pos[1] < 6", "Back"),
 #
-#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[0,0,90]]")),
+#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[0,0,90]")),
 #
 #            ("Label", "Left"),
-#            ("IfGoTo", "frame.vars.pos[0][0] < -1", "Front"),
-#            (None, "frame.vars.pos[0][0] -= .01"),
-#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos[0]")),
-#            ("IfGoTo", "frame.vars.pos[0][0] > -1", "Left"),
+#            ("IfGoTo", "frame.vars.pos[0] < -1", "Front"),
+#            (None, "frame.vars.pos[0] -= .01"),
+#            ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.fish"), (None, "frame.vars.pos")),
+#            ("IfGoTo", "frame.vars.pos[0] > -1", "Left"),
 #
-#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[[-90,0,-90]]")),
+#            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.fish"), (None, "[-90,0,-90]")),
 #
 #            ("Label", "Front"),
 #            (None, "frame.vars.pos[0][1] -= .01"),
@@ -570,7 +570,7 @@ class TestLib:
                 (None, "frame.vars.objTag"),
                 (None, "[0,1,0,1]")
             ),
-            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.obj"), (None, "[[-90,90,0]]")),
+            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.obj"), (None, "[-90,90,0]")),
 
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj"),(None, "[0,5,-.5]")),
             (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePew.wav')"),

@@ -3,6 +3,7 @@
 #
 # license: We don't need no stinking license
 #
+from direct.showbase.MessengerGlobal import messenger
 
 from Wye import Wye
 import inspect      # for debugging
@@ -92,6 +93,7 @@ class WyeCore(Wye.staticObj):
     picker = None   # object picker object
     base = None     # panda3d base - set by application
     focusManager = None # dialog input field focus manager
+    editor = None   # user editor of registered Wye objects
 
     lastIsNothingToRun = False
 
@@ -114,6 +116,7 @@ class WyeCore(Wye.staticObj):
         startObjs = []
         objs = []  # runnable objects
         objStacks = []  # objects run in parallel so each one gets a stack
+        objTags = {}     # map of graphic tags to object frames
 
         eventCallbackDict = {}              # dictionary of event callbacks
         repeatEventCallbackDict = {}      # dictionary of repeated event frames
@@ -128,6 +131,8 @@ class WyeCore(Wye.staticObj):
         def worldRun(task):
             global render
             global base
+
+            #messenger.toggleVerbose()      # Show all events
 
             property_names = [p for p in dir(Wye) if isinstance(getattr(Wye, p), property)]
             # print("Wye contains ", property_names)
@@ -180,6 +185,7 @@ class WyeCore(Wye.staticObj):
 
                 ###########
 
+
                 # put rep exec obj on obj list
                 WyeCore.World.objs.append(WyeCore.World.repeatEventExecObj)
                 stk = []
@@ -223,6 +229,9 @@ class WyeCore(Wye.staticObj):
 
                 # create picker object for object selection events
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
+
+                # set up editor
+                WyeCore.editor = WyeCore.libs.WyeUI.ObjEditor()
 
                 # WyeCore.picker.makePickable(_label3d)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
@@ -306,6 +315,20 @@ class WyeCore(Wye.staticObj):
                                 return frm
                 #stkIx += 1
             return None
+
+        # manage graphic object tag -> object frame list
+        def registerObjTag(tag, frame):
+            WyeCore.World.objTags[tag] = frame
+
+        def unregisterObjTag(tag):
+            if tag in WyeCore.World.objTags:
+                del WyeCore.World.objTags[tag]
+
+        def getRegisteredObj(tag):
+            if tag in WyeCore.World.objTags:
+                return WyeCore.World.objTags[tag]
+            else:
+                return None
 
         ##########################
         # Event Manager
@@ -495,6 +518,7 @@ class WyeCore(Wye.staticObj):
             self.pickedObj = None
 
             self.accept('mouse1', self.objSelectEvent)
+            self.accept('alt-mouse1', self.objSelectEvent)
 
             self.pickerEnable = True
 
@@ -555,14 +579,22 @@ class WyeCore(Wye.staticObj):
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                         # if there's a user input focus manager, call it
-                        focusStatus = False
-                        if WyeCore.focusManager:
+                        status = False
+                        if WyeCore.editor:
+                            status = WyeCore.editor.tagClicked(wyeID)
+                            #if status:
+                            #    print("objSelectEvent: Editor used tag", wyeID)
+
+                        # if editor didn't use the tag, try the dialog focus manager
+                        if WyeCore.focusManager and not status:
                             # Returns True if it used the event.
-                            focusStatus = WyeCore.focusManager.doSelect(wyeID)
+                            status = WyeCore.focusManager.doSelect(wyeID)
+                            #if status:
+                            #    print("objSelectEvent: Focus manager used tag", wyeID)
 
                         # if there isn't a focusManager or it didn't want that event, check if
                         # anyone else wants it
-                        if not focusStatus:
+                        if not status:
                             # if there's a callback for the specific object, call itF
                             if "click" in WyeCore.World.eventCallbackDict:
                                 tagDict = WyeCore.World.eventCallbackDict["click"]
@@ -579,12 +611,16 @@ class WyeCore(Wye.staticObj):
                                         frame.eventData = (wyeID, data)        # user data
                                     del tagDict[wyeID] # remove tag from dict of active callbacks
 
+                                    #print("objSelectEvent: click callback used tag", wyeID)
+
                                 # if there's a callback for 'any' click event, call it
                                 if "any" in tagDict:
                                     #print("Found ", len(tagDict[wyeID]), " callbacks for tag 'any'")
                                     for frame, data in tagDict.pop('any'):
                                         frame.PC += 1
                                         frame.eventData = (wyeID, data)
+                                    #print("objSelectEvent: 'any' callback used tag", wyeID)
+
 
                                 #else:
                                 #    print("No click events waiting")

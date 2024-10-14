@@ -411,13 +411,15 @@ class WyeUI(Wye.staticObj):
             self.m1Down = base.mouseWatcherNode.isButtonDown(MouseButton.one())
             self.m2Down = base.mouseWatcherNode.isButtonDown(MouseButton.two())
             self.m3Down = base.mouseWatcherNode.isButtonDown(MouseButton.three())
-            print("CameraControl mouseEvt: m1Down", self.m1Down, " m2Down", self.m2Down, " m3Down", self.m3Down)
+            #print("CameraControl mouseEvt: m1Down", self.m1Down, " m2Down", self.m2Down, " m3Down", self.m3Down)
 
         def mouseMove(self, x, y):
             #print("CameraControl mousemove:", x, ",", y)
             if self.m1Down:
+                # rotate viewpoing
                 pass
             elif self.m2Down:
+                # move viewpoint
                 pass
 
         def mouseWheel(self, dir):
@@ -821,9 +823,9 @@ class WyeUI(Wye.staticObj):
             frame = Wye.codeFrame(WyeUI.Dialog, stack)
             # give frame unique lists
             frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
-            frame.vars.dlgTags[0] = []         # not used
+            frame.vars.dlgTags[0] = []         # tags for OK, Cancel buttons
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
-            frame.vars.clickedBtns[0] = []     # clicked button(s) being "blinked"
+            frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
 
             # If we don't have a text input cursor, make one
             if WyeUI.Dialog._cursor is None:
@@ -917,9 +919,9 @@ class WyeUI(Wye.staticObj):
                     cardPath.setPos((-.5, .1, 1.2 - ht))
 
                 case 1:
-                    # do end of click-blink for buttons
+                    # do click-flash count down and end-flash color reset for buttons user clicked
                     delLst = []
-                    # decrement blink count.  if zero, turn off button highlight
+                    # decrement flash count.  if zero, turn off button highlight
                     for btnFrm in frame.vars.clickedBtns[0]:
                         #print("button ", btnFrm.verb.__name__, " count ", btnFrm.vars.clickCount[0])
                         btnFrm.vars.clickCount[0] -= 1
@@ -932,9 +934,6 @@ class WyeUI(Wye.staticObj):
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
                         frame.vars.clickedBtns[0].remove(btnFrm)
 
-                    # rotate toward viewer
-                    #topPath = frame.vars.topGObj[0].getNodePath()
-                    #topPath.lookAt
 
         def doSelect(frame, tag):
             #print("Dialog doSelect: ", frame.verb, " tag", tag)
@@ -989,7 +988,7 @@ class WyeUI(Wye.staticObj):
                                 else:
                                     # call once
                                     #print("doSelect call single cycle verb ", verbFrm.verb.__name__)
-                                    verbFrm.eventData = (tag, data)  # pass along user supplied event data, if any
+                                    verbFrm.eventData = (tag, data, inFrm)  # pass along user supplied event data, if any
                                     verbFrm.verb.run(verbFrm)
 
                         frame.vars.currInp[0] = -1       # no input has focus
@@ -1112,8 +1111,6 @@ class WyeUI(Wye.staticObj):
                     inWidg = inFrm.vars.gWidget[0]
                     #print("  set text", txt," ix", ix, " txtWidget", inWidg)
                     inWidg.setText(txt)
-                    # update return value
-                    inFrm.params.value[0] = inFrm.vars.currVal[0]
                     # place insert cursor
                     WyeUI.Dialog.drawCursor(inFrm)
 
@@ -1151,7 +1148,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
             frame.vars.dlgTags[0] = []         # not used
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
-            frame.vars.clickedBtns[0] = []     # clicked button(s) being "blinked"
+            frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed"
             if WyeUI.Dialog._cursor is None:
                 WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0, 0, 0])
             return frame
@@ -1269,3 +1266,25 @@ class WyeUI(Wye.staticObj):
             lst = getattr(dlgFrm.params, dlgFrm.firstParamName())
             lst[0] = rowIx
             # print("DropdownCallback data=", frame.eventData, " index = ", frame.eventData[1])
+
+    # called when user clicks on a graphic object that has a WyeID tag
+    class ObjEditor(DirectObject):
+        def __init__(self):
+            pass
+
+        # User clicked on object.  It alt key down and it's editable, open the editor
+        def tagClicked(self, wyeID):
+            #print("tagClicked")
+            # if alt key down
+            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
+                #print("Alt held down, is wyeID registered?")
+                frm = WyeCore.World.getRegisteredObj(wyeID)
+                if not frm is None:
+                    #print("wyeID", wyeID, " Is registered")
+                    print("Edit object", frm.verb.__name__)
+                    return True
+
+            # Get this far and we didn't use the tag so let someone else have it
+            return False
+
+

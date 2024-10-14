@@ -129,6 +129,39 @@ class WyeLib:
                     #frame.status = Wye.status.SUCCESS
 
 
+    # load model passed in at loc, scale passed in
+    class loadObject:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("objFrm", Wye.dType.OBJECT, Wye.access.REFERENCE),       # parent frame to associate obj with
+                      ("gObj", Wye.dType.OBJECT, Wye.access.REFERENCE),         # graphic object returned
+                      ("file", Wye.dType.STRING, Wye.access.REFERENCE),         # file to load graphic from
+                      ("posVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # position to place graphic
+                      ("rotVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # YPR angles to orient graphic
+                      ("scaleVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # scale to apply to object
+                      ("tag", Wye.dType.STRING_LIST, Wye.access.REFERENCE),     # returned tag assigned to graphic object
+                      ("colorVec", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE)) # color to assign to object
+        varDescr = ()
+        codeDescr = (
+            #(None, "print('test inline code')"),
+            # call loadModel with testLoader params 0 and 1
+            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.gObj"), (None, "frame.params.file")),
+            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.gObj")),
+            (None, "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
+            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.params.gObj"), (None, "frame.params.rotVec")),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.gObj"), (None, "frame.params.colorVec")),
+            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec"))
+        )
+
+        def build():
+            return WyeCore.Utils.buildCodeText("loadObject", WyeLib.loadObject.codeDescr)
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.loadObject, stack)
+
+        def run(frame):
+            WyeLib.WyeLib_rt.loadObject_run_rt(frame)
+
 
     # load Panda3d model
     # p0 - returned model
@@ -206,8 +239,8 @@ class WyeLib:
             global render     # panda3d base
 
             model = frame.params.object[0]
-            pos = frame.params.position
-            scale = frame.params.scale
+            pos = frame.params.position[0]
+            scale = frame.params.scale[0]
             #tag = frame.params.tag[0]
             #print("showModel pos ", pos, " scale ", scale) #, " tag ", tag)
             model.reparentTo(render)
@@ -232,6 +265,7 @@ class WyeLib:
             #print("setObjPos run: params ", frame.params)
             gObj = frame.params.obj[0]
             vec = frame.params.posVec[0]
+
             #print("setObjPos set obj", gObj, "to", vec)
             gObj.setPos(vec[0], vec[1], vec[2])
 
@@ -278,7 +312,6 @@ class WyeLib:
             #hpr = frame.params.obj[0].getHpr()
             #print("Current HPR ", hpr)
 
-            #print("setObjAngle obj", gObj, "to", vec)
             gObj.setHpr(vec[0], vec[1], vec[2])
 
             hpr = frame.params.obj[0].getHpr()
@@ -329,7 +362,7 @@ class WyeLib:
 
         def run(frame):
             gObj = frame.params.obj[0]
-            color = frame.params.color
+            color = frame.params.color[0]
             #print("setColor obj", gObj, "to", color)
             gObj.setColor(color[0], color[1], color[2], color[3])
 
@@ -350,7 +383,7 @@ class WyeLib:
 
         def run(frame):
             gObj = frame.params.obj[0]
-            color = frame.params.color
+            color = frame.params.color[0]
             #print("setMaterialColor obj", gObj, "to", color)
             mat = Material()
             mat.setShininess(5.0)  # Make this material shiny
