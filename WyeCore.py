@@ -132,6 +132,7 @@ class WyeCore(Wye.staticObj):
             global render
             global base
 
+            # EVENT DEBUG
             #messenger.toggleVerbose()      # Show all events
 
             property_names = [p for p in dir(Wye) if isinstance(getattr(Wye, p), property)]

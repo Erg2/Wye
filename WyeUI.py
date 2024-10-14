@@ -448,8 +448,8 @@ class WyeUI(Wye.staticObj):
         class MouseHandler(DirectObject):
             def __init__(self):
                 print("FocusManager create MouseHandler")
-                self.accept('wheel-up', partial(self.mouseWheel, 1))
-                self.accept('wheel-down', partial(self.mouseWheel, -1))
+                self.accept('wheel_up', partial(self.mouseWheel, 1))
+                self.accept('wheel_down', partial(self.mouseWheel, -1))
 
                 ## reference - events
                 # "escape", "f" + "1-12"(e.g.
@@ -463,10 +463,10 @@ class WyeUI(Wye.staticObj):
 
             # if there's an active dialog, pass it mousewheel events
             def mouseWheel(self, dir):
-                print("mouseWheel", dir)
+                #print("mouseWheel", dir)
                 if WyeUI.FocusManager._activeDialog:
-                    print("MouseHandler: mouseWheel", dir)
-                    WyeUI.FocusManager._activeDialog.doWheel(dir)
+                    #print("MouseHandler: mouseWheel", dir)
+                    WyeUI.FocusManager._activeDialog.verb.doWheel(dir)
 
 
         # find dialogFrame in leaf nodes of dialog hierarchies
@@ -544,10 +544,12 @@ class WyeUI(Wye.staticObj):
                     if not frm.parentFrame is None:
                         if frm.parentFrame.verb.doSelect(frm, id):
                             WyeUI.FocusManager._activeDialog = frm.parentFrame
+                            #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
                             status = True
                     else:
                         if frm.verb.doSelect(frm, id):
-                            WyeUI.FocusManager._activeDialog = frm.parentFrame
+                            WyeUI.FocusManager._activeDialog = frm
+                            #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
                             status = True
             return status
 
@@ -584,7 +586,8 @@ class WyeUI(Wye.staticObj):
                             else:
                                 if frm.verb.doKey(frm, key):
                                     return True
-                    return False
+
+                    return False # if get this far, didn't use the character
 
 
 
@@ -954,12 +957,14 @@ class WyeUI(Wye.staticObj):
             # if tag is input field in this dialog, select it
             closing = False
             WyeUI.Dialog._activeInputInteger = None
+            retStat = False     # haven't used the tag (yet)
 
             # if clicked on input field
             if tag in frame.vars.inpTags[0]:        # do we have a matching tag?
                 #print("Dialog header bounds", frame.vars[6][0].getNodePath().getTightBounds())
 
                 ix = frame.vars.inpTags[0][tag]     # Yes
+                retStat = True
 
                 # process dialog inputs
                 if frame.verb is WyeUI.Dialog:
@@ -1020,7 +1025,7 @@ class WyeUI(Wye.staticObj):
                 if tag == frame.vars.dlgTags[0][-1]:    # if cancel button
                     frame.params.retVal[0] = Wye.status.FAIL
                     print("Dialog", frame.params.title[0], " Cancel Button pressed, return status", frame.params.retVal)
-
+                    retStat = True
 
                 # else is OK button
                 else:
@@ -1036,6 +1041,7 @@ class WyeUI(Wye.staticObj):
                             inFrm.params.value[0] = inFrm.vars.currVal[0]
                     frame.params.retVal[0] = Wye.status.SUCCESS
                     print("doSelect OK button, return status", frame.params.retVal)
+                    retStat = True
 
                 # Done with dialog
                 frame.status = Wye.status.SUCCESS
@@ -1069,14 +1075,16 @@ class WyeUI(Wye.staticObj):
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(WyeUI.TEXT_COLOR)
 
+            return retStat      # return true if we used the tag
+
         # inc/dec InputInteger on wheel event
         def doWheel(dir):
             print("doWheel")
             if not WyeUI.Dialog._activeInputInteger is None:
-                print("doWheel update input")
+                #print("doWheel update input")
                 inFrm = WyeUI.Dialog._activeInputInteger
                 inFrm.vars.currVal[0] += dir
-                txt = str()
+                txt = str(inFrm.vars.currVal[0])
                 inWidg = inFrm.vars.gWidget[0]
                 inWidg.setText(txt)
                 WyeUI.Dialog.drawCursor(inFrm)
