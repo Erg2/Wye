@@ -116,6 +116,7 @@ class WyeCore(Wye.staticObj):
         startObjs = []
         objs = []  # runnable objects
         objStacks = []  # objects run in parallel so each one gets a stack
+        objKillList = []    # frames of objects to be removed from the active list at the end of the current display cycle
         objTags = {}     # map of graphic tags to object frames
 
         eventCallbackDict = {}              # dictionary of event callbacks
@@ -214,12 +215,7 @@ class WyeCore(Wye.staticObj):
                     namStrs = objStr.split(".")  # parse name of object
                     if namStrs[1] in WyeCore.World.libDict:
                         obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
-                        WyeCore.World.objs.append(obj)  # add to list of runtime objects
-                        stk = []
-                        f = obj.start(stk)  # start the object and get its stack frame
-                        stk.append(f)  # create a stack for it
-                        #f.params = [[0], ]  # place to put return param
-                        WyeCore.World.objStacks.append(stk)  # put obj's stack on list and put obj's frame on the stack
+                        WyeCore.World.startActiveObject(obj)
                     else:
                         print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
 
@@ -232,7 +228,7 @@ class WyeCore(Wye.staticObj):
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
                 # set up editor
-                WyeCore.editor = WyeCore.libs.WyeUI.ObjEditor()
+                WyeCore.editor = WyeCore.libs.WyeUI.ObjEditCtl()
 
                 # WyeCore.picker.makePickable(_label3d)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
@@ -298,7 +294,30 @@ class WyeCore(Wye.staticObj):
                         WyeCore.lastIsNothingToRun = True
                         # print("worldRunner stack # ", stackNum, " nothing to run")
 
+                if len(WyeCore.World.objKillList) > 0:
+                    for frame in WyeCore.World.objKillList:
+                        WyeCore.World._removeActiveObject(frame)
+
             return Task.cont  # tell panda3d we want to run next frame too
+
+        # Start object verb and put it on active list so called every display cycle
+        def startActiveObject(obj):
+            WyeCore.World.objs.append(obj)  # add to list of runtime objects
+            stk = []
+            f = obj.start(stk)  # start the object and get its stack frame
+            stk.append(f)  # create a stack for it
+            # f.params = [[0], ]  # place to put return param
+            WyeCore.World.objStacks.append(stk)  # put obj's stack on list and put obj's frame on the stack
+            return f
+
+        # Queue frame to be removed from active object list at end of this display cycle
+        def stopActiveObject(frame):
+            WyeCore.WOrld.objKillList.append(frame)
+
+        # find and remove frame, obj from active list
+        # If obj on list multiple times, only the given frame will be removed and one instance of the object
+        def _removeActiveObject(frame):
+            pass
 
         # Find first active instance of object with given name
         def findActiveObj(name):

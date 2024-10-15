@@ -266,7 +266,7 @@ class TestLib:
             return Wye.codeFrame(TestLib.UpdateCallback, stack)
 
         def run(frame):
-            print("UpdateCallback data=", frame.eventData, " verb", frame.eventData[1].verb.__name__)
+            #print("UpdateCallback data=", frame.eventData, " verb", frame.eventData[1].verb.__name__)
 
             frm = frame.eventData[1]
             ctlFrm = frame.eventData[2]
@@ -278,7 +278,7 @@ class TestLib:
             # inputs don't update parent variables until "OK" - which makes "Cancel" work correctly
             # so have to pull out the temp values from the input controls
             # Do some hackery to get to the pop up dialog's inputs' local variables
-            print("dlgFrm", dlgFrm.params.title)
+            #print("dlgFrm", dlgFrm.params.title)
             x = dlgFrm.params.inputs[0][0][0].vars.currVal[0]
             y = dlgFrm.params.inputs[0][1][0].vars.currVal[0]
             z = dlgFrm.params.inputs[0][2][0].vars.currVal[0]

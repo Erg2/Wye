@@ -447,7 +447,7 @@ class WyeUI(Wye.staticObj):
 
         class MouseHandler(DirectObject):
             def __init__(self):
-                print("FocusManager create MouseHandler")
+                #print("FocusManager create MouseHandler")
                 self.accept('wheel_up', partial(self.mouseWheel, 1))
                 self.accept('wheel_down', partial(self.mouseWheel, -1))
 
@@ -1040,7 +1040,7 @@ class WyeUI(Wye.staticObj):
                             #print("input old val '"+ inFrm.params[2][0]+ "' replaced with '"+ inFrm.vars[1][0]+"'")
                             inFrm.params.value[0] = inFrm.vars.currVal[0]
                     frame.params.retVal[0] = Wye.status.SUCCESS
-                    print("doSelect OK button, return status", frame.params.retVal)
+                    #print("doSelect OK button, return status", frame.params.retVal)
                     retStat = True
 
                 # Done with dialog
@@ -1061,7 +1061,7 @@ class WyeUI(Wye.staticObj):
                     wdg.removeNode()
 
                 closing = True
-                print("Closing dialog.  Status", frame.status)
+                #print("Closing dialog.  Status", frame.status)
 
             # selected graphic tag not recognized as a control in this dialog
             else:
@@ -1079,7 +1079,7 @@ class WyeUI(Wye.staticObj):
 
         # inc/dec InputInteger on wheel event
         def doWheel(dir):
-            print("doWheel")
+            #print("doWheel")
             if not WyeUI.Dialog._activeInputInteger is None:
                 #print("doWheel update input")
                 inFrm = WyeUI.Dialog._activeInputInteger
@@ -1298,8 +1298,9 @@ class WyeUI(Wye.staticObj):
             lst[0] = rowIx
             # print("DropdownCallback data=", frame.eventData, " index = ", frame.eventData[1])
 
+
     # called when user clicks on a graphic object that has a WyeID tag
-    class ObjEditor(DirectObject):
+    class ObjEditCtl(DirectObject):
         def __init__(self):
             pass
 
@@ -1318,4 +1319,17 @@ class WyeUI(Wye.staticObj):
             # Get this far and we didn't use the tag so let someone else have it
             return False
 
+    # put up object dialog for given object
+    class ObjEditor:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = False
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # gotta have a ret param
+        varDescr = (("TBD", Wye.dType.INTEGER, -1),
+                    )
 
+        def start(stack):
+            return Wye.codeFrame(WyeUI.ObjEditor, stack)
+
+        def run(frame):
+            pass
