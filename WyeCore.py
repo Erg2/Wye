@@ -211,7 +211,7 @@ class WyeCore(Wye.staticObj):
                 # parse starting object names and find the objects in the known libraries
                 # print("worldRunner:  start ", len(world.startObjs), " objs")
                 for objStr in WyeCore.World.startObjs:
-                    # print("obj ", objStr," in startObjs")
+                    #print("WorldRun start: obj ", objStr," in startObjs")
                     namStrs = objStr.split(".")  # parse name of object
                     if namStrs[1] in WyeCore.World.libDict:
                         obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
@@ -1029,9 +1029,10 @@ class WyeCore(Wye.staticObj):
 
                         # if this class is an object that should be added to the world's active object list
                         if hasattr(val, "autoStart"):
-                            classStr = libName + "." + libName + "." + val.__name__
-                            print("buildLib Startobj: ", classStr)
-                            WyeCore.World.startObjs.append(classStr)
+                            if val.autoStart:
+                                classStr = libName + "." + libName + "." + val.__name__
+                                print("buildLib Startobj: ", classStr)
+                                WyeCore.World.startObjs.append(classStr)
 
                         # add pointer from verb class to parent library class
                         setattr(val, "library", libClass)

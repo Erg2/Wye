@@ -1123,9 +1123,10 @@ class WyeUI(Wye.staticObj):
                         # place insert cursor
                         WyeUI.Dialog.drawCursor(inFrm)
                         return
-                    # not special control, if printable insert it in the string
+                    # not special control, if printable char, insert it in the string
                     else:
-                        print("verb is", inFrm.verb.__name__)
+                        #print("verb is", inFrm.verb.__name__)
+                        # For int input, only allow ints
                         if inFrm.verb is WyeUI.InputInteger:
                             if key in "-0123456789":
                                 if key != '-' or insPt == 0:
@@ -1133,7 +1134,8 @@ class WyeUI(Wye.staticObj):
                                     insPt += 1
                                     inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
 
-                        elif key.isalnum() or key == ' ':  # ignore unprintble keys
+                        # for general text, allow alphanum and space
+                        elif key.isprintable():  # ignore unprintble keys
                             txt = preTxt + key + postTxt
                             insPt += 1
                             inFrm.vars.currInsPt[0] = insPt        # set text insert point after new char
@@ -1299,21 +1301,28 @@ class WyeUI(Wye.staticObj):
             # print("DropdownCallback data=", frame.eventData, " index = ", frame.eventData[1])
 
 
-    # called when user clicks on a graphic object that has a WyeID tag
+    # class instance is called when user clicks on a graphic object that has a WyeID tag
+    # fires up Wye's ObjEditor object with the given object to edit
     class ObjEditCtl(DirectObject):
         def __init__(self):
-            pass
+            self.currObj = None
 
         # User clicked on object.  It alt key down and it's editable, open the editor
         def tagClicked(self, wyeID):
-            #print("tagClicked")
+            print("ObjEditCtl tagClicked")
             # if alt key down
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
-                #print("Alt held down, is wyeID registered?")
+                print("ObjEditCtl tagkClicked: Alt held down, is wyeID registered?")
                 frm = WyeCore.World.getRegisteredObj(wyeID)
                 if not frm is None:
                     #print("wyeID", wyeID, " Is registered")
-                    print("Edit object", frm.verb.__name__)
+                    print("ObjEditCtl: Edit object", frm.verb.__name__)
+
+                    # fire up object editor with given frame
+                    print("ObjEditorCtl: Create ObjEditor")
+                    edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.ObjEditor)
+                    print("ObjEditorCtl: Fill in ObjEditor objFrame param")
+                    edFrm.params.objFrame = [frm]
                     return True
 
             # Get this far and we didn't use the tag so let someone else have it
@@ -1324,7 +1333,7 @@ class WyeUI(Wye.staticObj):
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         autoStart = False
-        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # gotta have a ret param
+        paramDescr = (("objFrame", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # gotta have a ret param
         varDescr = (("TBD", Wye.dType.INTEGER, -1),
                     )
 
@@ -1332,4 +1341,7 @@ class WyeUI(Wye.staticObj):
             return Wye.codeFrame(WyeUI.ObjEditor, stack)
 
         def run(frame):
+            if frame.vars.TBD[0] < 0:
+                print("ObjEditor.  Running with obj ", frame.params.objFrame[0].verb.__name__)
+                frame.vars.TBD[0] = 0
             pass
