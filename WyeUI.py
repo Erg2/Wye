@@ -1333,15 +1333,96 @@ class WyeUI(Wye.staticObj):
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         autoStart = False
-        paramDescr = (("objFrame", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # gotta have a ret param
-        varDescr = (("TBD", Wye.dType.INTEGER, -1),
+        paramDescr = (("objFrame", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
+        varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),                          # object dialog frame
+                    ("dlgStat", Wye.dType.INTEGER, -1),
                     )
+
+        # global list of frames being edited
+        activeFrames = {}
 
         def start(stack):
             return Wye.codeFrame(WyeUI.ObjEditor, stack)
 
         def run(frame):
-            if frame.vars.TBD[0] < 0:
-                print("ObjEditor.  Running with obj ", frame.params.objFrame[0].verb.__name__)
-                frame.vars.TBD[0] = 0
-            pass
+            match(frame.PC):
+                case 0:
+                    # only edit frame once
+                    if frame in WyeUI.ObjEditor.activeFrames:
+                        print("Already editing this frame", frame.params.objFrame[0].verb.__name__)
+                        # take self off active object list
+                        WyeCore.World.stopActiveObject(frame)
+                        frame.status = Wye.status.FAIL
+                        return
+
+                    # can only edit objects with Wye code
+                    objFrame = frame.params.objFrame[0]       # shorthand
+                    if not hasattr(objFrame.verb, "codeDescr"):
+                        print("Object", objFrame.verb.__name__, " has no code to edit")
+                        print("     ", objFrame.tostring())
+                        # take self off active object list
+                        WyeCore.World.stopActiveObject(frame)
+                        frame.status = Wye.status.FAIL
+                        return
+
+                    # mark this frame actively being edited
+                    WyeUI.ObjEditor.activeFrames[frame] = True
+
+                    # create object dialog
+                    dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
+
+                    dlgFrm.params.retVal = frame.vars.dlgStat
+                    dlgFrm.params.title = ["Edit ", frame.params.objFrame[0].verb.__name__]
+                    dlgFrm.params.position = (0,10,0) # todo - get from object
+                    dlgFrm.params.parent = [None]
+                    frame.vars.dlgFrm[0] = dlgFrm
+
+                    # build dialog frame params list of input frames
+                    attrIx = 0
+
+                    for tuple in objFrame.verb.codeDescr:
+                        if tuple[0] is None:
+                            txt = "Code:" + tuple[1]
+                        elif "." in tuple[0]:
+                            txt = "Verb:" + tuple[0] + "," + str(tuple[1])
+                        else:
+                            match tuple[0]:
+                                case "Expr":
+                                    txt = "Expression:" + tuple[1]
+                                case "Const":
+                                    txt = "Constant:" + tuple[1]
+                                case "Var":
+                                    txt = "Variable:" + tuple[1]
+                                case "Expr":
+                                    txt = "Expression:" + tuple[1]
+                                case "GoTo":
+                                    txt = "GoTo:" + tuple[1]
+                                case "Label":
+                                    txt = "Label:" + tuple[1]
+                                case "IfGoTo":
+                                    txt = "If GoTo:" + tuple[1]
+
+
+                        btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                        dlgFrm.params.inputs[0].append([btnFrm])
+                        btnFrm.params.frame = [None]
+                        btnFrm.params.parent = [None]  # return value
+                        btnFrm.params.label = [txt]  # button label is verb name
+                        btnFrm.params.verb = [WyeCore.libs.WyeUI.DropdownCallback]  # button callback
+                        btnFrm.params.optData = [(attrIx, frame)]  # button data - offset to button
+                        WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+                        attrIx += 1
+
+                    # WyeUI.Dialog.run(dlgFrm)
+                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
+
+                    frame.PC += 1  # on return from dialog, run next case
+
+                case 1:
+                    frame.SP.pop()  # remove dialog frame from stack
+                    print("ObjEditor: returned status", frame.params.dlgStat[0])  # Wye.status.tostring(frame.))
+                    frame.status = Wye.status.SUCCESS  # done
+
+
+

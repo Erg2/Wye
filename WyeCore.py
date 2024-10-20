@@ -312,7 +312,7 @@ class WyeCore(Wye.staticObj):
 
         # Queue frame to be removed from active object list at end of this display cycle
         def stopActiveObject(frame):
-            WyeCore.WOrld.objKillList.append(frame)
+            WyeCore.World.objKillList.append(frame)
 
         # find and remove frame, obj from active list
         # If obj on list multiple times, only the given frame will be removed and one instance of the object
@@ -735,8 +735,10 @@ class WyeCore(Wye.staticObj):
                                     #print(" parseWyeTuple: skip 0th entry in wyeTuple")
                                     continue        # skip processing any more of this tuple parameter
 
+                                tupleKey = paramTuple[0]
                                 #print(" parseWyeTuple: 2 parse paramTuple ", paramTuple)
-                                if paramTuple[0] is None:        # constant/var (leaf node)
+                                # if tuple is code to compile
+                                if tupleKey is None or tupleKey == "Var" or tupleKey == "Const" or tupleKey == "Expr":        # constant/var (leaf node)
                                     #print(" parseWyeTuple: paramTuple[0] is None")
                                     #print("  parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
                                     #print("   verbClass.paramDescr", verbClass.paramDescr)
@@ -806,7 +808,8 @@ class WyeCore(Wye.staticObj):
 
                                 # param starts with None, is a python code snippet returning a value
                                 # (const, frame var ref, other expression)
-                                if paramTuple[0] is None:
+                                tupleKey = paramTuple[0]
+                                if tupleKey is None or tupleKey == "Var" or tupleKey == "Const" or tupleKey == "Expr":
                                     #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
 
                                     # debug
@@ -867,7 +870,7 @@ class WyeCore(Wye.staticObj):
                     for line in codeLines:
                         codeText += "    "+line+"\n"
                 else:
-                    print("Wye Warning - parseTuple null verb but no raw code supplied")
+                    print("Wye Warning - parseWyeTuple null verb but no raw code supplied")
 
                 retParam = None
 
