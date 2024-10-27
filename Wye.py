@@ -353,9 +353,24 @@ class Wye:
         def paramsToString(frame):
             return frame.attribToString(frame.params)
 
+        # verbose version that lists values
+        def paramsToStringV(frame):
+            # name from verb paramDescr, value from frame parameter
+            if hasattr(frame, "verb") and hasattr(frame.verb, "paramDescr"):
+                return ",".join([ desc[0] + "=" + str(getattr(frame.params, desc[0])) for desc in frame.verb.paramDescr])
+            else:
+                return Wye.codeFrame.paramsToString(frame)
+
         # return vars concanated
         def varsToString(frame):
             return frame.attribToString(frame.vars)
+
+        def varsToStringV(frame):
+            # name from verb varDescr, value from frame var
+            if hasattr(frame, "verb") and hasattr(frame.verb, "varDescr"):
+                return ",".join([ desc[0] + "=" + str(getattr(frame.vars, desc[0])) for desc in frame.verb.varDescr])
+            else:
+                return Wye.codeFrame.varsToString(frame)
 
         # return stack in reverse order
         def stackToString(stack):
