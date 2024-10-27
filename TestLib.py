@@ -136,8 +136,8 @@ class TestLib:
 
             # really bad coding / wizardry required here
             # Get the text widget of the
-            inFrm = frame.eventData[1][0]
-            var = frame.eventData[1][1]
+            inFrm = frame.eventData[1][0]       #
+            var = frame.eventData[1][1]         # caller's counter variable
             # print("data [1]", frame.eventData[1][1], " var", var)
             dlgFrm = inFrm.parentFrame
             # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
@@ -148,6 +148,7 @@ class TestLib:
             lblFrame = dlgFrm.params.inputs[0][3][0]
 
             # supreme hackery - look up the display label in the label's graphic widget list
+            # Update its text string with the current count value
             inWidg = lblFrame.vars.gWidgetStack[0][0]
             txt = "Count " + str(var[0])
             # print("  set text", txt," ix", ix, " txtWidget", inWidg)

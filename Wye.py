@@ -180,9 +180,9 @@ class Wye:
 
         def tostring(access):            # static print function
             match access:
-                case Wye.dType.VALUE:
+                case Wye.access.VALUE:
                     return "VALUE"
-                case Wye.dType.REFERENCE:
+                case Wye.access.REFERENCE:
                     return "REFERENCE"
                 #case Wye.dType.OUT:
                 #    return "OUT"
