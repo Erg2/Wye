@@ -396,7 +396,7 @@ class WyeCore(Wye.staticObj):
             repEvt = [[frame], eventName, data, frameID]
             frame.SP = repEvt[0]        # repeated event runs on its own stack
             WyeCore.World.repeatEventCallbackDict[frameID] = repEvt
-            #print("setRepeatEventCallback on event ", eventName, " object ", objTag, " add frameID ", frameID, "\nrepDict now=", WyeCore.World.repeatEventCallbackDict)
+            #print("setRepeatEventCallback on event ", eventName, " object ", frame, " add frameID ", frameID, "\nrepDict now=", WyeCore.World.repeatEventCallbackDict)
             return frameID
             pass
 
@@ -482,29 +482,32 @@ class WyeCore(Wye.staticObj):
                 #print("repEventObj run: Event dict:", WyeCore.World.repeatEventCallbackDict)
                 evtIx = 0       # debug
                 for evtID in WyeCore.World.repeatEventCallbackDict:
+                    #print("repeatEventExecObj run: process evt", evtID)
                     evt = WyeCore.World.repeatEventCallbackDict[evtID]
-                    frame = evt[0][-1]
-                    #print("repEventObj run: frame=", frame)
-                    # run bottom of stack unless done
-                    if frame.status == Wye.status.CONTINUE:
-                        #print("repEventObj run: evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
-                        frame.eventData = (evtID, evt[2])        # user data
-                        frame.verb.run(frame)
-                    # bottom of stack done, run next up on stack if any
-                    elif len(evt[0]) > 1:
-                        frame = evt[0][-2]
-                        #print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
-                        frame.eventData = (evtID, evt[2])        # user data
-                        frame.verb.run(frame)
-                        # On parent error, bail out - TODO - consider letting its parent handle error
-                        if frame.status == Wye.status.FAIL and len(evt[0]) > 1:
-                            #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
-                            delList.append(evt[3])  # save this entry's tag to delete when done
-                    # if only one frame on stack and it's done, remove event entry
-                    if len(evt[0]) == 1 and evt[0][0].status != Wye.status.CONTINUE:
-                        #print("repEventObj run: done with evt ", evtIx, ".  Remove from dict")
-                        delList.append(evt[3])      # save this entry's tag to delete when done
-                    evtIx += 1 # debug
+                    if len(evt[0]) > 0:
+                        #print("repeatEventExecObj run: process evt", evt)
+                        frame = evt[0][-1]
+                        #print("repEventObj run: frame=", frame)
+                        # run bottom of stack unless done
+                        if frame.status == Wye.status.CONTINUE:
+                            #print("repEventObj run: evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
+                            frame.eventData = (evtID, evt[2])        # user data
+                            frame.verb.run(frame)
+                        # bottom of stack done, run next up on stack if any
+                        elif len(evt[0]) > 1:
+                            frame = evt[0][-2]
+                            #print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
+                            frame.eventData = (evtID, evt[2])        # user data
+                            frame.verb.run(frame)
+                            # On parent error, bail out - TODO - consider letting its parent handle error
+                            if frame.status == Wye.status.FAIL and len(evt[0]) > 1:
+                                #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
+                                delList.append(evt[3])  # save this entry's tag to delete when done
+                        # if only one frame on stack and it's done, remove event entry
+                        if len(evt[0]) == 1 and evt[0][0].status != Wye.status.CONTINUE:
+                            #print("repEventObj run: done with evt ", evtIx, ".  Remove from dict")
+                            delList.append(evt[3])      # save this entry's tag to delete when done
+                        evtIx += 1 # debug
 
                 for tag in delList:
                     #print("repEventObj: done with tag ", tag)
