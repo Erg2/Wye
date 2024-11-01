@@ -29,7 +29,7 @@ class PandaRunner(ShowBase):
         WyeCore.base = self      # world needs this to do panda3d stuff
 
         # TURN OFF DEFAULT CAMERA CONTROLS
-#        WyeCore.base.disableMouse() # turn off default mouse move
+        WyeCore.base.disableMouse() # turn off default mouse move
 
         #props = WindowProperties()
         #props.setTitle("Wye V" + version)

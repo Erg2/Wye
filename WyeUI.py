@@ -395,36 +395,154 @@ class WyeUI(Wye.staticObj):
 
     class CameraControl(DirectObject):
         def __init__(self):
-            self.m1Down = False
+            self.m1Down = False     # state
             self.m2Down = False
             self.m3Down = False
 
-            self.accept('mouse1', self.mouseEvt)
-            self.accept('mouse2', self.mouseEvt)
-            self.accept('mouse3', self.mouseEvt)
-            self.accept('mouse1-up', self.mouseEvt)
-            self.accept('mouse2-up', self.mouseEvt)
-            self.accept('mouse3-up', self.mouseEvt)
+            self.shift = False
+            self.ctl = False
+            self.alt = False
+
+            self.m1Pressed = False  # edge
+            self.m2Pressed = False
+            self.m3Pressed = False
+
+            self.shiftPressed = False
+            self.ctlPressed = False
+            self.altPressed = False
+
+            # Note: cannot get shift-mouse-up or shift-mouse_up
+            # plus
+            #self.accept('mouse1', self.mouseEvt)
+            #self.accept('mouse2', self.mouseEvt)
+            #self.accept('mouse3', self.mouseEvt)
+            #self.accept('mouse1-up', self.mouseEvt)
+            #self.accept('mouse2-up', self.mouseEvt)
+            #self.accept('mouse3-up', self.mouseEvt)
+            #self.accept('shift-mouse1', self.shiftMouseEvt)
+            #self.accept('shift-mouse2', self.shiftMouseEvt)
+            #self.accept('shift-mouse3', self.shiftMouseEvt)
+            #self.accept('shift-mouse1-up', self.shiftMouseEvt)
+            #self.accept('shift-mouse2-up', self.shiftMouseEvt)
+            #self.accept('shift-mouse3-up', self.shiftMouseEvt)
+
+            self.walk = False       # start off flying
+            self.viewDir = (0, 1, 0)
+            self.shift = False
+
+            self.speed = .5
+
+        #def mouseEvt(self):
+        #    global base
+
+        #    if self.shift:
+        #        print("Shift up")
+        #        self.shift = False
+
+        #def shiftMouseEvt(self):
+        #    self.shift = base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.shift())
+        #    print("shiftMouseEvt shift", self.shift)
+        #    self.mouseEvt
+
+        #    #print("CameraControl mouseEvt: m1Down", self.m1Down, " m2Down", self.m2Down, " m3Down", self.m3Down)
 
 
-
-        def mouseEvt(self):
-            global base
-            evt = WyeCore.base.mouseWatcherNode.getMouse()
-            self.m1Down = base.mouseWatcherNode.isButtonDown(MouseButton.one())
-            self.m2Down = base.mouseWatcherNode.isButtonDown(MouseButton.two())
-            self.m3Down = base.mouseWatcherNode.isButtonDown(MouseButton.three())
-            #print("CameraControl mouseEvt: m1Down", self.m1Down, " m2Down", self.m2Down, " m3Down", self.m3Down)
 
         def mouseMove(self, x, y):
-            #print("CameraControl mousemove:", x, ",", y)
-            if self.m1Down:
-                # rotate viewpoing
+            global base
+
+            self.m1Pressed = False  # edge
+            self.m2Pressed = False
+            self.m3Pressed = False
+
+            self.shiftPressed = False
+            self.ctlPressed = False
+            self.altPressed = False
+
+            # get mouse buttons and mouse-down start pos
+            evt = WyeCore.base.mouseWatcherNode.getMouse()
+            if base.mouseWatcherNode.isButtonDown(MouseButton.one()):
+                if not self.m1Down:
+                    self.m1Down = True
+                    self.m1DownPos = (x, y)
+                    self.m1Pressed = True
+            else:
+                self.m1Down = False
+            if base.mouseWatcherNode.isButtonDown(MouseButton.two()):
+                if not self.m2Down:
+                    self.m2Down = True
+                    self.m2DownPos = (x, y)
+                    self.m2Pressed = True
+            else:
+                self.m2Down = False
+            if base.mouseWatcherNode.isButtonDown(MouseButton.three()):
+                if not self.m3Down:
+                    self.m3Down = True
+                    self.m3DownPos = (x, y)
+                    self.m3Pressed = True
+            else:
+                self.m3Down = False
+
+            # get shift key
+            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.shift()):
+                if not self.shift:
+                    self.shift = True
+                    self.shiftPressed = True
+            else:
+                self.shift = False
+            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
+                if not self.alt:
+                    self.alt = True
+                    self.altPressed = True
+            else:
+                self.alt = False
+            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
+                if not self.ctl:
+                    self.ctl = True
+                    self.ctlPressed = True
+            else:
+                self.ctl = False
+
+            #if self.m1Pressed or self.m2Pressed or self.m3Pressed:
+            #    print("m1Pressed" if self.m1Pressed else "" + "m2Pressed" if self.m2Pressed else "" + "m3Pressed" if self.m3Pressed else "")
+            #if self.altPressed or self.shiftPressed or self.ctlPressed:
+            #    print("altPressed" if self.altPressed else "" + "shiftPressed" if self.shiftPressed else "" + "ctlPressed" if self.ctlPressed else "")
+
+            # do movement based on mouse buttons
+            #print("CameraControl mousemove:", x, ",", y, (self.m1Down if "m1Down" else (self.m2Down if "m2Down" else "")))
+            #print("CameraControl mousemove:", ("m1Down" if self.m1Down else ("m3Down" if self.m3Down else "")))
+
+            # if don't have the debug menu and the user wants it, start it
+            if self.m1Pressed and self.shift and self.alt and self.ctl:
+                if not WyeCore.World.debugger:
+                    WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.DebugDialog)
+
+            elif self.m1Down:
+                # rotate viewpoint
+                #print("CameraControl mouseMove: m1Down")
                 pass
             elif self.m2Down:
+                base.camera.setPos(0,0,0)
+            elif self.m3Down:
                 # move viewpoint
+                #print("CameraControl mouseMove: m3Down")
+                camPos = base.camera.getPos()
+                dx = (x - self.m3DownPos[0]) * self.speed
+                if self.shift:
+                    dy = 0
+                    dz = (y - self.m3DownPos[1]) * self.speed
+                else:
+                    dy = (y - self.m3DownPos[1]) * self.speed
+                    dz = 0
+                if self.walk:
+                    self.m3DownPos = (x,y)
+                base.camera.setPos(camPos[0]+dx, camPos[1]+dy, camPos[2]+dz)
+                #print("move", dx, ",", dy, " camPos",camPos, " ", x, ",", y)
+
                 pass
 
+        def setFly(self, doFly):
+            self.fly = doFly
 
     # Widget focus manager singleton
     # Maintains a list of dialog hierarchies where the most recently added member of each hierarchy is the only one
@@ -869,6 +987,7 @@ class WyeUI(Wye.staticObj):
             # If we don't have a text input cursor, make one
             if WyeUI.Dialog._cursor is None:
                 WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0,0,0])
+                WyeUI.Dialog._cursor.path.hide()
             return frame
 
         # first time, draw dialog and all its fields
@@ -1239,6 +1358,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed"
             if WyeUI.Dialog._cursor is None:
                 WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0, 0, 0])
+                WyeUI.Dialog._cursor.path.hide()
             return frame
 
         def run(frame):
@@ -1749,6 +1869,109 @@ class WyeUI(Wye.staticObj):
                     print("EditVarTypeCallback data='" + str(data) + "'")
                     frm = data[1][1]
                     print("param ix", data[1][0], " data frame", frm.verb.__name__)
+                    frame.PC += 1
+                case 1:
+                    pass
+
+
+    class DebugDialog:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = False
+        paramDescr = (("objFrame", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
+        varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
+                    ("dlgStat", Wye.dType.INTEGER, -1),
+                    )
+
+        # global list of frames being edited
+        activeFrames = {}
+
+        def start(stack):
+            return Wye.codeFrame(WyeUI.DebugDialog, stack)
+
+        def run(frame):
+            match(frame.PC):
+                case 0:
+                    # create top level debug dialog
+                    dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
+                    dlgFrm.params.retVal = frame.vars.dlgStat
+                    dlgFrm.params.title = ["Wye Debugger"]
+                    dlgFrm.params.position = (0,10,0) # todo - get from object
+                    dlgFrm.params.parent = [None]
+                    frame.vars.dlgFrm[0] = dlgFrm
+
+
+                    # build dialog
+
+                    # running objects
+                    lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    lblFrm.params.frame = [None]
+                    lblFrm.params.parent = [None]  # return value
+                    lblFrm.params.label = ["Active Objects:"]
+                    WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
+
+                    attrIx = 0
+
+                    for stack in WyeCore.World.objStacks:
+                        sLen = len(stack)
+                        if sLen > 0:  # if there's something on the stack
+                            baseFrm = stack[0]
+                            leafFrm = stack[-1]
+
+                            # make the dialog row
+                            btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                            dlgFrm.params.inputs[0].append([btnFrm])
+                            btnFrm.params.frame = [None]
+                            btnFrm.params.parent = [None]  # return value
+                            if sLen == 1:
+                                btnFrm.params.label = ["  Verb:"+baseFrm.verb.__name__]
+                            else:
+                                btnFrm.params.label = ["  Verb:"+baseFrm.verb.__name__ + ", active verb:"+leafFrm.verb.__name__]
+                            btnFrm.params.verb = [WyeCore.libs.WyeUI.DebugFrameCallback]  # button callback
+                            btnFrm.params.optData = [(attrIx, leafFrm)]  # button row, dialog frame
+                            WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+                            attrIx += 1
+
+                    # if nothing running
+                    if attrIx == 0:
+                        lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                        lblFrm.params.frame = [None]
+                        lblFrm.params.parent = [None]  # return value
+                        lblFrm.params.label = ["<no active objects>"]
+                        WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
+
+
+                    # WyeUI.Dialog.run(dlgFrm)
+                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
+
+                    frame.PC += 1  # on return from dialog, run next case
+
+                case 1:
+                    frame.SP.pop()  # remove dialog frame from stack
+                    print("Debugger: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
+                    frame.status = Wye.status.SUCCESS  # done
+
+    #  Debug frame callback
+    class DebugFrameCallback:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("count", Wye.dType.INTEGER, 0),)
+
+        def start(stack):
+            # print("EditVarTypeCallback started")
+            return Wye.codeFrame(WyeUI.DebugFrameCallback, stack)
+
+        def run(frame):
+            match (frame.PC):
+                case 0:
+                    data = frame.eventData
+                    print("DebugFrameCallback data='" + str(data) + "'")
+                    frm = data[1][1]
+                    print("param ix", data[1][0], " debug frame", frm.verb.__name__)
                     frame.PC += 1
                 case 1:
                     pass

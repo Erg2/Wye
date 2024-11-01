@@ -107,8 +107,9 @@ class WyeCore(Wye.staticObj):
         varDescr = ()
         codeDescr = ()
 
-        keyHandler = None
-        mouseHandler = None
+        keyHandler = None           # keyboard handler slot
+        mouseHandler = None         # mouse handler slot
+        debugger = None             # no debugger running
 
         # universe specific
         libList = []
@@ -222,6 +223,7 @@ class WyeCore(Wye.staticObj):
                 # set up for text input events
                 WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
 
+                print("start CameraControl")
                 WyeCore.World.mouseHandler = WyeCore.libs.WyeUI.CameraControl()
 
                 # create picker object for object selection events
