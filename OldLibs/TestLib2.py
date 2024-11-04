@@ -34,7 +34,7 @@ class TestLib2:
 
         def run(frame):
             lib = WyeCore.World.libDict["TestLib"]
-            f = lib.printParams.start()
+            f = lib.printParams.start(frame.SP)
             f.params = [["one"], [2], ["C"]]
             lib.printParams.run(f)
 

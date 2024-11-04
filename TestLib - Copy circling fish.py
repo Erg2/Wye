@@ -118,7 +118,7 @@ class TestLib:
             (None, "print('testDialog, startup - create param list ')"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
              (None, "frame.vars.Title"),                        # title
-             (None, "(-3,8,1)"),                                # position
+             (None, "((-3,8,1))"),                                # position
              (None, "[None]"),                                  # parent
              ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
               (None, "['TextLabel']"),
@@ -214,7 +214,7 @@ class TestLib:
             ("Label", "PopDialog"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
              (None, "['Fish Angle Dialog']"),                        # title
-             (None, "(-3,8,1)"),                                # position
+             (None, "((-3,8,1))"),                                # position
              (None, "[None]"),                                  # parent
              ("WyeUI.InputText", (None, "frame.vars.XAngleID"),   # inputs (variable length)
               (None, "['XAngle']"),

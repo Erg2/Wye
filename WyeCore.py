@@ -223,7 +223,7 @@ class WyeCore(Wye.staticObj):
                 # set up for text input events
                 WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
 
-                print("start CameraControl")
+                #print("start CameraControl")
                 WyeCore.World.mouseHandler = WyeCore.libs.WyeUI.CameraControl()
 
                 # create picker object for object selection events

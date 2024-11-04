@@ -312,7 +312,8 @@ class TestLib:
         codeDescr = (
 
 
-            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
+            #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
+            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
             ("Label", "PopDialog"),
@@ -325,7 +326,7 @@ class TestLib:
                 (None, "frame.vars.dialogFrm"),
                 ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
                  (None, "['Fish Angle Dialog']"),                   # title
-                 (None, "((-3,8,1))"),                              # position
+                 (None, "((-3,8,1),)"),                              # position
                  (None, "[None]"),                                  # parent
                  ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
                   (None, "['XAngle']"),

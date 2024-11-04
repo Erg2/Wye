@@ -111,7 +111,7 @@ class TestLib:
             (None, "print('Callback 2, create dialog. parent ', frame.eventData[1])"),
             (None, "print('           frame.eventData ', frame.eventData)"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
-             (None, "(1,-1,-1)"), (None, "[frame.eventData[1]]"),
+             (None, "((1,-1,-1),)"), (None, "[frame.eventData[1]]"),
              ("WyeUI.InputText", (None, "frame.vars.txt1ID"),
               (None, "['TextLabel']"),
               (None, "frame.vars.text1Val")
@@ -219,7 +219,7 @@ class TestLib:
         codeDescr = (
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars.frame"), (None, "frame.vars.Title"),
-                                (None, "(-2,10,0)"), (None, "[None]"),
+                                (None, "((-2,10,0),)"), (None, "[None]"),
                                 ("WyeUI.InputLabel", (None, "frame.vars.labelId"), (None, "['InputLabel']")),
                                 ("WyeUI.InputText", (None, "frame.vars.test1frm"),
                                   (None, "['Enter Text 1']"),
@@ -243,7 +243,7 @@ class TestLib:
             #(None, "print('DlgTst frame 1 vars', frame.vars)"),
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars.Dlg2Frm"), (None, "frame.vars.Title2"),
-                               (None, "(2,10,0)"), (None, "[None]"),
+                               (None, "((2,10,0),)"), (None, "[None]"),
                                ("WyeUI.InputText", (None, "frame.vars.text1frm2"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars.test1Val2")

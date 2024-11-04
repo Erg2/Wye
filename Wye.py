@@ -73,7 +73,7 @@ class Wye:
                     return "unknown pType "+str(pType)
 
 
-    # Wye dType - verb, object, function verb
+    # Wye cType - verb, object, function verb
     class cType:
         FUNCTION = "F"      # Function that immediately returns a value of given dType (see dType)
         OBJECT = "O"        # multi-cycle object that has a "runnable" test and returns status (above) on each cycle
@@ -133,6 +133,25 @@ class Wye:
         OBJECT_LIST =   "OL"
         STRING_LIST =   "SL"
         VARIABLE =      "V"
+
+        dTypeList = [
+            NONE,
+            ANY,
+            NUMBER,
+            INTEGER,
+            FLOAT,
+            BOOL,
+            OBJECT,
+            STRING,
+            ANY_LIST,
+            ANY_LIST,
+            INTEGER_LIST,
+            FLOAT_LIST,
+            BOOL_LIST,
+            OBJECT_LIST,
+            STRING_LIST,
+            VARIABLE,
+        ]
 
         def tostring(dataType):            # static print function
             match dataType:

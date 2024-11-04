@@ -78,7 +78,7 @@ class TestLib3:
         codeDescr = (
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars.id"), (None, "frame.vars.Title"),
-                                (None, "(-2,10,0)"), (None, "None"),
+                                (None, "((-2,10,0),)"), (None, "None"),
                                 ("WyeUI.InputLabel", (None, "frame.vars.labelId"), (None, "['InputLabel']")),
                                 ("WyeUI.InputText", (None, "frame.vars.text1ID"),
                                   (None, "['T1Label']"),
@@ -96,7 +96,7 @@ class TestLib3:
             #(None, "print('DlgTst frame 1 vars', frame.vars)"),
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
             ("WyeUI.Dialog", (None, "frame.vars.id2"), (None, "frame.vars.Title2"),
-                               (None, "(2,10,0)"), (None, "None"),
+                               (None, "((2,10,0),)"), (None, "None"),
                                ("WyeUI.InputText", (None, "frame.vars.text1ID2"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars.text1Val2")
