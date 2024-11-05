@@ -679,19 +679,9 @@ class WyeUI(Wye.staticObj):
                 if len(hier) > 0:
                     frm = hier[-1]
                     #print("FocusManager doSelect", frm, ",", frm.params.title[0], ",", id)
-                    if False:  #not frm.parentFrame is None:
-                        if frm.parentFrame.verb.doSelect(frm, id):
-                            WyeUI.FocusManager._activeDialog = frm.parentFrame
-                            #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
-                            status = True
-                    else:
-                        if frm.verb.doSelect(frm, id):
-                            WyeUI.FocusManager._activeDialog = frm
-                            #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
-                            status = True
-
-                    # if dialog active, show user
-                    if status:
+                    if frm.verb.doSelect(frm, id):
+                        WyeUI.FocusManager._activeDialog = frm
+                        #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
                         WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, True)
 
             return status
@@ -930,7 +920,7 @@ class WyeUI(Wye.staticObj):
             #print("  frame.params.frame=",frame.params.frame)
             #frame.vars.verb[0] = frame.params.verb[0]       # save verb to call
             frame.params.frame[0] = frame  # self referential!
-            print("InputButton ", frame.params.label, " params.verb", frame.params.verb)
+            #print("InputButton ", frame.params.label, " params.verb", frame.params.verb)
             frame.vars.verb[0] = frame.params.verb[0]  # save verb to call
             #print("InputButton params.frame=", frame.params.frame)
             # return frame and success, caller dialog will use frame as placeholder for input
@@ -1698,6 +1688,12 @@ class WyeUI(Wye.staticObj):
 
                     # can only edit objects with Wye code
                     objFrame = frame.params.objFrame[0]       # shorthand
+
+                    # if this is one subframe of a parallel stream, edit the parent
+                    if objFrame.verb is WyeCore.ParallelStream:
+                        print(objFrame.verb.__name__, " is parallel stream, get parent", objFrame.parentFrame.verb.__name__)
+                        objFrame = objFrame.parentFrame
+
                     if not hasattr(objFrame.verb, "codeDescr"):
                         print("Object", objFrame.verb.__name__, " has no code to edit")
                         print("     ", objFrame.tostring())
@@ -1714,7 +1710,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
                     dlgFrm.params.retVal = frame.vars.dlgStat
-                    dlgFrm.params.title = ["Edit Object " + frame.params.objFrame[0].verb.__name__]
+                    dlgFrm.params.title = ["Edit Object " + objFrame.verb.__name__]
                     dlgFrm.params.position = [(0,10,0)] # todo - get from object
                     dlgFrm.params.parent = [None]
                     frame.vars.dlgFrm[0] = dlgFrm
@@ -1778,50 +1774,59 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.inputs[0].append([lblFrm])
 
                     attrIx = 0
+                    # If it's parallel code blocks
+                    if isinstance(objFrame, Wye.parallelFrame):
+                            lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                            lblFrm.params.frame = [None]  # return value
+                            lblFrm.params.parent = [None]
+                            lblFrm.params.label = ["TODO - Parallel Code"]
+                            WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                            dlgFrm.params.inputs[0].append([lblFrm])
+                    # regular boring normal single stream code
+                    else:
+                        for tuple in objFrame.verb.codeDescr:
+                            # make the dialog row
+                            btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                            dlgFrm.params.inputs[0].append([btnFrm])
+                            btnFrm.params.frame = [None]
+                            btnFrm.params.parent = [None]  # return value
 
-                    for tuple in objFrame.verb.codeDescr:
-                        # make the dialog row
-                        btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                        dlgFrm.params.inputs[0].append([btnFrm])
-                        btnFrm.params.frame = [None]
-                        btnFrm.params.parent = [None]  # return value
+                            # fill in text and callback based on code row type
+                            if tuple[0] is None:
+                                btnFrm.params.label = ["  Code:" + tuple[1]]
+                                btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                            elif "." in tuple[0]:
+                                btnFrm.params.label = ["  Verb:" + tuple[0] + "," + str(tuple[1])]
+                                btnFrm.params.verb = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
+                            else:
+                                match tuple[0]:
+                                    case "Expr":
+                                        btnFrm.params.label = ["  Expression:" + tuple[1]]
+                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                    case "Const":
+                                        btnFrm.params.label = ["  Constant:" + tuple[1]]
+                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
-                        # fill in text and callback based on code row type
-                        if tuple[0] is None:
-                            btnFrm.params.label = ["  Code:" + tuple[1]]
-                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-                        elif "." in tuple[0]:
-                            btnFrm.params.label = ["  Verb:" + tuple[0] + "," + str(tuple[1])]
-                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
-                        else:
-                            match tuple[0]:
-                                case "Expr":
-                                    btnFrm.params.label = ["  Expression:" + tuple[1]]
-                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-                                case "Const":
-                                    btnFrm.params.label = ["  Constant:" + tuple[1]]
-                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                    case "Var":
+                                        btnFrm.params.label = ["  Variable:" + tuple[1]]
+                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
-                                case "Var":
-                                    btnFrm.params.label = ["  Variable:" + tuple[1]]
-                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                    case "GoTo":
+                                        btnFrm.params.label = ["  GoTo:" + tuple[1]]
+                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
-                                case "GoTo":
-                                    btnFrm.params.label = ["  GoTo:" + tuple[1]]
-                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                    case "Label":
+                                        btnFrm.params.label = ["  Label:" + tuple[1]]
+                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
-                                case "Label":
-                                    btnFrm.params.label = ["  Label:" + tuple[1]]
-                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                    case "IfGoTo":
+                                        btnFrm.params.label = ["  If GoTo:" + tuple[1]]
+                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
-                                case "IfGoTo":
-                                    btnFrm.params.label = ["  If GoTo:" + tuple[1]]
-                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                            btnFrm.params.optData = [(attrIx, dlgFrm, tuple, objFrame)]  # button row, dialog frame
+                            WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
-                        btnFrm.params.optData = [(attrIx, dlgFrm, tuple, objFrame)]  # button row, dialog frame
-                        WyeCore.libs.WyeUI.InputButton.run(btnFrm)
-
-                        attrIx += 1
+                            attrIx += 1
 
                     # WyeUI.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
@@ -2064,7 +2069,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
-                    lblFrm.params.label = ["Active Object stacks:"]
+                    lblFrm.params.label = ["Active Objects:"]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
@@ -2134,16 +2139,19 @@ class WyeUI(Wye.staticObj):
             match (frame.PC):
                 case 0:
                     data = frame.eventData
-                    print("DebugFrameCallback data='" + str(data) + "'")
+                    #print("DebugFrameCallback data='" + str(data) + "'")
                     objFrame = data[1][1]
-                    print("param ix", data[1][0], " debug frame", objFrame) # objFrame.verb.__name__)
+                    #print("param ix", data[1][0], " debug frame", objFrame) # objFrame.verb.__name__)
+
+                    objRow = data[1][0]
+                    objOffset = (objRow + 2) * .3
 
                     # Display contents of frame in a dialog
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
                     dlgFrm.params.retVal = frame.vars.dlgStat
-                    dlgFrm.params.title = ["Object " + objFrame.verb.__name__ + " frame"]
-                    dlgFrm.params.position = [(0, 9, 0)]  # todo - get from object
+                    dlgFrm.params.title = ["Debug " + objFrame.verb.__name__]
+                    dlgFrm.params.position = [(2, 9.8, -objOffset)]  # todo - get from object
                     dlgFrm.params.parent = [None]
                     frame.vars.dlgFrm[0] = dlgFrm
 
@@ -2207,7 +2215,7 @@ class WyeUI(Wye.staticObj):
 
                     attrIx = 0
 
-                    print("objFrame is ", )
+                    # Need meta layer to display parallel code blocks
                     if isinstance(objFrame, Wye.parallelFrame):
                             lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                             lblFrm.params.frame = [None]  # return value
@@ -2215,49 +2223,51 @@ class WyeUI(Wye.staticObj):
                             lblFrm.params.label = ["TODO - Parallel Code"]
                             WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                             dlgFrm.params.inputs[0].append([lblFrm])
+                    # regular boring normal single stream code
                     else:
-                        for tuple in objFrame.verb.codeDescr:
-                            print("  do tuple ", tuple)
-                            # make the dialog row
-                            btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                            dlgFrm.params.inputs[0].append([btnFrm])
-                            btnFrm.params.frame = [None]  # return value
-                            btnFrm.params.parent = [None]
+                        if hasattr(objFrame, "codeDescr"):
+                            for tuple in objFrame.verb.codeDescr:
+                                print("  do tuple ", tuple)
+                                # make the dialog row
+                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                                dlgFrm.params.inputs[0].append([btnFrm])
+                                btnFrm.params.frame = [None]  # return value
+                                btnFrm.params.parent = [None]
 
-                            # fill in text and callback based on code row type
-                            if tuple[0] is None:
-                                btnFrm.params.label = ["  Code:" + tuple[1]]
-                                btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-                            elif "." in tuple[0]:
-                                btnFrm.params.label = ["  Verb:" + tuple[0] + "," + str(tuple[1])]
-                                btnFrm.params.verb = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
-                            else:
-                                match tuple[0]:
-                                    case "Expr":
-                                        btnFrm.params.label = ["  Expression:" + tuple[1]]
-                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-                                    case "Const":
-                                        btnFrm.params.label = ["  Constant:" + tuple[1]]
-                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                # fill in text and callback based on code row type
+                                if tuple[0] is None:
+                                    btnFrm.params.label = ["  Code:" + tuple[1]]
+                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                elif "." in tuple[0]:
+                                    btnFrm.params.label = ["  Verb:" + tuple[0] + "," + str(tuple[1])]
+                                    btnFrm.params.verb = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
+                                else:
+                                    match tuple[0]:
+                                        case "Expr":
+                                            btnFrm.params.label = ["  Expression:" + tuple[1]]
+                                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                        case "Const":
+                                            btnFrm.params.label = ["  Constant:" + tuple[1]]
+                                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
-                                    case "Var":
-                                        btnFrm.params.label = ["  Variable:" + tuple[1]]
-                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                        case "Var":
+                                            btnFrm.params.label = ["  Variable:" + tuple[1]]
+                                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
-                                    case "GoTo":
-                                        btnFrm.params.label = ["  GoTo:" + tuple[1]]
-                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                        case "GoTo":
+                                            btnFrm.params.label = ["  GoTo:" + tuple[1]]
+                                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
-                                    case "Label":
-                                        btnFrm.params.label = ["  Label:" + tuple[1]]
-                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                        case "Label":
+                                            btnFrm.params.label = ["  Label:" + tuple[1]]
+                                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
-                                    case "IfGoTo":
-                                        btnFrm.params.label = ["  If GoTo:" + tuple[1]]
-                                        btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                        case "IfGoTo":
+                                            btnFrm.params.label = ["  If GoTo:" + tuple[1]]
+                                            btnFrm.params.verb = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
-                            btnFrm.params.optData = [(attrIx, dlgFrm, tuple, objFrame)]  # button row, dialog frame
-                            WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+                                btnFrm.params.optData = [(attrIx, dlgFrm, tuple, objFrame)]  # button row, dialog frame
+                                WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
 
                     # WyeUI.Dialog.run(dlgFrm)

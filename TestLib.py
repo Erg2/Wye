@@ -552,14 +552,26 @@ class TestLib:
             #(None, "print('fishes before load', frame.vars.fishes)"),
             #(None, "print('fishTags', frame.vars.fishTags)"),
             (None, "objNm = 'flyer_0'+str(frame.vars.count[0]+2)+'.glb'"),
-            ("TestLib.testLoader",                          # generate fish to put in entry
-                (None, "frame.vars.fishes[frame.vars.count[0]]"),
-                (None, "[objNm]"),
-                (None, "[[frame.vars.count[0] ,5, -.5]]"),
-                (None, "[[.75,.75,.75]]"),
-                (None, "frame.vars.fishTags[frame.vars.count[0]]"),
-                (None, "[[1,1,0,1]]")
-            ),
+#            ("TestLib.testLoader",                          # generate fish to put in entry
+#                (None, "frame.vars.fishes[frame.vars.count[0]]"),
+#                (None, "[objNm]"),
+#                (None, "[[frame.vars.count[0] ,5, -.5]]"),
+#                (None, "[[.75,.75,.75]]"),
+#                (None, "frame.vars.fishTags[frame.vars.count[0]]"),
+#                (None, "[[1,1,0,1]]")
+#            ),
+            # load object and register this code for editing
+            ("WyeCore.libs.WyeLib.loadObject",
+             (None, "[frame]"),
+             (None, "frame.vars.fishes[frame.vars.count[0]]"),
+             (None, "[objNm]"),
+             (None, "[[frame.vars.count[0] ,5, -.5]]"),  # posVec
+             (None, "[[0, 90, 0]]"),  # rotVec
+             (None, "[[.75,.75,.75]]"),  # scaleVec
+             (None, "frame.vars.fishTags[frame.vars.count[0]]"),
+             (None, "[[0,1,0,1]]")
+             ),
+
             #(None, "print('fishes after load', frame.vars.fishes)"),
             #(None, "print('fishTags', frame.vars.fishTags)"),
             (None, "frame.vars.count[0] += 1"),     # next fish
@@ -630,14 +642,25 @@ class TestLib:
         codeDescr=(
                 (
                 #(None, ("print('leaderFish case 0: set up object')")),
-                ("TestLib.testLoader",
-                    (None, "frame.vars.fish"),
-                    (None, "['flyer_01.glb']"),
-                    (None, "[[0,5,-.5]]"),
-                    (None, "[[.75,.75,.75]]"),
-                    (None, "frame.vars.fishTag"),
-                    (None, "[[1,0,0,1]]")
-                ),
+                #("TestLib.testLoader",
+                #    (None, "frame.vars.fish"),
+                #    (None, "['flyer_01.glb']"),
+                #    (None, "[[0,5,-.5]]"),
+                #    (None, "[[.75,.75,.75]]"),
+                #    (None, "frame.vars.fishTag"),
+                #    (None, "[[1,0,0,1]]")
+                #),
+
+                ("WyeCore.libs.WyeLib.loadObject",
+                 (None, "[frame]"),
+                 (None, "frame.vars.fish"),
+                 (None, "['flyer_01.glb']"),
+                 (None, "[[0,5,-.5]]"),  # posVec
+                 (None, "[[0, 0, 0]]"),  # rotVec
+                 (None, "[[.75,.75,.75]]"),  # scaleVec
+                 (None, "frame.vars.fishTag"),
+                 (None, "[[1,0,0,1]]")
+                 ),
 
                 #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
                 (None, "from panda3d.core import LPoint3f"),
@@ -759,7 +782,7 @@ if dist > 2:
                 (None, "frame.vars.gObj"),
                 (None, "['flyer_01.glb']"),
                 (None, "[[-1,5,-.5]]"),       # posVec
-                (None, "[[-0, 90, 0]]"),      # rotVec
+                (None, "[[0, 90, 0]]"),      # rotVec
                 (None, "[[.75,.75,.75]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
                 (None, "[[0,1,0,1]]")
