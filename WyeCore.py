@@ -296,30 +296,36 @@ class WyeCore(Wye.staticObj):
                         WyeCore.lastIsNothingToRun = True
                         # print("worldRunner stack # ", stackNum, " nothing to run")
 
+                # if active object completed, remove the stack it is on from run list
                 if len(WyeCore.World.objKillList) > 0:
                     for frame in WyeCore.World.objKillList:
-                        WyeCore.World._removeActiveObject(frame)
+                        print("remove frame.SP ", frame.SP, " from objStacks", WyeCore.World.objStacks)
+                        WyeCore.World.objStacks.remove(frame.SP)
+                    WyeCore.World.objKillList.clear()
 
             return Task.cont  # tell panda3d we want to run next frame too
 
         # Start object verb and put it on active list so called every display cycle
+        # return its stack frame
         def startActiveObject(obj):
-            WyeCore.World.objs.append(obj)  # add to list of runtime objects
-            stk = []
-            f = obj.start(stk)  # start the object and get its stack frame
-            stk.append(f)  # create a stack for it
-            # f.params = [[0], ]  # place to put return param
+            #WyeCore.World.objs.append(obj)  # add to list of runtime objects
+            stk = []            # create stack to run object on
+            frame = obj.start(stk)  # start the object and get its stack frame
+            stk.append(frame)       # put obj frame on its stack
+            # frame.params = [[0], ]  # place to put return param
             WyeCore.World.objStacks.append(stk)  # put obj's stack on list and put obj's frame on the stack
-            return f
+            return frame
+
+        # Put object instance frame on active list
+        # caller already created stack and started the object
+        # (required when caller needs to pass params to the object)
+        def startActiveFrame(frame):
+            WyeCore.World.objStacks.append(frame.SP)  # put obj's stack on list and put obj's frame on the stack
+            return frame
 
         # Queue frame to be removed from active object list at end of this display cycle
         def stopActiveObject(frame):
             WyeCore.World.objKillList.append(frame)
-
-        # find and remove frame, obj from active list
-        # If obj on list multiple times, only the given frame will be removed and one instance of the object
-        def _removeActiveObject(frame):
-            pass
 
         # Find first active instance of object with given name
         def findActiveObj(name):
@@ -544,6 +550,7 @@ class WyeCore(Wye.staticObj):
 
             self.accept('mouse1', self.objSelectEvent)
             self.accept('alt-mouse1', self.objSelectEvent)
+            self.accept('control-mouse1', self.objSelectEvent)
 
             self.pickerEnable = True
 

@@ -513,9 +513,9 @@ class WyeUI(Wye.staticObj):
             #print("CameraControl mousemove:", ("m1Down" if self.m1Down else ("m3Down" if self.m3Down else "")))
 
             # if don't have the debug menu and the user wants it, start it
-            if self.m1Pressed and self.shift and self.alt and self.ctl:
+            if self.m1Pressed and self.shift and self.alt:
                 if not WyeCore.World.debugger:
-                    WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.DebugDialog)
+                    WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.DebugMainDialog)
                 else:
                     print("Already have debugger")
             elif self.m1Down:
@@ -1629,9 +1629,8 @@ class WyeUI(Wye.staticObj):
         # User clicked on object.  It alt key down and it's editable, open the editor
         def tagClicked(self, wyeID):
             #print("ObjEditCtl tagClicked")
-            # if alt key down
-            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
-                #print("ObjEditCtl tagkClicked: Alt held down, is wyeID registered?")
+            # if ctrl then edit
+            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
                 frm = WyeCore.World.getRegisteredObj(wyeID)
                 if not frm is None:
                     #print("wyeID", wyeID, " Is registered")
@@ -1642,6 +1641,27 @@ class WyeUI(Wye.staticObj):
                     edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.ObjEditor)
                     #print("ObjEditorCtl: Fill in ObjEditor objFrame param")
                     edFrm.params.objFrame = [frm]
+                    return True
+
+            # if alt key down then debug
+            elif base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
+                #print("ObjEditCtl tagkClicked: Alt held down, is wyeID registered?")
+                frm = WyeCore.World.getRegisteredObj(wyeID)
+                if not frm is None:
+                    #print("wyeID", wyeID, " Is registered")
+                    #print("ObjEditCtl: Edit object", frm.verb.__name__)
+
+                    # set up object to be put on active list
+                    #print("ObjEditorCtl: Create ObjDebugger")
+                    stk = []            # create stack to run object on
+                    dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(stk)  # start obj debugger and get its stack frame
+                    dbgFrm.params.objFrame = [frm]  # put object to edit in editor frame
+                    stk.append(dbgFrm)  # put obj debugger on its stack
+
+                    # put object frame on active list
+                    WyeCore.World.startActiveFrame(dbgFrm)
+                    #print("ObjEditorCtl: Fill in ObjEditor objFrame param")
+
                     return True
 
             # Get this far and we didn't use the tag so let someone else have it
@@ -1835,7 +1855,7 @@ class WyeUI(Wye.staticObj):
 
                 case 1:
                     frame.SP.pop()  # remove dialog frame from stack
-                    print("ObjEditor: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
+                    #print("ObjEditor: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
                     frame.status = Wye.status.SUCCESS  # done
 
 
@@ -2036,7 +2056,7 @@ class WyeUI(Wye.staticObj):
                     pass
 
     # show active object stacks
-    class DebugDialog:
+    class DebugMainDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         autoStart = False
@@ -2049,7 +2069,7 @@ class WyeUI(Wye.staticObj):
         activeFrames = {}
 
         def start(stack):
-            return Wye.codeFrame(WyeUI.DebugDialog, stack)
+            return Wye.codeFrame(WyeUI.DebugMainDialog, stack)
 
         def run(frame):
             match(frame.PC):
@@ -2121,6 +2141,33 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.stopActiveObject(WyeCore.World.debugger)
                     print("Clear debugger")
                     WyeCore.World.debugger = None
+
+    # debug object clicked on
+    class ObjectDebugger:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = False
+        paramDescr = (("objFrame", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
+        varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
+                    ("dlgStat", Wye.dType.INTEGER, -1),
+                    )
+
+        # global list of frames being edited
+        activeFrames = {}
+
+        def start(stack):
+            return Wye.codeFrame(WyeUI.ObjectDebugger, stack)
+
+        def run(frame):
+            match(frame.PC):
+                case 0:
+                    dbgFrm = WyeCore.libs.WyeUI.DebugFrameCallback.start(frame.SP)
+                    dbgFrm.eventData = [0, (0, frame.params.objFrame[0])]  # button row, dialog frame
+                    frame.SP.append(dbgFrm)
+                    frame.PC += 1
+                case 1:
+                    dbgFrm = frame.SP.pop()
+
 
     #  Show current frame contents
     class DebugFrameCallback:
@@ -2277,7 +2324,7 @@ class WyeUI(Wye.staticObj):
 
                 case 1:
                     frame.SP.pop()  # remove dialog frame from stack
-                    print("ObjEditor: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
+                    #print("ObjDebugger: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
                     frame.status = Wye.status.SUCCESS  # done
 
 
