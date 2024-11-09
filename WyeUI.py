@@ -393,6 +393,7 @@ class WyeUI(Wye.staticObj):
         #def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
         #    label = WyeUI._label3d(text, color, pos, scale, bg)
 
+    # This does more than camera control, it also triggers debugger and editor
     class CameraControl(DirectObject):
         def __init__(self):
             self.m1Down = False     # state
@@ -411,41 +412,12 @@ class WyeUI(Wye.staticObj):
             self.ctlPressed = False
             self.altPressed = False
 
-            # Note: cannot get shift-mouse-up or shift-mouse_up
-            # plus
-            #self.accept('mouse1', self.mouseEvt)
-            #self.accept('mouse2', self.mouseEvt)
-            #self.accept('mouse3', self.mouseEvt)
-            #self.accept('mouse1-up', self.mouseEvt)
-            #self.accept('mouse2-up', self.mouseEvt)
-            #self.accept('mouse3-up', self.mouseEvt)
-            #self.accept('shift-mouse1', self.shiftMouseEvt)
-            #self.accept('shift-mouse2', self.shiftMouseEvt)
-            #self.accept('shift-mouse3', self.shiftMouseEvt)
-            #self.accept('shift-mouse1-up', self.shiftMouseEvt)
-            #self.accept('shift-mouse2-up', self.shiftMouseEvt)
-            #self.accept('shift-mouse3-up', self.shiftMouseEvt)
-
-            self.walk = False       # start off flying
+            self.walk = False       # start off flying [not currently implemented]
             self.viewDir = (0, 1, 0)
             self.shift = False
 
             self.speed = .5
-
-        #def mouseEvt(self):
-        #    global base
-
-        #    if self.shift:
-        #        print("Shift up")
-        #        self.shift = False
-
-        #def shiftMouseEvt(self):
-        #    self.shift = base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.shift())
-        #    print("shiftMouseEvt shift", self.shift)
-        #    self.mouseEvt
-
-        #    #print("CameraControl mouseEvt: m1Down", self.m1Down, " m2Down", self.m2Down, " m3Down", self.m3Down)
-
+            self.rotRate = .5
 
 
         def mouseMove(self, x, y):
@@ -459,12 +431,15 @@ class WyeUI(Wye.staticObj):
             self.ctlPressed = False
             self.altPressed = False
 
+
             # get mouse buttons and mouse-down start pos
             evt = WyeCore.base.mouseWatcherNode.getMouse()
             if base.mouseWatcherNode.isButtonDown(MouseButton.one()):
                 if not self.m1Down:
+                    print("m1")
                     self.m1Down = True
                     self.m1DownPos = (x, y)
+                    self.m1DownRot = base.camera.getHpr()
                     self.m1Pressed = True
             else:
                 self.m1Down = False
@@ -472,6 +447,7 @@ class WyeUI(Wye.staticObj):
                 if not self.m2Down:
                     self.m2Down = True
                     self.m2DownPos = (x, y)
+                    self.m2DownRot = base.camera.getHpr()
                     self.m2Pressed = True
             else:
                 self.m2Down = False
@@ -479,38 +455,38 @@ class WyeUI(Wye.staticObj):
                 if not self.m3Down:
                     self.m3Down = True
                     self.m3DownPos = (x, y)
+                    self.m3DownRot = base.camera.getHpr()
                     self.m3Pressed = True
             else:
                 self.m3Down = False
 
+            # if anyone wants to know a mouse button was pressed
+            if (self.m1Pressed or self.m2Pressed or self.m3Pressed) and len(WyeCore.World.mouseCallbacks) > 0:
+                for callback in WyeCore.World.mouseCallbacks:
+                    callback()
+
             # get shift key
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.shift()):
                 if not self.shift:
+                    print("Shift")
                     self.shift = True
                     self.shiftPressed = True
             else:
                 self.shift = False
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
                 if not self.alt:
+                    print("Alt")
                     self.alt = True
                     self.altPressed = True
             else:
                 self.alt = False
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
                 if not self.ctl:
+                    print("Ctl")
                     self.ctl = True
                     self.ctlPressed = True
             else:
                 self.ctl = False
-
-            #if self.m1Pressed or self.m2Pressed or self.m3Pressed:
-            #    print("m1Pressed" if self.m1Pressed else "" + "m2Pressed" if self.m2Pressed else "" + "m3Pressed" if self.m3Pressed else "")
-            #if self.altPressed or self.shiftPressed or self.ctlPressed:
-            #    print("altPressed" if self.altPressed else "" + "shiftPressed" if self.shiftPressed else "" + "ctlPressed" if self.ctlPressed else "")
-
-            # do movement based on mouse buttons
-            #print("CameraControl mousemove:", x, ",", y, (self.m1Down if "m1Down" else (self.m2Down if "m2Down" else "")))
-            #print("CameraControl mousemove:", ("m1Down" if self.m1Down else ("m3Down" if self.m3Down else "")))
 
             # if don't have the debug menu and the user wants it, start it
             if self.m1Pressed and self.shift and self.alt:
@@ -518,30 +494,52 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.DebugMainDialog)
                 else:
                     print("Already have debugger")
+
+            # rotate viewpoint
             elif self.m1Down:
-                # rotate viewpoint
                 #print("CameraControl mouseMove: m1Down")
-                pass
+                camRot = base.camera.getHpr()
+                dx = -(x - self.m1DownPos[0]) * self.rotRate
+                if self.shift:
+                    dx = 0  # don't rotate while tilting
+                    dy = 0
+                    dz = (x - self.m1DownPos[0]) * self.rotRate
+                else:
+                    dy = (y - self.m1DownPos[1]) * self.rotRate
+                    dz = 0
+                base.camera.setHpr(camRot[0]+dx, camRot[1]+dy, camRot[2]+dz)
+
+            # reset viewpoint
             elif self.m2Down:
                 base.camera.setPos(0,0,0)
+                base.camera.setHpr(0,0,0)
+
+            # move viewpoint
             elif self.m3Down:
                 # move viewpoint
                 #print("CameraControl mouseMove: m3Down")
+
+                # remove tilt - do all moves relative to upright orientation
+                camHpr = base.camera.getHpr()
+                base.camera.setHpr(camHpr[0], camHpr[1], 0)
                 camPos = base.camera.getPos()
                 dx = (x - self.m3DownPos[0]) * self.speed
                 if self.shift:
                     dy = 0
-                    dz = (y - self.m3DownPos[1]) * self.speed
+                    dz = -(y - self.m3DownPos[1]) * self.speed
                 else:
                     dy = (y - self.m3DownPos[1]) * self.speed
                     dz = 0
                 if self.walk:
                     self.m3DownPos = (x,y)
                 base.camera.setPos(camPos[0]+dx, camPos[1]+dy, camPos[2]+dz)
+                # put cam orientation back
+                base.camera.setHpr(camHpr)
                 #print("move", dx, ",", dy, " camPos",camPos, " ", x, ",", y)
 
                 pass
 
+        # stub
         def setFly(self, doFly):
             self.fly = doFly
 
@@ -1628,7 +1626,7 @@ class WyeUI(Wye.staticObj):
 
         # User clicked on object.  It alt key down and it's editable, open the editor
         def tagClicked(self, wyeID):
-            #print("ObjEditCtl tagClicked")
+            print("ObjEditCtl tagClicked")
             # if ctrl then edit
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
                 frm = WyeCore.World.getRegisteredObj(wyeID)
@@ -1645,7 +1643,7 @@ class WyeUI(Wye.staticObj):
 
             # if alt key down then debug
             elif base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
-                #print("ObjEditCtl tagkClicked: Alt held down, is wyeID registered?")
+                print("ObjEditCtl tagkClicked: Alt held down, is wyeID registered?")
                 frm = WyeCore.World.getRegisteredObj(wyeID)
                 if not frm is None:
                     #print("wyeID", wyeID, " Is registered")
@@ -2162,7 +2160,12 @@ class WyeUI(Wye.staticObj):
             match(frame.PC):
                 case 0:
                     dbgFrm = WyeCore.libs.WyeUI.DebugFrameCallback.start(frame.SP)
-                    dbgFrm.eventData = [0, (0, frame.params.objFrame[0])]  # button row, dialog frame
+                    objFrm = frame.params.objFrame[0]
+                    print("objectDebugger objFrm", objFrm.verb.__name__)
+                    if objFrm.verb is WyeCore.ParallelStream:
+                        objFrm = objFrm.parentFrame
+                    print("  objFrm is parallel, get parent", objFrm.verb.__name__)
+                    dbgFrm.eventData = [0, (0, objFrm)]  # button row, dialog frame
                     frame.SP.append(dbgFrm)
                     frame.PC += 1
                 case 1:

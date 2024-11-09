@@ -110,6 +110,10 @@ class WyeCore(Wye.staticObj):
         keyHandler = None           # keyboard handler slot
         mouseHandler = None         # mouse handler slot
         debugger = None             # no debugger running
+        mouseCallbacks = []         # any function wanting mouse events
+                                    #   Control seems to jam mouse events,
+                                    #   (neither mouse nor control-mouse gets called)
+                                    #   So do mouse manually.  Sigh
 
         # universe specific
         libList = []
@@ -344,6 +348,14 @@ class WyeCore(Wye.staticObj):
                 #stkIx += 1
             return None
 
+        def registerMouseCallback(callback):
+            if not callback in WyeCore.World.mouseCallbacks:
+                WyeCore.World.mouseCallbacks.append(callback)
+
+        def unregisterMouseCallback(callback):
+            if callback in WyeCore.World.mouseCallbacks:
+                WyeCore.World.mouseCallbacks.append(callback)
+
         # manage graphic object tag -> object frame list
         def registerObjTag(tag, frame):
             WyeCore.World.objTags[tag] = frame
@@ -548,9 +560,10 @@ class WyeCore(Wye.staticObj):
             # this holds the object that has been picked
             self.pickedObj = None
 
-            self.accept('mouse1', self.objSelectEvent)
-            self.accept('alt-mouse1', self.objSelectEvent)
-            self.accept('control-mouse1', self.objSelectEvent)
+            WyeCore.World.registerMouseCallback(self.objSelectEvent)
+            #self.accept('mouse1', self.objSelectEvent)
+            #self.accept('control-mouse1', self.objSelectEvent)
+            #self.accept('alt-mouse1', self.objSelectEvent)
 
             self.pickerEnable = True
 
