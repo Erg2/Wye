@@ -436,7 +436,6 @@ class WyeUI(Wye.staticObj):
             evt = WyeCore.base.mouseWatcherNode.getMouse()
             if base.mouseWatcherNode.isButtonDown(MouseButton.one()):
                 if not self.m1Down:
-                    print("m1")
                     self.m1Down = True
                     self.m1DownPos = (x, y)
                     self.m1DownRot = base.camera.getHpr()
@@ -468,21 +467,18 @@ class WyeUI(Wye.staticObj):
             # get shift key
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.shift()):
                 if not self.shift:
-                    print("Shift")
                     self.shift = True
                     self.shiftPressed = True
             else:
                 self.shift = False
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
                 if not self.alt:
-                    print("Alt")
                     self.alt = True
                     self.altPressed = True
             else:
                 self.alt = False
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
                 if not self.ctl:
-                    print("Ctl")
                     self.ctl = True
                     self.ctlPressed = True
             else:
@@ -496,26 +492,27 @@ class WyeUI(Wye.staticObj):
                     print("Already have debugger")
 
             # rotate viewpoint
-            elif self.m1Down:
+            elif self.m3Down:
                 #print("CameraControl mouseMove: m1Down")
                 camRot = base.camera.getHpr()
-                dx = -(x - self.m1DownPos[0]) * self.rotRate
+                dx = -(x - self.m3DownPos[0]) * self.rotRate
                 if self.shift:
                     dx = 0  # don't rotate while tilting
                     dy = 0
-                    dz = (x - self.m1DownPos[0]) * self.rotRate
+                    dz = (x - self.m3DownPos[0]) * self.rotRate
                 else:
-                    dy = (y - self.m1DownPos[1]) * self.rotRate
+                    dy = (y - self.m3DownPos[1]) * self.rotRate
                     dz = 0
                 base.camera.setHpr(camRot[0]+dx, camRot[1]+dy, camRot[2]+dz)
 
             # reset viewpoint
             elif self.m2Down:
-                base.camera.setPos(0,0,0)
+                if not self.shift:
+                    base.camera.setPos(0,0,0)
                 base.camera.setHpr(0,0,0)
 
             # move viewpoint
-            elif self.m3Down:
+            elif self.m1Down:
                 # move viewpoint
                 #print("CameraControl mouseMove: m3Down")
 
@@ -523,15 +520,15 @@ class WyeUI(Wye.staticObj):
                 camHpr = base.camera.getHpr()
                 base.camera.setHpr(camHpr[0], camHpr[1], 0)
                 camPos = base.camera.getPos()
-                dx = (x - self.m3DownPos[0]) * self.speed
+                dx = (x - self.m1DownPos[0]) * self.speed
                 if self.shift:
                     dy = 0
-                    dz = -(y - self.m3DownPos[1]) * self.speed
+                    dz = (y - self.m1DownPos[1]) * self.speed
                 else:
-                    dy = (y - self.m3DownPos[1]) * self.speed
+                    dy = (y - self.m1DownPos[1]) * self.speed
                     dz = 0
                 if self.walk:
-                    self.m3DownPos = (x,y)
+                    self.m1DownPos = (x,y)
                 base.camera.setPos(camPos[0]+dx, camPos[1]+dy, camPos[2]+dz)
                 # put cam orientation back
                 base.camera.setHpr(camHpr)
@@ -740,7 +737,8 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # 0 return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE))  # 1 user supplied label for field
-        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+                    ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
                     ("currPos", Wye.dType.INTEGER, 0),
                    )  # 0
 
@@ -757,6 +755,7 @@ class WyeUI(Wye.staticObj):
         def display(frame, dlgHeader, pos):
 
             pos[2] -= WyeUI.LINE_HEIGHT
+            frame.vars.position[0] = pos
 
             lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
@@ -779,7 +778,8 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
                       ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
-        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, 0),           # list of objects to delete on exit
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+                    ("gWidgetStack", Wye.dType.OBJECT_LIST, 0),           # list of objects to delete on exit
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
                     ("currVal", Wye.dType.STRING, ""),                    # current string value
                     ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
@@ -801,6 +801,7 @@ class WyeUI(Wye.staticObj):
         def display(frame, dlgHeader, pos):
 
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
+            frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
             lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
@@ -831,10 +832,13 @@ class WyeUI(Wye.staticObj):
                 gObj.removeNode()
 
         def setLabel(frame, text):
-            frame.vars.frame[0][0].setText(text)
+            frame.vars.gWidgetStack[0][0].setText(text)
 
-        def setCurrent(frame, index):
-            frame.vars.frame[0][1].setText(text)
+        def setValue(frame, text):
+            frame.vars.gWidget[0].setText(text)
+
+        def setCurrentPos(frame, index):
+            frame.vars.currPos[0] = index       # TODO needs validating!
 
     class InputInteger(InputText):
 
@@ -843,7 +847,8 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
                       ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
-        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, 0),           # list of objects to delete on exit
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+                    ("gWidgetStack", Wye.dType.OBJECT_LIST, 0),           # list of objects to delete on exit
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
                     ("currVal", Wye.dType.STRING, ""),                    # current string value
                     ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
@@ -859,6 +864,7 @@ class WyeUI(Wye.staticObj):
         def display(frame, dlgHeader, pos):
 
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
+            frame.vars.position = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
             lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
@@ -885,10 +891,10 @@ class WyeUI(Wye.staticObj):
             return gTags
 
         def setLabel(frame, text):
-            frame.vars.frame[0][0].setText(text)
+            frame.vars.gWidgetStack[0][0].setText(text)
 
-        def setText(frame, text):
-            frame.vars.frame[0][1].setText(str(text))
+        def setValue(frame, int):
+            frame.vars.gWidget[1].setText(str(int))
 
 
     # text input field
@@ -900,7 +906,8 @@ class WyeUI(Wye.staticObj):
                       ("verb", Wye.dType.STRING, Wye.access.REFERENCE),   # 2 verb to call when button clicked
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),   # 3 optional data
                       )
-        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+                    ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
                     ("gWidget", Wye.dType.OBJECT, None),                  # 1 associated graphic widget
                     ("verb", Wye.dType.OBJECT, None),                     # 2 verb to call
                     ("clickCount", Wye.dType.INTEGER, 0),                 # 3 button depressed count
@@ -927,6 +934,7 @@ class WyeUI(Wye.staticObj):
         def display(frame, dlgHeader, pos):
             #print("InputButton display: pos", pos)
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
+            frame.vars.position[0] = pos
             btn = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(btn)  # save for deleting on dialog close
@@ -939,7 +947,7 @@ class WyeUI(Wye.staticObj):
                 gObj.removeNode()
 
         def setLabel(frame, text):
-            frame.vars.frame[0][0].setText(text)
+            frame.vars.gWidget[0].setText(text)
 
 
     # dropdown input field
@@ -951,7 +959,8 @@ class WyeUI(Wye.staticObj):
                       ("list", Wye.dType.STRING, Wye.access.REFERENCE),     # text list of entries
                       ("selectionIx", Wye.dType.ANY, Wye.access.REFERENCE), # current selection index
                       )
-        varDescr = (("gWidgetStack", Wye.dType.OBJECT_LIST, None),        # list of objects to delete on exit
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+                    ("gWidgetStack", Wye.dType.OBJECT_LIST, None),        # list of objects to delete on exit
                     ("gWidget", Wye.dType.OBJECT, None),                  # associated graphic widget
                     ("verb", Wye.dType.OBJECT, None),                     # verb to call
                     ("clickCount", Wye.dType.INTEGER, 0),                 # button depressed count
@@ -978,6 +987,7 @@ class WyeUI(Wye.staticObj):
 
         def display(frame, dlgHeader, pos):
             print("InputDropdown display: pos", pos)
+            frame.vars.position[0] = pos
             #pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
             #btn = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
             #                     scale=(1, 1, 1), parent=dlgHeader.getNodePath())
@@ -1018,7 +1028,12 @@ class WyeUI(Wye.staticObj):
                 gObj.removeNode()
 
         def setLabel(frame, text):
-            frame.vars.frame[0][0].setText(text)
+            frame.vars.gWidgetStack[0][0].setText(text)
+
+        def setValue(frame, index):
+            # todo Range check index!
+            frame.vars.gWidget[0].setText(frame.vars.list[0][index])
+            frame.params.selectionIx[0] = index
 
     class InputDropdownCallback:
         mode = Wye.mode.MULTI_CYCLE
@@ -1163,7 +1178,9 @@ class WyeUI(Wye.staticObj):
 
                         setattr(inFrm, "parentFrame", frame)
 
-                        if inFrm.verb in [WyeUI.InputLabel, WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputButton, WyeUI.InputDropdown]:
+                        # display inputs
+                        # stash returned display obj tags in lookup dict to detect what user clicked on
+                        if hasattr(inFrm.verb, "display"):
                             for lbl in inFrm.verb.display(inFrm, dlgHeader, pos):  # displays label, updates pos, returns selection tags
                                 frame.vars.inpTags[0][lbl] = ii
 
