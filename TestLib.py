@@ -528,7 +528,7 @@ class TestLib:
         paramDescr = ()
         varDescr = (("fishes", Wye.dType.OBJECT_LIST, None),        # fish graphic objs
                     ("fishTags", Wye.dType.STRING, ""),
-                    ("pos", Wye.dType.STRING, [0,0,0]),
+                    ("position", Wye.dType.STRING, [0,0,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -0.02]),
                     ("angle", Wye.dType.FLOAT_LIST, [0., 90., 0.]),
                     ("target", Wye.dType.OBJECT, None),             # leader fish Wye obj frame
@@ -598,6 +598,7 @@ class TestLib:
             ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "SwimLoop"),  # if not done, loop for next fish
             (None, "frame.vars.count[0] = 0"),
             (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
+            ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, ("frame.vars.fishes[0]"))),
             ("GoTo", "SwimLoop")
         )
 
@@ -623,7 +624,6 @@ class TestLib:
         paramDescr = ()
         varDescr = (("fish", Wye.dType.OBJECT, None),
                     ("fishTag", Wye.dType.STRING, "obj1Tag"),
-                    ("pos", Wye.dType.FLOAT_LIST, [0.,5.,0.]),
                     ("tgtPos", Wye.dType.FLOAT_LIST, [0, 10, 0]),
                     ("tgtDist", Wye.dType.FLOAT, 1.),
                     ("currDist", Wye.dType.FLOAT, 0.),
@@ -637,6 +637,7 @@ class TestLib:
                     ("piAngle", Wye.dType.FLOAT, 0.),
                     ("sound", Wye.dType.OBJECT, None),
                     ("box", Wye.dType.OBJECT, None),
+                    ("position", Wye.dType.FLOAT_LIST, (0,5,-.5)),
                 )
 
         codeDescr=(
@@ -655,7 +656,7 @@ class TestLib:
                  (None, "[frame]"),
                  (None, "frame.vars.fish"),
                  (None, "['flyer_01.glb']"),
-                 (None, "[[0,5,-.5]]"),  # posVec
+                 (None, "frame.vars.position"),  # posVec
                  (None, "[[0, 0, 0]]"),  # rotVec
                  (None, "[[.75,.75,.75]]"),  # scaleVec
                  (None, "frame.vars.fishTag"),
@@ -709,6 +710,7 @@ if dist > 2:
                 (None, "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
                 #(None, "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
                 #(None, "print('new target point', frame.vars.tgtPos[0])"),
+                ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.fish")),
 
                 ("GoTo", "StartLoop")
 
@@ -773,7 +775,9 @@ if dist > 2:
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
-                    ("sound", Wye.dType.OBJECT, None))  # var 4
+                    ("sound", Wye.dType.OBJECT, None),
+                    ("position", Wye.dType.FLOAT_LIST, [-1,5,-.5]),
+                    )  # var 4
 
         codeDescr=(
             #(None, ("print('testObj2 case 0: start - set up object')")),
@@ -781,7 +785,7 @@ if dist > 2:
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
                 (None, "['flyer_01.glb']"),
-                (None, "[[-1,5,-.5]]"),       # posVec
+                (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
                 (None, "[[.75,.75,.75]]"),    # scaleVec
                 (None, "frame.vars.objTag"),

@@ -289,6 +289,29 @@ class WyeLib:
             #print("setObjPos set obj", gObj, "to", vec)
             gObj.setPos(gObj, vec[0], vec[1], vec[2])
 
+    # get model pos
+    class getObjPos:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("posVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE),
+                      ("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                    )
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.setObjPos, stack)
+
+        def run(frame):
+            #print("setObjPos run: params ", frame.params)
+            gObj = frame.params.obj[0]
+            #print("setObjPos set obj", gObj, "to", vec)
+            pos = gObj.getPos()
+
+            frame.params.posVec = [[pos[0], pos[1], pos[2] ]]
+
+
     # set object to given angle
     class setObjAngle:
         mode = Wye.mode.SINGLE_CYCLE
@@ -346,6 +369,33 @@ class WyeLib:
 
             hpr = frame.params.obj[0].getHpr()
             # print("New HPR ", hpr)
+
+
+
+    # return object current angle
+    class getObjAngle:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("angle", Wye.dType.FLOAT_LIST, [0,0,0]),
+                      ("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      )
+        varDescr = ()
+        codeDescr = ()
+        code = None
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.getObjAngle, stack)
+
+        # TODO - make multi-cycle
+        def run(frame):
+            #print('execute setObjAngle, params', frame.params, ' vars', frame.vars)
+
+            gObj = frame.params.obj[0]
+            angle = gObj.getHpr()
+            frame.params.angle = [[angle[0], angle[1], angle[2]]]
+
+            #hpr = frame.params.obj[0].getHpr()
+            #print("getObjAngle: HPR", hpr)
 
     # set object to given color (r,g,b,a, values 0..1.0)
     class setObjColor:

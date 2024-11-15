@@ -626,7 +626,7 @@ class WyeCore(Wye.staticObj):
                         # if there's a user input focus manager, call it
                         status = False
                         if WyeCore.editor:
-                            status = WyeCore.editor.tagClicked(wyeID)
+                            status = WyeCore.editor.tagClicked(wyeID, self.pickedObj.getPos())
                             #if status:
                             #    print("objSelectEvent: Editor used tag", wyeID)
 
@@ -759,6 +759,10 @@ class WyeCore(Wye.staticObj):
 
                                     #print(" parseWyeTuple: skip 0th entry in wyeTuple")
                                     continue        # skip processing any more of this tuple parameter
+
+                                # skip empty tuples (list ended in ",")
+                                if len(paramTuple) == 0:
+                                    continue
 
                                 tupleKey = paramTuple[0]
                                 #print(" parseWyeTuple: 2 parse paramTuple ", paramTuple)
