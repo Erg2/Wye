@@ -278,7 +278,8 @@ class WyeCore(Wye.staticObj):
                         #    print("worldRunner ERROR: stack # ", stackNum, " depth", len(stack)," stack[-1] frame = None")
                         #    exit(1)
                         if frame.status == Wye.status.CONTINUE:
-                            #print("worldRunner run: stack ", stackNum, " verb", frame.verb.__name__, " PC ", frame.PC)
+                            if Wye.debugOn:
+                                Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb"+ frame.verb.__name__+ " PC "+ str(frame.PC))
                             frame.verb.run(frame)
                             # if frame.status != Wye.status.CONTINUE:
                             #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
@@ -288,7 +289,8 @@ class WyeCore(Wye.staticObj):
                             # print("worldRunner: status = ", WyeCore.Utils.statusToString(frame.status))
                             if sLen > 1:  # if there's a parent frame on the stack list, let them know their called word has exited
                                 pFrame = stack[-2]
-                                # print("worldRunner: return from call, run frame one back from bottom ", pFrame.verb.__name__)
+                                if Wye.debugOn:
+                                    Wye.debug(pFrame, "worldRunner: return from call to"+ frame.verb.__name__+". Run parent frame "+pFrame.verb.__name__)
                                 pFrame.verb.run(pFrame)  # parent will remove child frame
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
@@ -512,12 +514,16 @@ class WyeCore(Wye.staticObj):
                         if frame.status == Wye.status.CONTINUE:
                             #print("repEventObj run: evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
                             frame.eventData = (evtID, evt[2])        # user data
+                            if Wye.debugOn:
+                                Wye.debug(frame, "RepeatEvent run:"+ frame.verb.__name__+ " evt data "+ str(frame.eventData))
                             frame.verb.run(frame)
                         # bottom of stack done, run next up on stack if any
                         elif len(evt[0]) > 1:
                             frame = evt[0][-2]
                             #print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
                             frame.eventData = (evtID, evt[2])        # user data
+                            if Wye.debugOn:
+                                print(frame, "RepeatEvent done, run parent:"+ frame.verb.__name__+ " evt data"+ str(frame.eventData))
                             frame.verb.run(frame)
                             # On parent error, bail out - TODO - consider letting its parent handle error
                             if frame.status == Wye.status.FAIL and len(evt[0]) > 1:
@@ -806,9 +812,12 @@ class WyeCore(Wye.staticObj):
 
 
                             #print("*** parseWyeTuple: finished params")
-                        codeText += "    "+wyeTuple[0] + ".run(frame."+eff+")\n    if frame."+eff+".status == Wye.status.FAIL:\n"
-                        #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
-                        codeText += "     frame.status = frame."+eff+".status\n     return\n"
+                            
+                            # debug hook placeholder
+                            codeText += "    if Wye.debugOn:\n      Wye.debug(frame."+eff+",'Exec run:'+frame."+eff+".verb.__name__)\n"
+                            codeText += "    "+wyeTuple[0] + ".run(frame."+eff+")\n    if frame."+eff+".status == Wye.status.FAIL:\n"
+                            #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
+                            codeText += "     frame.status = frame."+eff+".status\n     return\n"
 
                     # multi-cycle verbs create code that pushes a new frame on the stack which will run on the next display cycle and
                     # generates a new case statement in this verb that will pick up when the pushed frame completes
@@ -1142,5 +1151,6 @@ class WyeCore(Wye.staticObj):
             return Wye.codeFrame(WyeCore.ParallelStream, stack)
 
         def run(frame):
-            #print("ParallelStream run: frame", frame.tostring())
+            if Wye.debugOn:
+                Wye.debug(frame, "ParallelStream run: frame"+ frame.verb.__name__) #frame.tostring())
             frame.run(frame)

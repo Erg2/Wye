@@ -11,7 +11,21 @@
 # Wye container class that holds Wye classes
 class Wye:
 
+    debugOn = False          # true if exec should check debug flags
+    trace = True           # true if tracing
+    step = False            # true if single stepping
+    breakList = []          # list of frames to break on
+
     version = "0.3"
+
+
+    # if debugging is on, check for what to do on run()
+    def debug(frame, msg):
+        if Wye.trace:
+            print("trace frame", frame.verb.__name__, ":", msg)
+
+
+
     #############################################
     #
     #  Static Wye Classes
@@ -438,7 +452,8 @@ class Wye:
 
                     # if it's still running, run it again
                     if f.status == Wye.status.CONTINUE:
-                        #print("  frame", f.verb.__name__, " status CONTINUE, PC", f.PC, " run frame")
+                        if Wye.debugOn:
+                            Wye.debug(f, "runParallel: run frame "+ f.verb.__name__+ " status CONTINUE, PC " + str(f.PC)+ " run frame")
                         f.verb.run(f)
                         foundContinue = True
 
@@ -448,7 +463,8 @@ class Wye:
                         # have a parent on stack
                         if len(stack) > 1:
                             fp = stack[-2]
-                            #print("    run parent", fp.verb.__name__)
+                            if Wye.debugOn:
+                                Wye.debug(fp, "runParallel: run parent " + fp.verb.__name__)
                             fp.verb.run(fp)  # run parent (will test child status, remove from stack, and continue)
                             foundContinue = True  # technically we haven't checked, but we will next time
                         # no parent, atatus not CONTINUE, we're done with stream
@@ -524,7 +540,5 @@ class Wye:
         #self.currWorld = None  # the universe
         #self.picker = None  # 3d object picker
         #self.textBgnd = None  # Text background geom reffed by all text
-
-
 
 # if Wye UI is not already running, start it?
