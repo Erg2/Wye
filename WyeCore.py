@@ -273,7 +273,7 @@ class WyeCore(Wye.staticObj):
                         # if frame:
                         #    print("worldRunner stack # ", stackNum, " verb", frame.verb.__name__,
                         #          " status ", WyeCore.Utils.statusToString(frame.status),
-                        #          " stack:", WyeCore.Utils.stackToString(stack))
+                        #          " stack:", frame.stackToString(frame.SP))
                         # else:
                         #    print("worldRunner ERROR: stack # ", stackNum, " depth", len(stack)," stack[-1] frame = None")
                         #    exit(1)

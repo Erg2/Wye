@@ -672,7 +672,7 @@ def f():
         f4.params = [frame.vars[0], [1]]    # pass obj, rotation axis to spin
         frame.SP.append(f4)             # note2:  put its frame on the stack.  Execution will continue in spin until it's done
         #print("testObj2, frame.SP", frame.SP)
-        #print("testObj2, stack contains ", WyeCore.Utils.stackToString(frame.SP))
+        #print("testObj2, stack contains ", frame.stackToString(frame.SP))
         
         frame.PC = 3 # jump over delay to waitClick                    # bump forward a step - when spin completes we'll pick up at the next case
         

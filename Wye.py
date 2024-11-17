@@ -406,7 +406,7 @@ class Wye:
                 return Wye.codeFrame.varsToString(frame)
 
         # return stack in reverse order
-        def stackToString(stack):
+        def stackToString(frame, stack):
             sLen = len(stack)
             stkStr = "\n stack len=" + str(sLen)
             if sLen > 0:
@@ -436,7 +436,7 @@ class Wye:
             # DEBUG: print out all the stacks
             # print("parallel run: frame.stacks:")
             # for sIx in range(len(frame.stacks)):
-            # print(" stack:", sIx, WyeCore.Utils.stackToString(frame.stacks[sIx]))
+            # print(" stack:", sIx, frame.stackToString(frame.stacks[sIx]))
 
             # Each parallel code block (aka stream) has its own stack.
             # For each stack, process frame at end of stack.

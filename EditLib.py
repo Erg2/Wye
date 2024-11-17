@@ -39,9 +39,9 @@ class EditLib:
             # so have to pull out the temp values from the input controls
             # Do some hackery to get to the pop up dialog's inputs' local variables
             #print("dlgFrm", dlgFrm.params.title)
-            x = dlgFrm.params.inputs[0][0][0].vars.currVal[0]
-            y = dlgFrm.params.inputs[0][1][0].vars.currVal[0]
-            z = dlgFrm.params.inputs[0][2][0].vars.currVal[0]
+            x = dlgFrm.params.inputs[0][0].vars.currVal[0]
+            y = dlgFrm.params.inputs[0][1].vars.currVal[0]
+            z = dlgFrm.params.inputs[0][2].vars.currVal[0]
 
             frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
             #print("  hpr", dlgFrm.vars.target[0].vars.gObj[0].getHpr())
