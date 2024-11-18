@@ -962,7 +962,7 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),    # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),    # user supplied label for field
                       ("list", Wye.dType.STRING, Wye.access.REFERENCE),     # text list of entries
-                      ("selectionIx", Wye.dType.ANY, Wye.access.REFERENCE), # current selection index
+                      ("selectionIx", Wye.dType.INTEGER, Wye.access.REFERENCE), # current selection index
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),        # list of objects to delete on exit
@@ -1016,7 +1016,7 @@ class WyeUI(Wye.staticObj):
             # offset 3d input field right past end of 3d label
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
-            txt = frame.params.selectionIx[0]
+            txt = Wye.dType.tostring(Wye.dType.dTypeList[frame.params.selectionIx[0]])
             btn = WyeUI._label3d(txt, WyeUI.LABEL_COLOR,
                                  pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
             btn.setColor(WyeUI.TEXT_COLOR)
@@ -1064,7 +1064,7 @@ class WyeUI(Wye.staticObj):
                     objFrm = data[1][3]
                     varIx = data[1][0]
 
-                    #print(" parentFrm", parentFrm.params.title[0], ":", parentFrm.tostring())
+                    print("InputDropdownCallback parentFrm", parentFrm.params.title[0], ":", parentFrm.tostring())
                     #print(" objFrm", objFrm.tostring())
 
                     frame.vars.rowFrm[0] = rowFrm
@@ -2093,7 +2093,7 @@ class WyeUI(Wye.staticObj):
                     varTypeFrm.params.frame = [None]
                     varTypeFrm.params.label = ["Type:"]
                     varTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.dTypeList]]
-                    varTypeFrm.params.selectionIx = [Wye.dType.tostring(frame.vars.varType[0])]
+                    varTypeFrm.params.selectionIx = [Wye.dType.dTypeList.index(frame.vars.varType[0])]
                     varTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVarTypeCallback]
                     varTypeFrm.params.optData = ((varIx, varTypeFrm, dlgFrm, objFrm, frame.vars.varType[0]),)    # var to return chosen type in
                     varTypeFrm.verb.run(varTypeFrm)
@@ -2115,30 +2115,24 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = frame.SP.pop()
                     # check status to see if values should be used
                     if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
-                        print("EditVarCallback return from Edit Variable dialog.  EV Dlg params", dlgFrm.paramsToStringV())
                         label = dlgFrm.params.inputs[0][0].params.value[0]
                         typeIx = dlgFrm.params.inputs[0][1].params.selectionIx[0]
-                        type
+                        type = Wye.dType.dTypeList[typeIx]
                         initVal = dlgFrm.params.inputs[0][2].params.value[0]
-                        print("EditVarCallback run: returned from edit var dialog. Status", Wye.status.tostring(dlgFrm.status))
-                        print("   label=", label, " typeIx=", typeIx, " (type=",dlgFrm.params.inputs[0][1].params.list[0][typeIx], ") initial value=", initVal)
 
                         # convert initVal to appropriate type
-                        # TODO - do this!
+                        # TODO - do initval type conversion!!!!
+                        initVal = Wye.dType.convertType(initVal, type)
 
 
                         # var descriptions are constants so have to rebuild the whole thing
                         preDescr = objFrm.verb.varDescr[:varIx]
                         postDescr = objFrm.verb.varDescr[varIx+1:]
-                        descr = ((label, Wye.dType.dTypeList[typeIx], initVal), )
-                        print("preDescr", preDescr)
-                        print("descr", descr)
-                        print("postDescr", postDescr)
+                        descr = ((label, type, initVal), )
                         objFrm.verb.varDescr = preDescr + descr + postDescr
-                        print("varDescr", objFrm.verb.varDescr)
 
-                        rowTxt = "  " + label + " type:" + Wye.dType.tostring(Wye.dType.dTypeList[typeIx]) + " = " + str(initVal)
-                        print("new row", rowTxt)
+                        rowTxt = "  " + label + " type:" + Wye.dType.tostring(type) + " = " + str(initVal)
+                        #print("new row", rowTxt)
                         btnFrm.verb.setLabel(btnFrm, rowTxt)
 
                     # either way, we're done
@@ -2166,7 +2160,8 @@ class WyeUI(Wye.staticObj):
                 case 1:
                     pass
 
-    # show active object stacks
+    # show active objects (currently running object stacks)
+    # so user can debug them
     class DebugMainDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
@@ -2253,7 +2248,7 @@ class WyeUI(Wye.staticObj):
                     print("Clear debugger")
                     WyeCore.World.debugger = None
 
-    #  Show current frame contents
+    # User selected an object, open its frame in the debugger
     class DebugFrameCallback:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
@@ -2291,7 +2286,7 @@ class WyeUI(Wye.staticObj):
 
 
 
-    # debug
+    # Open up an object and debug it
     class ObjectDebugger:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING

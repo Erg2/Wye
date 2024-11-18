@@ -170,40 +170,104 @@ class Wye:
         def tostring(dataType):            # static print function
             match dataType:
                 case Wye.dType.NONE:
-                    return "NONE"
+                    return "None"
                 case Wye.dType.ANY:
-                    return "ANY"
+                    return "Any"
                 case Wye.dType.NUMBER:
-                    return "NUMBER"
+                    return "Number"
                 case Wye.dType.INTEGER:
-                    return "INTEGER"
+                    return "Integer"
                 case Wye.dType.FLOAT:
-                    return "FLOAT"
+                    return "Float"
                 case Wye.dType.BOOL:
-                    return "BOOL"
+                    return "Bool"
                 case Wye.dType.OBJECT:
-                    return "OBJECT"
+                    return "Object"
                 case Wye.dType.STRING:
-                    return "STRING"
+                    return "String"
                 case Wye.dType.ANY_LIST:
-                    return "NUMBER_LIST"
+                    return "Number_list"
                 case Wye.dType.ANY_LIST:
-                    return "NUMBER_LIST"
+                    return "Number_list"
                 case Wye.dType.INTEGER_LIST:
-                    return "INTEGER_LIST"
+                    return "Integer_list"
                 case Wye.dType.FLOAT_LIST:
-                    return "FLOAT_LIST"
+                    return "Float_list"
                 case Wye.dType.BOOL_LIST:
-                    return "BOOL_LIST"
+                    return "Bool_list"
                 case Wye.dType.OBJECT_LIST:
-                    return "OBJECT_LIST"
+                    return "Object_list"
                 case Wye.dType.STRING_LIST:
-                    return "STRING_LIST"
+                    return "String_list"
                 case Wye.dType.VARIABLE:
-                    return "VARIABLE"
+                    return "Variable"
 
                 case _:
                     return "--unknown data dType value " + str(dataType) + "--"
+
+        def convertType(value, dataType):
+            match dataType:
+                case Wye.dType.NONE:
+                    return value
+                case Wye.dType.ANY:
+                    return value
+                case Wye.dType.NUMBER:
+                    try:
+                        num = float(value)
+                    except:
+                        print("Invalid conversion of ", value, " to Number. Returning 0.")
+                        num = 0.
+                    return num
+                case Wye.dType.INTEGER:
+                    try:
+                        num = int(value)
+                    except:
+                        print("Invalid conversion of ", value, " to Integer. Returning 0")
+                        num = 0
+                    return num
+                case Wye.dType.FLOAT:
+                    try:
+                        num = float(value)
+                    except:
+                        print("Invalid conversion of ", value, " to Float. Returning 0.")
+                        num = 0.
+                    return num
+                case Wye.dType.BOOL:
+                    if isinstance(value, str):
+                        num = value.lower() in ("yes", "true", "t", "1")
+                    try:
+                        num = bool(value)
+                    except:
+                        print("Invalid conversion of ", value, " to bool. Returning 0")
+                        num = False
+                    return num
+                case Wye.dType.OBJECT:
+                    # for now, only return None
+                    # TODO think about how to improve this
+                    return None
+                case Wye.dType.STRING:
+                    return str(value)
+                #case Wye.dType.ANY_LIST:
+                #    print("Conversion of ", value, " not implemented yet")
+                #    return "Number_list"
+                #case Wye.dType.ANY_LIST:
+                #    return "Number_list"
+                #case Wye.dType.INTEGER_LIST:
+                #    return "Integer_list"
+                #case Wye.dType.FLOAT_LIST:
+                #    return "Float_list"
+                #case Wye.dType.BOOL_LIST:
+                #    return "Bool_list"
+                #case Wye.dType.OBJECT_LIST:
+                #    return "Object_list"
+                #case Wye.dType.STRING_LIST:
+                #    return "String_list"
+                #case Wye.dType.VARIABLE:
+                #    return "Variable"
+
+                case _:
+                    print("Conversion of ", value, " not implemented yet")
+                    return value
 
     # parameter access (how parameter is passed)
     class access:
