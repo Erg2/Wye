@@ -36,7 +36,7 @@ class TestLib:
 
                     dlgFrm.params.retVal = frame.params.retStat
                     dlgFrm.params.title = [lib.__name__]
-                    dlgFrm.params.position = frame.params.coord[0]
+                    dlgFrm.params.position = [frame.params.coord[0]]
                     dlgFrm.params.parent = [None]
                     frame.vars.dlgFrm[0] = dlgFrm
 
@@ -49,7 +49,7 @@ class TestLib:
                             if inspect.isclass(verb):
                                 # print("lib", lib.__name__, " verb", verb.__name__)
                                 btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                                dlgFrm.params.inputs[0].append(btnFrm)
+                                dlgFrm.params.inputs[0].append([btnFrm])
 
                                 txt = lib.__name__ + "." + verb.__name__
                                 btnFrm.params.frame = [None]
@@ -147,7 +147,7 @@ class TestLib:
             var[0] += 1
 
             # get label input's frame from parent dialog
-            lblFrame = dlgFrm.params.inputs[0][3]
+            lblFrame = dlgFrm.params.inputs[0][3][0]
 
             # supreme hackery - look up the display label in the label's graphic widget list
             # Update its text string with the current count value
@@ -282,9 +282,9 @@ class TestLib:
             # so have to pull out the temp values from the input controls
             # Do some hackery to get to the pop up dialog's inputs' local variables
             #print("dlgFrm", dlgFrm.params.title)
-            x = dlgFrm.params.inputs[0][0].vars.currVal[0]
-            y = dlgFrm.params.inputs[0][1].vars.currVal[0]
-            z = dlgFrm.params.inputs[0][2].vars.currVal[0]
+            x = dlgFrm.params.inputs[0][0][0].vars.currVal[0]
+            y = dlgFrm.params.inputs[0][1][0].vars.currVal[0]
+            z = dlgFrm.params.inputs[0][2][0].vars.currVal[0]
 
             frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
             #print("  hpr", dlgFrm.vars.target[0].vars.gObj[0].getHpr())

@@ -146,6 +146,7 @@ class WyeLib:
             #(None, "print('test inline code')"),
             # call loadModel with testLoader params 0 and 1
             ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.gObj"), (None, "frame.params.file")),
+            #(None, "print('loadObject frame.params.gObj', frame.params.gObj)"),
             ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.gObj")),
             (None, "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.params.gObj"), (None, "frame.params.rotVec")),
@@ -169,7 +170,7 @@ class WyeLib:
     class loadModel:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
-        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),      # return param
                       ("objectFileName", Wye.dType.STRING, Wye.access.REFERENCE))
         varDescr = ()
 

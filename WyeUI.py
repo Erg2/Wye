@@ -867,7 +867,7 @@ class WyeUI(Wye.staticObj):
             dlgHeader = dlgFrm.vars.topGObj[0]
 
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
-            frame.vars.position = pos
+            frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
             lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
@@ -1064,7 +1064,7 @@ class WyeUI(Wye.staticObj):
                     objFrm = data[1][3]
                     varIx = data[1][0]
 
-                    print("InputDropdownCallback parentFrm", parentFrm.params.title[0], ":", parentFrm.tostring())
+                    #print("InputDropdownCallback parentFrm", parentFrm.params.title[0], ":", parentFrm.tostring())
                     #print(" objFrm", objFrm.tostring())
 
                     frame.vars.rowFrm[0] = rowFrm
@@ -1184,9 +1184,9 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog run: frame", frame.verb.__name__, " params", frame.paramsToStringV())
                     frame.params.retVal[0] = Wye.status.CONTINUE        # return value: 0 running, 1 OK, 2 Cancel
                     parent = frame.params.parent[0]
-#                    WyeUI.FocusManager.openDialog(frame, parent)        # pass parent, if any
+
                     #print("Dialog put frame in param[0][0]", frame)
-                    frame.vars.position = frame.params.position       # save display position
+                    frame.vars.position[0] = [frame.params.position[0]]       # save display position
                     # return frame
 
                     #print("Dialog display: pos=frame.params.position", frame.params.position)
@@ -1200,15 +1200,14 @@ class WyeUI(Wye.staticObj):
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
                     frame.vars.topGObj[0] = dlgHeader        # save graphic for parenting sub dialogs
 
-                    pos = [0, 0, 0] # [x for x in frame.params.position]    # copy position
+                    print("Dialog run: params.position",frame.params.position[0])
+                    pos = [0,0,0] #[x for x in frame.params.position[0]]    # copy position
 
                     # do user inputs
                     # Note that input returns its frame as parameter value
                     nInputs = len(frame.params.inputs[0])
                     # draw user- supplied label and text inputs
                     for ii in range(nInputs):
-                        #pos[2] -= 1.5
-
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
                         inFrm = frame.params.inputs[0][ii]
                         #print("    inFrm", inFrm)
@@ -1219,11 +1218,11 @@ class WyeUI(Wye.staticObj):
                         setattr(inFrm, "parentFrame", frame)
 
                         # display inputs
+                        # Note: each Input's display function updates pos downward
                         # stash returned display obj tags in lookup dict to detect what user clicked on
                         if hasattr(inFrm.verb, "display"):
                             for lbl in inFrm.verb.display(inFrm, frame, pos):  # displays label, updates pos, returns selection tags
                                 frame.vars.inpTags[0][lbl] = ii
-
                         else:
                             print("Dialog: Error. Unknown input verb", inFrm.verb.__name__)
 
@@ -1411,7 +1410,7 @@ class WyeUI(Wye.staticObj):
             # If there was a diff selection before, fix that
             # (if closing dialog, nevermind)
             if prevSel > -1 and prevSel != frame.vars.currInp[0] and not closing:
-                inFrm =frame.params.inputs[0][prevSel][0]
+                inFrm =frame.params.inputs[0][prevSel]
                 if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputButton]:
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(WyeUI.TEXT_COLOR)
@@ -1563,7 +1562,7 @@ class WyeUI(Wye.staticObj):
                     parent = frame.params.parent[0]
 
                     # print("DropDown put frame in param[0][0]", frame)
-                    frame.vars.position = frame.params.position  # save display position
+                    frame.vars.position[0] = frame.params.position[0]  # save display position
                     # return frame
 
                     # handle scale and parent obj, if any
@@ -1577,15 +1576,13 @@ class WyeUI(Wye.staticObj):
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
                     frame.vars.topGObj[0] = dlgHeader        # save graphic for parenting sub dialogs
 
-                    pos = [0, 0, 0]  # [x for x in frame.params[2]]    # copy position
+                    pos = [1, 0, 0]  # [x for x in frame.params[2]]    # copy position
 
                     # do user inputs
                     # Note that input returns its frame as parameter value
                     nInputs = len(frame.params.inputs[0])
                     # draw user- supplied label and text inputs
                     for ii in range(nInputs):
-                        #pos[2] -= 1.5
-
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
                         inFrm = frame.params.inputs[0][ii]
                         #print("    inFrm", inFrm)
@@ -1596,6 +1593,7 @@ class WyeUI(Wye.staticObj):
                         setattr(inFrm, "parentFrame", frame)
 
                         # tell input to display itself.  Collect returned objects to close when dlg closes
+                        # Note: each Input's display function updates pos downward
                         if inFrm.verb in [WyeUI.InputLabel, WyeUI.InputButton]:
                             for lbl in inFrm.verb.display(inFrm, frame, pos):  # displays label, updates pos, returns selection tags
                                 frame.vars.inpTags[0][lbl] = ii
@@ -2028,11 +2026,14 @@ class WyeUI(Wye.staticObj):
                 case 0:
                     data = frame.eventData
                     print("EditParamCallback data='" + str(data) + "'")
-                    frm = data[1][2]
-                    print("param ix", data[1][0], " data frame", frm.verb.__name__)
+                    rowIx = data[1][0]
+                    rowFrm = data[1][1]
+                    dlgFrm = data[1][2]
+                    objFrm = data[1][3]
+                    print("param ix", rowIx, " row frame", rowFrm.verb.__name__, " dialog frame", dlgFrm.verb.__name__, " obj frame", objFrm.verb.__name__)
                     frame.PC += 1
                 case 1:
-                    pass
+                    frame.status == Wye.status.SUCCESS
 
     # Object variable callback: put up variable edit dialog
     class EditVarCallback:
@@ -2057,7 +2058,7 @@ class WyeUI(Wye.staticObj):
             btnFrm = data[1][1]
             parentFrm = data[1][2]
             objFrm = data[1][3]
-            print("param ix", data[1][0], " parentFrm", parentFrm.verb.__name__, " objFrm", objFrm.verb.__name__)
+            #print("param ix", data[1][0], " parentFrm", parentFrm.verb.__name__, " objFrm", objFrm.verb.__name__)
             varIx = data[1][0]      # offset to variable in object's varDescr list
 
             match (frame.PC):
@@ -2150,6 +2151,7 @@ class WyeUI(Wye.staticObj):
             return Wye.codeFrame(WyeUI.EditVarTypeCallback, stack)
 
         def run(frame):
+            print("EditVarTypeCallback")
             match (frame.PC):
                 case 0:
                     data = frame.eventData
@@ -2343,8 +2345,8 @@ class WyeUI(Wye.staticObj):
                         paramVal = getattr(objFrame.params, param[0])
                         btnFrm.params.label = ["  " + param[0] + " type:" + Wye.dType.tostring(
                             param[1]) + " = " + str(paramVal)]
-                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditParamCallback]  # button callback
-                        btnFrm.params.optData = [(attrIx, dlgFrm, objFrame)]  # button row, dialog frame
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugParamCallback]  # button callback
+                        btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrame)]  # button row, dialog frame
                         WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
                         attrIx += 1
@@ -2405,34 +2407,34 @@ class WyeUI(Wye.staticObj):
                                 # fill in text and callback based on code row type
                                 if tuple[0] is None:
                                     btnFrm.params.label = ["  Code:" + tuple[1]]
-                                    btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                    btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
                                 elif "." in tuple[0]:
                                     btnFrm.params.label = ["  Verb:" + tuple[0] + "," + str(tuple[1])]
-                                    btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
+                                    btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugVerbCallback]  # button callback
                                 else:
                                     match tuple[0]:
                                         case "Expr":
                                             btnFrm.params.label = ["  Expression:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
                                         case "Const":
                                             btnFrm.params.label = ["  Constant:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
 
                                         case "Var":
                                             btnFrm.params.label = ["  Variable:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
 
                                         case "GoTo":
                                             btnFrm.params.label = ["  GoTo:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugSpecialCallback]  # button callback
 
                                         case "Label":
                                             btnFrm.params.label = ["  Label:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugSpecialCallback]  # button callback
 
                                         case "IfGoTo":
                                             btnFrm.params.label = ["  If GoTo:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugSpecialCallback]  # button callback
 
                                 btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrame, tuple)]  # button row, dialog frame
                                 WyeCore.libs.WyeUI.InputButton.run(btnFrm)

@@ -158,7 +158,7 @@ class Wye:
             OBJECT,
             STRING,
             ANY_LIST,
-            ANY_LIST,
+            NUMBER_LIST,
             INTEGER_LIST,
             FLOAT_LIST,
             BOOL_LIST,
@@ -186,8 +186,8 @@ class Wye:
                 case Wye.dType.STRING:
                     return "String"
                 case Wye.dType.ANY_LIST:
-                    return "Number_list"
-                case Wye.dType.ANY_LIST:
+                    return "Any_list"
+                case Wye.dType.NUMBER_LIST:
                     return "Number_list"
                 case Wye.dType.INTEGER_LIST:
                     return "Integer_list"
@@ -247,10 +247,14 @@ class Wye:
                     return None
                 case Wye.dType.STRING:
                     return str(value)
-                #case Wye.dType.ANY_LIST:
+
+                # TODO - FINISH THIS!!!!
+
+                case Wye.dType.ANY_LIST:
+                    print("Conversion of ", value, " not implemented yet")
+                    return "Any_list"
+                # case Wye.dType.NUMBER_LIST:
                 #    print("Conversion of ", value, " not implemented yet")
-                #    return "Number_list"
-                #case Wye.dType.ANY_LIST:
                 #    return "Number_list"
                 #case Wye.dType.INTEGER_LIST:
                 #    return "Integer_list"
