@@ -235,11 +235,12 @@ class Wye:
                 case Wye.dType.BOOL:
                     if isinstance(value, str):
                         num = value.lower() in ("yes", "true", "t", "1")
-                    try:
-                        num = bool(value)
-                    except:
-                        print("Invalid conversion of ", value, " to bool. Returning 0")
-                        num = False
+                    else:
+                        try:
+                            num = bool(value)
+                        except:
+                            print("Invalid conversion of ", value, " to bool. Returning 0")
+                            num = False
                     return num
                 case Wye.dType.OBJECT:
                     # for now, only return None
@@ -251,23 +252,104 @@ class Wye:
                 # TODO - FINISH THIS!!!!
 
                 case Wye.dType.ANY_LIST:
-                    print("Conversion of ", value, " not implemented yet")
-                    return "Any_list"
-                # case Wye.dType.NUMBER_LIST:
-                #    print("Conversion of ", value, " not implemented yet")
-                #    return "Number_list"
-                #case Wye.dType.INTEGER_LIST:
-                #    return "Integer_list"
-                #case Wye.dType.FLOAT_LIST:
-                #    return "Float_list"
-                #case Wye.dType.BOOL_LIST:
-                #    return "Bool_list"
-                #case Wye.dType.OBJECT_LIST:
-                #    return "Object_list"
-                #case Wye.dType.STRING_LIST:
-                #    return "String_list"
-                #case Wye.dType.VARIABLE:
-                #    return "Variable"
+                    print("Conversion of Wye.dType.ANY_LIST not implemented yet")
+                    return value
+                case Wye.dType.NUMBER_LIST | Wye.dType.INTEGER_LIST | Wye.dType.FLOAT_LIST | Wye.dType.BOOL_LIST:
+                    retVal = []
+                    lst = False
+                    elemLst = False      # assume no sublist wrappers
+                    # if string, parse it
+                    if isinstance(value, str):
+                        lst = True
+                        value = "".join(value.split())   # remove all whitespace
+                        if value[0] == '[':
+                            value = value[1:-1]
+                            if value[1] == '[':    # if individual element lists
+                                elemLst = True
+                        elems = value.split(',')
+                        for elem in elems:
+                            if elemLst:     # if each element wrapped in list
+                                elem = elem[1:-1]
+                            try:
+                                if dataType == Wye.dType.INTEGER_LIST:
+                                    num = int(elem)
+                                elif dataType == Wye.dType.BOOL_LIST:
+                                    num = elem.lower() in ("yes", "true", "t", "1")
+                                # both NUMBER and FLOAT
+                                else:
+                                    num = float(elem)
+                            except:
+                                if dataType == Wye.dType.INTEGER_LIST:
+                                    num = 0
+                                else:
+                                    num = 0.
+                            if elemLst:
+                                num = [num]
+                            retVal.append(num)
+                    # else make it numeric
+                    else:
+                        # if it's a list
+                        if isinstance(value, list):
+                            # if there's something in the list
+                            if len(value) > 0:
+                                # if nested list elements
+                                if isinstance(value[0], list):
+                                    elemLst = True
+                                # ensure is numeric, replace with 0. if not
+                                for elem in value:
+                                    if elemLst:
+                                        elem = elem[0]
+                                    if not isinstance(elem, int) and not isinstance(elem, float):
+                                        try:
+                                            if dataType == Wye.dType.INTEGER_LIST:
+                                                num = int(elem)
+                                            elif dataType == Wye.dType.BOOL_LIST:
+                                                num = bool(elem)
+                                            else:
+                                                num = float(elem)
+                                        except:
+                                            if dataType == Wye.dType.INTEGER_LIST:
+                                                num = 0
+                                            elif dataType == Wye.dType.BOOL_LIST:
+                                                num = False
+                                            else:
+                                                num = 0.
+                                    if elemLst:
+                                        num = [num]
+
+                                    retVal.append(num)
+
+                        # Note: if none of the above, return empty list
+                    return retVal
+
+                # todo don't know what to do with objects yet
+                case Wye.dType.OBJECT_LIST:
+                    print("Conversion of OBJECT_LIST not implemented yet")
+                    return value
+
+                case Wye.dType.STRING_LIST:
+                    retVal = []
+                    lst = False
+                    elemLst = False      # assume no sublist wrappers
+                    if isinstance(value, str):
+                        lst = True
+                        value = value.strip()   # remove leading/trailing whitespace
+                        if value[0] == '[':
+                            value = value[1:-1]
+                            if value[1] == '[':    # if individual element lists
+                                elemLst = True
+                        elems = value.split(',')
+                        for elem in elems:
+                            if elemLst:     # if each element wrapped in list
+                                elem = elem[1:-1]
+                            if elemLst:
+                                num = [num]
+                            retVal.append(num)
+                    return retVal
+
+                case Wye.dType.VARIABLE:
+                    print("Conversion of VARIABLE not implemented yet")
+                    return value
 
                 case _:
                     print("Conversion of ", value, " not implemented yet")
