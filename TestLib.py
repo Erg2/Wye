@@ -530,9 +530,10 @@ class TestLib:
         paramDescr = ()
         varDescr = (("fishes", Wye.dType.OBJECT_LIST, None),        # fish graphic objs
                     ("fishTags", Wye.dType.STRING, ""),
-                    ("position", Wye.dType.STRING, [0,0,0]),
+                    ("position", Wye.dType.FLOAT_LIST, [0,0,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -0.02]),
                     ("angle", Wye.dType.FLOAT_LIST, [0., 90., 0.]),
+                    ("followDist", Wye.dType.FLOAT, 1.5),
                     ("target", Wye.dType.OBJECT, None),             # leader fish Wye obj frame
                     ("tgtDist", Wye.dType.FLOAT, 0),
                     ("count", Wye.dType.INTEGER, 0),        # loop counter
@@ -591,7 +592,7 @@ class TestLib:
             (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*40, 90, 0)"),      # flip to face up
             #(None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], 0, 90, 0)"),      # flip to face up
             (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos().getXy() - frame.vars.objAhead[0].getPos().getXy()).length()"),
-            (None, "frame.vars.dPos[0] = [0, 0, (1.5 - frame.vars.tgtDist[0])]"),
+            (None, "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
 
             (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish

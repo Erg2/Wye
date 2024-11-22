@@ -242,18 +242,67 @@ class Wye:
                             print("Invalid conversion of ", value, " to bool. Returning 0")
                             num = False
                     return num
+                # TODO - add string->object look up!!!
                 case Wye.dType.OBJECT:
-                    # for now, only return None
-                    # TODO think about how to improve this
-                    return None
+                    retVal = None   # default to don't know what to do
+
+                    if isinstance(value, str):
+                        if value == "None":
+                            retVal = None
+                        # else look object up...?
+                    else:
+                        retVal = value
+
+                    return retVal
                 case Wye.dType.STRING:
-                    return str(value)
+                    retVal = []
+                    lst = False
+                    elemLst = False      # assume no sublist wrappers
+                    # if string, parse it for list structure
+                    if isinstance(value, str):
+                        lst = True
+                        value = "".join(value.split())   # remove all whitespace
+                        if value[0] == '[':
+                            value = value[1:-1]
+                            if value[1] == '[':    # if individual element lists
+                                elemLst = True
+                        elems = value.split(',')
+                        for elem in elems:
+                            if elemLst:     # if each element wrapped in list
+                                elem = elem[1:-1]
+                                elem = [elem]
+                            retVal.append(elem)
+                        return retVal
 
-                # TODO - FINISH THIS!!!!
+                    # not a string, return it as-is
+                    else:
+                        return value
 
+                # if it's a string, parse into a string list, otherwise return as is
                 case Wye.dType.ANY_LIST:
-                    print("Conversion of Wye.dType.ANY_LIST not implemented yet")
-                    return value
+                    retVal = []
+                    lst = False
+                    elemLst = False  # assume no sublist wrappers
+                    # if string, parse it for list structure
+                    if isinstance(value, str):
+                        lst = True
+                        value = "".join(value.split())  # remove all whitespace
+                        if value[0] == '[':
+                            value = value[1:-1]
+                            if value[1] == '[':  # if individual element lists
+                                elemLst = True
+                        elems = value.split(',')
+                        for elem in elems:
+                            if elemLst:  # if each element wrapped in list
+                                elem = elem[1:-1]
+                                elem = [elem]
+                            retVal.append(elem)
+                        return retVal
+
+                    # not a string, return it as-is
+                    else:
+                        return value
+
                 case Wye.dType.NUMBER_LIST | Wye.dType.INTEGER_LIST | Wye.dType.FLOAT_LIST | Wye.dType.BOOL_LIST:
                     retVal = []
                     lst = False
@@ -322,11 +371,6 @@ class Wye:
                         # Note: if none of the above, return empty list
                     return retVal
 
-                # todo don't know what to do with objects yet
-                case Wye.dType.OBJECT_LIST:
-                    print("Conversion of OBJECT_LIST not implemented yet")
-                    return value
-
                 case Wye.dType.STRING_LIST:
                     retVal = []
                     lst = False
@@ -347,10 +391,19 @@ class Wye:
                             retVal.append(num)
                     return retVal
 
+                # todo Finish these
+
+                # todo if string, parse and look up objects
+                case Wye.dType.OBJECT_LIST:
+                    print("Conversion of OBJECT_LIST not implemented yet")
+                    return value
+
+                # todo if string, parse and look up variables
                 case Wye.dType.VARIABLE:
                     print("Conversion of VARIABLE not implemented yet")
                     return value
 
+                # unknown type, do nothing
                 case _:
                     print("Conversion of ", value, " not implemented yet")
                     return value
