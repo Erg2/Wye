@@ -29,13 +29,6 @@ class WyeUI(Wye.staticObj):
     LINE_HEIGHT = 1.25
     TEXT_SCALE = (.2,.2,.2)
 
-    TEXT_COLOR = (.2,.2,.2,1)
-    SELECTED_COLOR = (0,.4,0,1)
-    LABEL_COLOR = (1, 0, 0, 1)
-    BACKGROUND_COLOR = (0, 0, 0, 1)
-    HEADER_COLOR = (1,1,1,1)
-    CURSOR_COLOR = (0,1,0,1)
-
     # create a piece of geometry
     # this is a real class that gets instantiated
     class _geom3d:
@@ -70,7 +63,7 @@ class WyeUI(Wye.staticObj):
             color.addData4f(1, 0, 1, 1)
 
             vertex.addData3f(1*size[0], 1*size[1], -1*size[2])
-            color.addData4f(1, 1, 0, 1)
+            color.addData4f(1, 0, 1, 1)
 
             vertex.addData3f(1*size[0], 1*size[1], 1*size[2])
             color.addData4f(1, 1, 1, 1)
@@ -736,7 +729,9 @@ class WyeUI(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # 0 return own frame
-                      ("label", Wye.dType.STRING, Wye.access.REFERENCE))  # 1 user supplied label for field
+                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # 1 user supplied label for field
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
+                      )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
                     ("currPos", Wye.dType.INTEGER, 0),
@@ -758,7 +753,7 @@ class WyeUI(Wye.staticObj):
             pos[2] -= WyeUI.LINE_HEIGHT
             frame.vars.position[0] = pos
 
-            lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
+            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
@@ -771,6 +766,9 @@ class WyeUI(Wye.staticObj):
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
 
+        def setColor(frame, color):
+            frame.vars.gWidgetStack[0][0].setColor(color)
+
 
     # text input field
     class InputText:
@@ -778,7 +776,9 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
-                      ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
+                      ("value", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
+                      )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
@@ -806,7 +806,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
-            lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
+            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
             #tmp = WyeUI._geom3d([.1,.1,1])
@@ -819,9 +819,9 @@ class WyeUI(Wye.staticObj):
             # offset 3d input field right past end of 3d label
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
-            txt = WyeUI._label3d(frame.vars.currVal[0], WyeUI.LABEL_COLOR,
+            txt = WyeUI._label3d(frame.vars.currVal[0], Wye.color.TEXT_COLOR,
                                  pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
-            txt.setColor(WyeUI.TEXT_COLOR)
+            #txt.setColor(WyeUI.TEXT_COLOR)
             # print("    Dialog inWdg", txt)
             gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
             frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
@@ -839,6 +839,10 @@ class WyeUI(Wye.staticObj):
         def setValue(frame, text):
             frame.vars.gWidget[0].setText(text)
 
+        def setColor(frame, color):
+            frame.vars.gWidgetStack[0][0].setColor(color)
+            frame.vars.gWidget[0].setColor(color)
+
         def setCurrentPos(frame, index):
             frame.vars.currPos[0] = index       # TODO needs validating!
 
@@ -848,7 +852,9 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
-                      ("value", Wye.dType.STRING, Wye.access.REFERENCE))  # user supplied var to return value in
+                      ("value", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
+                      )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
@@ -870,7 +876,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
-            lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
+            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
             #tmp = WyeUI._geom3d([.1,.1,1])
@@ -883,9 +889,9 @@ class WyeUI(Wye.staticObj):
             # offset 3d input field right past end of 3d label
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
-            txt = WyeUI._label3d(str(frame.vars.currVal[0]), WyeUI.LABEL_COLOR,
+            txt = WyeUI._label3d(str(frame.vars.currVal[0]), Wye.color.LABEL_COLOR,
                                  pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
-            txt.setColor(WyeUI.TEXT_COLOR)
+            txt.setColor(Wye.color.TEXT_COLOR)
             # print("    Dialog inWdg", txt)
             gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
             frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
@@ -899,6 +905,9 @@ class WyeUI(Wye.staticObj):
         def setValue(frame, int):
             frame.vars.gWidget[1].setText(str(int))
 
+        def setColor(frame, color):
+            frame.vars.gWidgetStack[0][0].setColor(color)
+            frame.vars.gWidget[0].setColor(color)
 
     # text input field
     class InputButton:
@@ -908,6 +917,7 @@ class WyeUI(Wye.staticObj):
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # 1 user supplied label for field
                       ("callback", Wye.dType.STRING, Wye.access.REFERENCE),   # 2 verb to call when button clicked
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),   # 3 optional data
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
@@ -939,7 +949,7 @@ class WyeUI(Wye.staticObj):
             #print("InputButton display: pos", pos)
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
             frame.vars.position[0] = pos
-            btn = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
+            btn = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(btn)  # save for deleting on dialog close
             frame.vars.gWidget[0] = btn  # stash graphic obj in input's frame
@@ -954,6 +964,8 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidget[0].setText(text)
             frame.params.label[0] = text
 
+        def setColor(frame, color):
+            frame.vars.gWidget[0].setColor(color)
 
     # dropdown input field
     class InputDropdown:
@@ -963,6 +975,7 @@ class WyeUI(Wye.staticObj):
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),    # user supplied label for field
                       ("list", Wye.dType.STRING, Wye.access.REFERENCE),     # text list of entries
                       ("selectionIx", Wye.dType.INTEGER, Wye.access.REFERENCE), # current selection index
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),        # list of objects to delete on exit
@@ -1003,7 +1016,7 @@ class WyeUI(Wye.staticObj):
             pos[2] -= WyeUI.LINE_HEIGHT  # update position for next widget
 
             gTags = []  # clickable graphic object tags assoc with this input
-            lbl = WyeUI._label3d(frame.params.label[0], WyeUI.LABEL_COLOR, pos=tuple(pos),
+            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                  scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
             # tmp = WyeUI._geom3d([.1,.1,1])
@@ -1017,9 +1030,9 @@ class WyeUI(Wye.staticObj):
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
             txt = Wye.dType.tostring(Wye.dType.dTypeList[frame.params.selectionIx[0]])
-            btn = WyeUI._label3d(txt, WyeUI.LABEL_COLOR,
+            btn = WyeUI._label3d(txt, Wye.color.LABEL_COLOR,
                                  pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
-            btn.setColor(WyeUI.TEXT_COLOR)
+            btn.setColor(Wye.color.TEXT_COLOR)
             # print("    Dialog inWdg", btn)
             gTags.append(btn.getTag())  # save graphic widget for deleting on dialog close
             frame.vars.gWidgetStack[0].append(btn)  # save graphic widget for deleting on close
@@ -1039,6 +1052,9 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidget[0].setText(frame.vars.list[0][index])
             frame.params.selectionIx[0] = index
 
+        def setColor(frame, color):
+            frame.vars.gWidgetStack[0][0].setColor(color)
+            frame.vars.gWidget[0].setColor(color)
 
     class InputDropdownCallback:
         mode = Wye.mode.MULTI_CYCLE
@@ -1192,9 +1208,9 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog display: pos=frame.params.position", frame.params.position)
                     if parent is None:
                         #print("  params.inputs", frame.params.inputs)
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(WyeUI.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
+                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
                     else:
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(WyeUI.HEADER_COLOR), pos=frame.params.position[0],
+                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
                                                    scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
 
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
@@ -1230,13 +1246,13 @@ class WyeUI(Wye.staticObj):
 
                     # display OK, Cancel buttons
                     pos[2] -= 1.5
-                    txt = WyeUI._label3d("OK", color=(WyeUI.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
+                    txt = WyeUI._label3d("OK", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
                                          parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
                     pos[0] += 2.5       # shove Cancel to the right of OK
                     #print("Dialog Cancel btn at", pos)
-                    txt = WyeUI._label3d("Cancel", color=(WyeUI.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
+                    txt = WyeUI._label3d("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
                                         parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
@@ -1292,7 +1308,7 @@ class WyeUI(Wye.staticObj):
                         if btnFrm.vars.clickCount[0] <= 0:
                             #print("Dialog run: Done click flash for button ", btnFrm.verb.__name__)
                             delLst.append(btnFrm)
-                            btnFrm.vars.gWidget[0].setColor(WyeUI.BACKGROUND_COLOR)
+                            btnFrm.vars.gWidget[0].setColor(Wye.color.BACKGROUND_COLOR)
                     # remove any buttons whose count is finished
                     for btnFrm in delLst:
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
@@ -1323,7 +1339,7 @@ class WyeUI(Wye.staticObj):
                     if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
                         inWidg = inFrm.vars.gWidget[0]
                         #print("  found ix", ix, " inWdg", inWidg, " Set selected color")
-                        inWidg.setColor(WyeUI.SELECTED_COLOR)        # set input background to "has focus" color
+                        inWidg.setColor(Wye.color.SELECTED_COLOR)        # set input background to "has focus" color
                         WyeUI.Dialog.drawCursor(inFrm)
                         frame.vars.currInp[0] = ix           # save as current input focus
 
@@ -1334,7 +1350,7 @@ class WyeUI(Wye.staticObj):
                     elif inFrm.verb is WyeUI.InputButton or inFrm.verb is WyeUI.InputDropdown:
                         #print("Dialog doSelect clicked on",inFrm.verb.__name__)
                         callVerb = inFrm.vars.callback[0]
-                        inFrm.vars.gWidget[0].setColor(WyeUI.SELECTED_COLOR) # set button color pressed
+                        inFrm.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR) # set button color pressed
                         if inFrm.vars.clickCount[0] <= 0:     # if not in an upclick count, process click
                             #print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
                             inFrm.vars.clickCount[0] = 10       # start flash countdown (in display frames)
@@ -1413,7 +1429,7 @@ class WyeUI(Wye.staticObj):
                 inFrm =frame.params.inputs[0][prevSel]
                 if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputButton]:
                     inWidg = inFrm.vars.gWidget[0]
-                    inWidg.setColor(WyeUI.TEXT_COLOR)
+                    inWidg.setColor(Wye.color.TEXT_COLOR)
 
             #print("Dialog retStat", retStat)
             return retStat      # return true if we used the tag
@@ -1438,10 +1454,10 @@ class WyeUI(Wye.staticObj):
         # mark dialog selected/unselected
         def select(frame, setOn):
             if setOn:
-                frame.vars.bgndGObj[0].setColor(WyeUI.SELECTED_COLOR)
+                frame.vars.bgndGObj[0].setColor(Wye.color.SELECTED_COLOR)
                 #print("Dialog '"+frame.params.title[0]+ "' Selected")
             else:
-                frame.vars.bgndGObj[0].setColor(WyeUI.BACKGROUND_COLOR)
+                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR)
                 #print("Dialog '"+frame.params.title[0]+ "' Unselected")
 
 
@@ -1523,7 +1539,7 @@ class WyeUI(Wye.staticObj):
             #wPos = inWidg.getPos()
             xOff = 0
             WyeUI.Dialog._cursor.path.reparentTo(inWidg._nodePath)
-            WyeUI.Dialog._cursor.path.setColor(WyeUI.CURSOR_COLOR)
+            WyeUI.Dialog._cursor.path.setColor(Wye.color.CURSOR_COLOR)
             # If cursor not at beginning of text in widget,
             # get length of text before insert pt by generating temp text obj
             # with just pre-insert chars and getting its width
@@ -1567,10 +1583,10 @@ class WyeUI(Wye.staticObj):
 
                     # handle scale and parent obj, if any
                     if parent is None:
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(WyeUI.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
+                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
                     else:
                         #print("dropdown parent", parent.verb.__name__)
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(WyeUI.HEADER_COLOR), pos=frame.params.position[0],
+                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
                                                    scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
 
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
@@ -1604,7 +1620,7 @@ class WyeUI(Wye.staticObj):
                     # Cancel button
                     pos[2] -= 1.5
                     #print("Dialog Cancel btn at", pos)
-                    txt = WyeUI._label3d("Cancel", color=(WyeUI.HEADER_COLOR), pos=tuple(pos),
+                    txt = WyeUI._label3d("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos),
                                                       scale=(1,1,1), parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
@@ -1817,6 +1833,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]  # return value
                     lblFrm.params.label = ["Params:"]
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append(lblFrm)
 
@@ -1851,6 +1868,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]  # return value
                     lblFrm.params.label = ["Vars:"]
+                    lblFrm.params.color = ((0,1,1,1))
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append(lblFrm)
 
@@ -1886,6 +1904,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]  # return value
                     lblFrm.params.label = ["Wye Code:"]
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append(lblFrm)
 
@@ -2188,7 +2207,7 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.STRING
         autoStart = False
         paramDescr = (("objFrm", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
-        varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
+        varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
                     ("dlgStat", Wye.dType.INTEGER, -1),
                     )
 
@@ -2218,6 +2237,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Active Objects:"]
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append(lblFrm)
 
@@ -2227,7 +2247,7 @@ class WyeUI(Wye.staticObj):
                         sLen = len(stack)
                         if sLen > 0:  # if there's something on the stack
                             offset = 0
-                            for frm in stack:
+                            for objFrm in stack:
 
                                 # make the dialog row
                                 btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
@@ -2235,11 +2255,11 @@ class WyeUI(Wye.staticObj):
                                 btnFrm.params.frame = [None]  # return value
                                 btnFrm.params.parent = [None]
                                 if offset == 0:
-                                    btnFrm.params.label = ["  stack "+str(attrIx)+" depth "+str(offset)+":"+frm.verb.__name__]
+                                    btnFrm.params.label = ["  stack "+str(attrIx)+" depth "+str(offset)+":"+objFrm.verb.__name__]
                                 else:
-                                    btnFrm.params.label = ["                depth " + str(offset) + ":" + frm.verb.__name__]
+                                    btnFrm.params.label = ["                depth " + str(offset) + ":" + objFrm.verb.__name__]
                                 btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugFrameCallback]  # button callback
-                                btnFrm.params.optData = [(attrIx, btnFrm, frame, frm)]  # button row, row frame, dialog frame, obj frame
+                                btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, row frame, dialog frame, obj frame
                                 WyeCore.libs.WyeUI.InputButton.run(btnFrm)
                                 offset += 1
 
@@ -2289,7 +2309,8 @@ class WyeUI(Wye.staticObj):
                 case 0:
                     data = frame.eventData
                     #print("DebugFrameCallback data='" + str(data) + "'")
-                    objFrm = data[1][2]
+                    objFrm = data[1][3]
+                    mainDbgFrm = data[1][4]
                     #print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
                     objRow = data[1][0]
@@ -2298,6 +2319,7 @@ class WyeUI(Wye.staticObj):
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
                     dbgFrm.params.objFrm = [objFrm]
                     dbgFrm.params.position = [objPos]
+                    dbgFrm.params.parent = [mainDbgFrm]
                     frame.SP.append(dbgFrm)
                     frame.PC += 1
                 case 1:
@@ -2335,29 +2357,32 @@ class WyeUI(Wye.staticObj):
                     # print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
                     # Display contents of frame in a dialog
+
+                    # If parallel subframe, get parent frame data
+                    if objFrm.verb is WyeCore.ParallelStream:
+                        paramDescr = objFrm.parentFrame.verb.paramDescr
+                        varDescr = objFrm.parentFrame.verb.varDescr
+                        name = objFrm.parentFrame.verb.__name__
+                    else:
+                        paramDescr = objFrm.verb.paramDescr
+                        varDescr = objFrm.verb.varDescr
+                        name = objFrm.verb.__name__
+
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
                     dlgFrm.params.retVal = frame.vars.dlgStat
-                    dlgFrm.params.title = ["Debug " + objFrm.verb.__name__]
+                    dlgFrm.params.title = ["Debug " + name]
                     dlgFrm.params.position = frame.params.position
                     dlgFrm.params.parent = [None]
                     frame.vars.dlgFrm[0] = dlgFrm
 
                     #print("ObjectDebugger objFrm", objFrm.tostring())
-
-                    # build dialog
-                    if objFrm.verb is WyeCore.ParallelStream:
-                        paramDescr = objFrm.parentFrame.verb.paramDescr
-                        varDescr = objFrm.parentFrame.verb.varDescr
-                    else:
-                        paramDescr = objFrm.verb.paramDescr
-                        varDescr = objFrm.verb.varDescr
-
                     # params
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Params:"]
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append(lblFrm)
 
@@ -2394,8 +2419,10 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Vars:"]
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append(lblFrm)
+
 
                     if len(varDescr) > 0:       # if we have variables, list them
 
@@ -2423,11 +2450,12 @@ class WyeUI(Wye.staticObj):
                         dlgFrm.params.inputs[0].append(btnFrm)
                         btnFrm.params.frame = [None]  # return value
                         btnFrm.params.parent = [None]
-                        btnFrm.params.label = ["  Refresh Variables"]
+                        btnFrm.params.label = ["  Refresh Values"]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugRefreshVarCallback]  # button callback
                         btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, dialog frame
+                        btnFrm.params.color = [(1,1,0,1)]
                         WyeCore.libs.WyeUI.InputButton.run(btnFrm)
-                        
+
                     # else nothing to do here
                     else:
                         lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -2442,6 +2470,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]  # return value
                     lblFrm.params.label = ["Wye Code:"]
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append(lblFrm)
 
@@ -2695,7 +2724,7 @@ class WyeUI(Wye.staticObj):
 
                         # convert initVal to appropriate type
                         val = Wye.dType.convertType(strVal, frame.vars.varType[0])
-                        print("DebugVarCallback strVal", strVal, " type", Wye.dType.tostring(frame.vars.varType[0]), "converted type", type(val), " value", val)
+                        #print("DebugVarCallback strVal", strVal, " type", Wye.dType.tostring(frame.vars.varType[0]), "converted type", type(val), " value", val)
 
                         # if value has changed, update it
                         if val != frame.vars.varVal[0]:

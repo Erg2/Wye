@@ -46,11 +46,7 @@ class Wye:
             # if this happens a lot, maybe do an exit(1)
             # it would be cool to put code in every child object to identify which obj is being instantiated - once
             # the editor is fully running.
-# Unused
-#
-#   # convenient library holder
-#   class libList:
-#       pass
+
 
     # Constants
 
@@ -146,7 +142,7 @@ class Wye:
         BOOL_LIST =     "BL"
         OBJECT_LIST =   "OL"
         STRING_LIST =   "SL"
-        VARIABLE =      "V"
+        VARIABLE =      "V"     # first of variable number of parameter
 
         dTypeList = [
             NONE,
@@ -458,6 +454,16 @@ class Wye:
                 case Wye.ctlKyes.SHIFT_UP:
                     return "SHIFT_UP"
 
+    # UI text color
+    class color:
+        TEXT_COLOR = (.8, .8, .8, 1)
+        SELECTED_COLOR = (0, .4, 0, 1)
+        LABEL_COLOR = (1, 0, 0, 1)
+        BACKGROUND_COLOR = (0, 0, 0, 1)
+        HEADER_COLOR = (1, 1, 1, 1)
+        CURSOR_COLOR = (0, 1, 0, 1)
+        SUBHDR_COLOR = (1, 1, 0, 1)
+
     ###########################################################################
     #
     # Dynamic Wye Classes
@@ -496,12 +502,16 @@ class Wye:
             #    print("verb",verb, " has no varDescr")
             if hasattr(verb, "paramDescr"):
                 for paramDef in verb.paramDescr:
+                    # create parameter
                     if len(paramDef) > 1:
                         #print("  params attr ", paramDef[0])
                         if paramDef[1] != Wye.dType.VARIABLE:
                             setattr(self.params, paramDef[0], [])
                         else:
                             setattr(self.params, paramDef[0], [[]])
+                    # if default value supplied, stick it in
+                    if len(paramDef) > 3:
+                        getattr(self.params, paramDef[0]).append(paramDef[3])
 
             self.PC = 0         # used by async verbs to track location in executing code
             self.SP = stack      # points to stack list this frame is on
