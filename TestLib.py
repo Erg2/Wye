@@ -315,6 +315,7 @@ class TestLib:
 
 
             #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
+            (None, "print('TestLib ShowFishDialog')"),
             (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
@@ -572,7 +573,7 @@ class TestLib:
              (None, "[[0, 90, 0]]"),  # rotVec
              (None, "[[.75,.75,.75]]"),  # scaleVec
              (None, "frame.vars.fishTags[frame.vars.count[0]]"),
-             (None, "[[0,1,0,1]]")
+             (None, "[[(frame.vars.count[0]+1)/3.,1,0,1]]")  # color
              ),
 
             #(None, "print('fishes after load', frame.vars.fishes)"),

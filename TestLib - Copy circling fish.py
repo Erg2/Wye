@@ -86,7 +86,7 @@ class TestLib:
             var[0] += 1
 
             # get label input's frame from parent dialog
-            lblFrame = dlgFrm.params.inputs[0][3]
+            lblFrame = dlgFrm.params.inputs[0][3][0]
 
             # supreme hackery - look up the display label in the label's graphic widget list
             inWidg = lblFrame.vars.gWidgetStack[0][0]

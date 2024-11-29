@@ -197,7 +197,7 @@ class WyeUI(Wye.staticObj):
 #                if inspect.isclass(verb):
 #                    #print("lib", lib.__name__, " verb", verb.__name__)
 #                    btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-#                    dlgFrm.params.inputs[0].append(btnFrm)
+#                    dlgFrm.params.inputs[0].append([btnFrm])
 #
 #                    txt = lib.__name__ + "." +verb.__name__
 #                    btnFrm.params.frame = [None]
@@ -1102,7 +1102,7 @@ class WyeUI(Wye.staticObj):
                     for rowTxt in typeLst:
                         # print("lib", lib.__name__, " verb", verb.__name__)
                         btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                        dlgFrm.params.inputs[0].append(btnFrm)
+                        dlgFrm.params.inputs[0].append([btnFrm])
                         btnFrm.params.frame = [None]  # return value
                         btnFrm.params.parent = [dlgFrm]
                         btnFrm.params.label = [rowTxt]  # button label is verb name
@@ -1225,7 +1225,7 @@ class WyeUI(Wye.staticObj):
                     # draw user- supplied label and text inputs
                     for ii in range(nInputs):
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
-                        inFrm = frame.params.inputs[0][ii]
+                        inFrm = frame.params.inputs[0][ii][0]
                         #print("    inFrm", inFrm)
                         #print("    Dialog input ", ii, " inFrm", inFrm)
                         #print("       inFrm.params.title", inFrm.params.title)
@@ -1333,7 +1333,7 @@ class WyeUI(Wye.staticObj):
 
                 # process dialog inputs
                 if frame.verb is WyeUI.Dialog:
-                    inFrm = frame.params.inputs[0][ix]
+                    inFrm = frame.params.inputs[0][ix][0]
 
                     # if is text input make it selected
                     if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
@@ -1403,7 +1403,7 @@ class WyeUI(Wye.staticObj):
                     nInputs = (len(frame.params.inputs[0]))
                     #print("dialog ok: nInputs",nInputs," inputs",frame.params.inputs[0])
                     for ii in range(nInputs):
-                        inFrm = frame.params.inputs[0][ii]
+                        inFrm = frame.params.inputs[0][ii][0]
                         # for any text inputs, copy working string to return string
                         if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
                             #print("input", ii, " frame", inFrm, "\n", WyeCore.Utils.frameToString(inFrm))
@@ -1426,7 +1426,7 @@ class WyeUI(Wye.staticObj):
             # If there was a diff selection before, fix that
             # (if closing dialog, nevermind)
             if prevSel > -1 and prevSel != frame.vars.currInp[0] and not closing:
-                inFrm =frame.params.inputs[0][prevSel]
+                inFrm =frame.params.inputs[0][prevSel][0]
                 if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputButton]:
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(Wye.color.TEXT_COLOR)
@@ -1443,7 +1443,7 @@ class WyeUI(Wye.staticObj):
             # delete any graphic objects associated with the inputs
             nInputs = (len(frame.params.inputs[0]))
             for ii in range(nInputs):
-                inFrm = frame.params.inputs[0][ii]
+                inFrm = frame.params.inputs[0][ii][0]
                 inFrm.verb.close(inFrm)
 
             # delete the graphic widgets associated with the dialog
@@ -1475,10 +1475,11 @@ class WyeUI(Wye.staticObj):
 
         # update InputText/InputInteger on key event
         def doKey(frame, key):
+            print("Dialog doKey: key", key)
             # if we have an input with focus
             ix = frame.vars.currInp[0]
             if ix >= 0:
-                inFrm = frame.params.inputs[0][ix]
+                inFrm = frame.params.inputs[0][ix][0]
                 if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
 
                     txt = str(inFrm.vars.currVal[0])    # handle either text or integer
@@ -1486,11 +1487,15 @@ class WyeUI(Wye.staticObj):
                     preTxt = txt[:insPt]
                     postTxt = txt[insPt:]
                     # delete key
-                    if key == '\x08':         # delete key
+                    if key == '\x08':         # backspace delete key
                         if insPt > 0:
                             preTxt = preTxt[:-1]
                             insPt -= 1
                             inFrm.vars.currInsPt[0] = insPt
+                        txt = preTxt + postTxt
+                    if key == -9:  # delete (forward) key
+                        if insPt < len(txt)-1:
+                            postTxt = postTxt[1:]
                         txt = preTxt + postTxt
                     # arrow keys
                     elif key == Wye.ctlKeys.LEFT:   # arrow keys
@@ -1600,7 +1605,7 @@ class WyeUI(Wye.staticObj):
                     # draw user- supplied label and text inputs
                     for ii in range(nInputs):
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
-                        inFrm = frame.params.inputs[0][ii]
+                        inFrm = frame.params.inputs[0][ii][0]
                         #print("    inFrm", inFrm)
                         #print("    Dialog input ", ii, " inFrm", inFrm)
                         #print("       inFrm.params.title", inFrm.params.title)
@@ -1835,7 +1840,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.label = ["Params:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
 
                     if len(objFrm.verb.paramDescr) > 0:     # if we have params, list them
 
@@ -1844,7 +1849,7 @@ class WyeUI(Wye.staticObj):
                         for param in objFrm.verb.paramDescr:
                             # make the dialog row
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                            dlgFrm.params.inputs[0].append(btnFrm)
+                            dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
                             btnFrm.params.parent = [None]  # return value
                             btnFrm.params.label = ["  "+param[0] + " type:"+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])]
@@ -1861,7 +1866,7 @@ class WyeUI(Wye.staticObj):
                         lblFrm.params.parent = [None]
                         lblFrm.params.label = ["  <no parameters>"]
                         WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
 
                     # vars
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -1870,7 +1875,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.label = ["Vars:"]
                     lblFrm.params.color = ((0,1,1,1))
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
 
                     if len(objFrm.verb.varDescr) > 0:
                         attrIx = 0
@@ -1878,7 +1883,7 @@ class WyeUI(Wye.staticObj):
                         for var in objFrm.verb.varDescr:
                             # make the dialog row
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                            dlgFrm.params.inputs[0].append(btnFrm)
+                            dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
                             btnFrm.params.parent = [None]  # return value
                             btnFrm.params.label = ["  "+var[0] + " type:"+Wye.dType.tostring(var[1]) + " = "+str(var[2])]
@@ -1896,7 +1901,7 @@ class WyeUI(Wye.staticObj):
                         lblFrm.params.parent = [None]
                         lblFrm.params.label = ["  <no variables>"]
                         WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
 
 
                     # build dialog frame params list of input frames
@@ -1906,7 +1911,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.label = ["Wye Code:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
 
                     attrIx = 0
                     # If it's parallel code blocks
@@ -1916,13 +1921,13 @@ class WyeUI(Wye.staticObj):
                             lblFrm.params.parent = [None]
                             lblFrm.params.label = ["  <TODO - Parallel Code>"]
                             WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                            dlgFrm.params.inputs[0].append(lblFrm)
+                            dlgFrm.params.inputs[0].append([lblFrm])
                     # regular boring normal single stream code
                     else:
                         for tuple in objFrm.verb.codeDescr:
                             # make the dialog row
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                            dlgFrm.params.inputs[0].append(btnFrm)
+                            dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
                             btnFrm.params.parent = [None]  # return value
 
@@ -2126,7 +2131,7 @@ class WyeUI(Wye.staticObj):
                     varNameFrm.params.label = ["Name:"]
                     varNameFrm.params.value = frame.vars.varName
                     WyeCore.libs.WyeUI.InputText.run(varNameFrm)
-                    dlgFrm.params.inputs[0].append(varNameFrm)
+                    dlgFrm.params.inputs[0].append([varNameFrm])
 
                     # Var type
                     frame.vars.varType[0] = objFrm.verb.varDescr[varIx][1]
@@ -2138,7 +2143,7 @@ class WyeUI(Wye.staticObj):
                     varTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVarTypeCallback]
                     varTypeFrm.params.optData = ((varIx, varTypeFrm, dlgFrm, objFrm, frame.vars.varType[0]),)    # var to return chosen type in
                     varTypeFrm.verb.run(varTypeFrm)
-                    dlgFrm.params.inputs[0].append(varTypeFrm)
+                    dlgFrm.params.inputs[0].append([varTypeFrm])
 
                     # Var initial value
                     frame.vars.varVal[0] = str(objFrm.verb.varDescr[varIx][2])
@@ -2147,7 +2152,7 @@ class WyeUI(Wye.staticObj):
                     varValFrm.params.label = ["Value:"]
                     varValFrm.params.value = frame.vars.varVal
                     WyeCore.libs.WyeUI.InputText.run(varValFrm)
-                    dlgFrm.params.inputs[0].append(varValFrm)
+                    dlgFrm.params.inputs[0].append([varValFrm])
 
                     frame.SP.append(dlgFrm)
                     frame.PC += 1
@@ -2156,10 +2161,10 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = frame.SP.pop()
                     # check status to see if values should be used
                     if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
-                        label = dlgFrm.params.inputs[0][0].params.value[0]
-                        typeIx = dlgFrm.params.inputs[0][1].params.selectionIx[0]
+                        label = dlgFrm.params.inputs[0][0][0].params.value[0]
+                        typeIx = dlgFrm.params.inputs[0][1][0].params.selectionIx[0]
                         wType = Wye.dType.dTypeList[typeIx]
-                        initVal = dlgFrm.params.inputs[0][2].params.value[0]
+                        initVal = dlgFrm.params.inputs[0][2][0].params.value[0]
 
                         # convert initVal to appropriate type
                         initVal = Wye.dType.convertType(initVal, wType)
@@ -2239,7 +2244,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.label = ["Active Objects:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
 
                     attrIx = 0
 
@@ -2251,7 +2256,7 @@ class WyeUI(Wye.staticObj):
 
                                 # make the dialog row
                                 btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                                dlgFrm.params.inputs[0].append(btnFrm)
+                                dlgFrm.params.inputs[0].append([btnFrm])
                                 btnFrm.params.frame = [None]  # return value
                                 btnFrm.params.parent = [None]
                                 if offset == 0:
@@ -2272,7 +2277,7 @@ class WyeUI(Wye.staticObj):
                         lblFrm.params.parent = [None]
                         lblFrm.params.label = ["<no active objects>"]
                         WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
 
 
                     # WyeUI.Dialog.run(dlgFrm)
@@ -2384,7 +2389,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.label = ["Params:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
 
                     if len(paramDescr) > 0:     # if we have params, list them
 
@@ -2393,7 +2398,7 @@ class WyeUI(Wye.staticObj):
                         for param in paramDescr:
                             # make the dialog row
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                            dlgFrm.params.inputs[0].append(btnFrm)
+                            dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]  # return value
                             btnFrm.params.parent = [None]
                             paramVal = getattr(objFrm.params, param[0])
@@ -2412,7 +2417,7 @@ class WyeUI(Wye.staticObj):
                         lblFrm.params.parent = [None]
                         lblFrm.params.label = ["  <no parameters>"]
                         WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
 
                     # vars
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -2421,7 +2426,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.label = ["Vars:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
 
 
                     if len(varDescr) > 0:       # if we have variables, list them
@@ -2431,7 +2436,7 @@ class WyeUI(Wye.staticObj):
                         for var in varDescr:
                             # make the dialog row
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                            dlgFrm.params.inputs[0].append(btnFrm)
+                            dlgFrm.params.inputs[0].append([btnFrm])
                             frame.vars.varInpLst[0].append(btnFrm)
                             
                             btnFrm.params.frame = [None]  # return value
@@ -2447,7 +2452,7 @@ class WyeUI(Wye.staticObj):
                             
                         # refresg
                         btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                        dlgFrm.params.inputs[0].append(btnFrm)
+                        dlgFrm.params.inputs[0].append([btnFrm])
                         btnFrm.params.frame = [None]  # return value
                         btnFrm.params.parent = [None]
                         btnFrm.params.label = ["  Refresh Values"]
@@ -2463,7 +2468,7 @@ class WyeUI(Wye.staticObj):
                         lblFrm.params.parent = [None]
                         lblFrm.params.label = ["  <no variables>"]
                         WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
 
                     # build dialog frame params list of input frames
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -2472,7 +2477,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.label = ["Wye Code:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
 
                     attrIx = 0
 
@@ -2483,7 +2488,7 @@ class WyeUI(Wye.staticObj):
                         lblFrm.params.parent = [None]
                         lblFrm.params.label = ["  <TODO - Parallel Code>"]
                         WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
                     # regular boring normal single stream code
                     else:
                         if hasattr(objFrm, "codeDescr"):
@@ -2491,7 +2496,7 @@ class WyeUI(Wye.staticObj):
                                 print("  do tuple ", tuple)
                                 # make the dialog row
                                 btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                                dlgFrm.params.inputs[0].append(btnFrm)
+                                dlgFrm.params.inputs[0].append([btnFrm])
                                 btnFrm.params.frame = [None]  # return value
                                 btnFrm.params.parent = [None]
 
@@ -2549,9 +2554,9 @@ class WyeUI(Wye.staticObj):
         paramDescr = ()
         varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
                     ("dlgStat", Wye.dType.INTEGER, -1),
-                    ("varName", Wye.dType.STRING, "<name>"),
-                    ("varType", Wye.dType.STRING, "<type>"),
-                    ("varVal", Wye.dType.STRING, "<val>"),
+                    ("paramName", Wye.dType.STRING, "<name>"),
+                    ("paramType", Wye.dType.STRING, "<type>"),
+                    ("paramVal", Wye.dType.STRING, "<val>"),
                     )
 
         def start(stack):
@@ -2561,7 +2566,7 @@ class WyeUI(Wye.staticObj):
         def run(frame):
             data = frame.eventData
             # print("DebugParamCallback data='" + str(data) + "'")
-            varIx = data[1][0]      # offset to variable in object's varDescr list
+            paramIx = data[1][0]      # offset to paramiable in object's paramDescr list
             btnFrm = data[1][1]
             parentFrm = data[1][2]
             objFrm = data[1][3]
@@ -2574,47 +2579,47 @@ class WyeUI(Wye.staticObj):
                 case 0:
                     #print("param ix", data[1][0], " data frame", parentFrm.verb.__name__)
 
-                    # build var dialog
+                    # build param dialog
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
                     frame.vars.dlgFrm[0] = dlgFrm
 
                     nParams = min(len(objFrm.verb.paramDescr), 1)
-                    nVars = len(paramDescr)
-                    varIx = data[1][0]
+                    nParams = len(paramDescr)
+                    paramIx = data[1][0]
 
                     dlgFrm.params.retVal = frame.vars.dlgStat
-                    dlgFrm.params.title = ["Edit Variable"]
+                    dlgFrm.params.title = ["Edit Parameter"]
                     dlgFrm.params.parent = [parentFrm]
-                    #print("DebugVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    lineOffset = (3.25 + nParams + varIx) * -WyeUI.LINE_HEIGHT
+                    #print("DebugParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
+                    lineOffset = (3.25 + nParams + paramIx) * -WyeUI.LINE_HEIGHT
                     dlgFrm.params.position = [(.5,-.3,lineOffset)]
 
-                    # Var name
-                    frame.vars.varName[0] = paramDescr[varIx][0]
-                    varNameFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
-                    varNameFrm.params.frame = [None]        # placeholder
-                    varNameFrm.params.label = ["Name: "+frame.vars.varName[0]]
-                    WyeCore.libs.WyeUI.InputLabel.run(varNameFrm)
-                    dlgFrm.params.inputs[0].append(varNameFrm)
+                    # Param name
+                    frame.vars.paramName[0] = paramDescr[paramIx][0]
+                    paramNameFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    paramNameFrm.params.frame = [None]        # placeholder
+                    paramNameFrm.params.label = ["Name: "+frame.vars.paramName[0]]
+                    WyeCore.libs.WyeUI.InputLabel.run(paramNameFrm)
+                    dlgFrm.params.inputs[0].append([paramNameFrm])
 
-                    # Var type
-                    frame.vars.varType[0] = paramDescr[varIx][1]
-                    varTypeFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
-                    varTypeFrm.params.frame = [None]
-                    varTypeFrm.params.label = ["Type: "+Wye.dType.tostring(frame.vars.varType[0])]
-                    varTypeFrm.verb.run(varTypeFrm)
-                    dlgFrm.params.inputs[0].append(varTypeFrm)
+                    # Param type
+                    frame.vars.paramType[0] = paramDescr[paramIx][1]
+                    paramTypeFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    paramTypeFrm.params.frame = [None]
+                    paramTypeFrm.params.label = ["Type: "+Wye.dType.tostring(frame.vars.paramType[0])]
+                    paramTypeFrm.verb.run(paramTypeFrm)
+                    dlgFrm.params.inputs[0].append([paramTypeFrm])
 
-                    # Var current value
-                    frame.vars.varVal[0] = getattr(objFrm.vars, frame.vars.varName[0])[0]
-                    #print("varVal[0]", frame.vars.varVal[0])
-                    varValFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
-                    varValFrm.params.frame = [None]
-                    varValFrm.params.label = ["Value:"]
-                    varValFrm.params.value = [str(frame.vars.varVal[0])]
-                    WyeCore.libs.WyeUI.InputText.run(varValFrm)
-                    dlgFrm.params.inputs[0].append(varValFrm)
+                    # Param current value
+                    frame.vars.paramVal[0] = getattr(objFrm.params, frame.vars.paramName[0])[0]
+                    #print("paramVal[0]", frame.vars.paramVal[0])
+                    paramValFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
+                    paramValFrm.params.frame = [None]
+                    paramValFrm.params.label = ["Value:"]
+                    paramValFrm.params.value = [str(frame.vars.paramVal[0])]
+                    WyeCore.libs.WyeUI.InputText.run(paramValFrm)
+                    dlgFrm.params.inputs[0].append([paramValFrm])
 
                     frame.SP.append(dlgFrm)
                     frame.PC += 1
@@ -2623,16 +2628,19 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = frame.SP.pop()
                     # check status to see if values should be used
                     if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
-                        strVal = dlgFrm.params.inputs[0][2].params.value[0]
+                        strVal = dlgFrm.params.inputs[0][2][0].params.value[0]
 
-                        # convert initVal to appropriate type
-                        val = Wye.dType.convertType(strVal, type)
+                        # convert val to appropriate type
+                        val = Wye.dType.convertType(strVal, frame.vars.paramType[0])
 
                         # if value has changed, update it
-                        if val != frame.vars.varVal[0]:
-                            setattr(objFrm.vars, frame.vars.varName[0], val)
+                        if val != frame.vars.paramVal[0]:
+                            print("DebugParamCallback val before change (stored)", frame.vars.paramVal[0], " type", type(frame.vars.paramVal[0]), " after change", val, " type", type(val))
+                            print("DebugParamCallback val before change", getattr(objFrm.params, frame.vars.paramName[0]))
+                            getattr(objFrm.params, frame.vars.paramName[0])[0] = val
+                            print("DebugParamCallback val after change", getattr(objFrm.params, frame.vars.paramName[0]))
 
-                        rowStr = "  " + frame.vars.varName[0] + " type:" + Wye.dType.tostring(frame.vars.varType[0]) + " = " + str(val)
+                        rowStr = "  " + frame.vars.paramName[0] + " type:" + Wye.dType.tostring(frame.vars.paramType[0]) + " = " + str(val)
                         btnFrm.verb.setLabel(btnFrm, str(rowStr))
 
                     # either way, we're done
@@ -2693,7 +2701,7 @@ class WyeUI(Wye.staticObj):
                     varNameFrm.params.frame = [None]        # placeholder
                     varNameFrm.params.label = ["Name: "+frame.vars.varName[0]]
                     WyeCore.libs.WyeUI.InputLabel.run(varNameFrm)
-                    dlgFrm.params.inputs[0].append(varNameFrm)
+                    dlgFrm.params.inputs[0].append([varNameFrm])
 
                     # Var type
                     frame.vars.varType[0] = varDescr[varIx][1]
@@ -2701,7 +2709,7 @@ class WyeUI(Wye.staticObj):
                     varTypeFrm.params.frame = [None]
                     varTypeFrm.params.label = ["Type: "+Wye.dType.tostring(frame.vars.varType[0])]
                     varTypeFrm.verb.run(varTypeFrm)
-                    dlgFrm.params.inputs[0].append(varTypeFrm)
+                    dlgFrm.params.inputs[0].append([varTypeFrm])
 
                     # Var current value
                     frame.vars.varVal[0] = getattr(objFrm.vars, frame.vars.varName[0])[0]
@@ -2711,7 +2719,7 @@ class WyeUI(Wye.staticObj):
                     varValFrm.params.label = ["Value:"]
                     varValFrm.params.value = [str(frame.vars.varVal[0])]
                     WyeCore.libs.WyeUI.InputText.run(varValFrm)
-                    dlgFrm.params.inputs[0].append(varValFrm)
+                    dlgFrm.params.inputs[0].append([varValFrm])
 
                     frame.SP.append(dlgFrm)
                     frame.PC += 1
@@ -2720,7 +2728,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = frame.SP.pop()
                     # check status to see if values should be used
                     if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
-                        strVal = dlgFrm.params.inputs[0][2].params.value[0]
+                        strVal = dlgFrm.params.inputs[0][2][0].params.value[0]
 
                         # convert initVal to appropriate type
                         val = Wye.dType.convertType(strVal, frame.vars.varType[0])

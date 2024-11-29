@@ -449,15 +449,15 @@ class WyeCore(Wye.staticObj):
                 self.accept('shift_up', self.controlKeyFunc, [Wye.ctlKeys.SHIFT_UP])
                 self.accept('ctl_down', self.controlKeyFunc, [Wye.ctlKeys.CTL_DOWN])
                 self.accept('ctl_up', self.controlKeyFunc, [Wye.ctlKeys.CTL_UP])
-
+                self.accept('delete', self.controlKeyFunc, [Wye.ctlKeys.DELETE])
 
             def controlKeyFunc(self, keyID):
-                #print("Control key ", keyID)
+                print("Control key ", keyID)
                 if WyeCore.focusManager:
                     WyeCore.focusManager.doKey(keyID)
 
             def keyFunc(self, keyname):
-                #print("KeyHandler: key=", keyname, "=", ord(keyname))
+                print("KeyHandler: key=", keyname, "=", ord(keyname))
                 # if there's a dialog focus manager running
                 focusStatus = False
                 if WyeCore.focusManager:
@@ -467,7 +467,7 @@ class WyeCore(Wye.staticObj):
                 # if there isn't a focusManager or it didn't want that event, check if
                 # anyone else wants it
                 if not focusStatus:
-                    # if there's a callback for the specific object, call itF
+                    # if there's a callback for the specific object, call it
                     if "key" in WyeCore.World.eventCallbackDict:
                         tagDict = WyeCore.World.eventCallbackDict["key"]
                         delLst = []

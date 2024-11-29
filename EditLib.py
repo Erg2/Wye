@@ -39,9 +39,9 @@ class EditLib:
             # so have to pull out the temp values from the input controls
             # Do some hackery to get to the pop up dialog's inputs' local variables
             #print("dlgFrm", dlgFrm.params.title)
-            x = dlgFrm.params.inputs[0][0].vars.currVal[0]
-            y = dlgFrm.params.inputs[0][1].vars.currVal[0]
-            z = dlgFrm.params.inputs[0][2].vars.currVal[0]
+            x = dlgFrm.params.inputs[0][0][0].vars.currVal[0]
+            y = dlgFrm.params.inputs[0][1][0].vars.currVal[0]
+            z = dlgFrm.params.inputs[0][2][0].vars.currVal[0]
 
             frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
             #print("  hpr", dlgFrm.vars.target[0].vars.gObj[0].getHpr())
@@ -55,7 +55,6 @@ class EditLib:
         autoStart = True
         paramDescr = ()
         varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
-                    ("dialogFrm", Wye.dType.OBJECT, None),
                     ("XAngleID", Wye.dType.STRING, ""),
                     ("XAngle", Wye.dType.INTEGER, 0),
                     ("YAngleID", Wye.dType.STRING, ""),
@@ -70,7 +69,7 @@ class EditLib:
 
         codeDescr = (
 
-
+            (None, "print('EditLib ShowFishDialog')"),
             (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
@@ -84,31 +83,28 @@ class EditLib:
             (None, "frame.vars.XAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[0])"),
             (None, "frame.vars.YAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[1])"),
             (None, "frame.vars.ZAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[2])"),
-            ("WyeCore.libs.WyeLib.setEqual",
-                (None, "frame.vars.dialogFrm"),
-                ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
-                 (None, "['Fish Angle Dialog']"),                   # title
-                 (None, "((-3,8,1),)"),                                # position
-                 (None, "[None]"),                                  # parent
-                 ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
-                  (None, "['XAngle']"),
-                  (None, "frame.vars.XAngle")
-                  ),
-                 ("WyeUI.InputInteger", (None, "frame.vars.YAngleID"),
-                  (None, "['YAngle']"),
-                  (None, "frame.vars.YAngle")
-                  ),
-                 ("WyeUI.InputInteger", (None, "frame.vars.ZAngleID"),
-                  (None, "['ZAngle']"),
-                  (None, "frame.vars.ZAngle")
-                  ),
-                 ("WyeUI.InputButton", (None, "frame.vars.updateBtnId"),
-                  (None, "['Update']"),
-                  (None, "[EditLib.UpdateCallback]"),
-                  (None, "[frame]")
-                  ),
-                 ),
-             ),
+            ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
+                (None, "['Fish Angle Dia    log']"),                   # title
+                (None, "((-3,8,1),)"),                                # position
+                (None, "[None]"),                                  # parent
+                ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
+                    (None, "['XAngle']"),
+                    (None, "frame.vars.XAngle")
+                ),
+                ("WyeUI.InputInteger", (None, "frame.vars.YAngleID"),
+                    (None, "['YAngle']"),
+                    (None, "frame.vars.YAngle")
+                ),
+                ("WyeUI.InputInteger", (None, "frame.vars.ZAngleID"),
+                    (None, "['ZAngle']"),
+                    (None, "frame.vars.ZAngle")
+                ),
+                ("WyeUI.InputButton", (None, "frame.vars.updateBtnId"),
+                    (None, "['Update']"),
+                    (None, "[EditLib.UpdateCallback]"),
+                    (None, "[frame]")
+                ),
+            ),
             #(None, "print('showFishDialog closed. status', frame.vars.dlgRetVal[0])"),
             ("IfGoTo", "frame.vars.dlgRetVal[0] != Wye.status.SUCCESS", "PopDialog"),
             #(None, "print('showFishDialog OK, set angle')"),
