@@ -115,7 +115,7 @@ class TestLib:
         )
 
         codeDescr = (
-            (None, "print('testDialog, startup - create param list ')"),
+            #(None, "print('testDialog, startup - create param list ')"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
              (None, "frame.vars.Title"),                        # title
              (None, "((-3,8,1))"),                                # position
@@ -140,7 +140,7 @@ class TestLib:
                 (None, "frame.vars.retList"),
                 (None, "[10]"),
              ),
-            (None, "print('testDialog retList=', frame.vars.retList[0])"),
+            #(None, "print('testDialog retList=', frame.vars.retList[0])"),
             (None, "frame.status = Wye.status.SUCCESS")
         )
 
@@ -175,9 +175,9 @@ class TestLib:
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 ("Label", "ClickLoop"),
-                (None, "print('fishbutton: waitclick')"),
+                #(None, "print('fishbutton: waitclick')"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                (None, "print('fishbutton: open fishDialog')"),
+                #(None, "print('fishbutton: open fishDialog')"),
                 ("TestLib.fishDialog",),
                 ("GoTo", "ClickLoop")
             )
@@ -231,10 +231,10 @@ class TestLib:
 
              ),
 
-            (None, "print('fishDialog XAngle', frame.vars.XAngle, ' YAngle', frame.vars.YAngle, ' ZAngle', frame.vars.ZAngle)"),
+            #(None, "print('fishDialog XAngle', frame.vars.XAngle, ' YAngle', frame.vars.YAngle, ' ZAngle', frame.vars.ZAngle)"),
             ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"), (None, "[TestLib.fishDialog.findActiveObj('testObj2')]")),
             ("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
-            (None, "print('testObj2 frm', frame.vars.target[0].verb.__name__)"),
+            #(None, "print('testObj2 frm', frame.vars.target[0].verb.__name__)"),
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.target[0].vars.obj"),
                 (None, "[[int(frame.vars.XAngle[0]),int(frame.vars.YAngle[0]),int(frame.vars.ZAngle[0])]]")),
             ("GoTo", "PopDialog")

@@ -202,7 +202,7 @@ class Wye:
                     return "--unknown data dType value " + str(dataType) + "--"
 
         def convertType(value, dataType):
-            print("Convert", value, " ", type(value), " dataType", Wye.dType.tostring(dataType))
+            #print("Convert", value, " ", type(value), " dataType", Wye.dType.tostring(dataType))
             match dataType:
                 case Wye.dType.NONE:
                     return value

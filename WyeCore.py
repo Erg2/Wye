@@ -452,12 +452,12 @@ class WyeCore(Wye.staticObj):
                 self.accept('delete', self.controlKeyFunc, [Wye.ctlKeys.DELETE])
 
             def controlKeyFunc(self, keyID):
-                print("Control key ", keyID)
+                #print("Control key", keyID)
                 if WyeCore.focusManager:
                     WyeCore.focusManager.doKey(keyID)
 
             def keyFunc(self, keyname):
-                print("KeyHandler: key=", keyname, "=", ord(keyname))
+                #print("KeyHandler: key=", keyname, "=", ord(keyname))
                 # if there's a dialog focus manager running
                 focusStatus = False
                 if WyeCore.focusManager:

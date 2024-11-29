@@ -239,11 +239,11 @@ class TestLib:
                 #(None, "print('libButton frame0: loaded button & id vars')"),
 
                 ("Label", "ClickLoop"),
-                (None, "print('fishbutton: waitclick')"),
+                #(None, "print('fishbutton: waitclick')"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                (None, "print('fishbutton: open showFishDialog')"),
+                #(None, "print('fishbutton: open showFishDialog')"),
                 ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.dlgStatus"), ("TestLib.showFishDialog",(None, "[1]"))),
-                (None, "print('passed showFishDialog. Status', frame.vars.dlgStatus[0], ' go loop')"),
+                #(None, "print('passed showFishDialog. Status', frame.vars.dlgStatus[0], ' go loop')"),
                 ("GoTo", "ClickLoop")
             )
 
@@ -315,7 +315,7 @@ class TestLib:
 
 
             #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
-            (None, "print('TestLib ShowFishDialog')"),
+            #(None, "print('TestLib ShowFishDialog')"),
             (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 

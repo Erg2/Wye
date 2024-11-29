@@ -39,7 +39,7 @@ class TestLib:
             (
                 ("Label", "Loop"),
                 ("WyeCore.libs.WyeLib.waitChar", (None, "frame.vars.retChar"), (None, "frame.vars.doitId")),
-                (None, "print('doitButton received char', frame.vars.retChar[0])"),
+                #(None, "print('doitButton received char', frame.vars.retChar[0])"),
                 ("GoTo", "Loop")
             )
         )
@@ -108,8 +108,8 @@ class TestLib:
         )
 
         codeDescr = (
-            (None, "print('Callback 2, create dialog. parent ', frame.eventData[1])"),
-            (None, "print('           frame.eventData ', frame.eventData)"),
+            #(None, "print('Callback 2, create dialog. parent ', frame.eventData[1])"),
+            #(None, "print('           frame.eventData ', frame.eventData)"),
             ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
              (None, "((1,-1,-1),)"), (None, "[frame.eventData[1]]"),
              ("WyeUI.InputText", (None, "frame.vars.txt1ID"),
@@ -128,7 +128,7 @@ class TestLib:
              ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
              ),
             #("Label", "Done"),
-            (None, "print('Callback 2 done with SUCCESS')"),
+            #(None, "print('Callback 2 done with SUCCESS')"),
             (None, "frame.status = Wye.status.SUCCESS")
         )
 
@@ -158,8 +158,8 @@ class TestLib:
         )
 
         codeDescr = (
-            (None, "print('Callback 3, create dropdown. parent ', frame.eventData[1])"),
-            (None, "print('           frame.eventData ', frame.eventData)"),
+            #(None, "print('Callback 3, create dropdown. parent ', frame.eventData[1])"),
+            #(None, "print('           frame.eventData ', frame.eventData)"),
             ("WyeCore.libs.WyeLib.setEqual",
                 (None, "frame.vars.selRow"),
                 ("WyeUI.DropDown", (None, "frame.vars.tstDlg3Frm"), (None, "frame.vars.Title"),
@@ -172,8 +172,8 @@ class TestLib:
             #  (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
             #),
             #("Label", "Done"),
-            (None, "print('Callback 3 dropDown done with SUCCESS.  User picked entry', frame.vars.selRow[0])"),
-            (None, "frame.status = Wye.status.SUCCESS")
+            #(None, "print('Callback 3 dropDown done with SUCCESS.  User picked entry', frame.vars.selRow[0])"),
+            #(None, "frame.status = Wye.status.SUCCESS")
         )
 
         def build():

@@ -100,7 +100,7 @@ class TestLib:
                 (None, "frame.vars.retList"),
                 (None, "[10]"),
              ),
-            (None, "print('test retList=', frame.vars.retList[0])"),
+            #(None, "print('test retList=', frame.vars.retList[0])"),
             (None, "frame.status = Wye.status.SUCCESS")
         )
 

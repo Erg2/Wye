@@ -1475,7 +1475,7 @@ class WyeUI(Wye.staticObj):
 
         # update InputText/InputInteger on key event
         def doKey(frame, key):
-            print("Dialog doKey: key", key)
+            #print("Dialog doKey: key", key)
             # if we have an input with focus
             ix = frame.vars.currInp[0]
             if ix >= 0:
