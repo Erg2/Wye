@@ -1873,7 +1873,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]  # return value
                     lblFrm.params.label = ["Vars:"]
-                    lblFrm.params.color = ((0,1,1,1))
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
