@@ -12,7 +12,7 @@
 class Wye:
 
     debugOn = False          # true if exec should check debug flags
-    trace = True           # true if tracing
+    trace = False           # true if tracing
     step = False            # true if single stepping
     breakList = []          # list of frames to break on
 
@@ -23,9 +23,13 @@ class Wye:
     def debug(frame, msg):
         if Wye.trace:
             print("trace frame", frame.verb.__name__, ":", msg)
-
-
-
+        if frame.breakpt:
+            # todo - some debug dialog thing!!!
+            if not hasattr(frame, "alreadyBroken"):
+                setattr(frame, "alreadyBroken", True)
+                print("Break at ", frame.verb.__name__)
+        else:
+            frame.verb.run(frame)
     #############################################
     #
     #  Static Wye Classes
@@ -492,6 +496,7 @@ class Wye:
             self.verb = verb    # the static verb that we're holding runtime data for
             self.params = Wye.params()  # caller will fill in params
             self.vars = Wye.vars()
+            self.breakpt = False      # set to true to break on next run
 
             #print("code frame for verb ", verb.__name__)
             if hasattr(verb, "varDescr"):
@@ -667,9 +672,10 @@ class Wye:
 
                     # if it's still running, run it again
                     if f.status == Wye.status.CONTINUE:
-                        if Wye.debugOn:
+                        if False: # todo figure this out Wye.debugOn:
                             Wye.debug(f, "runParallel: run frame "+ f.verb.__name__+ " status CONTINUE, PC " + str(f.PC)+ " run frame")
-                        f.verb.run(f)
+                        else:
+                            f.verb.run(f)
                         foundContinue = True
 
                     # if it terminated, if there's a parent, call it to clean up completed child
@@ -680,7 +686,8 @@ class Wye:
                             fp = stack[-2]
                             if Wye.debugOn:
                                 Wye.debug(fp, "runParallel: run parent " + fp.verb.__name__)
-                            fp.verb.run(fp)  # run parent (will test child status, remove from stack, and continue)
+                            else:
+                                fp.verb.run(fp)  # run parent (will test child status, remove from stack, and continue)
                             foundContinue = True  # technically we haven't checked, but we will next time
                         # no parent, atatus not CONTINUE, we're done with stream
                         else:

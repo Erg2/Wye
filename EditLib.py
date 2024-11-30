@@ -114,7 +114,6 @@ class EditLib:
         )
 
         def build():
-            print("Build showFishDialog")
             return WyeCore.Utils.buildCodeText("showFishDialog", EditLib.showFishDialog.codeDescr)
 
         def start(stack):

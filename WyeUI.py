@@ -6,6 +6,7 @@ from Wye import Wye
 from WyeCore import WyeCore
 import inspect      # for debugging
 from panda3d.core import *
+from panda3d.core import LVector3f
 #from functools import partial
 #import traceback
 #import sys
@@ -409,7 +410,7 @@ class WyeUI(Wye.staticObj):
             self.viewDir = (0, 1, 0)
             self.shift = False
 
-            self.speed = .5
+            self.speed = .25
             self.rotRate = .5
 
 
@@ -505,28 +506,26 @@ class WyeUI(Wye.staticObj):
                 base.camera.setHpr(0,0,0)
 
             # move viewpoint
+            # Walk flat (mouse up = fwd, mouse l/r = slide sideways).  Elevator up and down
             elif self.m1Down:
                 # move viewpoint
                 #print("CameraControl mouseMove: m3Down")
 
-                # remove tilt - do all moves relative to upright orientation
-                camHpr = base.camera.getHpr()
-                base.camera.setHpr(camHpr[0], camHpr[1], 0)
-                camPos = base.camera.getPos()
-                dx = (x - self.m1DownPos[0]) * self.speed
-                if self.shift:
-                    dy = 0
-                    dz = (y - self.m1DownPos[1]) * self.speed
-                else:
-                    dy = (y - self.m1DownPos[1]) * self.speed
-                    dz = 0
-                if self.walk:
-                    self.m1DownPos = (x,y)
-                base.camera.setPos(camPos[0]+dx, camPos[1]+dy, camPos[2]+dz)
-                # put cam orientation back
-                base.camera.setHpr(camHpr)
-                #print("move", dx, ",", dy, " camPos",camPos, " ", x, ",", y)
+                quaternion = base.camera.getQuat()
+                fwd = quaternion.getForward()
 
+                # shift -> only up/down
+                if self.shift:
+                    fwd = LVector3f(0, 0, 1)
+                    right = LVector3f.zero()
+                # else walk flat
+                else:
+                    fwd = LVector3f(fwd[0], fwd[1], 0)
+                    quat = Quat()
+                    quat.setFromAxisAngle(-90, LVector3f.up())
+                    right = quat.xform(fwd)
+
+                base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
                 pass
 
         # stub
@@ -1376,7 +1375,8 @@ class WyeUI(Wye.staticObj):
                                     verbFrm.eventData = (tag, data, inFrm)  # pass along user supplied event data, if any
                                     if Wye.debugOn:
                                         Wye.debug(verbFrm, "Dialog doSelect: call single cycle verb "+ verbFrm.verb.__name__+" data"+str(verbFrm.eventData))
-                                    verbFrm.verb.run(verbFrm)
+                                    else:
+                                        verbFrm.verb.run(verbFrm)
 
                         frame.vars.currInp[0] = -1       # no input has focus
 
@@ -1725,7 +1725,7 @@ class WyeUI(Wye.staticObj):
 
                     # fire up object editor with given frame
                     #print("ObjEditorCtl: Create ObjEditor")
-                    edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.ObjEditor)
+                    edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.ObjectEditor)
                     #print("ObjEditorCtl: Fill in ObjEditor objFrm param")
                     edFrm.params.objFrm = [frm]
                     edFrm.params.position = [frm.vars.position[0]]
@@ -1757,7 +1757,7 @@ class WyeUI(Wye.staticObj):
             return status
 
     # put up object dialog for given object
-    class ObjEditor:
+    class ObjectEditor:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         autoStart = False
@@ -1773,7 +1773,7 @@ class WyeUI(Wye.staticObj):
         activeFrames = {}
 
         def start(stack):
-            f = Wye.codeFrame(WyeUI.ObjEditor, stack)
+            f = Wye.codeFrame(WyeUI.ObjectEditor, stack)
             f.vars.paramInpLst[0] = []
             f.vars.varInpLst[0] = []
             return f
@@ -1794,7 +1794,7 @@ class WyeUI(Wye.staticObj):
 
 
                     # only edit frame once
-                    if frame in WyeUI.ObjEditor.activeFrames:
+                    if frame in WyeUI.ObjectEditor.activeFrames:
                         print("Already editing this frame", frame.params.objFrm[0].verb.__name__)
                         # take self off active object list
                         WyeCore.World.stopActiveObject(frame)
@@ -1818,7 +1818,7 @@ class WyeUI(Wye.staticObj):
                         return
 
                     # mark this frame actively being edited
-                    WyeUI.ObjEditor.activeFrames[frame] = True
+                    WyeUI.ObjectEditor.activeFrames[frame] = True
 
                     # create object dialog
                     #dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
@@ -2003,7 +2003,7 @@ class WyeUI(Wye.staticObj):
         def run(frame):
             match (frame.PC):
                 case 0:
-                    if frame in WyeUI.ObjEditor.activeFrames:
+                    if frame in WyeUI.ObjectEditor.activeFrames:
                         print("Already editing this frame", frame.params.objFrm[0].verb.__name__)
                         # take self off active object list
                         WyeCore.World.stopActiveObject(frame)
@@ -2230,7 +2230,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Wye Debugger"]
-                    dlgFrm.params.position = [(0,10,0)] # todo - get from object
+                    dlgFrm.params.position = [(0,10,0)] # todo - get from viewpoint and mouse
                     dlgFrm.params.parent = [None]
                     frame.vars.dlgFrm[0] = dlgFrm
 
@@ -2246,29 +2246,12 @@ class WyeUI(Wye.staticObj):
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
-                    attrIx = 0
+                    attrIx = [0]
+                    row = [0]
 
                     for stack in WyeCore.World.objStacks:
-                        sLen = len(stack)
-                        if sLen > 0:  # if there's something on the stack
-                            offset = 0
-                            for objFrm in stack:
-
-                                # make the dialog row
-                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                                dlgFrm.params.inputs[0].append([btnFrm])
-                                btnFrm.params.frame = [None]  # return value
-                                btnFrm.params.parent = [None]
-                                if offset == 0:
-                                    btnFrm.params.label = ["  stack "+str(attrIx)+" depth "+str(offset)+":"+objFrm.verb.__name__]
-                                else:
-                                    btnFrm.params.label = ["                depth " + str(offset) + ":" + objFrm.verb.__name__]
-                                btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugFrameCallback]  # button callback
-                                btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, row frame, dialog frame, obj frame
-                                WyeCore.libs.WyeUI.InputButton.run(btnFrm)
-                                offset += 1
-
-                            attrIx += 1
+                        WyeCore.libs.WyeUI.DebugMainDialog.listStack(stack, dlgFrm, row, attrIx, frame, 0)
+                        attrIx[0] += 1
 
                     # if nothing running
                     if attrIx == 0:
@@ -2287,12 +2270,44 @@ class WyeUI(Wye.staticObj):
 
                 case 1:
                     frame.SP.pop()  # remove dialog frame from stack
-                    print("Debugger: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
                     frame.status = Wye.status.SUCCESS  # done
 
                     WyeCore.World.stopActiveObject(WyeCore.World.debugger)
-                    print("Clear debugger")
                     WyeCore.World.debugger = None
+
+        def listStack(stack, dlgFrm, rowIx, attrIx, frame, level):
+            indent = "".join(["  " for l in range(level)])      # indent by recursion depth
+            sLen = len(stack)
+            if sLen > 0:  # if there's something on the stack
+                offset = 0
+                for objFrm in stack:
+
+                    # make the dialog row
+                    btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([btnFrm])
+                    btnFrm.params.frame = [None]  # return value
+                    btnFrm.params.parent = [None]
+                    if offset == 0:
+                        btnFrm.params.label = [
+                            indent + "  stack " + str(attrIx[0]) + " depth " + str(offset) + ":" + objFrm.verb.__name__]
+                    else:
+                        btnFrm.params.label = [indent + "                depth " + str(offset) + ":" + objFrm.verb.__name__]
+                    btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugFrameCallback]  # button callback
+                    btnFrm.params.optData = [
+                        (rowIx[0], btnFrm, dlgFrm, objFrm, frame)]  # button row, row frame, dialog frame, obj frame
+                    WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+                    offset += 1
+                    rowIx[0] += 1
+
+                # if bottom frame is a parallel frame, do all its stacks
+                lastFrm = stack[-1]
+                if isinstance(lastFrm, Wye.parallelFrame):
+                    pAttrIx = [0]
+                    for pStack in lastFrm.stacks:
+                        WyeCore.libs.WyeUI.DebugMainDialog.listStack(pStack, dlgFrm, rowIx, pAttrIx, frame, level + 1)
+                        pAttrIx[0] += 1
+                        rowIx[0] += 1
+
 
     # User selected an object, open its frame in the debugger
     class DebugFrameCallback:
@@ -2346,6 +2361,7 @@ class WyeUI(Wye.staticObj):
                     ("dlgStat", Wye.dType.INTEGER, -1),
                     ("paramInpLst", Wye.dType.OBJECT_LIST, None),
                     ("varInpLst", Wye.dType.OBJECT_LIST, None),
+                    ("breakLst", Wye.dType.OBJECT_LIST, None),
                     )
 
         def start(stack):
@@ -2353,25 +2369,33 @@ class WyeUI(Wye.staticObj):
             f = Wye.codeFrame(WyeUI.ObjectDebugger, stack)
             f.vars.paramInpLst[0] = []
             f.vars.varInpLst[0] = []
+            f.vars.breakLst[0] = []
             return f
 
         def run(frame):
             match (frame.PC):
                 case 0:
                     objFrm = frame.params.objFrm[0]
+
                     # print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
                     # Display contents of frame in a dialog
 
                     # If parallel subframe, get parent frame data
+                    # todo - debugging shd add dbg on/off.  For now, automatically set break point
                     if objFrm.verb is WyeCore.ParallelStream:
                         paramDescr = objFrm.parentFrame.verb.paramDescr
                         varDescr = objFrm.parentFrame.verb.varDescr
                         name = objFrm.parentFrame.verb.__name__
+                        objFrm.parentFrame.breakpt = True
                     else:
                         paramDescr = objFrm.verb.paramDescr
                         varDescr = objFrm.verb.varDescr
                         name = objFrm.verb.__name__
+                        objFrm.breakpt = True
+                    #objFrm.breakpt = True
+                    # make sure debugging is happening
+                    #Wye.debugOn = True
 
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
@@ -2545,6 +2569,13 @@ class WyeUI(Wye.staticObj):
                     # print("ObjDebugger: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
                     frame.status = Wye.status.SUCCESS  # done
 
+                    # turn obj breakpt off
+                    objFrm = frame.params.objFrm[0]
+                    if objFrm.verb is WyeCore.ParallelStream:
+                        objFrm.parentFrame.breakpt = False
+                    else:
+                        objFrm.breakpt = False
+
 
     # Debug parameter callback: put up parameter edit dialog
     # TODO - finish this
@@ -2635,10 +2666,7 @@ class WyeUI(Wye.staticObj):
 
                         # if value has changed, update it
                         if val != frame.vars.paramVal[0]:
-                            print("DebugParamCallback val before change (stored)", frame.vars.paramVal[0], " type", type(frame.vars.paramVal[0]), " after change", val, " type", type(val))
-                            print("DebugParamCallback val before change", getattr(objFrm.params, frame.vars.paramName[0]))
                             getattr(objFrm.params, frame.vars.paramName[0])[0] = val
-                            print("DebugParamCallback val after change", getattr(objFrm.params, frame.vars.paramName[0]))
 
                         rowStr = "  " + frame.vars.paramName[0] + " type:" + Wye.dType.tostring(frame.vars.paramType[0]) + " = " + str(val)
                         btnFrm.verb.setLabel(btnFrm, str(rowStr))

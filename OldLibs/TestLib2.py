@@ -63,7 +63,6 @@ class TestLib2:
 
                     # demonstrate WyeCore function that returns params as a string
                     f.params[1][0] = 3
-                    print(f.paramsToString())
 
                     # put up 3d text
                     txt = WyeCore.libs.WyeUI._label3d("Text String 1", (1,0,0,1), pos=(-.5,10,0), scale=(.2,.2,.2))
@@ -161,7 +160,6 @@ class TestLib2:
                     frame.PC += 1  # bump forward a step
 
                 case 1:
-                    print("testObj3 Stream 0 case 1")
                     # wait for click on 3d text
                     # lib = WyeCore.World.libDict["TestLib"]
                     f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE
@@ -185,7 +183,6 @@ class TestLib2:
                     frame.PC += 1  # bump forward a step
 
                 case 1:
-                    print("testObj3 Stream 1 case 1")
                     # wait for click on 3d text
                     # lib = WyeCore.World.libDict["TestLib"]
                     f = WyeCore.libs.WyeLib.waitClick.start(frame.SP)  # create multi-cycle verb (frame default status is CONTINUE

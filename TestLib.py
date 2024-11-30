@@ -57,8 +57,6 @@ class TestLib:
                                 btnFrm.params.label = [txt]  # button label is verb name
                                 btnFrm.params.callback = [WyeCore.libs.WyeUI.DropdownCallback]  # button callback
                                 btnFrm.params.optData = [(attrIx, frame)]  # button data - offset to button
-                                if Wye.debugOn:
-                                    Wye.debug(frame, "libDialog run InputButton "+txt)
                                 WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
                                 attrIx += 1

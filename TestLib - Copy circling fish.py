@@ -145,7 +145,6 @@ class TestLib:
         )
 
         def build():
-            print("Build testDialog")
             return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr)
 
         def start(stack):
@@ -183,7 +182,6 @@ class TestLib:
             )
 
         def build():
-            print("Build fishDlgButton")
             return WyeCore.Utils.buildCodeText("fishDlgButton", TestLib.fishDlgButton.codeDescr)
 
         def start(stack):

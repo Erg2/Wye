@@ -105,11 +105,9 @@ class TestLib:
         )
 
         def build():
-            print("Build test")
             return WyeCore.Utils.buildCodeText("test", TestLib.test.codeDescr)
 
         def start(stack):
-            print("Start test")
             return Wye.codeFrame(TestLib.test, stack)
 
         def run(frame):
