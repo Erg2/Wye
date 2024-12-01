@@ -2395,7 +2395,7 @@ class WyeUI(Wye.staticObj):
                         objFrm.breakpt = True
                     #objFrm.breakpt = True
                     # make sure debugging is happening
-                    #Wye.debugOn = True
+                    Wye.debugOn = True
 
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
@@ -2474,13 +2474,24 @@ class WyeUI(Wye.staticObj):
 
                             attrIx += 1
                             
-                        # refresg
+                        # refresh
                         btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                         dlgFrm.params.inputs[0].append([btnFrm])
                         btnFrm.params.frame = [None]  # return value
                         btnFrm.params.parent = [None]
                         btnFrm.params.label = ["  Refresh Values"]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugRefreshVarCallback]  # button callback
+                        btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, dialog frame
+                        btnFrm.params.color = [(1,1,0,1)]
+                        WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+                        # Step
+                        btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                        dlgFrm.params.inputs[0].append([btnFrm])
+                        btnFrm.params.frame = [None]  # return value
+                        btnFrm.params.parent = [None]
+                        btnFrm.params.label = ["  Step"]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugStepCallback]  # button callback
                         btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, dialog frame
                         btnFrm.params.color = [(1,1,0,1)]
                         WyeCore.libs.WyeUI.InputButton.run(btnFrm)
@@ -2575,7 +2586,21 @@ class WyeUI(Wye.staticObj):
                         objFrm.parentFrame.breakpt = False
                     else:
                         objFrm.breakpt = False
+        def refresh(frame):
+            objFrm = frame.params.objFrm[0]
+            if objFrm.verb is WyeCore.ParallelStream:
+                varDescr = objFrm.parentFrame.verb.varDescr
+            else:
+                varDescr = objFrm.verb.varDescr
 
+            attrIx = 0
+            for btnFrm in frame.vars.varInpLst[0]:
+                # update the given input
+                var = varDescr[attrIx]
+                varVal = getattr(objFrm.vars, var[0])
+                btnFrm.verb.setLabel(btnFrm, "  " + var[0] + " type:" + Wye.dType.tostring(var[1]) + " = " + str(varVal[0]))
+
+                attrIx += 1
 
     # Debug parameter callback: put up parameter edit dialog
     # TODO - finish this
@@ -2776,7 +2801,7 @@ class WyeUI(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
         paramDescr = ()
-        varDescr = (("count", Wye.dType.INTEGER, 0),)
+        varDescr = ()
 
         def start(stack):
             #print("DebugRefreshVarCallback started")
@@ -2785,25 +2810,38 @@ class WyeUI(Wye.staticObj):
         def run(frame):
             data = frame.eventData
             #print("DebugRefreshVarCallback data='" + str(data) + "'")
-            rowIx = data[1][0]
-            rowFrm = data[1][1]
-            dlgFrm = data[1][2]
-            objFrm = data[1][3]
+
             dbgFrm = data[1][4]
             
-            if objFrm.verb is WyeCore.ParallelStream:
-                varDescr = objFrm.parentFrame.verb.varDescr
-            else:
-                varDescr = objFrm.verb.varDescr
+            WyeCore.libs.WyeUI.ObjectDebugger.refresh(dbgFrm)
 
-            attrIx = 0
-            for btnFrm in dbgFrm.vars.varInpLst[0]:
-                # update the given input
-                var = varDescr[attrIx]
-                varVal = getattr(objFrm.vars, var[0])
-                btnFrm.verb.setLabel(btnFrm, "  " + var[0] + " type:" + Wye.dType.tostring(var[1]) + " = " + str(varVal[0]))
+    class DebugStepCallback:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("count", Wye.dType.INTEGER, 0),)
 
-                attrIx += 1
+        def start(stack):
+            #print("DebugStepCallback started")
+            return Wye.codeFrame(WyeUI.DebugStepCallback, stack)
+
+        def run(frame):
+            data = frame.eventData
+
+            objFrm = data[1][3]
+            dbgFrm = data[1][4]
+
+            match frame.PC:
+                case 0:
+                    objFrm.breakCt += 1     # step object once
+                    frame.PC += 1
+
+                case 1:
+                    # note - do after the objFrm has cycled once
+                    WyeCore.libs.WyeUI.ObjectDebugger.refresh(dbgFrm)
+                    frame.status = Wye.status.SUCCESS
+
+
 
 
 

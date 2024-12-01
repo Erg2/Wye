@@ -1025,8 +1025,8 @@ class WyeCore(Wye.staticObj):
                 cd, fn = WyeCore.Utils.buildCodeText(verbName+"_stream" + str(ix), codeDescr)
                 parFnText += cd + fn
 
-            # define start last since it refs the run routines created above
             # create start routine for this parallel verb
+            # define start last since it refs the run routines created above
             parFnText +=     " def " + verbName + "_start_rt(stack):\n"
             #parFnText +=     "  print('" + verbName + "_start_rt')\n"
             parFnText +=     "  f = Wye.parallelFrame(" + libName + "." + verbName + ",stack)\n"
@@ -1154,7 +1154,4 @@ class WyeCore(Wye.staticObj):
             return Wye.codeFrame(WyeCore.ParallelStream, stack)
 
         def run(frame):
-            if False: # todo figure this out - Wye.debugOn:
-                Wye.debug(frame, "ParallelStream run: "+ frame.verb.__name__) #frame.tostring())
-            else:
-                frame.run(frame)
+            frame.run(frame)

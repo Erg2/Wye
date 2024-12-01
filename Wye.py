@@ -23,11 +23,22 @@ class Wye:
     def debug(frame, msg):
         if Wye.trace:
             print("trace frame", frame.verb.__name__, ":", msg)
+        # break here
         if frame.breakpt:
             # todo - some debug dialog thing!!!
             if not hasattr(frame, "alreadyBroken"):
                 setattr(frame, "alreadyBroken", True)
-                print("Break at ", frame.verb.__name__)
+                print("Break at ", frame.verb.__name__, ":", msg)
+            if frame.breakCt > 0:
+                frame.breakCt -= 1
+                Wye.breakStep(frame)
+        # not breaking here
+        else:
+            Wye.breakStep(frame)
+
+    def breakStep(frame):
+        if hasattr(frame, "parallelStreamFlag"):
+            frame.run(frame)
         else:
             frame.verb.run(frame)
     #############################################
@@ -497,6 +508,7 @@ class Wye:
             self.params = Wye.params()  # caller will fill in params
             self.vars = Wye.vars()
             self.breakpt = False      # set to true to break on next run
+            self.breakCt = 0          # when breakpt True, set to n to step n times
 
             #print("code frame for verb ", verb.__name__)
             if hasattr(verb, "varDescr"):
@@ -672,13 +684,13 @@ class Wye:
 
                     # if it's still running, run it again
                     if f.status == Wye.status.CONTINUE:
-                        if False: # todo figure this out Wye.debugOn:
+                        if Wye.debugOn:
                             Wye.debug(f, "runParallel: run frame "+ f.verb.__name__+ " status CONTINUE, PC " + str(f.PC)+ " run frame")
                         else:
                             f.verb.run(f)
                         foundContinue = True
 
-                    # if it terminated, if there's a parent, call it to clean up completed child
+                    # if it terminated and there's a parent, call parent to clean up completed child
                     else:
                         #print("  frame", f.verb.__name__," status", Wye.status.tostring(f.status), ", PC", f.PC)
                         # have a parent on stack
@@ -689,7 +701,7 @@ class Wye:
                             else:
                                 fp.verb.run(fp)  # run parent (will test child status, remove from stack, and continue)
                             foundContinue = True  # technically we haven't checked, but we will next time
-                        # no parent, atatus not CONTINUE, we're done with stream
+                        # no parent, status not CONTINUE, we're done with stream
                         else:
                             #print("    no parent, process status and remove stack")
                             if f.status == Wye.status.FAIL:
