@@ -30,9 +30,10 @@ class WyeUI(Wye.staticObj):
     LINE_HEIGHT = 1.25
     TEXT_SCALE = (.2,.2,.2)
 
-    # create a piece of geometry
-    # this is a real class that gets instantiated
-    class _geom3d:
+    # create a scaled rectangular prism
+    # (primarily used for InputText cursor)
+    # NOTE: this class gets instantiated
+    class _box:
 
         def __init__(self, size, pos=[0,0,0]):
             # Instantiate a vertex buffer
@@ -95,129 +96,15 @@ class WyeUI(Wye.staticObj):
             self.path = render.attachNewNode(self.node)
             self.path.setPos(pos[0], pos[1], pos[2])
 
-    # Build run_rt methods on each class
+    # Build run_rt methods on each class in library
     def build():
         WyeCore.Utils.buildLib(WyeUI)
-
-#    # utility functions for building 3d objects
-#    def _displayCommand(cmd, coord):
-#        txt = str([str(e) for e in cmd])
-#        txtCoord = list(coord)
-#        # elements.append(WyeUI._label3d("Stream 0", color=(0, 1, 0, 1), pos=(0, 10, yy), scale=(.2, .2, .2)))
-#        WyeUI._label3d(txt, color=(0, 1, 0, 1), pos=(txtCoord[0], txtCoord[1], txtCoord[2]),
-#                                   scale=(.2, .2, .2))
-#        txtCoord[2] -= WyeUI.LINE_HEIGHT
-#        return txtCoord[2]
-#
-#    def _displayVerb(verb, coord):
-#        cd = verb.codeDescr
-#        xyz = list(coord)
-#        xyz[0] += WyeUI.LINE_HEIGHT
-#        if verb.mode == Wye.mode.PARALLEL:
-#            for codeBlock in cd:
-#                for cmd in codeBlock:
-#                    xyz[2] = WyeUI._displayCommand(cmd, xyz)
-#                xyz[2] -= WyeUI.LINE_HEIGHT
-#        else:
-#            for cmd in cd:
-#                xyz[2] = WyeUI._displayCommand(cmd, xyz)
-#
-#        xyz[2] -= WyeUI.LINE_HEIGHT
-#        return xyz[2]
-#
-#    def _displayLibOld(lib, coord, elements=None):
-#        txtCoord = list(coord)
-#        verbLst = WyeCore.Utils.getLibEntries(lib)
-#        for verb in verbLst:
-#            #print("lib", lib.__name__, " verb", verb.__name__)
-#            txt = lib.__name__ + "." +verb.__name__
-#            txtCoord[2] -= WyeUI.LINE_HEIGHT
-#            WyeUI._label3d(txt, color=WyeUI.TEXT_COLOR, pos=(txtCoord[0], txtCoord[1], txtCoord[2]), scale=WyeUI.TEXT_SCALE)
-#            txtCoord[2] -= WyeUI.LINE_HEIGHT
-#            if hasattr(verb, "codeDescr"):
-#                txtCoord[2] = WyeUI._displayVerb(verb, txtCoord)
-#
-#    class _displayLibCallback():
-#        mode = Wye.mode.SINGLE_CYCLE
-#        dataType = Wye.dType.STRING
-#        paramDescr = ()
-#        varDescr = (("count", Wye.dType.INTEGER, 0),)
-#
-#        def start(stack):
-#            return Wye.codeFrame(WyeUI._displayLibCallback, stack)
-#
-#        def run(frame):
-#            print("Display Lib Callback event data", frame.eventData)
-#            rowIx = frame.eventData[1]
-#            # return (dropdown index, verb) tuple in dropdown dialog's first param
-#            setattr(frame.params, frame.firstParamName(), (rowIx, WyeCore.Utils.getLibEntries()[rowIx]))
-#            pass
-#            #print("_displayLibCallback data=", frame.eventData, " index = ", frame.eventData[1])
-#
-#            # really bad coding / wizardry required here
-#            # Get the text widget of the
-#       #     inFrm = frame.eventData[1][0]
-#       #     var = frame.eventData[1][1]
-#       #     #print("data [1]", frame.eventData[1][1], " var", var)
-#       #     dlgFrm = inFrm.parentFrame
-#       #     #print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
-##
-#       #     var[0] += 1
-##
-#       #     # get label input's frame from parent dialog
-#       # TODO fix dialog inputs
-#       #     lblFrame = dlgFrm.params.inputs+3][0]
-##
-#       #     # supreme hackery - look up the display label in the label's graphic widget list
-#       #     inWidg = lblFrame.vars.frame[0][0]
-#       #     txt = "Count " + str(var[0])
-#       #     # print("  set text", txt," ix", ix, " txtWidget", inWidg)
-#       #     inWidg.setText(txt)
-##
-#       #     if var[0] >= 10:
-#       #         var[0] = 0
-#
-#
-#    def _displayLib(frame, dlgPos, lib, coord, elements=None):
-#        txtCoord = list(coord)
-#
-#        # how good is Python's GC.  Will this temp list stay as long as it's used or will it go away, crashing everything?
-#        dlgFrm = WyeUI.Dialog.start([])
-#
-#        dlgFrm.params.retVal =[0]
-#        dlgFrm.params.title = [lib.__name__]
-#        dlgFrm.params.position=coord
-#        dlgFrm.params.parent = [None]
-#
-#        # build dialog frame params list of input frames
-#        attrIx = 0
-#        #print("_displayLib: process library", lib.__name__)
-#        for attr in dir(lib):
-#            if attr != "__class__":
-#                verb = getattr(lib, attr)
-#                if inspect.isclass(verb):
-#                    #print("lib", lib.__name__, " verb", verb.__name__)
-#                    btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-#                    dlgFrm.params.inputs[0].append([btnFrm])
-#
-#                    txt = lib.__name__ + "." +verb.__name__
-#                    btnFrm.params.frame = [None]
-#                    btnFrm.params.parent = [None]        # return value
-#                    btnFrm.params.label = [txt]     # button label is verb name
-#                    btnFrm.params.callback = [WyeUI._displayLibCallback]   # button callback
-#                    btnFrm.params.optData = [attrIx]       # button data - offset to button
-#                    WyeUI.InputButton.run(btnFrm)
-#
-#                    attrIx += 1
-#
-#        #WyeUI.Dialog.run(dlgFrm)
-#        frame.SP.append(dlgFrm)
 
             
     # 3d positioned clickable text
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
     # Changing the text requires regenerating the card and 3d node
-    class _label3d:
+    class _3dText:
         global render
 
         def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1), parent=None):
@@ -350,8 +237,8 @@ class WyeUI(Wye.staticObj):
             self._nodePath.setPos(pos[0], pos[1], pos[2])
             self._nodePath.setScale(scale)
 
-            self._nodePath.setBillboardPointWorld(0.)           # always face the camera
-            self._nodePath.setBillboardAxis()
+     #       self._nodePath.setBillboardPointWorld(0.)           # always face the camera
+     #       self._nodePath.setBillboardAxis()
             self._nodePath.setLightOff()                        # unaffected by world lighting
             self._nodePath.setColor(bg)
 
@@ -385,7 +272,7 @@ class WyeUI(Wye.staticObj):
 
 
         #def __init__(self, text="", color=(1, 1, 1, 1), pos=(0, 0, 0), scale=(1, 1, 1), bg=(0, 0, 0, 1)):
-        #    label = WyeUI._label3d(text, color, pos, scale, bg)
+        #    label = WyeUI._3dText(text, color, pos, scale, bg)
 
     # This does more than camera control, it also triggers debugger and editor
     class CameraControl(DirectObject):
@@ -752,8 +639,8 @@ class WyeUI(Wye.staticObj):
             pos[2] -= WyeUI.LINE_HEIGHT
             frame.vars.position[0] = pos
 
-            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
+            lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
             return []       # no clickable object tags
@@ -805,11 +692,8 @@ class WyeUI(Wye.staticObj):
             frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
-            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
-
-            #tmp = WyeUI._geom3d([.1,.1,1])
-            #render.attachNewNode(tmp.node)
+            lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
@@ -818,8 +702,8 @@ class WyeUI(Wye.staticObj):
             # offset 3d input field right past end of 3d label
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
-            txt = WyeUI._label3d(frame.vars.currVal[0], Wye.color.TEXT_COLOR,
-                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
+            txt = WyeUI._3dText(frame.vars.currVal[0], Wye.color.TEXT_COLOR,
+                                pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
             #txt.setColor(WyeUI.TEXT_COLOR)
             # print("    Dialog inWdg", txt)
             gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
@@ -875,11 +759,8 @@ class WyeUI(Wye.staticObj):
             frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
-            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
-
-            #tmp = WyeUI._geom3d([.1,.1,1])
-            #render.attachNewNode(tmp.node)
+            lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
@@ -888,8 +769,8 @@ class WyeUI(Wye.staticObj):
             # offset 3d input field right past end of 3d label
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
-            txt = WyeUI._label3d(str(frame.vars.currVal[0]), Wye.color.LABEL_COLOR,
-                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
+            txt = WyeUI._3dText(str(frame.vars.currVal[0]), Wye.color.LABEL_COLOR,
+                                pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
             txt.setColor(Wye.color.TEXT_COLOR)
             # print("    Dialog inWdg", txt)
             gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
@@ -948,8 +829,8 @@ class WyeUI(Wye.staticObj):
             #print("InputButton display: pos", pos)
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
             frame.vars.position[0] = pos
-            btn = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
+            btn = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(btn)  # save for deleting on dialog close
             frame.vars.gWidget[0] = btn  # stash graphic obj in input's frame
 
@@ -1015,11 +896,8 @@ class WyeUI(Wye.staticObj):
             pos[2] -= WyeUI.LINE_HEIGHT  # update position for next widget
 
             gTags = []  # clickable graphic object tags assoc with this input
-            lbl = WyeUI._label3d(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
-
-            # tmp = WyeUI._geom3d([.1,.1,1])
-            # render.attachNewNode(tmp.node)
+            lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
@@ -1029,8 +907,8 @@ class WyeUI(Wye.staticObj):
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
             txt = Wye.dType.tostring(Wye.dType.dTypeList[frame.params.selectionIx[0]])
-            btn = WyeUI._label3d(txt, Wye.color.LABEL_COLOR,
-                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
+            btn = WyeUI._3dText(txt, Wye.color.LABEL_COLOR,
+                                pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
             btn.setColor(Wye.color.TEXT_COLOR)
             # print("    Dialog inWdg", btn)
             gTags.append(btn.getTag())  # save graphic widget for deleting on dialog close
@@ -1187,7 +1065,7 @@ class WyeUI(Wye.staticObj):
 
             # If we don't have a text input cursor, make one
             if WyeUI.Dialog._cursor is None:
-                WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0,0,0])
+                WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._box([.05, .05, .6], [0, 0, 0])
                 WyeUI.Dialog._cursor.path.hide()
             return frame
 
@@ -1207,10 +1085,10 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog display: pos=frame.params.position", frame.params.position)
                     if parent is None:
                         #print("  params.inputs", frame.params.inputs)
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
+                        dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
                     else:
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
-                                                   scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
+                        dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
+                                                  scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
 
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
                     frame.vars.topGObj[0] = dlgHeader        # save graphic for parenting sub dialogs
@@ -1245,13 +1123,13 @@ class WyeUI(Wye.staticObj):
 
                     # display OK, Cancel buttons
                     pos[2] -= 1.5
-                    txt = WyeUI._label3d("OK", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
-                                         parent=dlgHeader.getNodePath())
+                    txt = WyeUI._3dText("OK", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1, 1, 1),
+                                        parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
                     pos[0] += 2.5       # shove Cancel to the right of OK
                     #print("Dialog Cancel btn at", pos)
-                    txt = WyeUI._label3d("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1,1,1),
+                    txt = WyeUI._3dText("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1, 1, 1),
                                         parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
@@ -1487,14 +1365,14 @@ class WyeUI(Wye.staticObj):
                     preTxt = txt[:insPt]
                     postTxt = txt[insPt:]
                     # delete key
-                    if key == '\x08':         # backspace delete key
+                    if key == '\x08':  # backspace delete key
                         if insPt > 0:
                             preTxt = preTxt[:-1]
                             insPt -= 1
                             inFrm.vars.currInsPt[0] = insPt
                         txt = preTxt + postTxt
                     if key == -9:  # delete (forward) key
-                        if insPt < len(txt)-1:
+                        if insPt < len(txt):
                             postTxt = postTxt[1:]
                         txt = preTxt + postTxt
                     # arrow keys
@@ -1514,21 +1392,24 @@ class WyeUI(Wye.staticObj):
                         return
                     # not special control, if printable char, insert it in the string
                     else:
-                        #print("verb is", inFrm.verb.__name__)
-                        # For int input, only allow ints
-                        if inFrm.verb is WyeUI.InputInteger:
-                            if key in "-0123456789":
-                                if key != '-' or insPt == 0:
-                                    txt = preTxt + key + postTxt
-                                    insPt += 1
-                                    inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
+                        if isinstance(key,str):
+                            #print("verb is", inFrm.verb.__name__)
+                            # For int input, only allow ints
+                            if inFrm.verb is WyeUI.InputInteger:
+                                if key in "-0123456789":
+                                    if key != '-' or insPt == 0:
+                                        txt = preTxt + key + postTxt
+                                        insPt += 1
+                                        inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
 
-                        # for general text, allow alphanum and space
-                        elif key.isprintable():  # ignore unprintble keys
-                            txt = preTxt + key + postTxt
-                            insPt += 1
-                            inFrm.vars.currInsPt[0] = insPt        # set text insert point after new char
+                            # else general text
+                            elif key.isprintable():
+                                txt = preTxt + key + postTxt
+                                insPt += 1
+                                inFrm.vars.currInsPt[0] = insPt        # set text insert point after new char
 
+                    if inFrm.verb is WyeUI.InputInteger and len(txt) == 0:
+                        txt = '0'
                     inFrm.vars.currVal[0] = txt
                     inWidg = inFrm.vars.gWidget[0]
                     #print("  set text", txt," ix", ix, " txtWidget", inWidg)
@@ -1571,9 +1452,11 @@ class WyeUI(Wye.staticObj):
             frame.vars.dlgTags[0] = []         # not used
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed"
-            if WyeUI.Dialog._cursor is None:
-                WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0, 0, 0])
-                WyeUI.Dialog._cursor.path.hide()
+
+            # If we don't have a text input cursor, make one
+            #if WyeUI.Dialog._cursor is None:
+            #    WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0, 0, 0])
+            #    WyeUI.Dialog._cursor.path.hide()
             return frame
 
         def run(frame):
@@ -1588,11 +1471,11 @@ class WyeUI(Wye.staticObj):
 
                     # handle scale and parent obj, if any
                     if parent is None:
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
+                        dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
                     else:
                         #print("dropdown parent", parent.verb.__name__)
-                        dlgHeader = WyeUI._label3d(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
-                                                   scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
+                        dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
+                                                  scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
 
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
                     frame.vars.topGObj[0] = dlgHeader        # save graphic for parenting sub dialogs
@@ -1625,8 +1508,8 @@ class WyeUI(Wye.staticObj):
                     # Cancel button
                     pos[2] -= 1.5
                     #print("Dialog Cancel btn at", pos)
-                    txt = WyeUI._label3d("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos),
-                                                      scale=(1,1,1), parent=dlgHeader.getNodePath())
+                    txt = WyeUI._3dText("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos),
+                                        scale=(1,1,1), parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.dlgTags[0].append(txt.getTag())
 

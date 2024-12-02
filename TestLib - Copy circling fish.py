@@ -28,7 +28,7 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._label3d(text='Click',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 (None, "frame.status = Wye.status.SUCCESS")
@@ -170,7 +170,7 @@ class TestLib:
 
         codeDescr = (
 
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._label3d(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 ("Label", "ClickLoop"),

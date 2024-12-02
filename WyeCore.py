@@ -170,20 +170,20 @@ class WyeCore(Wye.staticObj):
                 text.setCardDecal(True)
                 #
                 # create 3d text object
-                _label3d = NodePath(text.generate())  # supposed to, but does not, generate pickable node
-                # _label3d = NodePath(text)
-                _label3d.reparentTo(render)
-                _label3d.setScale(.2, .2, .2)
-                _label3d.setPos(-.5, 17, 4)
-                _label3d.setTwoSided(True)
+                _3dText = NodePath(text.generate())  # supposed to, but does not, generate pickable node
+                # _3dText = NodePath(text)
+                _3dText.reparentTo(render)
+                _3dText.setScale(.2, .2, .2)
+                _3dText.setPos(-.5, 17, 4)
+                _3dText.setTwoSided(True)
 
-                _label3d.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
+                _3dText.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
                 ####### Test 3d spimd
 
                 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 snd = audio3d.loadSfx("WyePop.wav")
-                audio3d.attachSoundToObject(snd, _label3d)
+                audio3d.attachSoundToObject(snd, _3dText)
 
                 ###########
 
@@ -236,9 +236,9 @@ class WyeCore(Wye.staticObj):
                 # set up editor
                 WyeCore.editor = WyeCore.libs.WyeUI.ObjEditCtl()
 
-                # WyeCore.picker.makePickable(_label3d)
+                # WyeCore.picker.makePickable(_3dText)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
-                # _label3d.setTag("wyeTag", tag)
+                # _3dText.setTag("wyeTag", tag)
 
                 # print("worldRunner done World Init")
 
@@ -595,7 +595,7 @@ class WyeCore(Wye.staticObj):
                 print("'", obj, "' has no known tags")
 
         # this function finds the closest object to the camera that has been hit by our ray
-        # TODO it does not take camera orientation into account. Fails once the camera moves
+        # TODO it does not work with billboard nodes. Fails once the billboard rotates too far
         def getObjectHit(self, mpos):  # mpos is the position of the mouse on the screen
             global render
 

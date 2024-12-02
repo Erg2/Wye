@@ -88,7 +88,7 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._label3d(text='Display Library',color=(1,1,1,1), pos=(1.5,10,2), scale=(.2,.2,.2))"),
+                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._3dText(text='Display Library',color=(1,1,1,1), pos=(1.5,10,2), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
                 #(None, "print('libButton frame0: loaded button & id vars')"),
                 (None, "frame.status = Wye.status.SUCCESS")
@@ -232,7 +232,7 @@ class TestLib:
 
         codeDescr = (
 
-                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._label3d(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
                 #(None, "print('libButton frame0: loaded button & id vars')"),
 
@@ -312,9 +312,9 @@ class TestLib:
         codeDescr = (
 
 
-            #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
+            #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
             #(None, "print('TestLib ShowFishDialog')"),
-            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._label3d(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
+            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
             ("Label", "PopDialog"),
@@ -672,7 +672,7 @@ class TestLib:
                 (None, "frame.vars.tgtPos[0] = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])"),
                 (None, "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
                 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "[[0,90,0]]")),
-                #(None, "frame.vars.box[0] = WyeCore.libs.WyeUI._geom3d([.1,.1,.1], frame.vars.tgtPos[0])"),
+                #(None, "frame.vars.box[0] = WyeCore.libs.WyeUI._box([.1,.1,.1], frame.vars.tgtPos[0])"),
                 (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
 
                 ("Label", "StartLoop"),
