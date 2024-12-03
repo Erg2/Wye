@@ -19,10 +19,12 @@ import sys, os
 libLoadList = ["WyeLib.py", "WyeUI.py"] # list of lib files to load on start.  libList on cmd line added to it
 startObjList = []           # list of lib objs from command line to load on start
 
-############
 
-# run the world
-class PandaRunner(ShowBase):
+############# run the world
+#
+# Note: Wye's static class structure means we need this instantiated class
+# to derive from ShowBase to access all the Panda3d runstime stuff
+class WorldRunner(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)     # Init Panda3d
         taskMgr.add(WyeCore.World.worldRun)
@@ -36,8 +38,7 @@ class PandaRunner(ShowBase):
         #WyeCore.base.win.requestProperties(props)
 
 
-# main program, run 3d
-
+# main program, set up and run the world
 
 #print("Start")
 loadPrcFileData('', 'win-size 1200 800')           # set size of window
@@ -88,7 +89,7 @@ WyeCore.World.startObjs.extend(startObjList)
 #print("Loaded libList:", WyeCore.World.libList)
 #print("start objs:", WyeCore.World.startObjs)
 
-pandaRunner = PandaRunner()
+pandaRunner = WorldRunner()
 #print("Started, now run")
 pandaRunner.run()
 #print("Done")

@@ -16,6 +16,8 @@ class Wye:
     step = False            # true if single stepping
     breakList = []          # list of frames to break on
 
+    dragging = False
+
     version = "0.3"
 
 
@@ -28,10 +30,11 @@ class Wye:
             # todo - some debug dialog thing!!!
             if not hasattr(frame, "alreadyBroken"):
                 setattr(frame, "alreadyBroken", True)
-                print("Break at ", frame.verb.__name__, ":", msg)
+                #print("Break at ", frame.verb.__name__, ":", msg)
             if frame.breakCt > 0:
                 frame.breakCt -= 1
                 Wye.breakStep(frame)
+                #print("Break step", frame.verb.__name__, ":", msg)
         # not breaking here
         else:
             Wye.breakStep(frame)

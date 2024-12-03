@@ -50,6 +50,8 @@ class dragDropObjectClass:
 
 class mouseCollisionClass:
   def __init__(self):
+    global base
+
     base.accept("escape",sys.exit)
     base.accept('mouse1',self.onPress)
     base.accept('mouse1-up',self.onRelease)

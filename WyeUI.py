@@ -30,6 +30,9 @@ class WyeUI(Wye.staticObj):
     LINE_HEIGHT = 1.25
     TEXT_SCALE = (.2,.2,.2)
 
+    dragFrame = None    # not currently dragging anything
+    dragOffset = (0,0,0)   # mouse position at drag downclick
+
     # create a scaled rectangular prism
     # (primarily used for InputText cursor)
     # NOTE: this class gets instantiated
@@ -315,9 +318,7 @@ class WyeUI(Wye.staticObj):
             self.ctlPressed = False
             self.altPressed = False
 
-
             # get mouse buttons and mouse-down start pos
-            evt = WyeCore.base.mouseWatcherNode.getMouse()
             if base.mouseWatcherNode.isButtonDown(MouseButton.one()):
                 if not self.m1Down:
                     self.m1Down = True
@@ -375,48 +376,79 @@ class WyeUI(Wye.staticObj):
                 else:
                     print("Already have debugger")
 
-            # rotate viewpoint
-            elif self.m3Down:
-                #print("CameraControl mouseMove: m1Down")
-                camRot = base.camera.getHpr()
-                dx = -(x - self.m3DownPos[0]) * self.rotRate
-                if self.shift:
-                    dx = 0  # don't rotate while tilting
-                    dy = 0
-                    dz = (x - self.m3DownPos[0]) * self.rotRate
-                else:
-                    dy = (y - self.m3DownPos[1]) * self.rotRate
-                    dz = 0
-                base.camera.setHpr(camRot[0]+dx, camRot[1]+dy, camRot[2]+dz)
+            elif not Wye.dragging:
+                # rotate viewpoint
+                if self.m3Down:
+                    #print("CameraControl mouseMove: m1Down")
+                    camRot = base.camera.getHpr()
+                    dx = -(x - self.m3DownPos[0]) * self.rotRate
+                    if self.shift:
+                        dx = 0  # don't rotate while tilting
+                        dy = 0
+                        dz = (x - self.m3DownPos[0]) * self.rotRate
+                    else:
+                        dy = (y - self.m3DownPos[1]) * self.rotRate
+                        dz = 0
+                    base.camera.setHpr(camRot[0]+dx, camRot[1]+dy, camRot[2]+dz)
 
-            # reset viewpoint
-            elif self.m2Down:
-                if not self.shift:
-                    base.camera.setPos(0,0,0)
-                base.camera.setHpr(0,0,0)
+                # reset viewpoint
+                elif self.m2Down:
+                    if not self.shift:
+                        base.camera.setPos(0,0,0)
+                    base.camera.setHpr(0,0,0)
 
-            # move viewpoint
-            # Walk flat (mouse up = fwd, mouse l/r = slide sideways).  Elevator up and down
-            elif self.m1Down:
                 # move viewpoint
-                #print("CameraControl mouseMove: m3Down")
+                # Walk flat (mouse up = fwd, mouse l/r = slide sideways).  Elevator up and down
+                elif self.m1Down:
+                    # move viewpoint
+                    #print("CameraControl mouseMove: m3Down")
 
-                quaternion = base.camera.getQuat()
-                fwd = quaternion.getForward()
+                    quaternion = base.camera.getQuat()
+                    fwd = quaternion.getForward()
 
-                # shift -> only up/down
-                if self.shift:
-                    fwd = LVector3f(0, 0, 1)
-                    right = LVector3f.zero()
-                # else walk flat
+                    # shift -> only up/down
+                    if self.shift:
+                        fwd = LVector3f(0, 0, 1)
+                        right = LVector3f.zero()
+                    # else walk flat
+                    else:
+                        fwd = LVector3f(fwd[0], fwd[1], 0)
+                        quat = Quat()
+                        quat.setFromAxisAngle(-90, LVector3f.up())
+                        right = quat.xform(fwd)
+
+                    base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
+
+
+            # do drag
+            else:
+                if self.m1Down:
+                    # camera forward vec
+                    quaternion = base.camera.getQuat()
+                    fwd = quaternion.getForward()
+
+                    # plane at obj pos perpendicular to view direction
+                    objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
+                    objPlane = LPlanef(fwd, objPath.getPos())
+
+                    # mouse position on that plane
+                    mpos = base.mouseWatcherNode.getMouse()
+                    newPos = Point3(0,0,0)
+                    nearPoint = Point3()
+                    farPoint = Point3()
+                    # generate ray from camera through mouse xy
+                    base.camLens.extrude(mpos, nearPoint, farPoint)
+                    # get intersection of mouse point ray with object plane
+                    if objPlane.intersectsLine(newPos,
+                                                 render.getRelativePoint(base.camera, nearPoint),
+                                                 render.getRelativePoint(base.camera, farPoint)):
+                        # Move dialog to that location, taking into account offset
+                        # from where user clicked rel to position of dialog
+                        objPath.setPos(newPos - WyeCore.libs.WyeUI.dragOffset)
+
                 else:
-                    fwd = LVector3f(fwd[0], fwd[1], 0)
-                    quat = Quat()
-                    quat.setFromAxisAngle(-90, LVector3f.up())
-                    right = quat.xform(fwd)
-
-                base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
-                pass
+                    Wye.dragging = False
+                    WyeCore.libs.WyeUI.dragFrame = None
 
         # stub
         def setFly(self, doFly):
@@ -638,7 +670,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            dlgHeader = dlgFrm.vars.topGObj[0]
+            dlgHeader = dlgFrm.vars.dragObj[0]
 
             pos[2] -= WyeUI.LINE_HEIGHT
             frame.vars.position[0] = pos
@@ -690,7 +722,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            dlgHeader = dlgFrm.vars.topGObj[0]
+            dlgHeader = dlgFrm.vars.dragObj[0]
 
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
             frame.vars.position[0] = pos
@@ -757,7 +789,7 @@ class WyeUI(Wye.staticObj):
             return frame
 
         def display(frame, dlgFrm, pos):
-            dlgHeader = dlgFrm.vars.topGObj[0]
+            dlgHeader = dlgFrm.vars.dragObj[0]
 
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
             frame.vars.position[0] = pos
@@ -828,7 +860,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            dlgHeader = dlgFrm.vars.topGObj[0]
+            dlgHeader = dlgFrm.vars.dragObj[0]
 
             #print("InputButton display: pos", pos)
             pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
@@ -891,7 +923,7 @@ class WyeUI(Wye.staticObj):
 
         def display(frame, dlgFrm, pos):
             frame.vars.dlgFrm[0] = dlgFrm
-            dlgHeader = dlgFrm.vars.topGObj[0]
+            dlgHeader = dlgFrm.vars.dragObj[0]
 
             #print("InputDropdown display: pos", pos)
             #print(" ".join([str(row)+"\n" for row in frame.params.list]))
@@ -1052,7 +1084,7 @@ class WyeUI(Wye.staticObj):
                     ("inpTags", Wye.dType.OBJECT, None),                    # 3 dictionary return param ix of input by graphic tag
                     ("currInp", Wye.dType.INTEGER, -1),                     # 4 index to current focus widget, if any
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # 5 list of buttons that need to be unclicked
-                    ("topGObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj *** REF'D BY CHILDREN ***
+                    ("dragObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj *** REF'D BY CHILDREN ***
                     ("topTag", Wye.dType.STRING, ""),                 # 6 Wye tag for top object (used for dragging)
                     ("bgndGObj", Wye.dType.OBJECT, None),                   # 7 background card
                     )
@@ -1093,10 +1125,10 @@ class WyeUI(Wye.staticObj):
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
                     else:
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
-                                                  scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
+                                                  scale=(1,1,1), parent=parent.vars.dragObj[0].getNodePath())
                     frame.vars.topTag[0] = dlgHeader.getTag()   # save tag for drag checking
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
-                    frame.vars.topGObj[0] = dlgHeader        # save graphic for parenting sub dialogs
+                    frame.vars.dragObj[0] = dlgHeader        # save graphic for parenting sub dialogs
 
                     #print("Dialog run: params.position",frame.params.position[0])
                     pos = [0,0,0] #[x for x in frame.params.position[0]]    # copy position
@@ -1146,7 +1178,7 @@ class WyeUI(Wye.staticObj):
                         scMult = 5
                     else:
                         scMult = 1
-                    dlgNodePath = frame.vars.topGObj[0].getNodePath()
+                    dlgNodePath = frame.vars.dragObj[0].getNodePath()
                     dlgBounds = dlgNodePath.getTightBounds()
                     card = CardMaker("Dlg Bgnd")
                     gFrame = LVecBase4f(0, 0, 0, 0)
@@ -1206,6 +1238,29 @@ class WyeUI(Wye.staticObj):
             WyeUI.Dialog._activeInputInteger = None
             retStat = False     # haven't used the tag (yet)
 
+            # if clicked header for dragging
+            if tag == frame.vars.topTag[0]:
+                if not Wye.dragging:
+                    Wye.dragging = True
+                    WyeCore.libs.WyeUI.dragFrame = frame
+                    #frame.vars.dragObj[0]._nodePath.wrtReparentTo(base.camera)
+
+                    # todo - clean this up!
+                    objPath = frame.vars.dragObj[0]._nodePath
+                    quaternion = base.camera.getQuat()
+                    fwd = quaternion.getForward()
+                    objPlane = LPlanef(fwd, objPath.getPos())
+                    mpos = base.mouseWatcherNode.getMouse()
+                    newPos = Point3(0,0,0)
+                    nearPoint = Point3()
+                    farPoint = Point3()
+                    base.camLens.extrude(mpos, nearPoint, farPoint)
+                    if objPlane.intersectsLine(newPos,
+                                                 render.getRelativePoint(base.camera, nearPoint),
+                                                 render.getRelativePoint(base.camera, farPoint)):
+                        objPosInPlane = objPlane.project(objPath.getPos())
+                        WyeCore.libs.WyeUI.dragOffset = newPos - objPosInPlane
+
             # if clicked on input field
             if tag in frame.vars.inpTags[0]:        # do we have a matching tag?
                 #print("doSelect: clicked on input tag", tag, " frame", frame.verb.__name__)
@@ -1213,7 +1268,7 @@ class WyeUI(Wye.staticObj):
                 ix = frame.vars.inpTags[0][tag]     # Yes
                 retStat = True
 
-                # process dialog inputs
+                # handle dialog inputs
                 if frame.verb is WyeUI.Dialog:
                     inFrm = frame.params.inputs[0][ix][0]
 
@@ -1484,10 +1539,10 @@ class WyeUI(Wye.staticObj):
                     else:
                         #print("dropdown parent", parent.verb.__name__)
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
-                                                  scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
+                                                  scale=(1,1,1), parent=parent.vars.dragObj[0].getNodePath())
 
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
-                    frame.vars.topGObj[0] = dlgHeader        # save graphic for parenting sub dialogs
+                    frame.vars.dragObj[0] = dlgHeader        # save graphic for parenting sub dialogs
 
                     pos = [1, 0, 0]  # [x for x in frame.params[2]]    # copy position
 
@@ -2280,11 +2335,13 @@ class WyeUI(Wye.staticObj):
                         varDescr = objFrm.parentFrame.verb.varDescr
                         name = objFrm.parentFrame.verb.__name__
                         objFrm.parentFrame.breakpt = True
+                        #print("parallel breakpt true for ", objFrm.verb.__name__)
                     else:
                         paramDescr = objFrm.verb.paramDescr
                         varDescr = objFrm.verb.varDescr
                         name = objFrm.verb.__name__
                         objFrm.breakpt = True
+                        #print("breakpt true for ", objFrm.verb.__name__)
                     #objFrm.breakpt = True
                     # make sure debugging is happening
                     Wye.debugOn = True

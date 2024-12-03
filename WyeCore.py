@@ -149,11 +149,19 @@ class WyeCore(Wye.staticObj):
                 # print("worldRunner: World Init")
                 WyeCore.worldInitialized = True  # Only do this once
 
+                # Lighting
                 dlight = DirectionalLight('dlight')
                 dlight.setColor((1, 1, 1, 1))  # (0.8, 0.8, 0.5, 1))
                 dlnp = render.attachNewNode(dlight)
                 dlnp.setHpr(45, -60, 0)
                 render.setLight(dlnp)
+
+                # Fog
+
+                myFog = Fog("Fog Name")
+                myFog.setColor(0, 0, 0)
+                myFog.setExpDensity(0.01)
+                base.render.setFog(myFog)
 
                 ####### Test 3d text
 
@@ -179,7 +187,7 @@ class WyeCore(Wye.staticObj):
 
                 _3dText.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
-                ####### Test 3d spimd
+                ####### Test 3d sound
 
                 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 snd = audio3d.loadSfx("WyePop.wav")
@@ -187,7 +195,8 @@ class WyeCore(Wye.staticObj):
 
                 ###########
 
-                # base.camera.setPos(10,25,10)        # this does not move camera - something else controlling pos?
+                # set initial cam position
+                base.camera.setPos(0,-10,0)
                 # print("camPos",base.camera.getPos())
 
                 ###########
@@ -279,7 +288,7 @@ class WyeCore(Wye.staticObj):
                         #    exit(1)
                         if frame.status == Wye.status.CONTINUE:
                             if Wye.debugOn:
-                                Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb"+ frame.verb.__name__+ " PC "+ str(frame.PC))
+                                Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC))
                             else:
                                 frame.verb.run(frame)
                             # if frame.status != Wye.status.CONTINUE:
