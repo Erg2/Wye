@@ -285,8 +285,6 @@ class TestLib:
             z = dlgFrm.params.inputs[0][2][0].vars.currVal[0]
 
             frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
-            #print("  hpr", dlgFrm.vars.target[0].vars.gObj[0].getHpr())
-
 
 
     # find and set angle of wiggle fish (testObj2)

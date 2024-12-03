@@ -44,8 +44,6 @@ class EditLib:
             z = dlgFrm.params.inputs[0][2][0].vars.currVal[0]
 
             frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
-            #print("  hpr", dlgFrm.vars.target[0].vars.gObj[0].getHpr())
-
 
 
     # find and set angle of wiggle fish (testObj2)
@@ -84,7 +82,7 @@ class EditLib:
             (None, "frame.vars.YAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[1])"),
             (None, "frame.vars.ZAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[2])"),
             ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
-                (None, "['Fish Angle Dia    log']"),                   # title
+                (None, "['Fish Angle Dialog']"),                   # title
                 (None, "((-3,8,1),)"),                                # position
                 (None, "[None]"),                                  # parent
                 ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)

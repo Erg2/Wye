@@ -1,10 +1,11 @@
 # Wye
-Wye character implementation language
+Wye in-3d character implementation language
+(currently only works on monitor, not in HMD)
 
 # Engine requires at least one library and start object on command line.  Ex:
 python WyeMain.py -l TestLib.py -o TestLib.TestLib.testObj -o TestLib.TestLib.testObj2
 
-# Two attempts to build, neither work
+# Two attempts to build, 2nd mostly works
 
 # Pand3D dist - doesn't build
 python setup.py build_apps

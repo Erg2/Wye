@@ -122,7 +122,7 @@ class WyeUI(Wye.staticObj):
             self._nodePath = None
             #
             self._genTextObj(text, color)
-            self._genCardObj()
+            #self._genCardObj()
             self._gen3dTextObj(pos, scale, bg)
 
             # txtNode.setAlign(TextNode.ACenter)
@@ -197,7 +197,7 @@ class WyeUI(Wye.staticObj):
             bg = self._nodePath.getColor()
             pos = self._nodePath.getPos()
             scale = self._nodePath.getScale()
-            self._genCardObj()                     # generate new card obj for updated text object
+            #self._genCardObj()                     # generate new card obj for updated text object
             self._nodePath.detachNode()            # detach 3d node path from old card
             self._gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
 
@@ -228,10 +228,13 @@ class WyeUI(Wye.staticObj):
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
-            self._nodePath = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
-            self._nodePath.attachNewNode(self.text)
-            self._nodePath.setEffect(DecalEffect.make())        # glue text onto card
+            self._nodePath = NodePath(self.text.generate())
+            #self._nodePath = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
+            #self._nodePath.attachNewNode(self.text)
+            #self._nodePath.setEffect(DecalEffect.make())        # glue text onto card
             self._nodePath.reparentTo(self.parent)
+
+
             WyeCore.picker.makePickable(self._nodePath)         # make selectable
             self._nodePath.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
             self._nodePath.setPos(pos[0], pos[1], pos[2])
@@ -538,28 +541,32 @@ class WyeUI(Wye.staticObj):
                     WyeUI.FocusManager._activeDialog = None
 
         # User clicked on object, it might be a dialog field.
-        # call each leaf dialog to see if obj belongs to it.
+        # call each leaf dialog to see if tag belongs to it.
         # If so, return True (we used it)
         # else return False (not ours, someone else can use it)
         def doSelect(id):
             status = False
             WyeUI.Dialog.hideCursor()
-            # if dialog active, deactivate
-            if not WyeUI.FocusManager._activeDialog is None:
+            # if there is an active dialog, deactivate it
+            if WyeUI.FocusManager._activeDialog:
                 WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
                 WyeUI.FocusManager._activeDialog = None
+            # loop through all the dialog hierarchies checking leaf dialogs to see if one wants this tag
             for hier in WyeUI.FocusManager._dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
                 #print("FocusManager doSelect hier=", hier)
                 if len(hier) > 0:
                     frm = hier[-1]
                     #print("FocusManager doSelect", frm, ",", frm.params.title[0], ",", id)
+                    # if dialog uses the tag, mark it active
                     if frm.verb.doSelect(frm, id):
                         WyeUI.FocusManager._activeDialog = frm
                         #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
                         WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, True)
+                        break   # Found user of tag. Done with loop
 
             return status
 
+        # process keys and controls (shift, ctl)
         def doKey(key):
             # handle control codes.
             # if key, apply case
@@ -599,18 +606,15 @@ class WyeUI(Wye.staticObj):
 
 
     # Input field classes
-    # Each input run method just returns its frame as p0
+    # Each input run method just returns its frame as p0.
+    # Since the input is a parameter and is run before the dialog runs, the input's run cannot do any graphic setup
     #
-    # Dialog sets up input graphics when it runs
-    # Since the input has run before the dialog does, it cannot do any graphic setup
-    # because it doesn't know where it's going to be.  The Dialog manages that.
-    # Therefore, all it can do is set up its info in its frame and return the frame for the
-    # dialog to use.
+    # When the dialog runs it calls the input's display method to do the actual graphical layout.
     #
-    # Effectively each is a factory generating an input object frame for dialog to use
+    # Effectively each input is a factory generating an input object frame for dialog to use
 
     # label field
-    # Technically not an input, but is treated as one for space
+    # Technically not an input, but is treated as one for layout
     class InputLabel:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
@@ -1049,6 +1053,7 @@ class WyeUI(Wye.staticObj):
                     ("currInp", Wye.dType.INTEGER, -1),                     # 4 index to current focus widget, if any
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # 5 list of buttons that need to be unclicked
                     ("topGObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj *** REF'D BY CHILDREN ***
+                    ("topTag", Wye.dType.STRING, ""),                 # 6 Wye tag for top object (used for dragging)
                     ("bgndGObj", Wye.dType.OBJECT, None),                   # 7 background card
                     )
 
@@ -1063,13 +1068,13 @@ class WyeUI(Wye.staticObj):
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
 
-            # If we don't have a text input cursor, make one
+            # If there isn't a text input cursor, make it
             if WyeUI.Dialog._cursor is None:
                 WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._box([.05, .05, .6], [0, 0, 0])
                 WyeUI.Dialog._cursor.path.hide()
             return frame
 
-        # first time, draw dialog and all its fields
+        # first time through run, draw dialog and all its fields
         # after that, process any buttons being flashed to show user they were clicked on
         def run(frame):
             match frame.PC:
@@ -1089,7 +1094,7 @@ class WyeUI(Wye.staticObj):
                     else:
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
                                                   scale=(1,1,1), parent=parent.vars.topGObj[0].getNodePath())
-
+                    frame.vars.topTag[0] = dlgHeader.getTag()   # save tag for drag checking
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
                     frame.vars.topGObj[0] = dlgHeader        # save graphic for parenting sub dialogs
 
@@ -1111,7 +1116,7 @@ class WyeUI(Wye.staticObj):
                         setattr(inFrm, "parentFrame", frame)
 
                         # display inputs
-                        # Note: each Input's display function updates pos downward
+                        # Note: each Input's display function updates draw "pos" downward
                         # stash returned display obj tags in lookup dict to detect what user clicked on
                         if hasattr(inFrm.verb, "display"):
                             for lbl in inFrm.verb.display(inFrm, frame, pos):  # displays label, updates pos, returns selection tags
@@ -1345,7 +1350,11 @@ class WyeUI(Wye.staticObj):
             if not WyeUI.Dialog._activeInputInteger is None:
                 #print("doWheel update input")
                 inFrm = WyeUI.Dialog._activeInputInteger
-                inFrm.vars.currVal[0] += dir
+                if isinstance(inFrm.vars.currVal[0], str):
+                    inFrm.vars.currVal[0] = str(int(inFrm.vars.currVal[0]) + dir)
+                else:
+                    inFrm.vars.currVal[0] += dir
+
                 txt = str(inFrm.vars.currVal[0])
                 inWidg = inFrm.vars.gWidget[0]
                 inWidg.setText(txt)
