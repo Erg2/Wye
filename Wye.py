@@ -480,6 +480,7 @@ class Wye:
         SELECTED_COLOR = (0, .4, 0, 1)
         LABEL_COLOR = (1, 0, 0, 1)
         BACKGROUND_COLOR = (0, 0, 0, 1)
+        OUTLINE_COLOR = (.25, .25, .25, 1)
         HEADER_COLOR = (1, 1, 1, 1)
         CURSOR_COLOR = (0, 1, 0, 1)
         SUBHDR_COLOR = (1, 1, 0, 1)

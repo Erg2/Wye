@@ -549,8 +549,7 @@ class WyeUI(Wye.staticObj):
             if not WyeUI.FocusManager._activeDialog is None:
                 WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
 
-            WyeUI.FocusManager._activeDialog = dialogFrame
-            WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, True)
+            WyeUI.Dialog.select(dialogFrame, True)
             #print("FocusManager openDialog", WyeUI.FocusManager._dialogHierarchies)
 
 
@@ -565,10 +564,8 @@ class WyeUI(Wye.staticObj):
                 WyeUI.FocusManager._dialogHierarchies.remove(hier)
             #print("FocusManager closeDialog complete: hierarchies", WyeUI.FocusManager._dialogHierarchies)
             if dialogFrame == WyeUI.FocusManager._activeDialog:
-                WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
                 if len(hier) > 0:
-                    WyeUI.FocusManager._activeDialog = hier[-1]
-                    WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, True)
+                    WyeUI.Dialog.select(hier[-1], True)
                 else:
                     WyeUI.FocusManager._activeDialog = None
 
@@ -580,9 +577,9 @@ class WyeUI(Wye.staticObj):
             status = False
             WyeUI.Dialog.hideCursor()
             # if there is an active dialog, deactivate it
-            if WyeUI.FocusManager._activeDialog:
-                WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
-                WyeUI.FocusManager._activeDialog = None
+            #if WyeUI.FocusManager._activeDialog:
+            #    WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
+            #    WyeUI.FocusManager._activeDialog = None
             # loop through all the dialog hierarchies checking leaf dialogs to see if one wants this tag
             for hier in WyeUI.FocusManager._dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
                 #print("FocusManager doSelect hier=", hier)
@@ -591,9 +588,8 @@ class WyeUI(Wye.staticObj):
                     #print("FocusManager doSelect", frm, ",", frm.params.title[0], ",", id)
                     # if dialog uses the tag, mark it active
                     if frm.verb.doSelect(frm, id):
-                        WyeUI.FocusManager._activeDialog = frm
                         #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
-                        WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, True)
+                        WyeUI.Dialog.select(frm, True)
                         break   # Found user of tag. Done with loop
 
             return status
@@ -1124,6 +1120,7 @@ class WyeUI(Wye.staticObj):
                         #print("  params.inputs", frame.params.inputs)
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
                     else:
+                        print("Dialog", frame.params.title[0], " parent is", parent.verb.__name__)
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
                                                   scale=(1,1,1), parent=parent.vars.dragObj[0].getNodePath())
                     frame.vars.topTag[0] = dlgHeader.getTag()   # save tag for drag checking
@@ -1261,6 +1258,8 @@ class WyeUI(Wye.staticObj):
                         objPosInPlane = objPlane.project(objPath.getPos())
                         WyeCore.libs.WyeUI.dragOffset = newPos - objPosInPlane
 
+                    retStat = True  # select this dialog!
+
             # if clicked on input field
             if tag in frame.vars.inpTags[0]:        # do we have a matching tag?
                 #print("doSelect: clicked on input tag", tag, " frame", frame.verb.__name__)
@@ -1392,10 +1391,16 @@ class WyeUI(Wye.staticObj):
         # mark dialog selected/unselected
         def select(frame, setOn):
             if setOn:
+                # if there's already an active dialog, deactivate it
+                if WyeUI.FocusManager._activeDialog:
+                    WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
+                # make this the currently active dialog
+                WyeUI.FocusManager._activeDialog = frame
                 frame.vars.bgndGObj[0].setColor(Wye.color.SELECTED_COLOR)
                 #print("Dialog '"+frame.params.title[0]+ "' Selected")
+
             else:
-                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR)
+                frame.vars.bgndGObj[0].setColor(Wye.color.OUTLINE_COLOR)
                 #print("Dialog '"+frame.params.title[0]+ "' Unselected")
 
 
@@ -1662,13 +1667,13 @@ class WyeUI(Wye.staticObj):
         # for edit and debug dialog's to be positioned near
         def tagClicked(self, wyeID, pos):
             status = False      # assume we won't use this tag
-            #print("ObjEditCtl tagClicked")
+            print("ObjEditCtl tagClicked")
             # if ctrl then edit
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
                 frm = WyeCore.World.getRegisteredObj(wyeID)
                 if not frm is None:
                     #print("wyeID", wyeID, " Is registered")
-                    #print("ObjEditCtl: Edit object", frm.verb.__name__)
+                    print("ObjEditCtl: Edit object", frm.verb.__name__)
 
                     # fire up object editor with given frame
                     #print("ObjEditorCtl: Create ObjEditor")
@@ -1687,7 +1692,7 @@ class WyeUI(Wye.staticObj):
                     #print("ObjEditCtl: Edit object", frm.verb.__name__)
 
                     # set up object to be put on active list
-                    #print("ObjEditorCtl: Create ObjDebugger")
+                    print("ObjEditorCtl: Create ObjDebugger")
                     stk = []            # create stack to run object on
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(stk)  # start obj debugger and get its stack frame
                     dbgFrm.params.objFrm = [frm]  # put object to edit in editor frame
@@ -2276,17 +2281,19 @@ class WyeUI(Wye.staticObj):
                 case 0:
                     data = frame.eventData
                     #print("DebugFrameCallback data='" + str(data) + "'")
+                    objRow = data[1][0]
+                    parentFrame = data[1][2]
                     objFrm = data[1][3]
                     mainDbgFrm = data[1][4]
                     #print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
-                    objRow = data[1][0]
+
                     objOffset = (objRow + 2) * .3
                     objPos = (2, 9.8, -objOffset)  # todo - get from object
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
                     dbgFrm.params.objFrm = [objFrm]
                     dbgFrm.params.position = [objPos]
-                    dbgFrm.params.parent = [mainDbgFrm]
+                    dbgFrm.params.parent = [parentFrame]
                     frame.SP.append(dbgFrm)
                     frame.PC += 1
                 case 1:
@@ -2302,7 +2309,8 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.STRING
         autoStart = False
         paramDescr = (("objFrm", Wye.dType.OBJECT, Wye.access.REFERENCE),  # object frame to edit
-                      ("position", Wye.dType.OBJECT, Wye.access.REFERENCE),  # object position
+                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE),  # object position
+                      ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE),  # object parent
                       )
         varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
                     ("dlgStat", Wye.dType.INTEGER, -1),
@@ -2351,7 +2359,11 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Debug " + name]
                     dlgFrm.params.position = frame.params.position
-                    dlgFrm.params.parent = [None]
+                    #print("ObjectDebugger frame.params.parent[0]", frame.params.parent[0])
+                    if len(frame.params.parent) == 0 or isinstance(frame.params.parent[0], list):
+                        dlgFrm.params.parent = [None]
+                    else:
+                        dlgFrm.params.parent = frame.params.parent
                     frame.vars.dlgFrm[0] = dlgFrm
 
                     #print("ObjectDebugger objFrm", objFrm.tostring())
