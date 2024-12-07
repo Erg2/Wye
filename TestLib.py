@@ -534,7 +534,7 @@ class TestLib:
                     ("target", Wye.dType.OBJECT, None),             # leader fish Wye obj frame
                     ("tgtDist", Wye.dType.FLOAT, 0),
                     ("count", Wye.dType.INTEGER, 0),        # loop counter
-                    ("nFish", Wye.dType.INTEGER, 3),        # total number of fish
+                    ("nFish", Wye.dType.INTEGER, 6),        # total number of fish
                     ("objAhead", Wye.dType.OBJECT, None),   # object in front of this one in train
                     )
         codeDescr=(
@@ -542,25 +542,13 @@ class TestLib:
             # initialize arrays
             (None, "frame.vars.fishes = []"),
             (None, "frame.vars.fishTags = []"),
-            #(None, "print('fishes init', frame.vars.fishes)"),
-            #(None, "print('fishTags', frame.vars.fishTags)"),
 
             ("Label", "MakeFish"),
             #(None, "print('makeFish loop start: count', frame.vars.count[0])"),
             (None, "frame.vars.fishes.append([None])"),     # create entry for fish
             (None, "frame.vars.fishTags.append([''])"),
-            #(None, "print('fishes before load', frame.vars.fishes)"),
-            #(None, "print('fishTags', frame.vars.fishTags)"),
-            (None, "objNm = 'flyer_0'+str(frame.vars.count[0]+2)+'.glb'"),
-#            ("TestLib.testLoader",                          # generate fish to put in entry
-#                (None, "frame.vars.fishes[frame.vars.count[0]]"),
-#                (None, "[objNm]"),
-#                (None, "[[frame.vars.count[0] ,5, -.5]]"),
-#                (None, "[[.75,.75,.75]]"),
-#                (None, "frame.vars.fishTags[frame.vars.count[0]]"),
-#                (None, "[[1,1,0,1]]")
-#            ),
-            # load object and register this code for editing
+            (None, "objNm = 'flyer_0'+str((frame.vars.count[0] % 3)+2)+'.glb'"),
+            # load object
             ("WyeCore.libs.WyeLib.loadObject",
              (None, "[frame]"),
              (None, "frame.vars.fishes[frame.vars.count[0]]"),
@@ -569,18 +557,14 @@ class TestLib:
              (None, "[[0, 90, 0]]"),  # rotVec
              (None, "[[.75,.75,.75]]"),  # scaleVec
              (None, "frame.vars.fishTags[frame.vars.count[0]]"),
-             (None, "[[(frame.vars.count[0]+1)/3.,1,0,1]]")  # color
+             (None, "[[((frame.vars.count[0] % 3)+1)/3.,1,0,1]]")  # color
              ),
-
-            #(None, "print('fishes after load', frame.vars.fishes)"),
-            #(None, "print('fishTags', frame.vars.fishTags)"),
             (None, "frame.vars.count[0] += 1"),     # next fish
             ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "MakeFish"),      # if not done, loop for next fish
 
             # prep for swim loop
             ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"),       # Find leader fish
               (None, "[WyeCore.World.findActiveObj('leaderFish')]")),
-
             (None, "frame.vars.count[0] = 0"),
             (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
 

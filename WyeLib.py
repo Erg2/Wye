@@ -281,13 +281,13 @@ class WyeLib:
         code = None
 
         def start(stack):
-            return Wye.codeFrame(WyeLib.setObjPos, stack)
+            return Wye.codeFrame(WyeLib.setObjRelPos, stack)
 
         def run(frame):
-            #print("setObjPos run: params ", frame.params)
+            #print("setObjRelPos run: params ", frame.params)
             gObj = frame.params.obj[0]
             vec = frame.params.posVec[0]
-            #print("setObjPos set obj", gObj, "to", vec)
+            #print("setObjRelPos set obj", gObj, "to", vec)
             gObj.setPos(gObj, vec[0], vec[1], vec[2])
 
     # get model pos
@@ -305,10 +305,10 @@ class WyeLib:
             return Wye.codeFrame(WyeLib.setObjPos, stack)
 
         def run(frame):
-            #print("setObjPos run: params ", frame.params)
+            #print("getObjPos run: params ", frame.params)
             gObj = frame.params.obj[0]
-            #print("setObjPos set obj", gObj, "to", vec)
             pos = gObj.getPos()
+            #print("getObjPos get obj pos", gObj, " ", pos)
 
             frame.params.posVec = [[pos[0], pos[1], pos[2] ]]
 
@@ -353,11 +353,11 @@ class WyeLib:
         code = None
 
         def start(stack):
-            return Wye.codeFrame(WyeLib.setObjAngle, stack)
+            return Wye.codeFrame(WyeLib.setObjRelAngle, stack)
 
         # TODO - make multi-cycle
         def run(frame):
-            # print('execute setObjAngle, params', frame.params, ' vars', frame.vars)
+            # print('execute setObjRelAngle, params', frame.params, ' vars', frame.vars)
 
             gObj = frame.params.obj[0]
             vec = frame.params.angle[0]
@@ -389,7 +389,7 @@ class WyeLib:
 
         # TODO - make multi-cycle
         def run(frame):
-            #print('execute setObjAngle, params', frame.params, ' vars', frame.vars)
+            #print('execute getObjAngle, params', frame.params, ' vars', frame.vars)
 
             gObj = frame.params.obj[0]
             angle = gObj.getHpr()
@@ -414,7 +414,7 @@ class WyeLib:
         def run(frame):
             gObj = frame.params.obj[0]
             color = frame.params.color[0]
-            #print("setColor obj", gObj, "to", color)
+            #print("setObjColor: setColor obj", gObj, "to", color)
             gObj.setColor(color[0], color[1], color[2], color[3])
 
 
@@ -435,7 +435,7 @@ class WyeLib:
         def run(frame):
             gObj = frame.params.obj[0]
             color = frame.params.color[0]
-            #print("setMaterialColor obj", gObj, "to", color)
+            #print("setObjMaterialColor obj", gObj, "to", color)
             mat = Material()
             mat.setShininess(5.0)  # Make this material shiny
             mat.setAmbient((color[0], color[1], color[2], color[3]))  # Make this material blue

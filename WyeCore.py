@@ -280,9 +280,10 @@ class WyeCore(Wye.staticObj):
                         # run the frame furthest down the stack
                         frame = stack[-1]
                         # if frame:
-                        #    print("worldRunner stack # ", stackNum, " verb", frame.verb.__name__,
-                        #          " status ", WyeCore.Utils.statusToString(frame.status),
-                        #          " stack:", frame.stackToString(frame.SP))
+                            #print("worldRunner stack # ", stackNum, " verb", frame.verb.__name__) #,
+
+                            #      " status ", Wye.status.tostring(frame.status),
+                            #      " stack:", frame.stackToString(frame.SP))
                         # else:
                         #    print("worldRunner ERROR: stack # ", stackNum, " depth", len(stack)," stack[-1] frame = None")
                         #    exit(1)

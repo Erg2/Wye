@@ -27,22 +27,33 @@ class Wye:
             print("trace frame", frame.verb.__name__, ":", msg)
         # break here
         if frame.breakpt:
+            # prevent SINGLE frames from completing without having run 'cause
+            # their status is SUCCESS by default
+            #print("  debug: breakpoint for frame", frame.verb.__name__, " at", msg)
+            if not hasattr(frame, "prevStatus"):
+                #print("   debug: save prev status", Wye.status.tostring(frame.status))
+                frame.prevStatus = frame.status
+                frame.status = Wye.status.CONTINUE
             # todo - some debug dialog thing!!!
             if not hasattr(frame, "alreadyBroken"):
+                #print("   debug: set alreadyBroken", frame.verb.__name__)
                 setattr(frame, "alreadyBroken", True)
                 #print("Break at ", frame.verb.__name__, ":", msg)
             if frame.breakCt > 0:
                 frame.breakCt -= 1
-                Wye.breakStep(frame)
+                #print("     debug: do breakstep", frame.verb.__name__, " count", frame.breakCt, " at", msg)
+                Wye.breakStep(frame, msg)
                 #print("Break step", frame.verb.__name__, ":", msg)
         # not breaking here
         else:
-            Wye.breakStep(frame)
+            Wye.breakStep(frame, msg)
 
-    def breakStep(frame):
+    def breakStep(frame, msg):
         if hasattr(frame, "parallelStreamFlag"):
+            #print("      breakStep parallel frame.run", frame.verb.__name__, ", parent ",frame.parent.verb.__name__, " at", msg)
             frame.run(frame)
         else:
+            #print("      breakStep frame.run", frame.verb.__name__, " at", msg)
             frame.verb.run(frame)
     #############################################
     #
@@ -689,7 +700,7 @@ class Wye:
                     # if it's still running, run it again
                     if f.status == Wye.status.CONTINUE:
                         if Wye.debugOn:
-                            Wye.debug(f, "runParallel: run frame "+ f.verb.__name__+ " status CONTINUE, PC " + str(f.PC)+ " run frame")
+                            Wye.debug(f, "runParallel: run frame "+ f.verb.__name__+ ", parent "+self.verb.__name__+", status CONTINUE, PC " + str(f.PC)+ " run frame")
                         else:
                             f.verb.run(f)
                         foundContinue = True

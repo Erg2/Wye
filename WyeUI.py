@@ -1667,7 +1667,7 @@ class WyeUI(Wye.staticObj):
         # for edit and debug dialog's to be positioned near
         def tagClicked(self, wyeID, pos):
             status = False      # assume we won't use this tag
-            print("ObjEditCtl tagClicked")
+            #print("ObjEditCtl tagClicked")
             # if ctrl then edit
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
                 frm = WyeCore.World.getRegisteredObj(wyeID)
@@ -2343,13 +2343,13 @@ class WyeUI(Wye.staticObj):
                         varDescr = objFrm.parentFrame.verb.varDescr
                         name = objFrm.parentFrame.verb.__name__
                         objFrm.parentFrame.breakpt = True
-                        #print("parallel breakpt true for ", objFrm.verb.__name__)
+                        print(">>>>>>1 Set parallel breakpt true for ", objFrm.verb.__name__)
                     else:
                         paramDescr = objFrm.verb.paramDescr
                         varDescr = objFrm.verb.varDescr
                         name = objFrm.verb.__name__
                         objFrm.breakpt = True
-                        #print("breakpt true for ", objFrm.verb.__name__)
+                        print(">>>>>>2 Set breakpt true for ", objFrm.verb.__name__)
                     #objFrm.breakpt = True
                     # make sure debugging is happening
                     Wye.debugOn = True
@@ -2545,8 +2545,13 @@ class WyeUI(Wye.staticObj):
                     objFrm = frame.params.objFrm[0]
                     if objFrm.verb is WyeCore.ParallelStream:
                         objFrm.parentFrame.breakpt = False
+                        if hasattr(objFrm.parentFrame, "prevStatus"):
+                            objFrm.status = objFrm.parentFrame.prevStatus
                     else:
                         objFrm.breakpt = False
+                        if hasattr(objFrm, "prevStatus"):
+                            objFrm.status = objFrm.prevStatus
+
         def refresh(frame):
             objFrm = frame.params.objFrm[0]
             if objFrm.verb is WyeCore.ParallelStream:
@@ -2791,10 +2796,14 @@ class WyeUI(Wye.staticObj):
 
             objFrm = data[1][3]
             dbgFrm = data[1][4]
+            # if parallel, set flag on actual object frame (parent of this frame)
+            if objFrm.verb is WyeCore.ParallelStream:
+                objFrm = objFrm.parentFrame
 
             match frame.PC:
                 case 0:
                     objFrm.breakCt += 1     # step object once
+                    #print("DebugStepCallback increment breakCt to", objFrm.breakCt," on objFrm", objFrm.verb.__name__)
                     frame.PC += 1
 
                 case 1:
