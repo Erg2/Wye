@@ -562,45 +562,46 @@ class TestLib:
             (None, "frame.vars.count[0] += 1"),     # next fish
             ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "MakeFish"),      # if not done, loop for next fish
 
-            # prep for swim loop
-            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"),       # Find leader fish
-              (None, "[WyeCore.World.findActiveObj('leaderFish')]")),
+            # Find leader fish
+            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"), (None, "[WyeCore.World.findActiveObj('leaderFish')]")),
             (None, "frame.vars.count[0] = 0"),
             (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
 
-            ("Label", "SwimLoop"),    # top of loop moving each fish
+            ("Label", "SwimLoop"),    # used to be loop moving fish.  Unrolled loop 'cause IfGoTo lost a frame to each fish so jerky movement
+            # orient toward fish in front
             (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),  # orient toward fish in front
             (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),      # flip to face up
             (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
+            # move fwd
             (None, "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
             (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
             (None, "frame.vars.count[0] += 1"),     # next fish
 
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
             # orient toward fish in front
-            (None,
-             "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
-            # flip to face up
-            (None,
-             "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
+            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
+            (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
+            (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
+            # move fwd
             (None, "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
             (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
             (None, "frame.vars.count[0] += 1"),  # next fish
 
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
             # orient toward fish in front
+            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
             (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
-            # flip to face up
             (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
+            # move fwd
             (None, "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
             (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
 
-            #            ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "SwimLoop"),  # if not done, loop for next fish
+            #("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "SwimLoop"),  # if not done, loop for next fish
             (None, "frame.vars.count[0] = 0"),
             (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
+
+            # Save new position
             ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, ("frame.vars.fishes[0]"))),
             ("GoTo", "SwimLoop")
         )
