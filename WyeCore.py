@@ -12,6 +12,7 @@ from direct.showbase.DirectObject import DirectObject
 from panda3d.core import *
 from direct.showbase import Audio3DManager
 import sys, os
+import math
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -723,6 +724,78 @@ class WyeCore(Wye.staticObj):
             #print("  return path '"+ path+"'")
             return path
 
+        def slerp(q1, q2, t):
+            costheta = q1.dot(q2)
+            if costheta < 0.0:
+                costheta = -costheta
+                q1 = q1.conjugate()
+            elif costheta > 1.0:
+                costheta = 1.0
+
+            theta = math.acos(costheta)
+            if abs(theta) < 0.01:
+                return q2
+
+            sintheta = math.sqrt(1.0 - costheta * costheta)
+            if abs(sintheta) < 0.01:
+                return (q1 + q2) * 0.5
+
+            r1 = math.sin((1.0 - t) * theta) / sintheta
+            r2 = math.sin(t * theta) / sintheta
+            return (q1 * r1) + (q2 * r2)
+
+
+        #https://physicsforgames.blogspot.com/2010/02/quaternions.html
+        #Quat nlerp(const Quat& i, const Quat& f, float blend)
+        #{
+        #     Quat result;
+        #     float dot = i.w*f.w + i.x*f.x + i.y*f.y + i.z*f.z;
+        #     float blendI = 1.0f - blend;
+        #     if(dot < 0.0f)
+        #     {
+        #          Quat tmpF;
+        #          tmpF.w = -f.w;
+        #          tmpF.x = -f.x;
+        #          tmpF.y = -f.y;
+        #          tmpF.z = -f.z;
+        #          result.w = blendI*i.w + blend*tmpF.w;
+        #          result.x = blendI*i.x + blend*tmpF.x;
+        #          result.y = blendI*i.y + blend*tmpF.y;
+        #          result.z = blendI*i.z + blend*tmpF.z;
+        #     }
+        #     else
+        #     {
+        #          result.w = blendI*i.w + blend*f.w;
+        #          result.x = blendI*i.x + blend*f.x;
+        #          result.y = blendI*i.y + blend*f.y;
+        #          result.z = blendI*i.z + blend*f.z;
+        #     }
+        #     result = QuatNormalize(result);
+        #     return result;
+        #}
+        def nlerp(q1, q2, tt):
+            result = Quat()
+            ttInv = 1.0 - tt
+            dotp = q1.getR()*q2.getR() + q1.getI()*q2.getI() + q1.getJ()*q2.getJ() + q1.getK()*q2.getK();
+            if dotp < 0.0:
+                tmpF = Quat()
+                tmpF.setR(-q2.getR())
+                tmpF.setI(-q2.getI())
+                tmpF.setJ(-q2.getJ())
+                tmpF.setK(-q2.getK())
+                result.setR(ttInv * q1.getR() + tt * tmpF.getR())
+                result.setI(ttInv * q1.getI() + tt * tmpF.getI())
+                result.setJ(ttInv * q1.getJ() + tt * tmpF.getJ())
+                result.setK(ttInv * q1.getK() + tt * tmpF.getK())
+            else:
+                result.setR(ttInv * q1.getR() + tt * q2.getR())
+                result.setI(ttInv * q1.getI() + tt * q2.getI())
+                result.setJ(ttInv * q1.getJ() + tt * q2.getJ())
+                result.setK(ttInv * q1.getK() + tt * q2.getK())
+
+            return result.normalized()
+
+
         # Take a Wye code description tuple and return compilable Python code
         # Resulting code pushes all the params to the frame, then runs the function
         # Recurses to parse nested param tuples
@@ -736,7 +809,7 @@ class WyeCore(Wye.staticObj):
             codeText = ""
             parFnText = ""
             # Wye verb
-            if wyeTuple[0]:     # if there is a verb here
+            if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Expr", "Code"]:     # if there is a verb here
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
@@ -786,8 +859,9 @@ class WyeCore(Wye.staticObj):
                                 tupleKey = paramTuple[0]
                                 #print(" parseWyeTuple: 2 parse paramTuple ", paramTuple)
                                 # if tuple is code to compile
-                                if tupleKey is None or tupleKey == "Var" or tupleKey == "Const" or tupleKey == "Expr":        # constant/var (leaf node)
-                                    #print(" parseWyeTuple: paramTuple[0] is None")
+                                #print("tupleKey", tupleKey)
+                                if tupleKey is None or tupleKey in ["Var", "Const", "Expr", "Code"]:        # constant/var (leaf node)
+                                    #print(" parseWyeTuple: paramTuple[0] is None/Const/Expr/Code")
                                     #print("  parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
                                     #print("   verbClass.paramDescr", verbClass.paramDescr)
                                     #print("   verbClass.paramDescr[paramIx-1]", verbClass.paramDescr[paramIx-1][0])
@@ -860,7 +934,8 @@ class WyeCore(Wye.staticObj):
                                 # param starts with None, is a python code snippet returning a value
                                 # (const, frame var ref, other expression)
                                 tupleKey = paramTuple[0]
-                                if tupleKey is None or tupleKey == "Var" or tupleKey == "Const" or tupleKey == "Expr":
+                                #print("tupleKey", tupleKey)
+                                if tupleKey is None or tupleKey in ["Var", "Const", "Expr", "Code"]:
                                     #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
 
                                     # debug
