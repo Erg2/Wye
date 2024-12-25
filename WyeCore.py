@@ -533,7 +533,7 @@ class WyeCore(Wye.staticObj):
                         # bottom of stack done, run next up on stack if any
                         elif len(evt[0]) > 1:
                             frame = evt[0][-2]
-                            #print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
+                            print("repEventObj run: bot stack done, run -2 evt ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
                             frame.eventData = (evtID, evt[2])        # user data
                             if Wye.debugOn:
                                 Wye.debug(frame, "RepeatEvent done, run parent:"+ frame.verb.__name__+ " evt data"+ str(frame.eventData))

@@ -11,7 +11,7 @@
 # Wye container class that holds Wye classes
 class Wye:
 
-    debugOn = False          # true if exec should check debug flags
+    debugOn = 0         # > 0 if exec should check debug flags
     trace = False           # true if tracing
     step = False            # true if single stepping
     breakList = []          # list of frames to break on
