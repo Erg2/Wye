@@ -2021,7 +2021,7 @@ class WyeUI(Wye.staticObj):
                     )
 
         def start(stack):
-            print("EditParamCallback started")
+            #print("EditParamCallback started")
             return Wye.codeFrame(WyeUI.EditParamCallback, stack)
 
         def run(frame):
@@ -2034,7 +2034,7 @@ class WyeUI(Wye.staticObj):
 
             match (frame.PC):
                 case 0:
-                    print("EditParamCallback data='" + str(data) + "'")
+                    #print("EditParamCallback data='" + str(data) + "'")
                     # build param dialog
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
@@ -2047,7 +2047,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Parameter"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("EditParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    lineOffset = (3.25 + nParams + paramIx) * -WyeUI.LINE_HEIGHT
+                    lineOffset = (2.25 + nParams + paramIx) * -WyeUI.LINE_HEIGHT
                     dlgFrm.params.position = [(.5,-.3,lineOffset)]
 
                     # param name
@@ -2067,12 +2067,12 @@ class WyeUI(Wye.staticObj):
                     paramTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.dTypeList]]
                     paramTypeFrm.params.selectionIx = [Wye.dType.dTypeList.index(frame.vars.paramType[0])]
                     paramTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditParamTypeCallback]
-                    paramTypeFrm.params.optData = ((paramIx, paramTypeFrm, dlgFrm, objFrm, frame.vars.paramType[0]),)    # param to return chosen type in
+                    paramTypeFrm.params.optData = ((paramIx, paramTypeFrm, dlgFrm, objFrm, frame.vars.paramType[0]),)    # var to return chosen type in
                     paramTypeFrm.verb.run(paramTypeFrm)
                     dlgFrm.params.inputs[0].append([paramTypeFrm])
 
                     # param access method
-                    frame.vars.paramAccess[0] = str(objFrm.verb.paramDescr[paramIx][2])
+                    frame.vars.paramAccess[0] = Wye.access.tostring(objFrm.verb.paramDescr[paramIx][2])
                     paramAccessFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                     paramAccessFrm.params.frame = [None]
                     paramAccessFrm.params.label = ["Access:"]
@@ -2080,36 +2080,37 @@ class WyeUI(Wye.staticObj):
                     WyeCore.libs.WyeUI.InputText.run(paramAccessFrm)
                     dlgFrm.params.inputs[0].append([paramAccessFrm])
 
-                    print("EditParamCallback case 0: push dlgFrm", dlgFrm.verb.__name__)
                     frame.SP.append(dlgFrm)
                     frame.PC += 1
                 case 1:
                     dlgFrm = frame.SP.pop()
-                    print("EditParamCallback case 1: dlgFrm", dlgFrm.verb.__name__)
                     # check status to see if values should be used
-                    print("pre-crash: dlgFrm", dlgFrm.tostring())
-                    print("  dlgFrm.params attribs:", dir(dlgFrm.params))
                     if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
                         label = dlgFrm.params.inputs[0][0][0].params.value[0]
                         typeIx = dlgFrm.params.inputs[0][1][0].params.selectionIx[0]
                         wType = Wye.dType.dTypeList[typeIx]
-                        initVal = dlgFrm.params.inputs[0][2][0].params.value[0]
-
-                        # convert initVal to appropriate type
-                        initVal = Wye.dType.convertType(initVal, wType)
+                        accessVal = dlgFrm.params.inputs[0][2][0].params.value[0]
+                        accessCode = Wye.access.REFERENCE    # default
+                        accessStr = "REFERENCE"
+                        match(accessVal.upper()):
+                            case "VALUE":
+                                accessStr = "VALUE"
+                                accessCode = Wye.access.VALUE
+                            case "REFERENCE":
+                                accessStr = "REFERENCE"
+                                accessCode = Wye.access.REFERENCE
 
                         # param descriptions are constants so have to rebuild the whole thing
                         preDescr = objFrm.verb.paramDescr[:paramIx]
                         postDescr = objFrm.verb.paramDescr[paramIx+1:]
-                        descr = ((label, type, initVal), )
+                        descr = ((label, wType, accessCode), )
                         objFrm.verb.paramDescr = preDescr + descr + postDescr
 
-                        rowTxt = "  " + label + " type:" + Wye.dType.tostring(type) + " = " + str(initVal)
+                        rowTxt = "  " + label + " type:" + Wye.dType.tostring(wType) + " call by:" + accessStr
                         #print("new row", rowTxt)
                         btnFrm.verb.setLabel(btnFrm, rowTxt)
 
-                    print("EditParamCallback case 1: Success - we are done")
-                    frame.status == Wye.status.SUCCESS
+                    frame.status = Wye.status.SUCCESS
 
 
     # Param edit type button callback: put up dropdown for variable type
@@ -2120,7 +2121,7 @@ class WyeUI(Wye.staticObj):
         varDescr = (("count", Wye.dType.INTEGER, 0),)
 
         def start(stack):
-            print("EditParamTypeCallback started")
+            #print("EditParamTypeCallback started")
             return Wye.codeFrame(WyeUI.EditParamTypeCallback, stack)
 
         def run(frame):
@@ -2128,9 +2129,9 @@ class WyeUI(Wye.staticObj):
             match (frame.PC):
                 case 0:
                     data = frame.eventData
-                    print("EditParamTypeCallback data='" + str(data) + "'")
+                    #print("EditParamTypeCallback data='" + str(data) + "'")
                     frm = data[1][1]
-                    print("param ix", data[1][0], " data frame", frm.verb.__name__)
+                    #print("param ix", data[1][0], " data frame", frm.verb.__name__)
                     frame.PC += 1
                 case 1:
                     pass
