@@ -14,6 +14,7 @@ from direct.showbase import Audio3DManager
 import sys, os
 import math
 
+
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
 # Building it this way prevents the editor from accidentally writing over the core because
@@ -111,6 +112,7 @@ class WyeCore(Wye.staticObj):
         keyHandler = None           # keyboard handler slot
         mouseHandler = None         # mouse handler slot
         debugger = None             # no debugger running
+        editor = None               # no editor running
         mouseCallbacks = []         # any function wanting mouse events
                                     #   Control seems to jam mouse events,
                                     #   (neither mouse nor control-mouse gets called)
@@ -201,6 +203,7 @@ class WyeCore(Wye.staticObj):
                 # print("camPos",base.camera.getPos())
 
                 ###########
+
 
 
                 # put rep exec obj on obj list

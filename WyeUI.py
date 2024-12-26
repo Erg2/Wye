@@ -370,6 +370,13 @@ class WyeUI(Wye.staticObj):
                 self.ctl = False
 
             # if don't have the debug menu and the user wants it, start it
+            if self.m1Pressed and self.shift and self.ctl:
+                if not WyeCore.World.editor:
+                    WyeCore.World.editor = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditMainDialog)
+                else:
+                    print("Already have editor")
+
+            # if don't have the debug menu and the user wants it, start it
             if self.m1Pressed and self.shift and self.alt:
                 if not WyeCore.World.debugger:
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.DebugMainDialog)
@@ -1655,6 +1662,129 @@ class WyeUI(Wye.staticObj):
             lst[0] = rowIx
             # print("DropdownCallback data=", frame.eventData, " index = ", frame.eventData[1])
 
+    # show loaded libraries
+    # so user can edit them
+    class EditMainDialog:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = False
+        paramDescr = (("objFrm", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
+        varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
+                    ("dlgStat", Wye.dType.INTEGER, -1),
+                    )
+
+        # global list of libs being edited
+        activeFrames = {}
+
+        def start(stack):
+            return Wye.codeFrame(WyeUI.EditMainDialog, stack)
+
+        def run(frame):
+            match(frame.PC):
+                case 0:
+                    # create top level edit dialog
+                    dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
+                    dlgFrm.params.retVal = frame.vars.dlgStat
+                    dlgFrm.params.title = ["Wye Library Editor"]
+                    dlgFrm.params.position = [(0,10,0)] # todo - get from viewpoint and mouse
+                    dlgFrm.params.parent = [None]
+                    frame.vars.dlgFrm[0] = dlgFrm
+
+                    # build dialog
+
+                    # loaded libraries
+                    lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    lblFrm.params.frame = [None]  # return value
+                    lblFrm.params.parent = [None]
+                    lblFrm.params.label = ["Loaded Libraries:"]
+                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
+
+                    attrIx = [0]
+                    rowIx = [0]
+
+                    for lib in WyeCore.World.libList:
+                        # make the dialog row
+                        btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                        dlgFrm.params.inputs[0].append([btnFrm])
+                        btnFrm.params.frame = [None]  # return value
+                        btnFrm.params.parent = [None]
+                        btnFrm.params.label = [
+                            "  Library " + str(attrIx[0]) + ":" + lib.__name__]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditLibCallback]  # button callback
+                        btnFrm.params.optData = [
+                            (rowIx[0], btnFrm, dlgFrm, lib, frame)]  # button row, row frame, dialog frame, obj frame
+                        WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+                        rowIx[0] += 1
+                        attrIx[0] += 1
+
+                    # if nothing running
+                    if attrIx == 0:
+                        lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                        lblFrm.params.frame = [None]  # return value
+                        lblFrm.params.parent = [None]
+                        lblFrm.params.label = ["<no libraries loaded>"]
+                        WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                        dlgFrm.params.inputs[0].append([lblFrm])
+
+
+                    # WyeUI.Dialog.run(dlgFrm)
+                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
+
+                    frame.PC += 1  # on return from dialog, run next case
+
+                case 1:
+                    dlgFrm = frame.SP.pop()  # remove dialog frame from stack
+                    frame.status = Wye.status.SUCCESS  # done
+                    print("EditMainDialog: Done")
+
+                    # stop ourselves
+                    WyeCore.World.stopActiveObject(WyeCore.World.editor)
+                    WyeCore.World.editor = None
+
+    class EditLibCallback:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
+                    ("dlgStat", Wye.dType.INTEGER, -1),
+
+                    )
+
+        def start(stack):
+            # print("EditLibCallback started")
+            return Wye.codeFrame(WyeUI.EditLibCallback, stack)
+
+
+        def run(frame):
+            match (frame.PC):
+                case 0:
+                    data = frame.eventData
+                    #print("DebugFrameCallback data='" + str(data) + "'")
+                    objRow = data[1][0]
+                    parentFrame = data[1][2]
+                    objFrm = data[1][3]
+                    mainDbgFrm = data[1][4]
+                    #print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
+
+                    print("EditLibCallback called, row", objRow)
+
+
+                #    objOffset = (objRow + 2) * .3
+                #    objPos = (2, 9.8, -objOffset)  # todo - get from object
+                #    dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
+                #    dbgFrm.params.objFrm = [objFrm]
+                #    dbgFrm.params.position = [objPos]
+                #    dbgFrm.params.parent = [parentFrame]
+                #    frame.SP.append(dbgFrm)
+                    frame.PC += 1
+                case 1:
+                    dbgFrm = frame.SP.pop()
+                    print("EditLibCallback done")
+                    # todo - if success then update object
+                    frame.status = Wye.status.SUCCESS
+
 
     # class instance is called when user clicks on a graphic object that has a WyeID tag
     # fires up Wye's ObjEditor object with the given object to edit
@@ -2327,6 +2457,7 @@ class WyeUI(Wye.staticObj):
                     frame.SP.pop()  # remove dialog frame from stack
                     frame.status = Wye.status.SUCCESS  # done
 
+                    # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.debugger)
                     WyeCore.World.debugger = None
 
@@ -2446,18 +2577,17 @@ class WyeUI(Wye.staticObj):
                         varDescr = objFrm.parentFrame.verb.varDescr
                         name = objFrm.parentFrame.verb.__name__
                         objFrm.parentFrame.breakpt = True
-                        Wye.debugOn += 1
-                        print(">>>>>>1 Set parallel breakpt true for ", objFrm.verb.__name__)
+                        Wye.debugOn += 1  # make sure debugging is happening
+                        print("ObjectDebugger: set parallel parent breakpt on", objFrm.parentFrame.verb.__name__," debugOn to", Wye.debugOn)
+                        #print(">>>>>>1 Set parallel breakpt true for ", objFrm.verb.__name__)
                     else:
                         paramDescr = objFrm.verb.paramDescr
                         varDescr = objFrm.verb.varDescr
                         name = objFrm.verb.__name__
                         objFrm.breakpt = True
-                        Wye.debugOn += 1
-                        print(">>>>>>2 Set breakpt true for ", objFrm.verb.__name__)
-
-                    # make sure debugging is happening
-                    Wye.debugOn += 1
+                        Wye.debugOn += 1  # make sure debugging is happening
+                        print("ObjectDebugger: set breakpt on", objFrm.verb.__name__," debugOn to", Wye.debugOn)
+                        #print(">>>>>>2 Set breakpt true for ", objFrm.verb.__name__)
 
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
 
@@ -2651,11 +2781,13 @@ class WyeUI(Wye.staticObj):
                     if objFrm.verb is WyeCore.ParallelStream:
                         objFrm.parentFrame.breakpt = False
                         Wye.debugOn -= 1
+                        print("ObjectDebugger remove breakpt on", objFrm.parentFrame.verb.__name__," reduce debugOn to", Wye.debugOn)
                         if hasattr(objFrm.parentFrame, "prevStatus"):
                             objFrm.status = objFrm.parentFrame.prevStatus
                     else:
                         objFrm.breakpt = False
                         Wye.debugOn -= 1
+                        print("ObjectDebugger remove breakpt on", objFrm.verb.__name__," reduce debugOn to", Wye.debugOn)
                         if hasattr(objFrm, "prevStatus"):
                             objFrm.status = objFrm.prevStatus
 

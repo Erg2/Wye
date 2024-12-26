@@ -98,7 +98,7 @@ class EditLib:
                     (None, "frame.vars.ZAngle")
                 ),
                 ("WyeUI.InputButton", (None, "frame.vars.updateBtnId"),
-                    (None, "['Update']"),
+                    (None, "['Update Fish Position']"),
                     (None, "[EditLib.UpdateCallback]"),
                     (None, "[frame]")
                 ),

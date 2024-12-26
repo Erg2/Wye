@@ -287,8 +287,11 @@ class WyeLib:
             #print("setObjRelPos run: params ", frame.params)
             gObj = frame.params.obj[0]
             vec = frame.params.posVec[0]
-            #print("setObjRelPos set obj", gObj, "to", vec)
+
+            oldPos = gObj.getPos()
+
             gObj.setPos(gObj, vec[0], vec[1], vec[2])
+            #print("setObjRelPos set obj", gObj, "to", vec, " old pos", oldPos, " new pos", gObj.getPos())
 
     # get model pos
     class getObjPos:
@@ -310,8 +313,7 @@ class WyeLib:
             pos = gObj.getPos()
             #print("getObjPos get obj pos", gObj, " ", pos)
 
-            frame.params.posVec = [[pos[0], pos[1], pos[2] ]]
-
+            frame.params.posVec[0] = pos[0], pos[1], pos[2]
 
     # set object to given angle
     class setObjAngle:
@@ -341,8 +343,7 @@ class WyeLib:
             hpr = frame.params.obj[0].getHpr()
             #print("New HPR ", hpr)
 
-        # set object to given angle
-
+    # change object by given relative angle
     class setObjRelAngle:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
@@ -362,13 +363,14 @@ class WyeLib:
             gObj = frame.params.obj[0]
             vec = frame.params.angle[0]
 
-            # hpr = frame.params.obj[0].getHpr()
-            # print("Current HPR ", hpr)
+            #oldHpr = gObj.getHpr()      # debug
 
-            #print("setObjRelAngle obj", gObj, "to", vec)
             gObj.setHpr(gObj, vec[0], vec[1], vec[2])
 
-            hpr = frame.params.obj[0].getHpr()
+            #hpr = gObj.getHpr()         # debug
+            #print("setObjRelAngle obj", gObj, " by", vec, "from", oldHpr, " to", hpr)
+
+            #hpr = frame.params.obj[0].getHpr()
             # print("New HPR ", hpr)
 
 
