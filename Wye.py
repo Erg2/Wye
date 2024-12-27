@@ -31,7 +31,7 @@ class Wye:
         if frame.breakpt:
             # prevent SINGLE frames from completing without having run 'cause
             # their status is SUCCESS by default
-            print("debug: breakpoint on", frame.verb.__name__, " at", msg)
+            #print("debug: breakpoint on", frame.verb.__name__, " at", msg)
             if not hasattr(frame, "prevStatus"):
                 #print("   debug: save prev status", Wye.status.tostring(frame.status))
                 frame.prevStatus = frame.status

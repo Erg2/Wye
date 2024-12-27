@@ -836,22 +836,22 @@ else:
 
         codeDescr=(
             ("Code", '''
-floor = WyeCore.libs.WyeUI._box((100, 100, .1), (0, 0, -10))
-floor.path.setColor((.95,.84,.44,.1))
+#floor = WyeCore.libs.WyeUI._box((100, 100, .1), (0, 0, -10))
+#floor.path.setColor((.95,.84,.44,.1))
 from random import random
-floorPos = [[-20]*20]*20      # 20x20 floor tile heights
-
+floorPos = [[0]*20]*20      # 20x20 floor tile heights
+# calculate undulating floor
 for xx in range(-10,10):
     for yy in range(-10,10):
-        floorPos[xx][yy] = -18 + random()*5
-        box = WyeCore.libs.WyeUI._box((5, 5, 5),(xx*10, yy*10, floorPos[xx][yy]))
+        floorPos[xx][yy] = -18 + random()*5     # why doesn't this crash? Negative indices!
+        box = WyeCore.libs.WyeUI._box((10, 10, 5),(xx*20, yy*20, floorPos[xx][yy]))
         box.path.setColor((.95,.84,.44,1))
 print("floorPos", floorPos)
-for xx in range(50):
+for xx in range(100):
         posX = (random()-.5)*200
-        ixX = int(posX/10)
+        ixX = int(posX/20)
         posY = (random()-.5)*200
-        ixY = int(posY/10)
+        ixY = int(posY/20)
         posZ = floorPos[ixX][ixY]
         print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
         box = WyeCore.libs.WyeUI._box([.2, .2, 2+3*random()], [posX, posY, posZ+5])
