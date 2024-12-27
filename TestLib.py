@@ -308,7 +308,7 @@ class TestLib:
         codeDescr = (
 
 
-            #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
+            #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-1,5,-.5), scale=(.2,.2,.2))"),
             #(None, "print('TestLib ShowFishDialog')"),
             (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
@@ -520,7 +520,7 @@ class TestLib:
     # school of fish chase leaderFish
     class fish:
         mode = Wye.mode.MULTI_CYCLE
-        #autoStart = True
+        autoStart = True
         dataType = Wye.dType.NONE
         paramDescr = ()
         varDescr = (("fishes", Wye.dType.OBJECT_LIST, None),        # fish graphic objs
@@ -538,69 +538,69 @@ class TestLib:
         codeDescr=(
             #(None, ("print('fish case 0: set up object')")),
             # initialize arrays
-            (None, "frame.vars.fishes = []"),
-            (None, "frame.vars.fishTags = []"),
+            ("Var=", "frame.vars.fishes = []"),
+            ("Var=", "frame.vars.fishTags = []"),
 
             ("Label", "MakeFish"),
             #(None, "print('makeFish loop start: count', frame.vars.count[0])"),
-            (None, "frame.vars.fishes.append([None])"),     # create entry for fish
-            (None, "frame.vars.fishTags.append([''])"),
-            (None, "objNm = 'flyer_0'+str((frame.vars.count[0] % 3)+2)+'.glb'"),
+            ("Expr", "frame.vars.fishes.append([None])"),     # create entry for fish
+            ("Expr", "frame.vars.fishTags.append([''])"),
+            ("Expr", "objNm = 'flyer_0'+str((frame.vars.count[0] % 3)+2)+'.glb'"),
             # load object
             ("WyeCore.libs.WyeLib.loadObject",
-             (None, "[frame]"),
-             (None, "frame.vars.fishes[frame.vars.count[0]]"),
-             (None, "[objNm]"),
-             (None, "[[frame.vars.count[0] ,2, -.5]]"),  # posVec
-             (None, "[[0, 90, 0]]"),  # rotVec
-             (None, "[[.25,.25,.25]]"),  # scaleVec
-             (None, "frame.vars.fishTags[frame.vars.count[0]]"),
-             (None, "[[((frame.vars.count[0] % 3)+1)/3.,1,0,1]]")  # color
+             ("Expr", "[frame]"),
+             ("Expr", "frame.vars.fishes[frame.vars.count[0]]"),
+             ("Var", "[objNm]"),
+             ("Expr", "[[frame.vars.count[0] ,2, -.5]]"),  # posVec
+             ("Const", "[[0, 90, 0]]"),  # rotVec
+             ("Const", "[[.25,.25,.25]]"),  # scaleVec
+             ("Expr", "frame.vars.fishTags[frame.vars.count[0]]"),
+             ("Expr", "[[((frame.vars.count[0] % 3)+1)/3.,1,0,1]]")  # color
              ),
-            (None, "frame.vars.count[0] += 1"),     # next fish
+            ("Var=", "frame.vars.count[0] += 1"),     # next fish
             ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "MakeFish"),      # if not done, loop for next fish
 
             # Find leader fish
-            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"), (None, "[WyeCore.World.findActiveObj('leaderFish')]")),
-            (None, "frame.vars.count[0] = 0"),
-            (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
+            ("WyeCore.libs.WyeLib.setEqual", ("Var", "frame.vars.target"), ("Expr", "[WyeCore.World.findActiveObj('leaderFish')]")),
+            ("Var=", "frame.vars.count[0] = 0"),
+            ("Var=", "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
 
             ("Label", "SwimLoop"),    # used to be loop moving fish.  Unrolled loop 'cause IfGoTo lost a frame to each fish so jerky movement
             # orient toward fish in front
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),  # orient toward fish in front
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),      # flip to face up
-            (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
+            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),  # orient toward fish in front
+            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),      # flip to face up
+            ("Var=", "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
             # move fwd
-            (None, "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
-            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
-            (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
-            (None, "frame.vars.count[0] += 1"),     # next fish
+            ("Var=", "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
+            ("WyeCore.libs.WyeLib.setObjRelPos", ("Expr", "frame.vars.fishes[frame.vars.count[0]]"), ("Var", "frame.vars.dPos")),
+            ("Var=", "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
+            ("Var=", "frame.vars.count[0] += 1"),     # next fish
 
             # orient toward fish in front
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
-            (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
+            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
+            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
+            ("Var=", "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
             # move fwd
-            (None, "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
-            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
-            (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
-            (None, "frame.vars.count[0] += 1"),  # next fish
+            ("Var=", "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
+            ("WyeCore.libs.WyeLib.setObjRelPos", ("Expr", "frame.vars.fishes[frame.vars.count[0]]"), ("Var", "frame.vars.dPos")),
+            ("Var=", "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
+            ("Var=", "frame.vars.count[0] += 1"),  # next fish
 
             # orient toward fish in front
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
-            (None, "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
-            (None, "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
+            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
+            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
+            ("Var=", "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
             # move fwd
-            (None, "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
-            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fishes[frame.vars.count[0]]"), (None, "frame.vars.dPos")),
-            (None, "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
+            ("Var=", "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
+            ("WyeCore.libs.WyeLib.setObjRelPos", ("Expr", "frame.vars.fishes[frame.vars.count[0]]"), ("Var", "frame.vars.dPos")),
+            ("Var=", "frame.vars.objAhead[0] = frame.vars.fishes[frame.vars.count[0]][0]"),  # next fish follows this fish
 
             #("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "SwimLoop"),  # if not done, loop for next fish
-            (None, "frame.vars.count[0] = 0"),
-            (None, "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
+            ("Var=", "frame.vars.count[0] = 0"),
+            ("Var=", "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
 
             # Save new position
-            ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, ("frame.vars.fishes[0]"))),
+            ("WyeCore.libs.WyeLib.getObjPos", ("Var", "frame.vars.position"), ("Expr", ("frame.vars.fishes[0]"))),
             ("GoTo", "SwimLoop")
         )
 
@@ -664,11 +664,11 @@ class TestLib:
                 ("Code", "from panda3d.core import LPoint3f"),
                 #(None, "print('tgtPos', frame.vars.tgtPos)"),
                 # convert tgtPos from list to LPoint3f
-                ("Expr", "frame.vars.tgtPos[0] = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])"),
-                ("Expr", "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
+                ("Var=", "frame.vars.tgtPos[0] = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])"),
+                ("Var=", "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
                 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "[[0,90,0]]")),
                 #(None, "frame.vars.box[0] = WyeCore.libs.WyeUI._box([.1,.1,.1], frame.vars.tgtPos[0])"),
-                ("Expr", "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+                ("Var=", "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
 
                 ("Label", "StartLoop"),
 
@@ -820,6 +820,61 @@ else:
             #print("Run leaderFish")
             frame.runParallel()
 
+
+    # put up "ground" objects
+    class ground:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.INTEGER
+        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
+        varDescr = (("gObj", Wye.dType.OBJECT, None),
+                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("sound", Wye.dType.OBJECT, None),
+                    ("position", Wye.dType.FLOAT_LIST, [-1,2,-1.2]),
+                    )  # var 4
+
+        codeDescr=(
+            ("Code", '''
+floor = WyeCore.libs.WyeUI._box((100, 100, .1), (0, 0, -10))
+floor.path.setColor((.95,.84,.44,.1))
+from random import random
+floorPos = [[-20]*20]*20      # 20x20 floor tile heights
+
+for xx in range(-10,10):
+    for yy in range(-10,10):
+        floorPos[xx][yy] = -18 + random()*5
+        box = WyeCore.libs.WyeUI._box((5, 5, 5),(xx*10, yy*10, floorPos[xx][yy]))
+        box.path.setColor((.95,.84,.44,1))
+print("floorPos", floorPos)
+for xx in range(50):
+        posX = (random()-.5)*200
+        ixX = int(posX/10)
+        posY = (random()-.5)*200
+        ixY = int(posY/10)
+        posZ = floorPos[ixX][ixY]
+        print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
+        box = WyeCore.libs.WyeUI._box([.2, .2, 2+3*random()], [posX, posY, posZ+5])
+        box.path.setColor((.65,.54,.94,1))
+'''),
+            ("Label", "Done"),
+        )
+
+        def build():
+            print("Build testObj2")
+            return WyeCore.Utils.buildCodeText("ground", TestLib.ground.codeDescr)
+
+        def start(stack):
+            #print("testObj2 object start")
+            return Wye.codeFrame(TestLib.ground, stack)
+
+        def run(frame):
+            #print("Run testObj2")
+            TestLib.TestLib_rt.ground_run_rt(frame)
+
+
+
+
     # Put up "clickWiggle" fish
     class testObj2:
         mode = Wye.mode.MULTI_CYCLE
@@ -830,7 +885,7 @@ else:
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
-                    ("position", Wye.dType.FLOAT_LIST, [-1,5,-.5]),
+                    ("position", Wye.dType.FLOAT_LIST, [-3,2,2.5]),
                     )  # var 4
 
         codeDescr=(
@@ -841,7 +896,7 @@ else:
                 (None, "['flyer_05.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
-                (None, "[[.75,.75,.75]]"),    # scaleVec
+                (None, "[[.5,.5,.5]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
                 (None, "[[0,1,0,1]]")
             ),
@@ -872,7 +927,7 @@ else:
     # circling fish
     class testObj3:
         mode = Wye.mode.MULTI_CYCLE
-        #autoStart = True
+        autoStart = True
         dataType = Wye.dType.INTEGER
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
@@ -882,6 +937,9 @@ else:
                     ("position", Wye.dType.FLOAT_LIST, [1,3,-.5]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.03]),
                     ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.75]),
+                    ("colorWk", Wye.dType.FLOAT_LIST, [128, 1, 1]),
+                    ("colorInc", Wye.dType.FLOAT_LIST, [4, 4, 4]),
+                    ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
                     )  # var 4
 
         codeDescr=(
@@ -892,9 +950,9 @@ else:
                 (None, "['flyer_06.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
-                (None, "[[.75,.75,.75]]"),    # scaleVec
+                (None, "[[.25,.25,.25]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
-                (None, "[[0,.5,.5,1]]")
+                (None, "frame.vars.color")
             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
@@ -905,6 +963,14 @@ else:
             ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
             # Step forward
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+            # set color
+            ("Expr", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
+            # todo Next two lines are horrible - if followed by then expression indented
+            # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
+            ("Expr", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
+            ("Expr", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
+            ("Expr", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
 
             ("GoTo", "Repeat")
         )
@@ -935,9 +1001,10 @@ else:
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
-                    ("position", Wye.dType.FLOAT_LIST, [1.1,2,-.5]),
+                    ("position", Wye.dType.FLOAT_LIST, [-2 ,2,-1]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.03]),
-                    ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., .5]),
+                    ("posAngle", Wye.dType.FLOAT, 0.),
+                    ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.5]),
                     )  # var 4
 
         codeDescr=(
@@ -950,9 +1017,9 @@ else:
                     (None, "['flyer_06.glb']"),
                     (None, "frame.vars.position"),       # posVec
                     (None, "[[0, 90, 0]]"),      # rotVec
-                    (None, "[[.75,.75,.75]]"),    # scaleVec
+                    (None, "[[.25,.25,.25]]"),    # scaleVec
                     (None, "frame.vars.objTag"),
-                    (None, "[[.5,0.,.5,1]]")
+                    (None, "[[.5,0.5,.5,1]]")
                 ),
                 # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
                 # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
@@ -970,7 +1037,19 @@ else:
                 ("Label", "Repeat"),
                 # Step forward
                 #("Code", "print('testObj4 run stream 2 setRelPos', frame.vars.gObj[0].getPos())"),
-                ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+                ("Expr", '''
+import math
+angle = frame.vars.posAngle[0]
+ctrPos = frame.vars.position[0]
+x = ctrPos[0] + math.sin(angle)
+y = ctrPos[1] + math.cos(angle)
+frame.vars.gObj[0].setPos(x,y,ctrPos[2])
+angle -= .01
+if angle < 0:
+    angle = math.pi * 2
+frame.vars.posAngle[0] = angle
+                '''),
+                #("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
                 ("GoTo", "Repeat")
             )
         )

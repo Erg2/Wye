@@ -1320,6 +1320,7 @@ class WyeUI(Wye.staticObj):
                                     if Wye.debugOn:
                                         Wye.debug(verbFrm, "Dialog doSelect: call single cycle verb "+ verbFrm.verb.__name__+" data"+str(verbFrm.eventData))
                                     else:
+                                        #print("doSelect run", verbFrm.verb.__name__)
                                         verbFrm.verb.run(verbFrm)
 
                         frame.vars.currInp[0] = -1       # no input has focus
@@ -2030,6 +2031,10 @@ class WyeUI(Wye.staticObj):
                                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
                                     case "Var":
+                                        btnFrm.params.label = ["  Variable:" + tuple[1]]
+                                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+
+                                    case "Var=":
                                         btnFrm.params.label = ["  Variable:" + tuple[1]]
                                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
@@ -2748,6 +2753,10 @@ class WyeUI(Wye.staticObj):
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
 
                                         case "Var":
+                                            btnFrm.params.label = ["  Variable:" + tuple[1]]
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
+
+                                        case "Var=":
                                             btnFrm.params.label = ["  Variable:" + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
 

@@ -68,7 +68,7 @@ class EditLib:
         codeDescr = (
 
             #(None, "print('EditLib ShowFishDialog')"),
-            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,9,1), scale=(.2,.2,.2))"),
+            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
             ("Label", "PopDialog"),
@@ -83,7 +83,7 @@ class EditLib:
             (None, "frame.vars.ZAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[2])"),
             ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
                 (None, "['Fish Angle Dialog']"),                   # title
-                (None, "((-3,8,1),)"),                                # position
+                (None, "((-3,2,1.5),)"),                                # position
                 (None, "[None]"),                                  # parent
                 ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
                     (None, "['XAngle']"),

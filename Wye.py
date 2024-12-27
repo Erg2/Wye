@@ -8,6 +8,8 @@
 
 # import collections
 
+import copy
+
 # Wye container class that holds Wye classes
 class Wye:
 
@@ -29,7 +31,7 @@ class Wye:
         if frame.breakpt:
             # prevent SINGLE frames from completing without having run 'cause
             # their status is SUCCESS by default
-            #print("debug: breakpoint for frame", frame.verb.__name__, " at", msg)
+            print("debug: breakpoint on", frame.verb.__name__, " at", msg)
             if not hasattr(frame, "prevStatus"):
                 #print("   debug: save prev status", Wye.status.tostring(frame.status))
                 frame.prevStatus = frame.status
@@ -46,15 +48,15 @@ class Wye:
                 #print("Break step", frame.verb.__name__, ":", msg)
         # not breaking here
         else:
-            #print("no breakpoint on", frame.verb.__name__, " run it")
+            #print("run", frame.verb.__name__)
             Wye.breakStep(frame, msg)
 
     def breakStep(frame, msg):
         if hasattr(frame, "parallelStreamFlag"):
-            #print("      breakStep parallel frame.run", frame.verb.__name__, ", parent ",frame.parent.verb.__name__, " at", msg)
+            #print("breakStep parallel run", frame.verb.__name__, ", parent ",frame.parent.verb.__name__, " at", msg)
             frame.run(frame)
         else:
-            #print("      breakStep frame.run", frame.verb.__name__, " at", msg)
+            #print("breakStep run", frame.verb.__name__, " at", msg)
             frame.verb.run(frame)
     #############################################
     #
@@ -531,7 +533,12 @@ class Wye:
                 for varDef in verb.varDescr:
                     if len(varDef) > 1:
                         #print("  vars attr ", varDef[0], "=", varDef[2])
-                        setattr(self.vars, varDef[0], [varDef[2]])
+                        varVal = varDef[2]
+                        #if isinstance(varVal, list):
+                        #    print("deep copy", varVal, end="")
+                        #    varVal = copy.deepcopy(varVal)
+                        #    print(" id varDef[2]", id(varDef[2]), " id varVal", id(varVal))
+                        setattr(self.vars, varDef[0], [varVal])
                         #print("  set vars '", varDef[0], "' to '", str(getattr(self.vars, varDef[0])))
             #else:
             #    print("verb",verb, " has no varDescr")
@@ -703,6 +710,7 @@ class Wye:
                         if Wye.debugOn:
                             Wye.debug(f, "runParallel: run frame "+ f.verb.__name__+ ", parent "+self.verb.__name__+", status CONTINUE, PC " + str(f.PC)+ " run frame")
                         else:
+                            #print("parallel run", f.verb.__name__)
                             f.verb.run(f)
                         foundContinue = True
 
@@ -715,6 +723,7 @@ class Wye:
                             if Wye.debugOn:
                                 Wye.debug(fp, "runParallel: run parent " + fp.verb.__name__)
                             else:
+                                #print("parallel run parent", fp.verb.__name__)
                                 fp.verb.run(fp)  # run parent (will test child status, remove from stack, and continue)
                             foundContinue = True  # technically we haven't checked, but we will next time
                         # no parent, status not CONTINUE, we're done with stream

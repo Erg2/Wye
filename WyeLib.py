@@ -287,11 +287,10 @@ class WyeLib:
             #print("setObjRelPos run: params ", frame.params)
             gObj = frame.params.obj[0]
             vec = frame.params.posVec[0]
-
-            oldPos = gObj.getPos()
-
+            #oldPos = gObj.getPos()
             gObj.setPos(gObj, vec[0], vec[1], vec[2])
-            #print("setObjRelPos set obj", gObj, "to", vec, " old pos", oldPos, " new pos", gObj.getPos())
+            #newPos = gObj.getPos()
+            #print("setObjRelPos old", oldPos, " new", newPos)
 
     # get model pos
     class getObjPos:

@@ -292,9 +292,11 @@ class WyeCore(Wye.staticObj):
                         #    print("worldRunner ERROR: stack # ", stackNum, " depth", len(stack)," stack[-1] frame = None")
                         #    exit(1)
                         if frame.status == Wye.status.CONTINUE:
+                            #if Wye.debugOn:
                             if Wye.debugOn:
                                 Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC))
                             else:
+                                #print("run", frame.verb.__name__)
                                 frame.verb.run(frame)
                             # if frame.status != Wye.status.CONTINUE:
                             #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
@@ -307,6 +309,7 @@ class WyeCore(Wye.staticObj):
                                 if Wye.debugOn:
                                     Wye.debug(pFrame, "worldRunner: return from call to"+ pFrame.verb.__name__+". Run parent frame "+pFrame.verb.__name__)
                                 else:
+                                    #print("run", pFrame.verb.__name__)
                                     pFrame.verb.run(pFrame)  # parent will remove child frame
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
@@ -532,6 +535,7 @@ class WyeCore(Wye.staticObj):
                             if Wye.debugOn:
                                 Wye.debug(frame, "RepeatEvent run:"+ frame.verb.__name__+ " evt data "+ str(frame.eventData))
                             else:
+                                #print("run", frame.verb.__name__)
                                 frame.verb.run(frame)
                         # bottom of stack done, run next up on stack if any
                         elif len(evt[0]) > 1:
@@ -542,6 +546,7 @@ class WyeCore(Wye.staticObj):
                             if Wye.debugOn:
                                 Wye.debug(frame, "RepeatEvent done, run parent:"+ frame.verb.__name__+ " evt data"+ str(frame.eventData))
                             else:
+                                #print("run", frame.verb.__name__)
                                 #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
                                 frame.verb.run(frame)
                             # On parent error, bail out - TODO - consider letting its parent handle error
@@ -814,7 +819,7 @@ class WyeCore(Wye.staticObj):
             codeText = ""
             parFnText = ""
             # Wye verb
-            if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Expr", "Code"]:     # if there is a verb here
+            if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code"]:     # if there is a verb here
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
@@ -906,9 +911,13 @@ class WyeCore(Wye.staticObj):
                             #print("*** parseWyeTuple: finished params")
                             
                             # debug hook placeholder
-                            codeText += "    if Wye.debugOn:\n     Wye.debug(frame."+eff+",'Exec run:'+frame."+eff+".verb.__name__)\n"
-                            codeText += "    else:\n     "+wyeTuple[0] + ".run(frame."+eff+")\n    if frame."+eff+".status == Wye.status.FAIL:\n"
-                            #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
+                            codeText += "    if Wye.debugOn:\n"
+                            codeText += "     Wye.debug(frame."+eff+",'Exec run:'+frame."+eff+".verb.__name__)\n"
+                            codeText += "    else:\n"
+                            #codeText += "     print('run',frame." + eff + ".verb.__name__)\n"
+                            codeText += "     "+wyeTuple[0] + ".run(frame."+eff+")\n"
+                            codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
+                            codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
                             codeText += "     frame.status = frame."+eff+".status\n     return\n"
 
                     # multi-cycle verbs create code that pushes a new frame on the stack which will run on the next display cycle and
@@ -940,7 +949,7 @@ class WyeCore(Wye.staticObj):
                                 # (const, frame var ref, other expression)
                                 tupleKey = paramTuple[0]
                                 #print("tupleKey", tupleKey)
-                                if tupleKey is None or tupleKey in ["Var", "Const", "Expr", "Code"]:
+                                if tupleKey is None or tupleKey in ["Var", "Const", "Var=", "Expr", "Code"]:
                                     #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
 
                                     # debug
@@ -1224,14 +1233,17 @@ class WyeCore(Wye.staticObj):
     # A verb that uses mode=Wye.mode.PARALLEL has codeDescr that is a list of multiple codeDescr blocks
     # that will run in parallel.
     #
-    # At compile time each code block is compiled into its own runtime function.  Then a custom start function is
-    # defined that creates a separate frame for each code block and fills it in with references to the parent frame
-    # plus a custom "run" attribute in each frame that points to its code block runtime function.
+    # At compile time each code block is compiled into its own runtime stream function.
+    # Then a custom start function is defined for the main verb that creates a separate code frame for each
+    # code block with ParallelStream as a verb.  The start function fills the stream's frame vars and params
+    # tuples with references to the parent frame vars and params.
+    # It also puts a custom "run" attribute in each stream frame that points to that code block's runtime stream
+    # function.
     #
-    # At runtime the ParallelStream verb "run" function calls through the custom run attribute to the appropriate
-    # runtime code.
+    # At runtime the ParallelStream verb "run" function calls through the frame's custom run attribute to the
+    # appropriate runtime code.
     #
-    # Whether this is elegant or an ugly hack is moot 'cause that's how it works.  So there.
+    # Whether this is an elegant or an ugly hack is moot 'cause that's how it works.  So there.
     class ParallelStream:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
