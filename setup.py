@@ -4,16 +4,16 @@ setup(
     name="Wye",
     options = {
         'build_apps': {
-            #'include_patterns': [
-            #    '**/*.png',
-            #    '**/*.jpg',
-            #    '**/*.egg',
-            #],
+            'include_patterns': [
+                '**/*.glb',
+                '**/*.wav',
+            ],
             'exclude_modules': ['_bootlocale', '_posixsubprocess', 'grp'],
             'gui_apps': {
-                'Wye V0.1': 'WyeMain.py',
+                'WyeV0.3': 'WyeMain.py',
+
             },
-            'log_filename': '$USER_APPDATA/Asteroids/output.log',
+            'log_filename': 'output.log',
             'log_append': False,
             'plugins': [
                 'pandagl',

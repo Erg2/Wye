@@ -99,6 +99,70 @@ class WyeUI(Wye.staticObj):
             self.path = render.attachNewNode(self.node)
             self.path.setPos(pos[0], pos[1], pos[2])
 
+
+    # create a scaled surface from a point grid
+    # NOTE: this class gets instantiated
+    class _surf:
+
+        def __init__(self, data, size, pos=[0,0,0]):
+            # Instantiate a vertex buffer
+            format = GeomVertexFormat.getV3c4()
+            format = GeomVertexFormat.registerFormat(format)
+            vdata = GeomVertexData("name", format, Geom.UHStatic)
+            vertex = GeomVertexWriter(vdata, "vertex")
+            color = GeomVertexWriter(vdata, "color")
+
+            vtxColors = (
+            (0, 0, 0, 1),
+            (0, 0, 1, 1),
+            (0, 1, 0, 1),
+            (0, 1, 1, 1),
+            (1, 0, 0, 1),
+            (1, 0, 1, 1),
+            (1, 0, 1, 1),
+            (1, 1, 1, 1),
+            )
+
+            # Add vertices and colors
+            cIx = 0     # vertex color index
+            xLen = len(data)
+            yLen = len(data[0])
+            #print("gen surface xLen", xLen, " by yLen", yLen)
+
+            #for yy in range(yLen):
+            #    print(data[yy])
+
+            # gen points
+            for yy in range( yLen):
+                for xx in range(xLen):
+                    #print("data[",yy,"][",xx,"]", data[yy][xx])
+                    vertex.addData3f(xx*size[0], yy*size[1], data[yy][xx]*size[2])
+                    color.addData4f(vtxColors[cIx][0], vtxColors[cIx][1], vtxColors[cIx][2], vtxColors[cIx][3])
+                    cIx += 1
+                    cIx = cIx % 8
+
+            # gen triangles
+            prim = GeomTriangles(Geom.UHStatic)
+            for yy in range(yLen - 1):
+                for xx0 in range(xLen - 1):
+                    xx1 = xx0+1
+                    yy0 = yy*xLen
+                    yy1 = (yy+1)*xLen
+                    #print("xx0", xx0, " xx1", xx1, " yy0", yy0, " yy1", yy1)
+                    prim.addVertices(xx0 + yy0, xx1 + yy0, xx1 + yy1)
+                    prim.addVertices(xx0 + yy0, xx1 + yy1, xx0 + yy1)
+
+            geom = Geom(vdata)
+            geom.addPrimitive(prim)
+            node = GeomNode("node")
+            node.addGeom(geom)
+
+            self.node = node
+
+            self.path = render.attachNewNode(self.node)
+            self.path.setPos(pos[0], pos[1], pos[2])
+
+
     # Build run_rt methods on each class in library
     def build():
         WyeCore.Utils.buildLib(WyeUI)
@@ -1804,7 +1868,7 @@ class WyeUI(Wye.staticObj):
                 frm = WyeCore.World.getRegisteredObj(wyeID)
                 if not frm is None:
                     #print("wyeID", wyeID, " Is registered")
-                    print("ObjEditCtl: Edit object", frm.verb.__name__)
+                    #print("ObjEditCtl: Edit object", frm.verb.__name__)
 
                     # fire up object editor with given frame
                     #print("ObjEditorCtl: Create ObjEditor")
@@ -2583,7 +2647,7 @@ class WyeUI(Wye.staticObj):
                         name = objFrm.parentFrame.verb.__name__
                         objFrm.parentFrame.breakpt = True
                         Wye.debugOn += 1  # make sure debugging is happening
-                        print("ObjectDebugger: set parallel parent breakpt on", objFrm.parentFrame.verb.__name__," debugOn to", Wye.debugOn)
+                        #print("ObjectDebugger: set parallel parent breakpt on", objFrm.parentFrame.verb.__name__," debugOn to", Wye.debugOn)
                         #print(">>>>>>1 Set parallel breakpt true for ", objFrm.verb.__name__)
                     else:
                         paramDescr = objFrm.verb.paramDescr
@@ -2591,7 +2655,7 @@ class WyeUI(Wye.staticObj):
                         name = objFrm.verb.__name__
                         objFrm.breakpt = True
                         Wye.debugOn += 1  # make sure debugging is happening
-                        print("ObjectDebugger: set breakpt on", objFrm.verb.__name__," debugOn to", Wye.debugOn)
+                        #print("ObjectDebugger: set breakpt on", objFrm.verb.__name__," debugOn to", Wye.debugOn)
                         #print(">>>>>>2 Set breakpt true for ", objFrm.verb.__name__)
 
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
@@ -2790,13 +2854,13 @@ class WyeUI(Wye.staticObj):
                     if objFrm.verb is WyeCore.ParallelStream:
                         objFrm.parentFrame.breakpt = False
                         Wye.debugOn -= 1
-                        print("ObjectDebugger remove breakpt on", objFrm.parentFrame.verb.__name__," reduce debugOn to", Wye.debugOn)
+                        #print("ObjectDebugger remove breakpt on", objFrm.parentFrame.verb.__name__," reduce debugOn to", Wye.debugOn)
                         if hasattr(objFrm.parentFrame, "prevStatus"):
                             objFrm.status = objFrm.parentFrame.prevStatus
                     else:
                         objFrm.breakpt = False
                         Wye.debugOn -= 1
-                        print("ObjectDebugger remove breakpt on", objFrm.verb.__name__," reduce debugOn to", Wye.debugOn)
+                        #print("ObjectDebugger remove breakpt on", objFrm.verb.__name__," reduce debugOn to", Wye.debugOn)
                         if hasattr(objFrm, "prevStatus"):
                             objFrm.status = objFrm.prevStatus
 

@@ -203,7 +203,7 @@ class TestLib:
         )
 
         def build():
-            print("Build testDialog")
+            #print("Build testDialog")
             return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr)
 
         def start(stack):
@@ -244,7 +244,7 @@ class TestLib:
             )
 
         def build():
-            print("Build fishDlgButton")
+            #print("Build fishDlgButton")
             return WyeCore.Utils.buildCodeText("fishDlgButton", TestLib.fishDlgButton.codeDescr)
 
         def start(stack):
@@ -353,7 +353,7 @@ class TestLib:
         )
 
         def build():
-            print("Build showFishDialog")
+            #print("Build showFishDialog")
             return WyeCore.Utils.buildCodeText("showFishDialog", TestLib.showFishDialog.codeDescr)
 
         def start(stack):
@@ -528,7 +528,7 @@ class TestLib:
                     ("position", Wye.dType.FLOAT_LIST, [0,0,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -0.02]),
                     ("angle", Wye.dType.FLOAT_LIST, [0., 90., 0.]),
-                    ("followDist", Wye.dType.FLOAT, .4),
+                    ("followDist", Wye.dType.FLOAT, 1),
                     ("target", Wye.dType.OBJECT, None),             # leader fish Wye obj frame
                     ("tgtDist", Wye.dType.FLOAT, 0),
                     ("count", Wye.dType.INTEGER, 0),        # loop counter
@@ -545,7 +545,7 @@ class TestLib:
             #(None, "print('makeFish loop start: count', frame.vars.count[0])"),
             ("Expr", "frame.vars.fishes.append([None])"),     # create entry for fish
             ("Expr", "frame.vars.fishTags.append([''])"),
-            ("Expr", "objNm = 'flyer_0'+str((frame.vars.count[0] % 3)+2)+'.glb'"),
+            ("Expr", "objNm = 'flyer_01.glb'"),
             # load object
             ("WyeCore.libs.WyeLib.loadObject",
              ("Expr", "[frame]"),
@@ -553,7 +553,7 @@ class TestLib:
              ("Var", "[objNm]"),
              ("Expr", "[[frame.vars.count[0] ,2, -.5]]"),  # posVec
              ("Const", "[[0, 90, 0]]"),  # rotVec
-             ("Const", "[[.25,.25,.25]]"),  # scaleVec
+             ("Const", "[[.5,.5,.5]]"),  # scaleVec
              ("Expr", "frame.vars.fishTags[frame.vars.count[0]]"),
              ("Expr", "[[((frame.vars.count[0] % 3)+1)/3.,1,0,1]]")  # color
              ),
@@ -654,7 +654,7 @@ class TestLib:
                  (None, "['flyer_01.glb']"),
                  (None, "frame.vars.position"),  # posVec
                  (None, "[[0, 0, 0]]"),  # rotVec
-                 (None, "[[.25,.25,.25]]"),  # scaleVec
+                 (None, "[[.5,.5,.5]]"),  # scaleVec
                  (None, "frame.vars.fishTag"),
                  (None, "[[1,0,0,1]]")
                  ),
@@ -836,40 +836,54 @@ else:
 
         codeDescr=(
             ("Code", '''
+floorPos = [] #[[0]*20]*20      # 20x20 floor tile heights
+from random import random
+for yy in range(20):
+    floorPos.append([])
+    for xx in range(20):
+        floorPos[yy].append(random()*5)
+        #print("floorPos", yy, ",", xx, "=", floorPos[yy][xx])
+floor = WyeCore.libs.WyeUI._surf(floorPos, (10,10,1), (-100,-100,-18))
+floor.path.setColor((.95,.84,.44,.1))
+
 #floor = WyeCore.libs.WyeUI._box((100, 100, .1), (0, 0, -10))
 #floor.path.setColor((.95,.84,.44,.1))
-from random import random
-floorPos = [[0]*20]*20      # 20x20 floor tile heights
-# calculate undulating floor
-for xx in range(-10,10):
-    for yy in range(-10,10):
-        floorPos[xx][yy] = -18 + random()*5     # why doesn't this crash? Negative indices!
-        box = WyeCore.libs.WyeUI._box((10, 10, 5),(xx*20, yy*20, floorPos[xx][yy]))
-        box.path.setColor((.95,.84,.44,1))
-print("floorPos", floorPos)
+
+#from random import random
+#floorPos = [[0]*20]*20      # 20x20 floor tile heights
+## calculate undulating floor
+#for yy in range(-10,10):
+#    for xx in range(-10,10):
+#        floorPos[yy][xx] = -18 + random()*5     # why doesn't this crash? Negative indices!
+#        box = WyeCore.libs.WyeUI._box((10, 10, 5),(xx*20, yy*20, floorPos[yy][xx]))
+#        box.path.setColor((.95,.84,.44,1))
+##print("floorPos", floorPos)
+
+# Weeds on floor
 for xx in range(100):
         posX = (random()-.5)*200
         ixX = int(posX/20)
         posY = (random()-.5)*200
         ixY = int(posY/20)
-        posZ = floorPos[ixX][ixY]
-        print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
-        box = WyeCore.libs.WyeUI._box([.2, .2, 2+3*random()], [posX, posY, posZ+5])
+        posZ = floorPos[ixY][ixX]
+        #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
+        ht  = 2+3*random()
+        box = WyeCore.libs.WyeUI._box([.2, .2, ht], [posX, posY, -18 + posZ+ht*.75])
         box.path.setColor((.65,.54,.94,1))
 '''),
             ("Label", "Done"),
         )
 
         def build():
-            print("Build testObj2")
+            #print("Build ground")
             return WyeCore.Utils.buildCodeText("ground", TestLib.ground.codeDescr)
 
         def start(stack):
-            #print("testObj2 object start")
+            #print("ground object start")
             return Wye.codeFrame(TestLib.ground, stack)
 
         def run(frame):
-            #print("Run testObj2")
+            #print("Run ground")
             TestLib.TestLib_rt.ground_run_rt(frame)
 
 
@@ -893,7 +907,7 @@ for xx in range(100):
             ("WyeCore.libs.WyeLib.loadObject",
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
-                (None, "['flyer_05.glb']"),
+                (None, "['flyer_01.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
                 (None, "[[.5,.5,.5]]"),    # scaleVec
@@ -911,7 +925,7 @@ for xx in range(100):
         )
 
         def build():
-            print("Build testObj2")
+            #print("Build testObj2")
             return WyeCore.Utils.buildCodeText("testObj2", TestLib.testObj2.codeDescr)
 
         def start(stack):
@@ -947,10 +961,10 @@ for xx in range(100):
             ("WyeCore.libs.WyeLib.loadObject",
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
-                (None, "['flyer_06.glb']"),
+                (None, "['flyer_01.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
-                (None, "[[.25,.25,.25]]"),    # scaleVec
+                (None, "[[.5,.5,.5]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
                 (None, "frame.vars.color")
             ),
@@ -976,7 +990,7 @@ for xx in range(100):
         )
 
         def build():
-            print("Build testObj3")
+            #print("Build testObj3")
             return WyeCore.Utils.buildCodeText("testObj3", TestLib.testObj3.codeDescr)
 
         def start(stack):
@@ -1009,15 +1023,15 @@ for xx in range(100):
 
         codeDescr=(
             (
-                ("Code", "print('testObj4 run stream 0 loadObject')"),
+                #("Code", "print('testObj4 run stream 0 loadObject')"),
                 #(None, ("print('testObj4 case 0: start - set up object')")),
                 ("WyeCore.libs.WyeLib.loadObject",
                     (None, "[frame]"),
                     (None, "frame.vars.gObj"),
-                    (None, "['flyer_06.glb']"),
+                    (None, "['flyer_01.glb']"),
                     (None, "frame.vars.position"),       # posVec
                     (None, "[[0, 90, 0]]"),      # rotVec
-                    (None, "[[.25,.25,.25]]"),    # scaleVec
+                    (None, "[[.5,.5,.5]]"),    # scaleVec
                     (None, "frame.vars.objTag"),
                     (None, "[[.5,0.5,.5,1]]")
                 ),

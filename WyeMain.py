@@ -68,20 +68,23 @@ else:
 for libFile in libLoadList:
     #print("Load lib '", libFile, "'")
     libName = libFile.split(".")[0]
-    #print("Lib name '", libName, "'")
+
+
     #path = libFile
-    path = WyeCore.Utils.resourcePath(libFile)
-    try:
+    path = WyeCore.Utils.resourcePath(libFile)[2:]
+    #print("Load library '" + path + "'")
+    if True:
+    #try:
         libModule = SourceFileLoader(libName, path).load_module()
         # print("libModule ", libModule)
         libClass = getattr(libModule, libName)
         # print("libClass ", libClass)
         WyeCore.World.libList.append(libClass)
         #print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
-    except:
-        print("Failed to load class ", libName, " From file ", path)
-        ex = sys.exception()
-        traceback.print_exception(ex)
+    #except:
+    #    print("Failed to load class ", libName, " From file ", path)
+    #    ex = sys.exception()
+    #    traceback.print_exception(ex)
 
 # load starting objects
 WyeCore.World.startObjs.extend(startObjList)

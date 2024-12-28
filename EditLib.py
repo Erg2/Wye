@@ -68,7 +68,7 @@ class EditLib:
         codeDescr = (
 
             #(None, "print('EditLib ShowFishDialog')"),
-            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
+            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Click to Set Fish Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
             ("Label", "PopDialog"),
@@ -98,7 +98,7 @@ class EditLib:
                     (None, "frame.vars.ZAngle")
                 ),
                 ("WyeUI.InputButton", (None, "frame.vars.updateBtnId"),
-                    (None, "['Update Fish Position']"),
+                    (None, "['Click to update Fish Position']"),
                     (None, "[EditLib.UpdateCallback]"),
                     (None, "[frame]")
                 ),

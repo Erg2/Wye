@@ -1174,7 +1174,7 @@ class WyeCore(Wye.staticObj):
                         if hasattr(val, "autoStart"):
                             if val.autoStart:
                                 classStr = libName + "." + libName + "." + val.__name__
-                                print("buildLib Startobj: ", classStr)
+                                #print("buildLib Startobj: ", classStr)
                                 WyeCore.World.startObjs.append(classStr)
 
                         # add pointer from verb class to parent library class
@@ -1185,13 +1185,14 @@ class WyeCore(Wye.staticObj):
                 codeStr += parFnStr         # tack parallel code on end of regular code
                 codeStr += 'setattr('+libName+', "'+libName+'_rt", '+libName+'_rt)\n'
 
+                # DEBUG PRINT GENERATED CODE
                 # If debug compiled Wye code
-                if WyeCore.debugListCode:
-                    print("\nlib '"+libClass.__name__+"' code=")
-                    lnIx = 1
-                    for ln in codeStr.split('\n'):
-                        print("%2d "%lnIx, ln)
-                        lnIx += 1
+                #if WyeCore.debugListCode:
+                #    print("\nlib '"+libClass.__name__+"' code=")
+                #    lnIx = 1
+                #    for ln in codeStr.split('\n'):
+                #        print("%2d "%lnIx, ln)
+                #        lnIx += 1
 
                 # compile the runtime class containing methods for all the verb runtimes
                 code = compile(codeStr, "<string>", "exec")

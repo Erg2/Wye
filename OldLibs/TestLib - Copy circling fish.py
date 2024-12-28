@@ -239,7 +239,7 @@ class TestLib:
         )
 
         def build():
-            print("Build fishDialog")
+            #print("Build fishDialog")
             return WyeCore.Utils.buildCodeText("fishDialog", TestLib.fishDialog.codeDescr)
 
         def start(stack):
@@ -447,11 +447,11 @@ class TestLib:
         )
 
         def build():
-            print("Build fish")
+            #print("Build fish")
             return WyeCore.Utils.buildCodeText("fish", TestLib.fish.codeDescr)
 
         def start(stack):
-            print("fish object start")
+            #print("fish object start")
             return Wye.codeFrame(TestLib.fish, stack)
 
         def run(frame):
@@ -536,11 +536,11 @@ class TestLib:
         )
 
         def build():
-            print("Build leaderFish")
+            #print("Build leaderFish")
             return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr)
 
         def start(stack):
-            print("leaderFish object start")
+            #print("leaderFish object start")
             return Wye.codeFrame(TestLib.leaderFish, stack)
 
         def run(frame):
@@ -579,7 +579,7 @@ class TestLib:
         )
 
         def build():
-            print("Build testObj2")
+            #print("Build testObj2")
             return WyeCore.Utils.buildCodeText("testObj2", TestLib.testObj2.codeDescr)
 
         def start(stack):

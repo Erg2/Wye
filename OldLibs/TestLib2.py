@@ -207,8 +207,6 @@ class TestLib2:
                     ("file", Wye.dType.STRING, "flyer_01.glb"),     # 1
                     ("objId", Wye.dType.STRING, ""),                # 2
                     ("obj", Wye.dType.OBJECT, None),                # 3
-                    ("file", Wye.dType.STRING, "flyer_01.glb"),     # 4
-                    ("objId", Wye.dType.STRING, ""),                # 5
                     ("count", Wye.dType.INTEGER, 1))                # 6
 
         # two parallel code streams

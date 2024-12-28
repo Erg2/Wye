@@ -177,15 +177,15 @@ class TestLib:
         )
 
         def build():
-            print("Build BtnCallback3")
+            #print("Build BtnCallback3")
             return WyeCore.Utils.buildCodeText("BtnCallback3", TestLib.BtnCallback3.codeDescr)
 
         def start(stack):
-            print("Start BtnCallback3")
+            #print("Start BtnCallback3")
             return Wye.codeFrame(TestLib.BtnCallback3, stack)
 
         def run(frame):
-            print("Run BtnCallback3")
+            #print("Run BtnCallback3")
             TestLib.TestLib_rt.BtnCallback3_run_rt(frame)
 
 
