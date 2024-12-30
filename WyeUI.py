@@ -21,6 +21,8 @@ from functools import partial
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import MouseButton
 
+from sphere import SphereMaker
+
 import pygame.midi
 import time
 
@@ -32,6 +34,17 @@ class WyeUI(Wye.staticObj):
 
     dragFrame = None    # not currently dragging anything
     dragOffset = (0,0,0)   # mouse position at drag downclick
+
+    class _ball:
+        def __init__(self, radius, pos=[0,0,0]):
+            ballBuilder = SphereMaker(radius=radius)
+            self.node = ballBuilder.generate()
+            if self.node:
+                self.path = render.attachNewNode(self.node)
+                self.path.setPos(pos[0], pos[1], pos[2])
+            else:
+                print("WyeUI _ball: SphereMaker didn't")
+
 
     # create a scaled rectangular prism
     # (primarily used for InputText cursor)
@@ -1887,7 +1900,7 @@ class WyeUI(Wye.staticObj):
                     #print("ObjEditCtl: Edit object", frm.verb.__name__)
 
                     # set up object to be put on active list
-                    print("ObjEditorCtl: Create ObjDebugger")
+                    #print("ObjEditorCtl: Create ObjDebugger")
                     stk = []            # create stack to run object on
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(stk)  # start obj debugger and get its stack frame
                     dbgFrm.params.objFrm = [frm]  # put object to edit in editor frame

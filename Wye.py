@@ -33,7 +33,7 @@ class Wye:
             # their status is SUCCESS by default
             #print("debug: breakpoint on", frame.verb.__name__, " at", msg)
             if not hasattr(frame, "prevStatus"):
-                #print("   debug: save prev status", Wye.status.tostring(frame.status))
+                #print("   debug: save prev status", Wye.status.tostring(frame.status), " New status CONTINUE")
                 frame.prevStatus = frame.status
                 frame.status = Wye.status.CONTINUE
             # DEBUG print
@@ -52,7 +52,7 @@ class Wye:
             Wye.breakStep(frame, msg)
 
     def breakStep(frame, msg):
-        if hasattr(frame, "parallelStreamFlag"):
+        if hasattr(frame, "parallelStreamFlag"):    # note: can't ref WyeCore class here, can't put ParallelStream here
             #print("breakStep parallel run", frame.verb.__name__, ", parent ",frame.parent.verb.__name__, " at", msg)
             frame.run(frame)
         else:

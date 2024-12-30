@@ -215,6 +215,75 @@ class TestLib:
             TestLib.TestLib_rt.testDialog_run_rt(frame)
 
 
+
+
+    # circling fish
+    class testObj3c:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.INTEGER
+        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
+        varDescr = (("gObj", Wye.dType.OBJECT, None),
+                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("sound", Wye.dType.OBJECT, None),
+                    ("position", Wye.dType.FLOAT_LIST, [1,3,-2]),
+                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.03]),
+                    ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.75]),
+                    ("colorWk", Wye.dType.FLOAT_LIST, [128, 1, 1]),
+                    ("colorInc", Wye.dType.FLOAT_LIST, [4, 4, 4]),
+                    ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+                    )  # var 4
+
+        codeDescr=(
+            #(None, ("print('testObj3 case 0: start - set up object')")),
+            ("WyeCore.libs.WyeLib.loadObject",
+                (None, "[frame]"),
+                (None, "frame.vars.gObj"),
+                (None, "['flyer_01.glb']"),
+                (None, "frame.vars.position"),       # posVec
+                (None, "[[0, 90, 0]]"),      # rotVec
+                (None, "[[.5,.5,.5]]"),    # scaleVec
+                (None, "frame.vars.objTag"),
+                (None, "frame.vars.color")
+            ),
+            #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
+            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
+            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            ("Label", "Repeat"),
+            # set angle
+            #("Code", "print('testObj3 run')"),
+            ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
+            # Step forward
+            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+            # set color
+            ("Expr", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
+            # todo Next two lines are horrible - if followed by then expression indented - they have to be together
+            # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
+            ("Expr", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
+            ("Expr", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
+            ("Expr", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
+
+            ("GoTo", "Repeat")
+        )
+
+        def build():
+            #print("Build testObj3")
+            return WyeCore.Utils.buildCodeText("testObj3c", TestLib.testObj3c.codeDescr)
+
+        def start(stack):
+            #print("testObj3 object start")
+            return Wye.codeFrame(TestLib.testObj3c, stack)
+
+        def run(frame):
+            #print("Run testObj3")
+            TestLib.TestLib_rt.testObj3c_run_rt(frame)
+
+
+
+
+
     class fishDlgButton:
         cType = Wye.cType.OBJECT
         #autoStart = True
@@ -832,7 +901,9 @@ else:
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [-1,2,-1.2]),
-                    )  # var 4
+                    ("weeds", Wye.dType.OBJECT_LIST, []),
+                    ("balls", Wye.dType.OBJECT_LIST, []),
+                    )
 
         codeDescr=(
             ("Code", '''
@@ -860,7 +931,7 @@ floor.path.setColor((.95,.84,.44,.1))
 ##print("floorPos", floorPos)
 
 # Weeds on floor
-for xx in range(100):
+for xx in range(50):
         posX = (random()-.5)*200
         ixX = int(posX/20)
         posY = (random()-.5)*200
@@ -868,10 +939,25 @@ for xx in range(100):
         posZ = floorPos[ixY][ixX]
         #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
         ht  = 2+3*random()
-        box = WyeCore.libs.WyeUI._box([.2, .2, ht], [posX, posY, -18 + posZ+ht*.75])
-        box.path.setColor((.65,.54,.94,1))
+        box = WyeCore.libs.WyeUI._box([.2, .2, ht], [posX, posY, -18 + posZ+ht*.5])
+        box.path.setColor((.4, .2, .7,1))
+        frame.vars.weeds[0].append(box)
+        ball = WyeCore.libs.WyeUI._ball(.4, [posX, posY, -18 + posZ+ht*.5])
+        ball.path.setColor((.95,.84,1, 1))
+        frame.vars.balls[0].append(ball)
 '''),
-            ("Label", "Done"),
+        ("Label", "Running"),
+        ("Code", '''
+# float bubbles up randomly far
+from random import random
+for ii in range(len(frame.vars.balls[0])):
+    ball = frame.vars.balls[0][ii]
+    if random() > .997:
+        weed = frame.vars.weeds[0][ii]
+        ball.path.setPos(weed.path.getPos())
+    else:
+        ball.path.setPos(ball.path, .001, .001, .1)
+''')
         )
 
         def build():
@@ -979,7 +1065,7 @@ for xx in range(100):
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
             # set color
             ("Expr", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
-            # todo Next two lines are horrible - if followed by then expression indented
+            # todo Next two lines are horrible - if followed by then expression indented - they have to be together
             # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
             ("Expr", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
             ("Expr", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
@@ -1001,6 +1087,71 @@ for xx in range(100):
             #print("Run testObj3")
             TestLib.TestLib_rt.testObj3_run_rt(frame)
 
+
+
+
+    # circling fish
+    class testObj3b:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.INTEGER
+        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
+        varDescr = (("gObj", Wye.dType.OBJECT, None),
+                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("sound", Wye.dType.OBJECT, None),
+                    ("position", Wye.dType.FLOAT_LIST, [1,3,-1.5]),
+                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.03]),
+                    ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.75]),
+                    ("colorWk", Wye.dType.FLOAT_LIST, [128, 1, 1]),
+                    ("colorInc", Wye.dType.FLOAT_LIST, [4, 4, 4]),
+                    ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+                    )  # var 4
+
+        codeDescr=(
+            #(None, ("print('testObj3 case 0: start - set up object')")),
+            ("WyeCore.libs.WyeLib.loadObject",
+                (None, "[frame]"),
+                (None, "frame.vars.gObj"),
+                (None, "['flyer_01.glb']"),
+                (None, "frame.vars.position"),       # posVec
+                (None, "[[0, 90, 0]]"),      # rotVec
+                (None, "[[.5,.5,.5]]"),    # scaleVec
+                (None, "frame.vars.objTag"),
+                (None, "frame.vars.color")
+            ),
+            #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
+            #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
+            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            ("Label", "Repeat"),
+            # set angle
+            #("Code", "print('testObj3 run')"),
+            ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
+            # Step forward
+            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+            # set color
+            ("Expr", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
+            # todo Next two lines are horrible - if followed by then expression indented - they have to be together
+            # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
+            ("Expr", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
+            ("Expr", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
+            ("Expr", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
+
+            ("GoTo", "Repeat")
+        )
+
+        def build():
+            #print("Build testObj3")
+            return WyeCore.Utils.buildCodeText("testObj3b", TestLib.testObj3b.codeDescr)
+
+        def start(stack):
+            #print("testObj3 object start")
+            return Wye.codeFrame(TestLib.testObj3b, stack)
+
+        def run(frame):
+            #print("Run testObj3")
+            TestLib.TestLib_rt.testObj3b_run_rt(frame)
 
 
 

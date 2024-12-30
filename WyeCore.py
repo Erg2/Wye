@@ -1223,6 +1223,7 @@ class WyeCore(Wye.staticObj):
                         retLst.append(verb)
             return retLst
 
+
     # Very special verb  used to execute parallel code
     # Each parallel stream needs its own stack and its own parent frame with stack pointer.
     # However all the parent frame params and vars need to be from the actual parent that owns
