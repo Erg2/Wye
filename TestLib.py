@@ -879,13 +879,6 @@ class TestLib:
 #quat = Quat()
 #lookAt(quat, target - nodePath.getPos(), Vec3.up())
 #nodePath.setQuat(quat)
-                
-                
-#  if (_start_quat.dot(_end_quat) < 0.0f) {
-#    // Make sure both quaternions are on the same side.
-#    _start_quat = -_start_quat;
-#  }
-  
   
 fish = frame.vars.fish[0]
 fishPos = fish.getPos()
@@ -900,9 +893,9 @@ if fishPos[2] > (tgtPos[2] + frame.vars.ceil[0]) or fishPos[2] < (tgtPos[2] - fr
 
         alpha = frame.vars.deltaT[0]      # how much to rotate each step (0..1)    
                 
-        # first time this cycle
+        # first time this rotation cycle
         if frame.vars.prevState[0] != 2:
-            # save rotation start, calc rotation end and save
+            # save rotation start, calc rotation end and nlerp time delta
             
             # start
             fishQ = LQuaternionf()
