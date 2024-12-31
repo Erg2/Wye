@@ -119,6 +119,8 @@ class WyeCore(Wye.staticObj):
                                     #   So do mouse manually.  Sigh
 
         # universe specific
+        dlight = None           # global directional light
+        dLightPath = None
         libList = []
         libDict = {}  # lib name -> lib lookup dictionary
         startObjs = []
@@ -153,17 +155,17 @@ class WyeCore(Wye.staticObj):
                 WyeCore.worldInitialized = True  # Only do this once
 
                 # Lighting
-                dlight = DirectionalLight('dlight')
-                dlight.setColor((1, 1, 1, 1))  # (0.8, 0.8, 0.5, 1))
-                dlnp = render.attachNewNode(dlight)
-                dlnp.setHpr(45, -60, 0)
-                render.setLight(dlnp)
+                WyeCore.World.dlight = DirectionalLight('dlight')
+                WyeCore.World.dlight.setColor((1, 1, 1, 1))  # (0.8, 0.8, 0.5, 1))
+                WyeCore.World.dlightPath = render.attachNewNode(WyeCore.World.dlight)
+                WyeCore.World.dlightPath.setHpr(45, -55, 0)
+                render.setLight(WyeCore.World.dlightPath)
 
                 # Fog
 
                 myFog = Fog("Fog Name")
                 myFog.setColor(0, 0, 0)
-                myFog.setExpDensity(0.01)
+                myFog.setExpDensity(0.001)
                 base.render.setFog(myFog)
 
                 ####### Test 3d text

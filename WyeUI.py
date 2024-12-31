@@ -119,13 +119,15 @@ class WyeUI(Wye.staticObj):
     # NOTE: this class gets instantiated
     class _surf:
 
-        def __init__(self, data, size, pos=[0,0,0]):
+        def __init__(self, data, size, pos=[0,0,0], colorFn=None):
             # Instantiate a vertex buffer
             format = GeomVertexFormat.getV3c4()
             format = GeomVertexFormat.registerFormat(format)
             vdata = GeomVertexData("name", format, Geom.UHStatic)
             vertex = GeomVertexWriter(vdata, "vertex")
             color = GeomVertexWriter(vdata, "color")
+
+            self.colorFn = colorFn
 
             vtxColors = (
             (0, 0, 0, 1),
@@ -147,12 +149,31 @@ class WyeUI(Wye.staticObj):
             #for yy in range(yLen):
             #    print(data[yy])
 
+            dMin = 100000
+            dMax = -100000
+            for yy in range(yLen):
+                for xx in range(xLen):
+                    if data[yy][xx] < dMin:
+                        dMin = data[yy][xx]
+                    if data[yy][xx] > dMax:
+                        dMax = data[yy][xx]
+            dRange = dMax - dMin
+            colorStep = 1 / dRange
+            #print("data min", dMin, " max", dMax, " range", dRange, " step", colorStep)
             # gen points
             for yy in range( yLen):
                 for xx in range(xLen):
                     #print("data[",yy,"][",xx,"]", data[yy][xx])
                     vertex.addData3f(xx*size[0], yy*size[1], data[yy][xx]*size[2])
-                    color.addData4f(vtxColors[cIx][0], vtxColors[cIx][1], vtxColors[cIx][2], vtxColors[cIx][3])
+                    if True: #colorFn:
+                        #r, g, b, a = colorFn(xx, yy, data[yy][xx]*size[2])
+                        a = 1
+                        g = b = 0
+                        r = (data[yy][xx] - dMin) * colorStep
+                        #print("data[", yy, "][", xx, "]", data[yy][xx], " color", r)
+                        color.addData4f(r, g, b, a)
+                    else:
+                        color.addData4f(vtxColors[cIx][0], vtxColors[cIx][1], vtxColors[cIx][2], vtxColors[cIx][3])
                     cIx += 1
                     cIx = cIx % 8
 
@@ -796,12 +817,14 @@ class WyeUI(Wye.staticObj):
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
+                    ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("currPos", Wye.dType.INTEGER, 0),
                    )  # 0
 
         def start(stack):
             frame = Wye.codeFrame(WyeUI.InputLabel, stack)
             frame.vars.gWidgetStack[0] = []
+            frame.vars.tags[0] = []     # no clickable tags
             return frame
 
         def run(frame):
@@ -839,15 +862,19 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
                       ("value", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
+                      ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
+                    ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
                     ("currVal", Wye.dType.STRING, ""),                    # current string value
                     ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
                     ("gWidget", Wye.dType.OBJECT, None),                  # stashed graphic widget
-                    ("Cursor", Wye.dType.OBJECT, None)                    # input cursor graphic widget
+                    ("Cursor", Wye.dType.OBJECT, None),                    # input cursor graphic widget
+                    ("callback", Wye.dType.OBJECT, None),  # verb to call
                     )
         def start(stack):
             frame = Wye.codeFrame(WyeUI.InputText, stack)
@@ -858,6 +885,8 @@ class WyeUI(Wye.staticObj):
             #print("InputText label", frame.params.label, " value=", frame.params.value)
             frame.vars.currVal[0] = frame.params.value[0]
             frame.params.frame[0] = frame  # self referential!
+            frame.vars.callback = frame.params.callback
+
             # return frame and success, caller dialog will use frame as placeholder for input
             frame.status = Wye.status.SUCCESS
 
@@ -885,6 +914,7 @@ class WyeUI(Wye.staticObj):
             gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
             frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
             frame.vars.gWidget[0] = txt
+            frame.vars.tags[0] = gTags
 
             return gTags
 
@@ -912,15 +942,19 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
                       ("value", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
+                      ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
+                    ("tags", Wye.dType.STRING_LIST, None),                  # assigned tags
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
                     ("currVal", Wye.dType.STRING, ""),                    # current string value
                     ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
                     ("gWidget", Wye.dType.OBJECT, None),                  # stashed graphic widget
-                    ("Cursor", Wye.dType.OBJECT, None)                    # input cursor graphic widget
+                    ("Cursor", Wye.dType.OBJECT, None),                    # input cursor graphic widget
+                    ("callback", Wye.dType.OBJECT, None),  # 2 verb to call
                     )
 
         def start(stack):
@@ -953,6 +987,8 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
             frame.vars.gWidget[0] = txt
 
+            frame.vars.tags[0] = gTags
+
             return gTags
 
         def setLabel(frame, text):
@@ -977,6 +1013,7 @@ class WyeUI(Wye.staticObj):
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
+                    ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("gWidget", Wye.dType.OBJECT, None),                  # 1 associated graphic widget
                     ("callback", Wye.dType.OBJECT, None),                     # 2 verb to call
                     ("clickCount", Wye.dType.INTEGER, 0),                 # 3 button depressed count
@@ -1009,8 +1046,9 @@ class WyeUI(Wye.staticObj):
                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(btn)  # save for deleting on dialog close
             frame.vars.gWidget[0] = btn  # stash graphic obj in input's frame
-
-            return [btn.getTag()]
+            tags = [btn.getTag()]
+            frame.vars.tags[0] = tags
+            return tags
 
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
@@ -1035,6 +1073,7 @@ class WyeUI(Wye.staticObj):
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),        # list of objects to delete on exit
+                    ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("gWidget", Wye.dType.OBJECT, None),                  # associated graphic widget
                     ("callback", Wye.dType.OBJECT, None),                     # verb to call
                     ("clickCount", Wye.dType.INTEGER, 0),                 # button depressed count
@@ -1090,7 +1129,7 @@ class WyeUI(Wye.staticObj):
             gTags.append(btn.getTag())  # save graphic widget for deleting on dialog close
             frame.vars.gWidgetStack[0].append(btn)  # save graphic widget for deleting on close
             frame.vars.gWidget[0] = btn
-
+            frame.vars.tags[0] = gTags
             return gTags
 
         def close(frame):
@@ -1371,6 +1410,34 @@ class WyeUI(Wye.staticObj):
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
                         frame.vars.clickedBtns[0].remove(btnFrm)
 
+        def doCallback(frame, inFrm, tag):
+            # if something to call
+            callVerb = inFrm.vars.callback[0]
+            if callVerb:
+                # print("Dialog doSelect: clicked btn, verb ", callVerb.__name__)
+                # start the verb
+                verbFrm = callVerb.start(frame.SP)
+                # handle user data
+                if len(inFrm.params.optData) > 0:
+                    # print("Button callback", callVerb.__name__, " user data", inFrm.params.optData)
+                    data = inFrm.params.optData[0]
+                else:
+                    data = None
+                # if not single cycle, then put up as parallel path
+                if callVerb.mode != Wye.mode.SINGLE_CYCLE:
+                    # queue to be called every display cycle
+                    WyeCore.World.setRepeatEventCallback("Display", verbFrm, data)
+                else:
+                    # call this once
+                    verbFrm.eventData = (tag, data, inFrm)  # pass along user supplied event data, if any
+                    if Wye.debugOn:
+                        Wye.debug(verbFrm,
+                                  "Dialog doSelect: call single cycle verb " + verbFrm.verb.__name__ + " data" + str(
+                                      verbFrm.eventData))
+                    else:
+                        # print("doSelect run", verbFrm.verb.__name__)
+                        verbFrm.verb.run(verbFrm)
+
         # User clicked on a tag. It might belong to a field in our dialog.
         # Figure out what dialog field it belongs to, if any, and do the appropriate thing
         def doSelect(frame, tag):
@@ -1431,36 +1498,14 @@ class WyeUI(Wye.staticObj):
                     # button callback
                     elif inFrm.verb is WyeUI.InputButton or inFrm.verb is WyeUI.InputDropdown:
                         #print("Dialog doSelect clicked on",inFrm.verb.__name__, " label", inFrm.params.label[0])
-                        callVerb = inFrm.vars.callback[0]
+
                         inFrm.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR) # set button color pressed
                         if inFrm.vars.clickCount[0] <= 0:     # if not in an upclick count, process click
                             #print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
                             inFrm.vars.clickCount[0] = 10       # start flash countdown (in display frames)
                             frame.vars.clickedBtns[0].append(inFrm)  # stash button for flash countdown
 
-                            # if something to call
-                            if not callVerb is None:
-                                #print("Dialog doSelect: clicked btn, verb ", callVerb.__name__)
-                                # start the verb
-                                verbFrm = callVerb.start(frame.SP)
-                                # handle user data
-                                if len(inFrm.params.optData) > 0:
-                                    #print("Button callback", callVerb.__name__, " user data", inFrm.params.optData)
-                                    data = inFrm.params.optData[0]
-                                else:
-                                    data = None
-                                # if not single cycle, then put up as parallel path
-                                if callVerb.mode != Wye.mode.SINGLE_CYCLE:
-                                    # queue to be called every display cycle
-                                    WyeCore.World.setRepeatEventCallback("Display", verbFrm, data)
-                                else:
-                                    # call this once
-                                    verbFrm.eventData = (tag, data, inFrm)  # pass along user supplied event data, if any
-                                    if Wye.debugOn:
-                                        Wye.debug(verbFrm, "Dialog doSelect: call single cycle verb "+ verbFrm.verb.__name__+" data"+str(verbFrm.eventData))
-                                    else:
-                                        #print("doSelect run", verbFrm.verb.__name__)
-                                        verbFrm.verb.run(verbFrm)
+                            WyeCore.libs.WyeUI.Dialog.doCallback(frame, inFrm, tag)
 
                         frame.vars.currInp[0] = -1       # no input has focus
 
@@ -1555,7 +1600,7 @@ class WyeUI(Wye.staticObj):
         # inc/dec InputInteger on wheel event
         def doWheel(dir):
             #print("doWheel")
-            if not WyeUI.Dialog._activeInputInteger is None:
+            if WyeUI.Dialog._activeInputInteger:
                 #print("doWheel update input")
                 inFrm = WyeUI.Dialog._activeInputInteger
                 if isinstance(inFrm.vars.currVal[0], str):
@@ -1567,6 +1612,10 @@ class WyeUI(Wye.staticObj):
                 inWidg = inFrm.vars.gWidget[0]
                 inWidg.setText(txt)
                 WyeUI.Dialog.drawCursor(inFrm)
+
+                # if the user supplied a callback
+                if inFrm.vars.callback[0]:
+                    WyeCore.libs.WyeUI.Dialog.doCallback(inFrm.parentFrame, inFrm, inFrm.vars.tags[0][0])
 
         # update InputText/InputInteger on key event
         def doKey(frame, key):
@@ -1628,6 +1677,12 @@ class WyeUI(Wye.staticObj):
                     if inFrm.verb is WyeUI.InputInteger and len(txt) == 0:
                         txt = '0'
                     inFrm.vars.currVal[0] = txt
+
+                    # if the user supplied a callback
+                    # note: callback can change currVal and result will be displayed
+                    if inFrm.vars.callback[0]:
+                        WyeCore.libs.WyeUI.Dialog.doCallback(inFrm.parentFrame, inFrm, inFrm.vars.tags[0][0])
+
                     inWidg = inFrm.vars.gWidget[0]
                     #print("  set text", txt," ix", ix, " txtWidget", inWidg)
                     inWidg.setText(txt)

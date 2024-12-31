@@ -6,9 +6,6 @@
 #    structures (regular classes)
 #    and factories (lib, obj)
 
-# import collections
-
-import copy
 
 # Wye container class that holds Wye classes
 class Wye:
@@ -20,7 +17,7 @@ class Wye:
 
     dragging = False
 
-    version = "0.3"
+    version = "0.4"
 
     startPos = (0, -10, 0)      # initial camera position
 

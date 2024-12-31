@@ -45,6 +45,7 @@ class EditLib:
 
             frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
 
+            WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))
 
     # find and set angle of wiggle fish (testObj2)
     class showFishDialog:
@@ -68,7 +69,7 @@ class EditLib:
         codeDescr = (
 
             #(None, "print('EditLib ShowFishDialog')"),
-            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Click to Set Fish Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
+            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Click to Set Fish and Sun Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
             ("Label", "PopDialog"),
@@ -78,25 +79,35 @@ class EditLib:
              (None, "[WyeCore.World.findActiveObj('testObj2')]")),
             ("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
             # read current value
-            (None, "frame.vars.XAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[0])"),
-            (None, "frame.vars.YAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[1])"),
-            (None, "frame.vars.ZAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[2])"),
+#            (None, "frame.vars.XAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[0])"),
+#            (None, "frame.vars.YAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[1])"),
+#            (None, "frame.vars.ZAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[2])"),
+            (None, "frame.vars.XAngle[0] = int(WyeCore.World.dlightPath.getHpr()[0])"),
+            (None, "frame.vars.YAngle[0] = int(WyeCore.World.dlightPath.getHpr()[1])"),
+            (None, "frame.vars.ZAngle[0] = int(WyeCore.World.dlightPath.getHpr()[2])"),
+
             ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
                 (None, "['Fish Angle Dialog']"),                   # title
                 (None, "((-3,2,1.5),)"),                                # position
                 (None, "[None]"),                                  # parent
                 ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
                     (None, "['XAngle']"),
-                    (None, "frame.vars.XAngle")
+                    (None, "frame.vars.XAngle"),
+                    (None, "[EditLib.UpdateCallback]"),
+                    (None, "[frame]")
                 ),
                 ("WyeUI.InputInteger", (None, "frame.vars.YAngleID"),
                     (None, "['YAngle']"),
-                    (None, "frame.vars.YAngle")
-                ),
+                    (None, "frame.vars.YAngle"),
+                    (None, "[EditLib.UpdateCallback]"),
+                    (None, "[frame]")
+                 ),
                 ("WyeUI.InputInteger", (None, "frame.vars.ZAngleID"),
                     (None, "['ZAngle']"),
-                    (None, "frame.vars.ZAngle")
-                ),
+                    (None, "frame.vars.ZAngle"),
+                    (None, "[EditLib.UpdateCallback]"),
+                    (None, "[frame]")
+                 ),
                 ("WyeUI.InputButton", (None, "frame.vars.updateBtnId"),
                     (None, "['Click to update Fish Position']"),
                     (None, "[EditLib.UpdateCallback]"),
