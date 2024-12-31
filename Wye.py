@@ -22,6 +22,8 @@ class Wye:
 
     version = "0.3"
 
+    startPos = (0, -10, 0)      # initial camera position
+
 
     # if debugging is on, check for what to do on run()
     def debug(frame, msg):
@@ -498,6 +500,7 @@ class Wye:
         HEADER_COLOR = (1, 1, 1, 1)
         CURSOR_COLOR = (0, 1, 0, 1)
         SUBHDR_COLOR = (1, 1, 0, 1)
+        DISABLED_COLOR = (.45, .45, .45, 1)
 
     ###########################################################################
     #

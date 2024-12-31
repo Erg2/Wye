@@ -199,7 +199,7 @@ class WyeCore(Wye.staticObj):
                 ###########
 
                 # set initial cam position
-                base.camera.setPos(0,-10,0)
+                base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
                 # print("camPos",base.camera.getPos())
 
                 ###########

@@ -462,49 +462,106 @@ class WyeUI(Wye.staticObj):
                 else:
                     print("Already have debugger")
 
+            # if not dragging then moving
+            # mouseY is fwd/back
+            # mouseX is rotate left/right
+            # shift mouseY is up/down
+            # shift mouseX is slide left/right
             elif not Wye.dragging:
-                # rotate viewpoint
-                if self.m3Down:
-                    #print("CameraControl mouseMove: m1Down")
-                    camRot = base.camera.getHpr()
-                    dx = -(x - self.m3DownPos[0]) * self.rotRate
-                    if self.shift:
-                        dx = 0  # don't rotate while tilting
-                        dy = 0
-                        dz = (x - self.m3DownPos[0]) * self.rotRate
-                    else:
-                        dy = (y - self.m3DownPos[1]) * self.rotRate
-                        dz = 0
-                    base.camera.setHpr(camRot[0]+dx, camRot[1]+dy, camRot[2]+dz)
 
-                # reset viewpoint
-                elif self.m2Down:
+                # motion
+                if self.m1Down:
+                    # regular motion
                     if not self.shift:
-                        base.camera.setPos(0,0,0)
-                    base.camera.setHpr(0,0,0)
+                        # walk fwd/back (mouseY), turning l/r (mouseX)
+                        camRot = base.camera.getHpr()
+                        dx = -(x - self.m1DownPos[0]) * self.rotRate
+                        base.camera.setHpr(camRot[0] + dx, camRot[1], camRot[2])
 
-                # move viewpoint
-                # Walk flat (mouse up = fwd, mouse l/r = slide sideways).  Elevator up and down
-                elif self.m1Down:
-                    # move viewpoint
-                    #print("CameraControl mouseMove: m3Down")
+                        quaternion = base.camera.getQuat()
+                        fwd = quaternion.getForward()
 
-                    quaternion = base.camera.getQuat()
-                    fwd = quaternion.getForward()
-
-                    # shift -> only up/down
-                    if self.shift:
-                        fwd = LVector3f(0, 0, 1)
-                        right = LVector3f.zero()
-                    # else walk flat
-                    else:
                         fwd = LVector3f(fwd[0], fwd[1], 0)
                         quat = Quat()
                         quat.setFromAxisAngle(-90, LVector3f.up())
                         right = quat.xform(fwd)
 
-                    base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
+                        base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
 
+                    else:
+                        # tilt up/down (mouseY), slide left/right (mouseX)
+                        camRot = base.camera.getHpr()
+                        dy = (y - self.m1DownPos[1]) * self.rotRate
+                        base.camera.setHpr(camRot[0], camRot[1] + dy, camRot[2])
+
+                        quaternion = base.camera.getQuat()
+                        fwd = quaternion.getForward()
+                        fwd = LVector3f(fwd[0], fwd[1], 0)      # no roll
+                        quat = Quat()
+                        quat.setFromAxisAngle(-90, LVector3f.up())
+                        right = quat.xform(fwd)
+
+                        #up = LVector3f(0, 0, 1)
+                        #base.camera.setPos(base.camera.getPos() + up * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
+                        base.camera.setPos(base.camera.getPos() + right * (x - self.m1DownPos[0]) * self.speed)
+
+
+                # reset viewpoint
+                elif self.m2Down:
+                    if not self.shift:
+                        base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
+                    base.camera.setHpr(0,0,0)
+
+
+                # slide sideways and up
+                elif self.m3Down:
+                    quaternion = base.camera.getQuat()
+                    fwd = quaternion.getForward()
+                    fwd = LVector3f(fwd[0], fwd[1], 0)  # no roll
+                    quat = Quat()
+                    quat.setFromAxisAngle(-90, LVector3f.up())
+                    right = quat.xform(fwd)
+
+                    up = LVector3f(0, 0, 1)
+                    base.camera.setPos(base.camera.getPos() + up * (y - self.m3DownPos[1]) * self.speed + right * (x - self.m3DownPos[0]) * self.speed)
+
+
+#                # rotate viewpoint
+#                if self.m3Down:
+#                    #print("CameraControl mouseMove: m1Down")
+#                    camRot = base.camera.getHpr()
+#                    dx = -(x - self.m3DownPos[0]) * self.rotRate
+#                    if self.shift:
+#                        dx = 0  # don't rotate while tilting
+#                        dy = 0
+#                        dz = (x - self.m3DownPos[0]) * self.rotRate
+#                    else:
+#                        dy = (y - self.m3DownPos[1]) * self.rotRate
+#                        dz = 0
+#                    base.camera.setHpr(camRot[0]+dx, camRot[1]+dy, camRot[2]+dz)
+#
+#
+#                # move viewpoint
+#                # Walk flat (mouse up = fwd, mouse l/r = slide sideways).  Elevator up and down
+#                elif self.m1Down:
+#                    # move viewpoint
+#                    #print("CameraControl mouseMove: m3Down")
+#
+#                    quaternion = base.camera.getQuat()
+#                    fwd = quaternion.getForward()
+#
+#                    # shift -> only up/down
+#                    if self.shift:
+#                        fwd = LVector3f(0, 0, 1)
+#                        right = LVector3f.zero()
+#                    # else walk flat
+#                    else:
+#                        fwd = LVector3f(fwd[0], fwd[1], 0)
+#                        quat = Quat()
+#                        quat.setFromAxisAngle(-90, LVector3f.up())
+#                        right = quat.xform(fwd)
+#
+#                    base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
 
             # do drag
             else:
@@ -1886,7 +1943,7 @@ class WyeUI(Wye.staticObj):
                                     lblFrm.params.parent = [None]  # return value
                                     txt = "  " + lib.__name__ + "." + verb.__name__
                                     lblFrm.params.label = [txt]
-                                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                                    lblFrm.params.color = [Wye.color.DISABLED_COLOR]
                                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                                     dlgFrm.params.inputs[0].append([lblFrm])
 

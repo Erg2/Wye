@@ -226,8 +226,8 @@ class TestLib:
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
-                    ("position", Wye.dType.FLOAT_LIST, [1,3,-.5]),
-                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.03]),
+                    ("position", Wye.dType.FLOAT_LIST, [-35,75,2]),
+                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
                     ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.75]),
                     ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
                     ("colorInc", Wye.dType.FLOAT_LIST, [8, 8, 8]),
@@ -242,7 +242,7 @@ class TestLib:
                 (None, "['flyer_01.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
-                (None, "[[.5,.5,.5]]"),    # scaleVec
+                (None, "[[2,2,2]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
                 (None, "frame.vars.color")
             ),
@@ -294,8 +294,8 @@ class TestLib:
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
-                    ("position", Wye.dType.FLOAT_LIST, [1,3,-1.5]),
-                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.04]),
+                    ("position", Wye.dType.FLOAT_LIST, [-35,75,0]),
+                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
                     ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
                     ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
                     ("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
@@ -310,7 +310,7 @@ class TestLib:
                 (None, "['flyer_01.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
-                (None, "[[.5,.5,.5]]"),    # scaleVec
+                (None, "[[2,2,2]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
                 (None, "frame.vars.color")
             ),
@@ -359,7 +359,7 @@ class TestLib:
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
-                    ("position", Wye.dType.FLOAT_LIST, [1,3,-2]),
+                    ("position", Wye.dType.FLOAT_LIST, [-35,75,-2]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
                     ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.65]),
                     ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
@@ -375,7 +375,7 @@ class TestLib:
                 (None, "['flyer_01.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
-                (None, "[[.5,.5,.5]]"),    # scaleVec
+                (None, "[[2,2,2]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
                 (None, "frame.vars.color")
             ),
@@ -1030,16 +1030,17 @@ else:
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [-1,2,-1.2]),
                     ("weeds", Wye.dType.OBJECT_LIST, []),
-                    ("balls", Wye.dType.OBJECT_LIST, []),
+                    ("bubbles", Wye.dType.OBJECT_LIST, []),
+                    ("bubbleCt", Wye.dType.INTEGER_LIST, []),
                     )
 
         codeDescr=(
             ("Code", '''
 floorPos = [] #[[0]*20]*20      # 20x20 floor tile heights
 from random import random
-for yy in range(20):
+for yy in range(21):
     floorPos.append([])
-    for xx in range(20):
+    for xx in range(21):
         floorPos[yy].append(random()*5)
         #print("floorPos", yy, ",", xx, "=", floorPos[yy][xx])
 floor = WyeCore.libs.WyeUI._surf(floorPos, (10,10,1), (-100,-100,-18))
@@ -1059,30 +1060,39 @@ floor.path.setColor((.95,.84,.44,.1))
 ##print("floorPos", floorPos)
 
 # Weeds on floor
+from random import random
 for xx in range(50):
-        posX = (random()-.5)*200
+        if xx < 35:
+            posX = (random()-.5)*20 - 25
+            posY = (random()-.5)*20 + 75
+        else:
+            posX = (random()-.5)*200
+            posY = (random()-.5)*200
         ixX = int(posX/20)
-        posY = (random()-.5)*200
         ixY = int(posY/20)
         posZ = floorPos[ixY][ixX]
         #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
         ht  = 2+3*random()
-        box = WyeCore.libs.WyeUI._box([.2, .2, ht], [posX, posY, -18 + posZ+ht*.5])
+        box = WyeCore.libs.WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
         box.path.setColor((.4, .2, .7,1))
         frame.vars.weeds[0].append(box)
-        ball = WyeCore.libs.WyeUI._ball(.4, [posX, posY, -18 + posZ+ht*.5])
+        ball = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
         ball.path.setColor((.95,.84,1, 1))
-        frame.vars.balls[0].append(ball)
+        frame.vars.bubbles[0].append(ball)
+        frame.vars.bubbleCt[0].append(60 + 300 * random())
 '''),
         ("Label", "Running"),
         ("Code", '''
-# float bubbles up randomly far
+# float bubbles up randomly 
 from random import random
-for ii in range(len(frame.vars.balls[0])):
-    ball = frame.vars.balls[0][ii]
-    if random() > .997:
+
+for ii in range(len(frame.vars.bubbles[0])):
+    ball = frame.vars.bubbles[0][ii]
+    frame.vars.bubbleCt[0][ii] -=1
+    if frame.vars.bubbleCt[0][ii] <= 0:
         weed = frame.vars.weeds[0][ii]
         ball.path.setPos(weed.path.getPos())
+        frame.vars.bubbleCt[0][ii] = 240 + 300 * random()
     else:
         ball.path.setPos(ball.path, .001, .001, .1)
 ''')
@@ -1164,10 +1174,11 @@ for ii in range(len(frame.vars.balls[0])):
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
-                    ("position", Wye.dType.FLOAT_LIST, [-2 ,2,-1]),
+                    ("position", Wye.dType.FLOAT_LIST, [3 ,2,-1]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.03]),
-                    ("posAngle", Wye.dType.FLOAT, 0.),
-                    ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.5]),
+                    ("posAngle", Wye.dType.FLOAT, 4.712388),
+                    ("dAngleDeg", Wye.dType.FLOAT_LIST, [0., 0., -.5]),
+                    ("dAngleRad", Wye.dType.FLOAT, 0.0087266462),
                     )  # var 4
 
         codeDescr=(
@@ -1193,7 +1204,7 @@ for ii in range(len(frame.vars.balls[0])):
                 ("Label", "Repeat"),
                 # set angle
                 #("Code", "print('testObj4 run stream 1 setRelAngle', frame.vars.gObj[0].getHpr())"),
-                ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
+                ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngleDeg")),
                 ("GoTo", "Repeat")
             ),
             (
@@ -1207,7 +1218,7 @@ ctrPos = frame.vars.position[0]
 x = ctrPos[0] + math.sin(angle)
 y = ctrPos[1] + math.cos(angle)
 frame.vars.gObj[0].setPos(x,y,ctrPos[2])
-angle -= .01
+angle += frame.vars.dAngleRad[0]
 if angle < 0:
     angle = math.pi * 2
 frame.vars.posAngle[0] = angle
