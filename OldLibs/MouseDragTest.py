@@ -1,9 +1,10 @@
 #snatched time ago from chombee's code
 #
-import direct.directbase.DirectStart
-from pandac.PandaModules import *
+#import direct.directbase.DirectStart
+from panda3d.core import *
 from direct.task import Task
-import sys,random
+import sys
+import random
 
 # Collision mask worn by all draggable objects.
 dragMask = BitMask32.bit(1)
