@@ -24,8 +24,8 @@ from panda3d.core import MouseButton
 # from https://github.com/Epihaius/procedural_panda3d_model_primitives
 from sphere import SphereMaker
 
-import pygame.midi
-import time
+#import pygame.midi
+#import time
 
 
 # 3d UI element library
@@ -1321,7 +1321,7 @@ class WyeUI(Wye.staticObj):
                     else:
                         scMult = 1
                     dlgNodePath = frame.vars.dragObj[0].getNodePath()
-                    dlgNodePath.setPos(frame.vars.position[0])
+                    dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
                     dlgBounds = dlgNodePath.getTightBounds()
                     card = CardMaker("Dlg Bgnd")
                     gFrame = LVecBase4f(0, 0, 0, 0)
@@ -1430,7 +1430,7 @@ class WyeUI(Wye.staticObj):
 
                     # button callback
                     elif inFrm.verb is WyeUI.InputButton or inFrm.verb is WyeUI.InputDropdown:
-                        print("Dialog doSelect clicked on",inFrm.verb.__name__, " label", inFrm.params.label[0])
+                        #print("Dialog doSelect clicked on",inFrm.verb.__name__, " label", inFrm.params.label[0])
                         callVerb = inFrm.vars.callback[0]
                         inFrm.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR) # set button color pressed
                         if inFrm.vars.clickCount[0] <= 0:     # if not in an upclick count, process click
@@ -2022,7 +2022,8 @@ class WyeUI(Wye.staticObj):
                     # fire up object editor with given frame
                     #print("ObjEditorCtl: Create ObjEditor")
                     edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.ObjectEditor)
-                    edFrm.params.position = [0,0,0]     # todo - work out something related to view and mouse pos
+                    edFrm.params.position = frm.vars.position
+                    edFrm.params.parent = [None]
                     #print("ObjEditorCtl: Fill in ObjEditor objFrm param")
 
                     # if this is one subframe of a parallel stream, edit the parent
@@ -2030,7 +2031,7 @@ class WyeUI(Wye.staticObj):
                         #print(frm.verb.__name__, " is parallel stream, get parent", frm.parentFrame.verb.__name__)
                         frm = frm.parentFrame
                     edFrm.params.verb = [frm.verb]
-                    edFrm.params.position = [frm.vars.position[0]]
+
                     status = True     # tell caller we used the tag
 
             # if alt key down then debug
@@ -2126,7 +2127,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Edit Object " + verb.__name__]
                     dlgFrm.params.position = frame.params.position
-                    print("ObjectEcitor at position", frame.params.position)
+                    print("ObjectEditor at position", frame.params.position, " parent=frame.params.parent")
                     dlgFrm.params.parent = frame.params.parent
                     frame.vars.dlgFrm[0] = dlgFrm
 
@@ -2752,7 +2753,7 @@ class WyeUI(Wye.staticObj):
 
 
                     objOffset = (objRow + 2) * .3
-                    objPos = (2, 9.8, -objOffset)  # todo - get from object
+                    objPos = (2, -.5, -objOffset)
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
                     dbgFrm.params.objFrm = [objFrm]
                     dbgFrm.params.position = [objPos]
