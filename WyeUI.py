@@ -2132,7 +2132,7 @@ class WyeUI(Wye.staticObj):
         activeVerbs = {}
 
         def start(stack):
-            print("EditVerb start")
+            #print("EditVerb start")
             f = Wye.codeFrame(WyeUI.EditVerb, stack)
             f.vars.paramInpLst[0] = []
             f.vars.varInpLst[0] = []
@@ -2141,7 +2141,7 @@ class WyeUI(Wye.staticObj):
         def run(frame):
             match(frame.PC):
                 case 0:
-                    print("EditVerb run case 0")
+                    #print("EditVerb run case 0")
                     #pygame.midi.init()
                     #player = pygame.midi.Output(0)
                     #for ins in range(127):
@@ -2174,7 +2174,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Edit Object " + verb.__name__]
                     dlgFrm.params.position = frame.params.position
-                    print("EditVerb at position", frame.params.position, " parent=frame.params.parent")
+                    #print("EditVerb at position", frame.params.position, " parent=frame.params.parent")
                     dlgFrm.params.parent = frame.params.parent
                     frame.vars.dlgFrm[0] = dlgFrm
 

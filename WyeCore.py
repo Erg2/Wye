@@ -380,6 +380,7 @@ class WyeCore(Wye.staticObj):
 
         # manage graphic object tag -> object frame list
         def registerObjTag(tag, frame):
+            #print("Register tag ", tag, " to object", frame.verb.__name__)
             WyeCore.World.objTags[tag] = frame
 
         def unregisterObjTag(tag):
@@ -611,8 +612,9 @@ class WyeCore(Wye.staticObj):
             if obj.getTag('pickable'):
                 print("'", obj, "' has tag ", " pickable")
                 hasTag = True
-            if obj.getTag('wyeTag'):
-                print("'", obj, "' has tag ", " wyeTag")
+            wyeTag = obj.getTag('wyeTag')
+            if wyeTag:
+                print("'", obj, "' has tag wyeTag =",wyeTag)
                 hasTag = True
             if not hasTag:
                 print("'", obj, "' has no known tags")
@@ -634,8 +636,14 @@ class WyeCore(Wye.staticObj):
                 self.pickedObj = None
                 # go up the path looking for a pickable node
                 while parent != render:
+
                     if parent.getTag('pickable') == 'true':
-                        self.pickedObj = parent
+                        #wyeTag = parent.getTag('wyeTag')
+                        #if wyeTag:
+                        #    print("Clicked on pickable object", parent, " with wyeTag", wyeTag)
+                        #else:
+                        #    print("clicked on pickable object", parent)
+                        #self.pickedObj = parent
                         return parent
                     else:
                         parent = parent.getParent()

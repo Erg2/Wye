@@ -1034,6 +1034,8 @@ else:
                     ("bubbles", Wye.dType.OBJECT_LIST, []),
                     ("bubbleCt", Wye.dType.INTEGER_LIST, []),
                     ("bubblePop", Wye.dType.INTEGER_LIST, []),
+                    ("bubbleMin", Wye.dType.FLOAT, 180),
+                    ("bubbleRand", Wye.dType.FLOAT, 180),
                     )
 
         codeDescr=(
@@ -1058,6 +1060,13 @@ for yy in range(floorX + 1):
 floor = WyeCore.libs.WyeUI._surf(floorPos, (10,10,1), (-(int(floorX * 10/2)),-(int(floorY*10/2)),-18))
 floor.path.setColor((.95,.84,.44,.1))
 
+tag = "wyeTag" + str(WyeCore.Utils.getId())
+floor.path.setTag("wyeTag", tag)
+print("Set tag", tag, " on", floor.path)
+WyeCore.picker.makePickable(floor.path)
+#print("test floor with tagDebug")
+#WyeCore.picker.tagDebug(floor.path)
+            
 # Weeds on floor
 from random import random
 for xx in range(int(floorX * floorY * .1)):
@@ -1077,14 +1086,21 @@ for xx in range(int(floorX * floorY * .1)):
         frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
         weed.path.setColor(color)
         frame.vars.weeds[0].append(weed)
+        weed.path.setTag("wyeTag", tag)
+        WyeCore.picker.makePickable(weed.path)
+        #print("Set tag", tag, " on weed", weed.path)
         
+        # Create bubble, color change amt, countdown to pop
         bubble = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
         bubble.path.setColor(color)
-        # Create bubble, color change amt, countdown to pop
+        bubble.path.setTag("wyeTag", tag)
+        WyeCore.picker.makePickable(bubble.path)
         frame.vars.bubbles[0].append(bubble)
-        pop = 60 + 300 * random()
+        pop = 60 + frame.vars.bubbleRand[0] * random()
         frame.vars.bubblePop[0].append(pop)
         frame.vars.bubbleCt[0].append(10+random()*(pop-10))
+        
+WyeCore.World.registerObjTag(tag, frame)
 '''),
         ("Label", "Running"),
         ("CodeBlock", '''
@@ -1100,7 +1116,7 @@ for ii in range(len(frame.vars.bubbles[0])):
         weed = frame.vars.weeds[0][ii]
         bubble.path.setPos(weed.path.getPos())
         frame.vars.bubbleCt[0][ii] = 0
-        frame.vars.bubblePop[0][ii] = 240 + 300 * random()
+        frame.vars.bubblePop[0][ii] = frame.vars.bubbleMin[0] + frame.vars.bubbleRand[0] * random()
         #weed.path.setColor(bubble.path.getColor())
     else:
         # float bubble up
