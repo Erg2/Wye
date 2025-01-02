@@ -256,14 +256,14 @@ class TestLib:
             # Step forward
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
             # set color
-            ("Expr", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
-            ("Expr", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+            ("Var=", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
+            ("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
             # todo Next two lines are horrible - if followed by then expression indented - they have to be together
             # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
-            ("Expr", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
-            ("Expr", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
-            ("Expr", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
-            ("Expr", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("Code", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
+            ("Code", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
+            ("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+            ("Var=", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
 
             ("GoTo", "Repeat")
@@ -324,12 +324,12 @@ class TestLib:
             # Step forward
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
             # set color
-            ("Expr", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+            ("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
             # todo Next two lines are horrible - if followed by then expression indented - they have to be together
             # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
-            ("Expr", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
-            ("Expr", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
-            ("Expr", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
+            ("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+            ("Var=", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
 
             ("GoTo", "Repeat")
@@ -389,12 +389,12 @@ class TestLib:
             # Step forward
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
             # set color
-            ("Expr", "frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
+            ("Var=", "frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
             # todo Next two lines are horrible - if followed by then expression indented - they have to be together
             # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
-            ("Expr", "if frame.vars.colorWk[0][0] >= 255 or frame.vars.colorWk[0][0] <= 0:"),
-            ("Expr", " frame.vars.colorInc[0][0] = -1 * frame.vars.colorInc[0][0]"),
-            ("Expr", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("Code", "if frame.vars.colorWk[0][0] >= 255 or frame.vars.colorWk[0][0] <= 0:"),
+            ("Code", " frame.vars.colorInc[0][0] = -1 * frame.vars.colorInc[0][0]"),
+            ("Var=", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
 
             ("GoTo", "Repeat")
@@ -582,10 +582,10 @@ class TestLib:
         codeDescr = (
             #(None, "print('test inline code')"),
             # call loadModel with testLoader params 0 and 1
-            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.obj"), (None, "frame.params.file")),
-            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.obj")),
-            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.obj"), (None, "frame.params.colorVec")),
-            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.obj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec"))
+            ("WyeCore.libs.WyeLib.loadModel", ("Var", "frame.params.obj"), ("Var", "frame.params.file")),
+            ("WyeCore.libs.WyeLib.makePickable", ("Var", "frame.params.tag"), ("Var", "frame.params.obj")),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.params.obj"), ("Var", "frame.params.colorVec")),
+            ("WyeCore.libs.WyeLib.showModel", ("Var", "frame.params.obj"), ("Var", "frame.params.posVec"), ("Var", "frame.params.scaleVec"))
         )
         code = None
 
@@ -746,7 +746,7 @@ class TestLib:
             #(None, "print('makeFish loop start: count', frame.vars.count[0])"),
             ("Expr", "frame.vars.fishes.append([None])"),     # create entry for fish
             ("Expr", "frame.vars.fishTags.append([''])"),
-            ("Expr", "objNm = 'flyer_01.glb'"),
+            ("Var=", "objNm = 'flyer_01.glb'"),
             # load object
             ("WyeCore.libs.WyeLib.loadObject",
              ("Expr", "[frame]"),
@@ -768,8 +768,8 @@ class TestLib:
 
             ("Label", "SwimLoop"),    # used to be loop moving fish.  Unrolled loop 'cause IfGoTo lost a frame to each fish so jerky movement
             # orient toward fish in front
-            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),  # orient toward fish in front
-            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),      # flip to face up
+            ("Code", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),  # orient toward fish in front
+            ("Code", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),      # flip to face up
             ("Var=", "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
             # move fwd
             ("Var=", "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
@@ -778,8 +778,8 @@ class TestLib:
             ("Var=", "frame.vars.count[0] += 1"),     # next fish
 
             # orient toward fish in front
-            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
-            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
+            ("Code", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
+            ("Code", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
             ("Var=", "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
             # move fwd
             ("Var=", "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
@@ -788,8 +788,8 @@ class TestLib:
             ("Var=", "frame.vars.count[0] += 1"),  # next fish
 
             # orient toward fish in front
-            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
-            ("Expr", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
+            ("Code", "frame.vars.fishes[frame.vars.count[0]][0].lookAt(frame.vars.objAhead[0])"),
+            ("Code", "frame.vars.fishes[frame.vars.count[0]][0].setHpr(frame.vars.fishes[frame.vars.count[0]][0], (frame.vars.count[0]-1)*20, 90, 0)"),
             ("Var=", "frame.vars.tgtDist[0] = (frame.vars.fishes[frame.vars.count[0]][0].getPos() - frame.vars.objAhead[0].getPos()).length()"),
             # move fwd
             ("Var=", "frame.vars.dPos[0] = [0, 0, (frame.vars.followDist[0] - frame.vars.tgtDist[0])]"),
@@ -801,7 +801,7 @@ class TestLib:
             ("Var=", "frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),  # first fish follows leader
 
             # Save new position
-            ("WyeCore.libs.WyeLib.getObjPos", ("Var", "frame.vars.position"), ("Expr", ("frame.vars.fishes[0]"))),
+            ("WyeCore.libs.WyeLib.getObjPos", ("Var", "frame.vars.position"), ("Var", ("frame.vars.fishes[0]"))),
             ("GoTo", "SwimLoop")
         )
 
@@ -875,7 +875,7 @@ class TestLib:
                 ("Label", "RunLoop"),
 
                 # Test raw code block
-                ("Code",'''
+                ("CodeBlock",'''
 #quat = Quat()
 #lookAt(quat, target - nodePath.getPos(), Vec3.up())
 #nodePath.setQuat(quat)
@@ -975,7 +975,7 @@ else:
                 #("GoTo", "RunLoop"),
 
                 # randomly move target around
-                ("Expr", "frame.vars.tgtChgCt[0] -= 1"),
+                ("Code", "frame.vars.tgtChgCt[0] -= 1"),
                 ("IfGoTo", "frame.vars.tgtChgCt[0] > 0", "RunLoop"),
 
                 ("Code", "from random import random"),
@@ -983,8 +983,8 @@ else:
                 ("Var=", "frame.vars.tgtPos[0] = LPoint3f((random()-.5)*5, (random()-.5)*5, 0)"),
                 ("Var=", "frame.vars.tgtChgCt[0] = 600 + random() * 1200"),
                 #("Code", "print('new target point', frame.vars.tgtPos[0])"),
-                #("Expr", "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
-                #(None, "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
+                #("Var=", "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
+                #("Code", "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
 
 
 
@@ -1030,12 +1030,14 @@ else:
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [-1,2,-1.2]),
                     ("weeds", Wye.dType.OBJECT_LIST, []),
+                    ("weedColorInc", Wye.dType.FLOAT_LIST, []),
                     ("bubbles", Wye.dType.OBJECT_LIST, []),
                     ("bubbleCt", Wye.dType.INTEGER_LIST, []),
+                    ("bubblePop", Wye.dType.INTEGER_LIST, []),
                     )
 
         codeDescr=(
-            ("Code", '''
+            ("CodeBlock", '''
 # ground
 floorPos = [] #[[0]*20]*20      # 20x20 floor tile heights
 from random import random
@@ -1047,7 +1049,11 @@ for yy in range(floorX + 1):
     for xx in range(floorY + 1):
         #angle = max(abs(xx-10), abs(yy-10)) * .11
         #print("floor x", xx, " y", yy, " angle", angle, " ht", (1 - math.cos(angle)))
-        floorPos[yy].append(random()*5)# + (1 - math.cos(angle)) * 50)
+        #if abs(xx) > 75 and abs(yy) > 75:
+        #    floorPos[yy].append(10+random()*20)
+        #else:
+        #    floorPos[yy].append(random()*5)  # + (1 - math.cos(angle)) * 50)
+        floorPos[yy].append(random()*5)  # + (1 - math.cos(angle)) * 50)
         #print("floorPos", yy, ",", xx, "=", floorPos[yy][xx])
 floor = WyeCore.libs.WyeUI._surf(floorPos, (10,10,1), (-(int(floorX * 10/2)),-(int(floorY*10/2)),-18))
 floor.path.setColor((.95,.84,.44,.1))
@@ -1066,28 +1072,55 @@ for xx in range(int(floorX * floorY * .1)):
         posZ = floorPos[ixY][ixX]
         #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
         ht  = 2+3*random()
-        box = WyeCore.libs.WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
-        box.path.setColor((.4, .2, .7,1))
-        frame.vars.weeds[0].append(box)
-        ball = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
-        ball.path.setColor((.95,.84,1, 1))
-        frame.vars.bubbles[0].append(ball)
-        frame.vars.bubbleCt[0].append(60 + 300 * random())
+        color = (.25+random()*.75,.25+random()*.75,.25+random()*.75, .5)
+        weed = WyeCore.libs.WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
+        frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
+        weed.path.setColor(color)
+        frame.vars.weeds[0].append(weed)
+        
+        bubble = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
+        bubble.path.setColor(color)
+        # Create bubble, color change amt, countdown to pop
+        frame.vars.bubbles[0].append(bubble)
+        pop = 60 + 300 * random()
+        frame.vars.bubblePop[0].append(pop)
+        frame.vars.bubbleCt[0].append(10+random()*(pop-10))
 '''),
         ("Label", "Running"),
-        ("Code", '''
+        ("CodeBlock", '''
 # float bubbles up randomly 
 from random import random
 
 for ii in range(len(frame.vars.bubbles[0])):
-    ball = frame.vars.bubbles[0][ii]
-    frame.vars.bubbleCt[0][ii] -=1
-    if frame.vars.bubbleCt[0][ii] <= 0:
+    bubble = frame.vars.bubbles[0][ii]
+    weed = frame.vars.weeds[0][ii]
+    frame.vars.bubbleCt[0][ii] +=1
+    if frame.vars.bubbleCt[0][ii] >= frame.vars.bubblePop[0][ii]:
+        # reset bubble
         weed = frame.vars.weeds[0][ii]
-        ball.path.setPos(weed.path.getPos())
-        frame.vars.bubbleCt[0][ii] = 240 + 300 * random()
+        bubble.path.setPos(weed.path.getPos())
+        frame.vars.bubbleCt[0][ii] = 0
+        frame.vars.bubblePop[0][ii] = 240 + 300 * random()
+        #weed.path.setColor(bubble.path.getColor())
     else:
-        ball.path.setPos(ball.path, .001, .001, .1)
+        # float bubble up
+        bubble.path.setPos(bubble.path, .001, .001, .1)
+        # do weed color
+        color = weed.path.getColor()
+        # cycle weed colors before resetting bubble
+        if frame.vars.bubbleCt[0][ii] > frame.vars.bubblePop[0][ii]-30:
+            for cc in range(3):
+                color[cc] += frame.vars.weedColorInc[0][ii][cc]
+                if color[cc] > 1:
+                    color[cc] = 1
+                    frame.vars.weedColorInc[0][ii][cc] *= -1
+                if color[cc] < .25:
+                    color[cc] = .25
+                    frame.vars.weedColorInc[0][ii][cc] *= -1
+            weed.path.setColor(color)
+        # bubble reset, pick up weed color
+        if frame.vars.bubbleCt[0][ii] < 2:
+            bubble.path.setColor(color)
 ''')
         )
 
@@ -1109,7 +1142,7 @@ for ii in range(len(frame.vars.bubbles[0])):
     # Put up "clickWiggle" fish
     class testObj2:
         mode = Wye.mode.MULTI_CYCLE
-        autoStart = True
+        #autoStart = True
         dataType = Wye.dType.INTEGER
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
@@ -1204,7 +1237,7 @@ for ii in range(len(frame.vars.bubbles[0])):
                 ("Label", "Repeat"),
                 # Step forward
                 #("Code", "print('testObj4 run stream 2 setRelPos', frame.vars.gObj[0].getPos())"),
-                ("Expr", '''
+                ("CodeBlock", '''
 import math
 angle = frame.vars.posAngle[0]
 ctrPos = frame.vars.position[0]

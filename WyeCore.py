@@ -158,7 +158,7 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.dlight = DirectionalLight('dlight')
                 WyeCore.World.dlight.setColor((1, 1, 1, 1))  # (0.8, 0.8, 0.5, 1))
                 WyeCore.World.dlightPath = render.attachNewNode(WyeCore.World.dlight)
-                WyeCore.World.dlightPath.setHpr(45, -55, 0)
+                WyeCore.World.dlightPath.setHpr(45, -65, 0)
                 render.setLight(WyeCore.World.dlightPath)
 
                 # Fog
@@ -821,7 +821,7 @@ class WyeCore(Wye.staticObj):
             codeText = ""
             parFnText = ""
             # Wye verb
-            if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code"]:     # if there is a verb here
+            if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
@@ -872,7 +872,7 @@ class WyeCore(Wye.staticObj):
                                 #print(" parseWyeTuple: 2 parse paramTuple ", paramTuple)
                                 # if tuple is code to compile
                                 #print("tupleKey", tupleKey)
-                                if tupleKey is None or tupleKey in ["Var", "Const", "Expr", "Code"]:        # constant/var (leaf node)
+                                if tupleKey is None or tupleKey in ["Var", "Const", "Expr", "Code", "CodeBlock"]:        # constant/var (leaf node)
                                     #print(" parseWyeTuple: paramTuple[0] is None/Const/Expr/Code")
                                     #print("  parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
                                     #print("   verbClass.paramDescr", verbClass.paramDescr)
@@ -951,7 +951,7 @@ class WyeCore(Wye.staticObj):
                                 # (const, frame var ref, other expression)
                                 tupleKey = paramTuple[0]
                                 #print("tupleKey", tupleKey)
-                                if tupleKey is None or tupleKey in ["Var", "Const", "Var=", "Expr", "Code"]:
+                                if tupleKey is None or tupleKey in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:
                                     #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
 
                                     # debug
@@ -1188,13 +1188,13 @@ class WyeCore(Wye.staticObj):
                 codeStr += 'setattr('+libName+', "'+libName+'_rt", '+libName+'_rt)\n'
 
                 # DEBUG PRINT GENERATED CODE
-                # If debug compiled Wye code
-                #if WyeCore.debugListCode:
-                #    print("\nlib '"+libClass.__name__+"' code=")
-                #    lnIx = 1
-                #    for ln in codeStr.split('\n'):
-                #        print("%2d "%lnIx, ln)
-                #        lnIx += 1
+                # If compiled Wye code, print it
+                if WyeCore.debugListCode:
+                    print("\nlib '"+libClass.__name__+"' code=")
+                    lnIx = 1
+                    for ln in codeStr.split('\n'):
+                        print("%2d "%lnIx, ln)
+                        lnIx += 1
 
                 # compile the runtime class containing methods for all the verb runtimes
                 code = compile(codeStr, "<string>", "exec")

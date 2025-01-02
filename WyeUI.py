@@ -473,6 +473,7 @@ class WyeUI(Wye.staticObj):
             if self.m1Pressed and self.shift and self.ctl:
                 if not WyeCore.World.editor:
                     WyeCore.World.editor = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditMainDialog)
+                    WyeCore.World.editor.eventData = ("", (0))
                 else:
                     print("Already have editor")
 
@@ -1096,6 +1097,7 @@ class WyeUI(Wye.staticObj):
 
             # copy the list over for later
             frame.vars.list[0] = frame.params.list[0][:]
+            print("Dropdown", frame.params.label, " list", frame.vars.list[0])
             #print("InputDropdown params.frame=", frame.params.frame)
             # return frame and success, caller dialog will use frame as placeholder for input
             frame.status = Wye.status.SUCCESS
@@ -1121,8 +1123,7 @@ class WyeUI(Wye.staticObj):
             # offset 3d input field right past end of 3d label
             lblGFrm = lbl.text.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + .5
-            txt = Wye.dType.tostring(Wye.dType.dTypeList[frame.params.selectionIx[0]])
-            btn = WyeUI._3dText(txt, Wye.color.LABEL_COLOR,
+            btn = WyeUI._3dText(frame.params.list[0][frame.params.selectionIx[0]], Wye.color.LABEL_COLOR,
                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
             btn.setColor(Wye.color.TEXT_COLOR)
             # print("    Dialog inWdg", btn)
@@ -1189,9 +1190,8 @@ class WyeUI(Wye.staticObj):
 
                     # build dialog frame params list of input frames
                     attrIx = 0
-                    typeLst = [Wye.dType.tostring(typ) for typ in Wye.dType.dTypeList]
                     # print("_displayLib: process library", lib.__name__)
-                    for rowTxt in typeLst:
+                    for rowTxt in rowFrm.vars.list[0]:
                         # print("lib", lib.__name__, " verb", verb.__name__)
                         btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                         dlgFrm.params.inputs[0].append([btnFrm])
@@ -1212,7 +1212,8 @@ class WyeUI(Wye.staticObj):
                 case 1:
                     dlgFrm = frame.SP.pop()
                     #print("InputDropdownCallback run case1: dlgFrm", dlgFrm.verb.__name__, " status", Wye.status.tostring(frame.status), " selIx", dlgFrm.vars.currInp[0])
-                    if dlgFrm.status == Wye.status.SUCCESS:
+                    if frame.vars.retStat[0] == Wye.status.SUCCESS:
+                        print("InputDropdownCallback done, success, set row label to", dlgFrm.vars.currInp[0])
                         frame.vars.rowFrm[0].verb.setValue(frame.vars.rowFrm[0], dlgFrm.vars.currInp[0])
 
                     frame.status = dlgFrm.status
@@ -1232,7 +1233,7 @@ class WyeUI(Wye.staticObj):
 
         def run(frame):
             data = frame.eventData
-            #print("InputDropdownRowCallback run: data", data)
+            print("InputDropdownRowCallback run: data", data)
             rowFrm = data[1][1]
             parentFrm = data[1][2]
             objFrm = data[1][3]
@@ -1858,13 +1859,12 @@ class WyeUI(Wye.staticObj):
             lst[0] = rowIx
             # print("DropdownCallback data=", frame.eventData, " index = ", frame.eventData[1])
 
-    # show loaded libraries
-    # so user can edit them
+    # Create dialog showing loaded libraries so user can edit them
     class EditMainDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         autoStart = False
-        paramDescr = (("objFrm", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
+        paramDescr = ()
         varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
                     ("dlgStat", Wye.dType.INTEGER, -1),
                     )
@@ -1907,7 +1907,7 @@ class WyeUI(Wye.staticObj):
                         rowIx[0] += 1
                         attrIx[0] += 1
 
-                    # if nothing running
+                    # if no libs loaded
                     if attrIx == 0:
                         lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                         lblFrm.params.frame = [None]  # return value
@@ -1931,6 +1931,7 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.stopActiveObject(WyeCore.World.editor)
                     WyeCore.World.editor = None
 
+    # put up dialog showing verbs in given library
     class EditLibCallback:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
@@ -1983,8 +1984,6 @@ class WyeUI(Wye.staticObj):
                                 if hasattr(verb, "codeDescr"):
                                     # print("lib", lib.__name__, " verb", verb.__name__)
                                     btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                                    dlgFrm.params.inputs[0].append([btnFrm])
-
                                     txt = "  " + lib.__name__ + "." + verb.__name__
                                     btnFrm.params.frame = [None]  # return value
                                     btnFrm.params.parent = [dlgFrm]
@@ -1992,6 +1991,7 @@ class WyeUI(Wye.staticObj):
                                     btnFrm.params.callback = [WyeCore.libs.WyeUI.EditLibaryVerbCallback]  # button callback
                                     btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button data - offset to button
                                     WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+                                    dlgFrm.params.inputs[0].append([btnFrm])
                                 else:
                                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                                     lblFrm.params.frame = [None]
@@ -2040,7 +2040,7 @@ class WyeUI(Wye.staticObj):
                     print("EditLibaryVerbCallback data=", frame.eventData, " index = ", frame.eventData[1][0])
 
                     # open object editor
-                    edFrm = WyeCore.libs.WyeUI.ObjectEditor.start(frame.SP)
+                    edFrm = WyeCore.libs.WyeUI.EditVerb.start(frame.SP)
                     edFrm.params.verb = [verb]
                     edFrm.params.parent = [dlgFrm]
                     lineOffset = (2.25 + rowIx) * -WyeUI.LINE_HEIGHT
@@ -2076,7 +2076,7 @@ class WyeUI(Wye.staticObj):
 
                     # fire up object editor with given frame
                     #print("ObjEditorCtl: Create ObjEditor")
-                    edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.ObjectEditor)
+                    edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditVerb)
                     edFrm.params.position = frm.vars.position
                     edFrm.params.parent = [None]
                     #print("ObjEditorCtl: Fill in ObjEditor objFrm param")
@@ -2115,7 +2115,7 @@ class WyeUI(Wye.staticObj):
             return status
 
     # put up object dialog for given object
-    class ObjectEditor:
+    class EditVerb:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         autoStart = False
@@ -2132,8 +2132,8 @@ class WyeUI(Wye.staticObj):
         activeVerbs = {}
 
         def start(stack):
-            print("ObjectEditor start")
-            f = Wye.codeFrame(WyeUI.ObjectEditor, stack)
+            print("EditVerb start")
+            f = Wye.codeFrame(WyeUI.EditVerb, stack)
             f.vars.paramInpLst[0] = []
             f.vars.varInpLst[0] = []
             return f
@@ -2141,7 +2141,7 @@ class WyeUI(Wye.staticObj):
         def run(frame):
             match(frame.PC):
                 case 0:
-                    print("ObjectEditor run case 0")
+                    print("EditVerb run case 0")
                     #pygame.midi.init()
                     #player = pygame.midi.Output(0)
                     #for ins in range(127):
@@ -2157,23 +2157,15 @@ class WyeUI(Wye.staticObj):
                     verb = frame.params.verb[0]       # shorthand
 
                     # only edit frame once
-                    if verb in WyeUI.ObjectEditor.activeVerbs:
+                    if verb in WyeUI.EditVerb.activeVerbs:
                         print("Already editing this library", verb.library.__name__, " verb", verb.__name__)
                         # take self off active object list
                         WyeCore.World.stopActiveObject(frame)
                         frame.status = Wye.status.FAIL
                         return
 
-                    ## can only edit objects with Wye code
-                    #if not hasattr(verb, "codeDescr"):
-                    #    print("Object", verb.__name__, " has no code to edit")
-                    #    # take self off active object list
-                    #    #WyeCore.World.stopActiveObject(frame)
-                    #    frame.status = Wye.status.FAIL
-                    #    return
-
                     # mark this frame actively being edited
-                    WyeUI.ObjectEditor.activeVerbs[frame] = True
+                    WyeUI.EditVerb.activeVerbs[verb] = True
 
                     # create object dialog
                     #dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
@@ -2182,7 +2174,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Edit Object " + verb.__name__]
                     dlgFrm.params.position = frame.params.position
-                    print("ObjectEditor at position", frame.params.position, " parent=frame.params.parent")
+                    print("EditVerb at position", frame.params.position, " parent=frame.params.parent")
                     dlgFrm.params.parent = frame.params.parent
                     frame.vars.dlgFrm[0] = dlgFrm
 
@@ -2270,7 +2262,6 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.inputs[0].append([lblFrm])
 
                     if hasattr(verb, "codeDescr") and len(verb.codeDescr) > 0:
-                        attrIx = 0
                         # If it's parallel code blocks
                         if verb.mode == Wye.mode.PARALLEL:
                                 lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -2281,51 +2272,11 @@ class WyeUI(Wye.staticObj):
                                 dlgFrm.params.inputs[0].append([lblFrm])
                         # regular boring normal single stream code
                         else:
+                            level = 2       # starting indent for nesting tuple data
+                            attrIx = 0      # This level code row
+                            row = [0]       # dialog row, including recursively displayed tuple data
                             for tuple in verb.codeDescr:
-                                # make the dialog row
-                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                                dlgFrm.params.inputs[0].append([btnFrm])
-                                btnFrm.params.frame = [None]
-                                btnFrm.params.parent = [None]  # return value
-
-                                # fill in text and callback based on code row type
-                                if tuple[0] is None:
-                                    btnFrm.params.label = ["  Code:" + tuple[1]]
-                                    btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-                                elif "." in tuple[0]:
-                                    btnFrm.params.label = ["  Verb:" + tuple[0] + "," + str(tuple[1])]
-                                    btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
-                                else:
-                                    match tuple[0]:
-                                        case "Expr":
-                                            btnFrm.params.label = ["  Expression:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-                                        case "Const":
-                                            btnFrm.params.label = ["  Constant:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-
-                                        case "Var":
-                                            btnFrm.params.label = ["  Variable:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-
-                                        case "Var=":
-                                            btnFrm.params.label = ["  Variable:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-
-                                        case "GoTo":
-                                            btnFrm.params.label = ["  GoTo:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
-
-                                        case "Label":
-                                            btnFrm.params.label = ["  Label:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
-
-                                        case "IfGoTo":
-                                            btnFrm.params.label = ["  If GoTo:" + tuple[1]]
-                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
-
-                                btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb, tuple)]  # button row, dialog frame
-                                WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+                                WyeCore.libs.WyeUI.EditVerb.displayTuple(tuple, level, verb, attrIx, row, dlgFrm)
 
                                 attrIx += 1
                     else:
@@ -2347,12 +2298,82 @@ class WyeUI(Wye.staticObj):
                     frame.status = Wye.status.SUCCESS  # done
 
 
-        # Object Editor Button Callbacks
-        # Callback gets passed eventData = (buttonTag, optUserData, buttonFrm)
+        # make the object editor dialog code row recursively
+        # level is the recursion level (starting at 2)
+        # verb is the verb being edited
+        # attrIx is the row within the verb's codeDescr
+        # row is the dialog row (since recursion expands the codeDescr rows)
+        # dlgFrm is the dialog being added to
+        def displayTuple(tuple, level, verb, attrIx, row, dlgFrm):
+            indent = "".join(["  " for l in range(level)])      # indent by recursion depth
+            #print("level", level, " indent '"+indent+"' tuple", tuple)
 
+            btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+            dlgFrm.params.inputs[0].append([btnFrm])
+            btnFrm.params.frame = [None]
+            btnFrm.params.parent = [None]  # return value
+
+            # fill in text and callback based on code row type
+            if tuple[0] is None:
+                btnFrm.params.label = [indent + "Code:" + tuple[1]]
+                btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+            elif "." in tuple[0]:
+                vStr = str(tuple[0])
+                if vStr.startswith("WyeCore.libs."):
+                    vStr = vStr[13:]
+                btnFrm.params.label = [indent + "Verb:" + vStr]
+                btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
+
+                if len(tuple) > 1:
+                    for paramTuple in tuple[1:]:
+                        row[0] += 1
+                        WyeCore.libs.WyeUI.EditVerb.displayTuple(paramTuple, level+1, verb, attrIx, row, dlgFrm)
+            else:
+                match tuple[0]:
+                    case "Code":  # raw Python
+                        btnFrm.params.label = [indent + "Code:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                    case "CodeBlock":  # multi-line raw Python
+                        btnFrm.params.label = [indent + "CodeBLock:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                    case "Expr":
+                        btnFrm.params.label = [indent + "Expression:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                    case "Const":
+                        btnFrm.params.label = [indent + "Constant:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+
+                    case "Var":
+                        btnFrm.params.label = [indent + "Variable:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+
+                    case "Var=":
+                        btnFrm.params.label = [indent + "Variable:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+
+                    case "GoTo":
+                        btnFrm.params.label = [indent + " GoTo:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+
+                    case "Label":
+                        btnFrm.params.label = [indent + "Label:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+
+                    case "IfGoTo":
+                        btnFrm.params.label = [indent + "If GoTo:" + tuple[1]]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
+
+            btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb, tuple)]  # button row, dialog frame
+            WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+    ######################
+    # VerbEditor Button Callback classes
+    # Callback gets passed eventData = (buttonTag, optUserData, buttonFrm)
+    ######################
 
 
     # put up code edit dialog for given verb
+    # put up dropdown to select other verb from library - or other library
     class EditVerbCallback:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
@@ -2360,6 +2381,10 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("verb", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
         varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),  # object dialog frame
                     ("dlgStat", Wye.dType.INTEGER, -1),
+                    ("libName", Wye.dType.STRING, ""),
+                    ("libNames", Wye.dType.STRING_LIST, []),
+                    ("verbName", Wye.dType.STRING, ""),
+                    ("verbNames", Wye.dType.STRING_LIST, []),
                     )
 
         # global list of frames being edited
@@ -2369,20 +2394,116 @@ class WyeUI(Wye.staticObj):
             return Wye.codeFrame(WyeUI.EditVerbCallback, stack)
 
         def run(frame):
+            data = frame.eventData
+            # print("EditVerbCallback data='" + str(data) + "'")
+            varIx = data[1][0]      # offset to parameter in object's paramDescr list
+            btnFrm = data[1][1]
+            parentFrame = data[1][2]
+            verb = data[1][3]
             match (frame.PC):
                 case 0:
-                    if frame.params.verb in WyeUI.ObjectEditor.activeVerbs:
-                        print("Already editing this verb", frame.params.verb[0].__name__)
-                        # take self off active object list
-                        WyeCore.World.stopActiveObject(frame)
-                        frame.status = Wye.status.FAIL
-                        return
+                    # build verb select/edit dialog
+                    dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
+                    dlgFrm.params.retVal = frame.vars.dlgStat
+                    offset = (2.5 + varIx) * -WyeUI.LINE_HEIGHT
+                    dlgFrm.params.position = [(.5, offset, .5)]
+                    dlgFrm.params.parent = [parentFrame]
+                    dlgFrm.params.title = ["Select Library and Verb"]
 
-                    print("EditVerbCallback data='" + str(frame.eventData) + "'")
+                    # split verb into lib, verb dropowns
+
+                    # build lib list for dropdown
+                    attrIx = [0]
+                    rowIx = [0]
+
+                    libName, verbName = btnFrm.params.label[0].split(".")
+                    libName = libName.split(":")[1]
+
+                    print("lib", libName, " verb", verbName, " from ", btnFrm.params.label[0])
+
+                    libFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                    libFrm.params.frame = [None]
+                    libFrm.params.label = ["Library"]
+                    frame.vars.libNames[0] = [lib.__name__ for lib in WyeCore.World.libList]
+                    libFrm.params.list = frame.vars.libNames
+                    libFrm.params.selectionIx = [frame.vars.libNames[0].index(libName)]
+                    libFrm.params.callback = [WyeCore.libs.WyeUI.EditVarLibCallback]
+                    libFrm.params.optData = ((varIx, libFrm, dlgFrm, verb, frame.vars.libName[0]),)
+                    libFrm.verb.run(libFrm)
+                    dlgFrm.params.inputs[0].append([libFrm])
+
+
+                    # build verb list for 2nd dropdown
+                    lib = WyeCore.World.libDict[libName]
+                    for attr in dir(lib):
+                        if attr != "__class__":
+                            libVerb = getattr(lib, attr)
+                            if inspect.isclass(libVerb):
+                                frame.vars.verbNames[0].append(libVerb.__name__)
+
+                    verbFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                    verbFrm.params.frame = [None]
+                    verbFrm.params.label = ["Verb"]
+                    verbFrm.params.list = frame.vars.verbNames
+                    print("find verName", verbName, " in ", frame.vars.verbNames)
+                    verbFrm.params.selectionIx = [frame.vars.verbNames[0].index(verbName)]
+                    verbFrm.params.callback = [WyeCore.libs.WyeUI.EditVarVerbCallback]
+                    verbFrm.params.optData = ((varIx, verbFrm, dlgFrm, verb, frame.vars.verbName[0]),)
+                    verbFrm.verb.run(verbFrm)
+                    dlgFrm.params.inputs[0].append([verbFrm])
+
+
+                    frame.SP.append(dlgFrm)
+                    # (if change lib, then have to rebuild verb dropdown)
+
+                    frame.PC += 1
+                case 1:
+                    dlgFrm = frame.SP.pop()
+                    #if dlgFrm.status == Wye.status.SUCCESS:
+                    #    frame.vars.rowFrm[0].verb.setValue(frame.vars.rowFrm[0], dlgFrm.vars.currInp[0])
+
+                    frame.status = dlgFrm.status
+
+
+    class EditVarLibCallback:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = ()
+
+        def start(stack):
+            #print("EditVarLibCallback started")
+            return Wye.codeFrame(WyeUI.EditVarLibCallback, stack)
+
+        def run(frame):
+            match (frame.PC):
+                case 0:
+                    print("EditVarLibCallback data='" + str(frame.eventData) + "'")
                     data = frame.eventData
                     frame.PC += 1
                 case 1:
                     pass
+
+
+    class EditVarVerbCallback:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = ()
+
+        def start(stack):
+            #print("EditVarVerbCallback started")
+            return Wye.codeFrame(WyeUI.EditVarVerbCallback, stack)
+
+        def run(frame):
+            match (frame.PC):
+                case 0:
+                    print("EditVarVerbCallback data='" + str(frame.eventData) + "'")
+                    data = frame.eventData
+                    frame.PC += 1
+                case 1:
+                    pass
+
 
 
     class EditCodeCallback:
@@ -3021,10 +3142,19 @@ class WyeUI(Wye.staticObj):
                                     btnFrm.params.label = ["  Code:" + tuple[1]]
                                     btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
                                 elif "." in tuple[0]:
-                                    btnFrm.params.label = ["  Verb:" + tuple[0] + "," + str(tuple[1])]
+                                    vStr = str(tuple[0])
+                                    if vStr.startswith("WyeCore.libs."):
+                                        vStr = vStr[13:]
+                                    btnFrm.params.label = ["  Verb:" + vStr + "," + str(tuple[1])]
                                     btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugVerbCallback]  # button callback
                                 else:
                                     match tuple[0]:
+                                        case "Code":         # raw Python
+                                            btnFrm.params.label = ["  Code:" + tuple[1]]
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
+                                        case "CodeBlock":    # multi-line raw Python
+                                            btnFrm.params.label = ["  CodeBLock:" + tuple[1]]
+                                            btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
                                         case "Expr":
                                             btnFrm.params.label = ["  Expression:" + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
