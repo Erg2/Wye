@@ -508,7 +508,7 @@ class WyeUI(Wye.staticObj):
                         quat.setFromAxisAngle(-90, LVector3f.up())
                         right = quat.xform(fwd)
 
-                        base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
+                        base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed) # + right * (x - self.m1DownPos[0]) * self.speed)
 
                     else:
                         # tilt up/down (mouseY), slide left/right (mouseX)

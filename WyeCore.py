@@ -643,7 +643,7 @@ class WyeCore(Wye.staticObj):
                         #    print("Clicked on pickable object", parent, " with wyeTag", wyeTag)
                         #else:
                         #    print("clicked on pickable object", parent)
-                        #self.pickedObj = parent
+                        self.pickedObj = parent
                         return parent
                     else:
                         parent = parent.getParent()
@@ -1197,12 +1197,12 @@ class WyeCore(Wye.staticObj):
 
                 # DEBUG PRINT GENERATED CODE
                 # If compiled Wye code, print it
-                if WyeCore.debugListCode:
-                    print("\nlib '"+libClass.__name__+"' code=")
-                    lnIx = 1
-                    for ln in codeStr.split('\n'):
-                        print("%2d "%lnIx, ln)
-                        lnIx += 1
+                #if WyeCore.debugListCode:
+                #    print("\nlib '"+libClass.__name__+"' code=")
+                #    lnIx = 1
+                #    for ln in codeStr.split('\n'):
+                #        print("%2d "%lnIx, ln)
+                #        lnIx += 1
 
                 # compile the runtime class containing methods for all the verb runtimes
                 code = compile(codeStr, "<string>", "exec")

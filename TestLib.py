@@ -885,15 +885,15 @@ fishPos = fish.getPos()
 tgtPos = frame.vars.tgtPos[0]
 # stay in local area
 dist = (frame.vars.fish[0].getPos() - tgtPos).length()
+
+# if we're outside the space around the target area or we're above or below the swim lane, do turning
 if fishPos[2] > (tgtPos[2] + frame.vars.ceil[0]) or fishPos[2] < (tgtPos[2] - frame.vars.ceil[0]) or dist > frame.vars.border[0]:
-        #print(">10")
         global render
         from panda3d.core import lookAt, Quat, LQuaternionf, LVector3f, Vec3
-        
 
         alpha = frame.vars.deltaT[0]      # how much to rotate each step (0..1)    
                 
-        # first time this rotation cycle
+        # if not turning (in turning state), calculate the turn toward the center
         if frame.vars.prevState[0] != 2:
             # save rotation start, calc rotation end and nlerp time delta
             
@@ -928,8 +928,8 @@ if fishPos[2] > (tgtPos[2] + frame.vars.ceil[0]) or fishPos[2] < (tgtPos[2] - fr
             
             #print("tgtPos", tgtPos, " tgtQ", tgtQ) #fish.setQuat(tgtQ)")
             #fish.setQuat(tgtQ)
-            
-            
+        
+        # We'turning, lerp that nose around the curve we calc'd above
         if frame.vars.lerpT[0] < 1.0:
             fishQ = frame.vars.startQ[0]
             tgtQ = frame.vars.endQ[0]
@@ -938,14 +938,17 @@ if fishPos[2] > (tgtPos[2] + frame.vars.ceil[0]) or fishPos[2] < (tgtPos[2] - fr
             fish.setQuat(quat)
             frame.vars.lerpT[0] += alpha
             #fish.setP(fish, 90)
+        # done turning
         else:
+            # flag that we finished the turn
             frame.vars.prevState[0] = 0    
-        
+
+# within "nice" distance from center, just chug happily along   
 else:
         #print("2<d<=10")
         fishHPR = fish.getHpr()     # get current direction         
         
-        # flip directions every new cycle
+        # flip turn direction every new pass through the middle area
         if frame.vars.prevState[0] != 1:
             from random import random            
             frame.vars.fudge0[0] *= (1 if random() > .5 else -1)
@@ -974,10 +977,11 @@ else:
 
                 #("GoTo", "RunLoop"),
 
-                # randomly move target around
+                # count down to next random relocation of target point to swim toward
                 ("Code", "frame.vars.tgtChgCt[0] -= 1"),
                 ("IfGoTo", "frame.vars.tgtChgCt[0] > 0", "RunLoop"),
 
+                # move target around randomly in a reasonably constrained area
                 ("Code", "from random import random"),
                 ("Code", "from panda3d.core import LPoint3f"),
                 ("Var=", "frame.vars.tgtPos[0] = LPoint3f((random()-.5)*5, (random()-.5)*5, 0)"),
@@ -985,8 +989,6 @@ else:
                 #("Code", "print('new target point', frame.vars.tgtPos[0])"),
                 #("Var=", "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
                 #("Code", "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
-
-
 
                 ("GoTo", "RunLoop")
 
@@ -1027,7 +1029,8 @@ else:
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
-                    ("sound", Wye.dType.OBJECT, None),
+                    ("sounds", Wye.dType.OBJECT_LIST, []),
+                    ("currSnd", Wye.dType.INTEGER, 0),
                     ("position", Wye.dType.FLOAT_LIST, [-1,2,-1.2]),
                     ("weeds", Wye.dType.OBJECT_LIST, []),
                     ("weedColorInc", Wye.dType.FLOAT_LIST, []),
@@ -1067,9 +1070,17 @@ WyeCore.picker.makePickable(floor.path)
 #print("test floor with tagDebug")
 #WyeCore.picker.tagDebug(floor.path)
             
-# Weeds on floor
+
 from random import random
-for xx in range(int(floorX * floorY * .1)):
+
+# load audio manager and buffer up a bunch of pop sounds so each bubble can play a full pop before the sound gets reused
+from direct.showbase import Audio3DManager
+audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
+for ii in range(100):
+    frame.vars.sounds[0].append(audio3d.loadSfx("WyePop.wav"))
+    
+# Weeds and bubbles decorating the floor
+for xx in range(int(floorX * floorY * .05)):
         if xx < 35:
             posX = (random()-.5)*20 - 25
             posY = (random()-.5)*20 + 75
@@ -1090,7 +1101,7 @@ for xx in range(int(floorX * floorY * .1)):
         WyeCore.picker.makePickable(weed.path)
         #print("Set tag", tag, " on weed", weed.path)
         
-        # Create bubble, color change amt, countdown to pop
+        # Create bubble, init color change amt and countdown to pop
         bubble = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
         bubble.path.setColor(color)
         bubble.path.setTag("wyeTag", tag)
@@ -1099,13 +1110,18 @@ for xx in range(int(floorX * floorY * .1)):
         pop = 60 + frame.vars.bubbleRand[0] * random()
         frame.vars.bubblePop[0].append(pop)
         frame.vars.bubbleCt[0].append(10+random()*(pop-10))
-        
+
 WyeCore.World.registerObjTag(tag, frame)
 '''),
         ("Label", "Running"),
         ("CodeBlock", '''
 # float bubbles up randomly 
 from random import random
+from direct.showbase import Audio3DManager
+audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
+# set fall off
+#audio3d.setDistanceFactor(.1)
+audio3d.setDropOffFactor(5)
 
 for ii in range(len(frame.vars.bubbles[0])):
     bubble = frame.vars.bubbles[0][ii]
@@ -1114,13 +1130,25 @@ for ii in range(len(frame.vars.bubbles[0])):
     if frame.vars.bubbleCt[0][ii] >= frame.vars.bubblePop[0][ii]:
         # reset bubble
         weed = frame.vars.weeds[0][ii]
-        bubble.path.setPos(weed.path.getPos())
+        pos = weed.path.getPos()
+        pos[2] += 2
+        bubble.path.setPos(pos)
         frame.vars.bubbleCt[0][ii] = 0
         frame.vars.bubblePop[0][ii] = frame.vars.bubbleMin[0] + frame.vars.bubbleRand[0] * random()
         #weed.path.setColor(bubble.path.getColor())
+
     else:
         # float bubble up
         bubble.path.setPos(bubble.path, .001, .001, .1)
+        # trigger pop now so it sounds when bubble pops
+        if frame.vars.bubblePop[0][ii]-9 > frame.vars.bubbleCt[0][ii] > frame.vars.bubblePop[0][ii]-10:
+            # pop bubble
+            viewerDist = (base.camera.getPos() - bubble.path.getPos()).length()
+            if viewerDist < 100:
+                audio3d.attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble.path)
+                frame.vars.sounds[0][frame.vars.currSnd[0]].play()
+                frame.vars.currSnd[0] = (frame.vars.currSnd[0] + 1) % 100
+            
         # do weed color
         color = weed.path.getColor()
         # cycle weed colors before resetting bubble
@@ -1158,7 +1186,7 @@ for ii in range(len(frame.vars.bubbles[0])):
     # Put up "clickWiggle" fish
     class testObj2:
         mode = Wye.mode.MULTI_CYCLE
-        #autoStart = True
+        autoStart = True
         dataType = Wye.dType.INTEGER
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
