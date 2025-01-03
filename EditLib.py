@@ -51,7 +51,7 @@ class EditLib:
     class showFishDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
-        #autoStart = True
+        autoStart = True
         paramDescr = ()
         varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
                     ("XAngleID", Wye.dType.STRING, ""),

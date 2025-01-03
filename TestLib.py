@@ -975,7 +975,8 @@ else:
                 ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.fish")),
                 #(None, "print('leaderfish running. new pos', frame.vars.position)"),
 
-                #("GoTo", "RunLoop"),
+                # don't relocate target
+                ("GoTo", "RunLoop"),
 
                 # count down to next random relocation of target point to swim toward
                 ("Code", "frame.vars.tgtChgCt[0] -= 1"),
@@ -1065,7 +1066,7 @@ floor.path.setColor((.95,.84,.44,.1))
 
 tag = "wyeTag" + str(WyeCore.Utils.getId())
 floor.path.setTag("wyeTag", tag)
-print("Set tag", tag, " on", floor.path)
+#print("Set tag", tag, " on", floor.path)
 WyeCore.picker.makePickable(floor.path)
 #print("test floor with tagDebug")
 #WyeCore.picker.tagDebug(floor.path)
@@ -1073,14 +1074,14 @@ WyeCore.picker.makePickable(floor.path)
 
 from random import random
 
-# load audio manager and buffer up a bunch of pop sounds so each bubble can play a full pop before the sound gets reused
+# load audio manager and buffer up a bunch of pop sound slots so each bubble can play a full pop before the sound gets reused
 from direct.showbase import Audio3DManager
 audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
 for ii in range(100):
     frame.vars.sounds[0].append(audio3d.loadSfx("WyePop.wav"))
     
 # Weeds and bubbles decorating the floor
-for xx in range(int(floorX * floorY * .05)):
+for xx in range(int(floorX * floorY * .08)):
         if xx < 35:
             posX = (random()-.5)*20 - 25
             posY = (random()-.5)*20 + 75

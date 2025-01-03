@@ -130,7 +130,8 @@ class WyeCore(Wye.staticObj):
         objTags = {}     # map of graphic tags to object frames
 
         eventCallbackDict = {}              # dictionary of event callbacks
-        repeatEventCallbackDict = {}      # dictionary of repeated event frames
+        repeatEventCallbackDict = {}        # dictionary of repeated event frames
+        _repEventAddList = []               # can't add event frame from within event callback, so queue here
 
         displayCycleCount = 0           # DEBUG
 
@@ -171,8 +172,8 @@ class WyeCore(Wye.staticObj):
                 ####### Test 3d text
 
                 text = TextNode('node name')
-                text.setWordwrap(7.0)
-                text.setText("Welcome to Wye " + Wye.version)
+                #text.setWordwrap(7.0)
+                text.setText("Welcome to\nWye " + Wye.version)
                 text.setTextColor(1, 1, 1, 1)
                 text.setAlign(TextNode.ACenter)
                 # text.setFrameColor(0, 0, 1, 1)
@@ -433,12 +434,13 @@ class WyeCore(Wye.staticObj):
         # even if those variable's frames have been GC'd
         def setRepeatEventCallback(eventName, frame, data=None):
 
+
             frameID = "frm"+str(WyeCore.Utils.getId()) # get unique id for frame list
             # note: list in repEvtCallbackDict acts as global stack frame as well as
             # holding onto the event tags this event is for
             repEvt = [[frame], eventName, data, frameID]
             frame.SP = repEvt[0]        # repeated event runs on its own stack
-            WyeCore.World.repeatEventCallbackDict[frameID] = repEvt
+            WyeCore.World._repEventAddList.append(repEvt)
             #print("setRepeatEventCallback on event ", eventName, " object ", frame, " add frameID ", frameID, "\nrepDict now=", WyeCore.World.repeatEventCallbackDict)
             return frameID
             pass
@@ -523,6 +525,11 @@ class WyeCore(Wye.staticObj):
             def run(frame):
                 delList = []
                 #print("repEventObj run: Event dict:", WyeCore.World.repeatEventCallbackDict)
+                if len(WyeCore.World._repEventAddList) > 0:
+                    for repEvt in WyeCore.World._repEventAddList:
+                        WyeCore.World.repeatEventCallbackDict[repEvt[3]] = repEvt
+                    WyeCore.World._repEventAddList = []
+
                 evtIx = 0       # debug
                 for evtID in WyeCore.World.repeatEventCallbackDict:
                     #print("repeatEventExecObj run: process evt", evtID)
