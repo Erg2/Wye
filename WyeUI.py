@@ -210,11 +210,12 @@ class WyeUI(Wye.staticObj):
     class _3dText:
         global render
 
-        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1), parent=None):
+        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1), parent=None, tag=""):
             if parent is None:
                 self.parent = render
             else:
                 self.parent = parent
+            self.tag = tag          # if caller supplied, ele will auto-gen unique tag
             self.marginL = .1
             self.marginR = .2
             self.marginB = .1
@@ -306,8 +307,9 @@ class WyeUI(Wye.staticObj):
 
         # internal rtn to gen text object with unique wyeTag name
         def _genTextObj(self, text, color=(1,1,1,1)):
-            tag = "txt"+str(WyeCore.Utils.getId())
-            self.text = TextNode(tag)
+            if not self.tag:
+                self.tag = "txt"+str(WyeCore.Utils.getId())
+            self.text = TextNode(self.tag)
             if len(text) == 0:
                 text = ' '
             self.text.setText(text)
@@ -1148,6 +1150,11 @@ class WyeUI(Wye.staticObj):
             frame.vars.tags[0] = gTags
             return gTags
 
+        def setList(frame, newList, newIndex):
+            print("frame", frame.verb.__name__, " setList: newList", newList, " newIndex", newIndex)
+            frame.vars.list[0] = newList
+            frame.verb.setValue(frame, newIndex)
+
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.removeNode()
@@ -1157,6 +1164,7 @@ class WyeUI(Wye.staticObj):
 
         def setValue(frame, index):
             # todo Range check index!
+            print("InputDropdown setValue. Label", frame.params.label, " index", index, " vars", frame.varsToStringV())
             frame.vars.gWidget[0].setText(frame.vars.list[0][index])
             frame.params.selectionIx[0] = index
 
@@ -1164,6 +1172,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setColor(color)
             frame.vars.gWidget[0].setColor(color)
 
+        # User clicked input, generate the DropDown
         class InputDropdownCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
@@ -1188,6 +1197,7 @@ class WyeUI(Wye.staticObj):
                         #print(" objFrm", objFrm.tostring())
 
                         pos = rowFrm.vars.position[0]
+                        pos[1] -= .5
                         #print("DropDown pos", pos)
 
                         dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
@@ -1206,7 +1216,7 @@ class WyeUI(Wye.staticObj):
                             dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [rowFrm]  # return value
                             btnFrm.params.parent = [dlgFrm]
-                            btnFrm.params.label = [rowTxt]  # button label is verb name
+                            btnFrm.params.label = [rowTxt]  # button label is currently selected value
                             # note: dropdown doesn't do per-row callbacks
                             WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
@@ -1219,7 +1229,9 @@ class WyeUI(Wye.staticObj):
 
                     case 1:
                         dlgFrm = frame.SP.pop()
-                        #print("InputDropdownCallback run case1: dlgFrm", dlgFrm.verb.__name__, " status", Wye.status.tostring(frame.status), " selIx", dlgFrm.vars.currInp[0])
+                        #print("InputDropdownCallback run case1: dlgFrm", dlgFrm.verb.__name__, " status", \
+                        #      Wye.status.tostring(frame.status), " selIx", dlgFrm.vars.currInp[0], \
+                        #      " retStat", frame.vars.retStat[0])
                         if frame.vars.retStat[0] == Wye.status.SUCCESS:
                             #print("InputDropdownCallback done, success, set row label to", dlgFrm.vars.currInp[0])
                             rowFrm.verb.setValue(rowFrm, dlgFrm.vars.currInp[0])
@@ -1335,7 +1347,7 @@ class WyeUI(Wye.staticObj):
 
                     # display OK, Cancel buttons
                     pos[2] -= 1.5
-                    pos[1] -= .25  # hack fwd just a tad in case text overran the dialog space and covered the ok/cancel
+                    pos[1] -= .1  # hack fwd just a tad in case text overran the dialog space and covered the ok/cancel
                     txt = WyeUI._3dText("OK", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1, 1, 1),
                                         parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
@@ -2414,31 +2426,32 @@ class WyeUI(Wye.staticObj):
 
                     libName, verbName = btnFrm.params.label[0].split(".")
                     libName = libName.split(":")[1]
+                    frame.vars.libName[0] = libName
 
                     #print("lib", libName, " verb", verbName, " from ", btnFrm.params.label[0])
 
+                    # do this here so can ref it in lib callback data
+                    verbFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+
+
                     libFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                     libFrm.params.frame = [None]
-                    btnFrm.params.parent = [None]
+                    libFrm.params.parent = [None]
                     libFrm.params.label = ["Library"]
                     frame.vars.libNames[0] = [lib.__name__ for lib in WyeCore.World.libList]
                     libFrm.params.list = frame.vars.libNames
                     libFrm.params.selectionIx = [frame.vars.libNames[0].index(libName)]
                     libFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback.SelectLibCallback]
-                    libFrm.params.optData = ((varIx, libFrm, dlgFrm, verb, frame.vars.libName[0]),)
+                    libFrm.params.optData = ((varIx, libFrm, dlgFrm, verb, frame.vars.libName, verbFrm),)
                     libFrm.verb.run(libFrm)
                     dlgFrm.params.inputs[0].append([libFrm])
 
 
                     # build verb list for 2nd dropdown
-                    lib = WyeCore.World.libDict[libName]
-                    for attr in dir(lib):
-                        if attr != "__class__":
-                            libVerb = getattr(lib, attr)
-                            if inspect.isclass(libVerb):
-                                frame.vars.verbNames[0].append(libVerb.__name__)
 
-                    verbFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                    frame.vars.verbNames[0] = frame.verb.buildVerbList(libName)
+
+                    # fill in rest of verb drop down
                     verbFrm.params.frame = [None]
                     btnFrm.params.parent = [None]
                     verbFrm.params.label = ["Verb"]
@@ -2446,7 +2459,7 @@ class WyeUI(Wye.staticObj):
                     #print("find verName", verbName, " in ", frame.vars.verbNames)
                     verbFrm.params.selectionIx = [frame.vars.verbNames[0].index(verbName)]
                     verbFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback.SelectVerbCallback]
-                    verbFrm.params.optData = ((varIx, verbFrm, dlgFrm, verb, frame.vars.verbName[0]),)
+                    verbFrm.params.optData = ((varIx, verbFrm, dlgFrm, verb, verbName),)
                     verbFrm.verb.run(verbFrm)
                     dlgFrm.params.inputs[0].append([verbFrm])
 
@@ -2462,6 +2475,17 @@ class WyeUI(Wye.staticObj):
 
                     frame.status = dlgFrm.status
 
+        # given the name of a library, get the list of verb names in the library
+        def buildVerbList(libName):
+            print("libName", libName)
+            verbLst = []
+            lib = WyeCore.World.libDict[libName]
+            for attr in dir(lib):
+                if attr != "__class__":
+                    libVerb = getattr(lib, attr)
+                    if inspect.isclass(libVerb):
+                        verbLst.append(libVerb.__name__)
+            return verbLst
 
         class SelectLibCallback:
             mode = Wye.mode.MULTI_CYCLE
@@ -2474,10 +2498,34 @@ class WyeUI(Wye.staticObj):
                 return Wye.codeFrame(WyeUI.EditVerbCallback.SelectLibCallback, stack)
 
             def run(frame):
+                data = frame.eventData
+                varIx = data[1][0]  # offset to parameter in object's paramDescr list
+                btnFrm = data[1][1]
+                parentFrame = data[1][2]
+                verb = data[1][3]
+                libNameLst = data[1][4]
+                verbFrm = data[1][5]
                 match (frame.PC):
                     case 0:
                         print("SelectLibCallback data='" + str(frame.eventData) + "'")
-                        data = frame.eventData
+                        print("  varIx", varIx)
+                        print("  btnFrm", btnFrm.verb.__name__)
+                        print("  parentFrm", parentFrame.verb.__name__)
+                        print("  verb", verb.__name__)
+                        print("  libName", libNameLst[0])
+                        print("  verbFrm", verbFrm.verb.__name__)
+
+                        # if lib changed, invalidate verb dropdown
+                        if libNameLst[0] != btnFrm.params.label:
+                            print("Library changed, invalidate selected verb. verbFrm", verbFrm.verb.__name__, " vars", verbFrm.varsToStringV())
+                            print("                                           btnFrm", btnFrm.verb.__name__, " vars", btnFrm.varsToStringV())
+                            verbLst = WyeCore.libs.WyeUI.EditVerbCallback.buildVerbList(libNameLst[0])
+                            verbLst.append('<none selected>')
+
+                            verbFrm.verb.setList(verbFrm,verbLst, len(verbLst)-1)
+
+                        # Note: if we're here, then the
+
                         frame.PC += 1
                     case 1:
                         pass
@@ -2494,10 +2542,11 @@ class WyeUI(Wye.staticObj):
                 return Wye.codeFrame(WyeUI.EditVerbCallback.SelectVerbCallback, stack)
 
             def run(frame):
+                data = frame.eventData
                 match (frame.PC):
                     case 0:
                         print("SelectVerbCallback data='" + str(frame.eventData) + "'")
-                        data = frame.eventData
+
                         frame.PC += 1
                     case 1:
                         pass
