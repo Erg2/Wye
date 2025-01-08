@@ -224,6 +224,7 @@ class WyeUI(Wye.staticObj):
             self.text = None
             self.card = None
             self._nodePath = None
+            self.gFrame = None
             #
             self._genTextObj(text, color)
             #self._genCardObj()
@@ -231,70 +232,82 @@ class WyeUI(Wye.staticObj):
 
             # txtNode.setAlign(TextNode.ACenter)
             # txtNode.setFrameColor(0, 0, 1, 1)
-            # txtNode.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
+            # txtNode.setFrameMargin(0.2, 0.2, 0.1, 0.1)
+
+        ## setters
 
         def setAlign(self, ctr):
             self.text.setAlign(ctr)
+
+        def setColor(self, val):
+            self._nodePath.setColor(val)
 
         # update the frame color
         def setFrameColor(self, color):
             self._nodePath.setColor(color)
 
         # update the margin spacing
-        def setFrameAsMargin(self, marginL, marginR, marginB, marginT):
+        def setFrameMargin(self, marginL, marginR, marginB, marginT):
             self.marginL = marginL
             self.marginR = marginR
             self.marginB = marginB
             self.marginT = marginT
             self._regen3d()
 
+        def setPos(self, val):
+            self._nodePath.setPos(val)
+
+        def setScale(self, val):
+            self._nodePath.setScale(val)
+
         # changing the text requires regenerating the background card and the 3d node
         def setText(self, text):
             self.text.setText(text)
             self._regen3d()
 
-        def setPos(self, val):
-            self._nodePath.setPos(val)
-
-        def setColor(self, val):
-            self._nodePath.setColor(val)
-
-        def setScale(self, val):
-            self._nodePath.setScale(val)
-
         def setWordWrap(self):
             return self.text.getWordwrap()
 
-        def getText(self):
-            return self.text.getText()
-
-        def getPos(self):
-            return self._nodePath.getPos()
-
-        def getColor(self):
-            return self._nodePath.getColor()
-
-        def getScale(self):
-            return self._nodePath.getScale()
-
-        def getWordWrap(self):
-            return self.text.setWordwrap()
-
-        def getTag(self):
-            return self.text.name
+        ## getters
 
         def getAlign(self):
             return self.text.getAlign()
 
+        def getColor(self):
+            return self._nodePath.getColor()
+
+        def getFrame(self):
+            return self.gFrame
+
+        def getHeight(self):
+            return self.gFrame[3] - self.gFrame[2]
+
         def getFrameColor(self):
             return self._nodePath.getColor()
+
+        # update the margin spacing
+        def getFrameMargin(self):
+            return (self.marginL, self.marginR, self.marginB, self.marginT)
 
         def getNodePath(self):
             return self._nodePath
 
-        # update the margin spacing
-        def getFrameAsMargin(self):
-            return (self.marginL, self.marginR, self.marginB, self.marginT)
+        def getPos(self):
+            return self._nodePath.getPos()
+
+        def getScale(self):
+            return self._nodePath.getScale()
+
+        def getTag(self):
+            return self.text.name
+
+        def getText(self):
+            return self.text.getText()
+
+        def getWordWrap(self):
+            return self.text.setWordwrap()
+
+        ## methods
 
         # rebuild card and path for updated text object
         def _regen3d(self):
@@ -319,17 +332,17 @@ class WyeUI(Wye.staticObj):
         def _genCardObj(self):
             #print("initial txtNode frame ", self.text.getFrameActual())
             self.card = CardMaker("Txt Card")
-            gFrame = self.text.getFrameActual()
-            if gFrame[1] == 0:      # if empty frame
-                gFrame[1] = 1
-                gFrame[3] = 1
-            #print("gFrame", gFrame)
-            gFrame[0] -= self.marginL
-            gFrame[1] += self.marginR
-            gFrame[2] -= self.marginB
-            gFrame[3] += self.marginT
-            #print("initial adjusted gFrame", gFrame)
-            self.card.setFrame(gFrame)
+            self.gFrame = self.text.getFrameActual()
+            if self.gFrame[1] == 0:      # if empty frame
+                self.gFrame[1] = 1
+                self.gFrame[3] = 1
+            #print("self.gFrame", self.gFrame)
+            self.gFrame[0] -= self.marginL
+            self.gFrame[1] += self.marginR
+            self.gFrame[2] -= self.marginB
+            self.gFrame[3] += self.marginT
+            #print("initial adjusted self.gFrame", self.gFrame)
+            self.card.setFrame(self.gFrame)
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
@@ -349,6 +362,17 @@ class WyeUI(Wye.staticObj):
      #       self._nodePath.setBillboardAxis()
             self._nodePath.setLightOff()                        # unaffected by world lighting
             self._nodePath.setColor(bg)
+
+            if not self.gFrame:
+                self.gFrame = self.text.getFrameActual()
+                if self.gFrame[1] == 0:  # if empty frame
+                    self.gFrame[1] = 1
+                    self.gFrame[3] = 1
+                # print("self.gFrame", self.gFrame)
+                self.gFrame[0] -= self.marginL
+                self.gFrame[1] += self.marginR
+                self.gFrame[2] -= self.marginB
+                self.gFrame[3] += self.marginT
 
         def removeNode(self):
             self._nodePath.removeNode()
@@ -818,7 +842,9 @@ class WyeUI(Wye.staticObj):
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # 1 user supplied label for field
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
-        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
+                    ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
+                    ("parent", Wye.dType.OBJECT, None),                 # parent dialog/dropdown
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
                     ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("currPos", Wye.dType.INTEGER, 0),
@@ -845,6 +871,10 @@ class WyeUI(Wye.staticObj):
                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
+            # update dialog pos to next free space downward
+            frame.vars.position[0] = pos        # save this position
+            pos[2] -= lbl.getHeight()           # update to next position
+
             return []       # no clickable object tags
 
         def close(frame):
@@ -869,7 +899,9 @@ class WyeUI(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
-        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
+                    ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
+                    ("parent", Wye.dType.OBJECT, None),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
                     ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
@@ -898,8 +930,6 @@ class WyeUI(Wye.staticObj):
         def display(frame, dlgFrm, pos):
             dlgHeader = dlgFrm.vars.dragObj[0]
 
-            pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
-            frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
             lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
@@ -920,6 +950,10 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
             frame.vars.gWidget[0] = txt
             frame.vars.tags[0] = gTags
+
+            # update dialog pos to next free space downward
+            frame.vars.position[0] = pos        # save this position
+            pos[2] -= txt.getHeight()           # update to next position
 
             return gTags
 
@@ -951,7 +985,9 @@ class WyeUI(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
-        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
+                    ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
+                    ("parent", Wye.dType.OBJECT, None),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
                     ("tags", Wye.dType.STRING_LIST, None),                  # assigned tags
                     ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
@@ -971,8 +1007,6 @@ class WyeUI(Wye.staticObj):
         def display(frame, dlgFrm, pos):
             dlgHeader = dlgFrm.vars.dragObj[0]
 
-            pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
-            frame.vars.position[0] = pos
 
             gTags = []      # clickable graphic object tags assoc with this input
             lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
@@ -994,6 +1028,10 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidget[0] = txt
 
             frame.vars.tags[0] = gTags
+
+            # update dialog pos to next free space downward
+            frame.vars.position[0] = pos  # save this position
+            pos[2] -= txt.getHeight()  # update to next position
 
             return gTags
 
@@ -1017,7 +1055,9 @@ class WyeUI(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),   # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       )
-        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
+                    ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
+                    ("parent", Wye.dType.OBJECT, None),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # 0 list of objects to delete on exit
                     ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("gWidget", Wye.dType.OBJECT, None),                  # 1 associated graphic widget
@@ -1049,14 +1089,17 @@ class WyeUI(Wye.staticObj):
             dlgHeader = dlgFrm.vars.dragObj[0]
 
             #print("InputButton display: pos", pos)
-            pos[2] -= WyeUI.LINE_HEIGHT       # update position for next widget
-            frame.vars.position[0] = pos
             btn = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(btn)  # save for deleting on dialog close
             frame.vars.gWidget[0] = btn  # stash graphic obj in input's frame
             tags = [btn.getTag()]
             frame.vars.tags[0] = tags
+
+            # update dialog pos to next free space downward
+            frame.vars.position[0] = pos  # save this position
+            pos[2] -= btn.getHeight()  # update to next position
+
             return tags
 
         def close(frame):
@@ -1082,7 +1125,9 @@ class WyeUI(Wye.staticObj):
                       ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       )
-        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
+                    ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
+                    ("parent", Wye.dType.OBJECT, None),
                     ("gWidgetStack", Wye.dType.OBJECT_LIST, None),        # list of objects to delete on exit
                     ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
                     ("gWidget", Wye.dType.OBJECT, None),                  # associated graphic widget
@@ -1125,9 +1170,7 @@ class WyeUI(Wye.staticObj):
 
             #print("InputDropdown display: pos", pos)
             #print(" ".join([str(row)+"\n" for row in frame.params.list]))
-            frame.vars.position[0] = pos
 
-            pos[2] -= WyeUI.LINE_HEIGHT  # update position for next widget
 
             gTags = []  # clickable graphic object tags assoc with this input
             lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
@@ -1148,12 +1191,18 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0].append(btn)  # save graphic widget for deleting on close
             frame.vars.gWidget[0] = btn
             frame.vars.tags[0] = gTags
+
+            # update dialog pos to next free space downward
+            frame.vars.position[0] = pos  # save this position
+            pos[2] -= btn.getHeight()  # update to next position
+
             return gTags
 
         def setList(frame, newList, newIndex):
             print("frame", frame.verb.__name__, " setList: newList", newList, " newIndex", newIndex)
             frame.vars.list[0] = newList
             frame.verb.setValue(frame, newIndex)
+            frame.params.selectionIx[0] = newIndex
 
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
@@ -1270,7 +1319,7 @@ class WyeUI(Wye.staticObj):
                     ("currInp", Wye.dType.INTEGER, -1),                     # 4 index to current focus widget, if any
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # 5 list of buttons that need to be unclicked
                     ("dragObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj *** REF'D BY CHILDREN ***
-                    ("topTag", Wye.dType.STRING, ""),                 # 6 Wye tag for top object (used for dragging)
+                    ("topTag", Wye.dType.STRING, ""),                       # 6 Wye tag for top object (used for dragging)
                     ("bgndGObj", Wye.dType.OBJECT, None),                   # 7 background card
                     )
 
@@ -1318,7 +1367,7 @@ class WyeUI(Wye.staticObj):
 
                     #print("Dialog run: params.position",frame.params.position[0])
                     # row position rel to parent, not global
-                    pos = [0,0,0] #[x for x in frame.params.position[0]]    # copy position
+                    pos = [0,0,-dlgHeader.getHeight()] #[x for x in frame.params.position[0]]    # copy position
 
                     # do user inputs
                     # Note that input returns its frame as parameter value
@@ -1346,7 +1395,6 @@ class WyeUI(Wye.staticObj):
                     #print("Dialog has input widgets", frame.vars.inpTags[0])
 
                     # display OK, Cancel buttons
-                    pos[2] -= 1.5
                     pos[1] -= .1  # hack fwd just a tad in case text overran the dialog space and covered the ok/cancel
                     txt = WyeUI._3dText("OK", color=(Wye.color.HEADER_COLOR), pos=tuple(pos), scale=(1, 1, 1),
                                         parent=dlgHeader.getNodePath())
@@ -1762,6 +1810,7 @@ class WyeUI(Wye.staticObj):
                     frame.vars.dragObj[0] = dlgHeader        # save graphic for parenting sub dialogs
 
                     pos = [1, 0, 0]  # [x for x in frame.params[2]]    # copy position
+
 
                     # do user inputs
                     # Note that input returns its frame as parameter value
@@ -2313,7 +2362,7 @@ class WyeUI(Wye.staticObj):
         # row is the dialog row (since recursion expands the codeDescr rows)
         # dlgFrm is the dialog being added to
         def displayTuple(tuple, level, verb, attrIx, row, dlgFrm):
-            indent = "".join(["  " for l in range(level)])      # indent by recursion depth
+            indent = "".join(["    " for l in range(level)])      # indent by recursion depth
             #print("level", level, " indent '"+indent+"' tuple", tuple)
 
             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
@@ -2322,23 +2371,21 @@ class WyeUI(Wye.staticObj):
             btnFrm.params.parent = [None]  # return value
 
             # fill in text and callback based on code row type
-            if tuple[0] is None:
-                btnFrm.params.label = [indent + "Code:" + tuple[1]]
-                btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
-            elif "." in tuple[0]:
+            if "." in tuple[0]:
                 vStr = str(tuple[0])
                 if vStr.startswith("WyeCore.libs."):
                     vStr = vStr[13:]
                 btnFrm.params.label = [indent + "Verb:" + vStr]
                 btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
 
+                # display verb's params (if any)
                 if len(tuple) > 1:
                     for paramTuple in tuple[1:]:
                         row[0] += 1
                         WyeCore.libs.WyeUI.EditVerb.displayTuple(paramTuple, level+1, verb, attrIx, row, dlgFrm)
             else:
                 match tuple[0]:
-                    case "Code":  # raw Python
+                    case "Code" | None:  # raw Python
                         btnFrm.params.label = [indent + "Code:" + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
                     case "CodeBlock":  # multi-line raw Python
@@ -2398,6 +2445,8 @@ class WyeUI(Wye.staticObj):
         # global list of frames being edited
         activeVerbs = {}
 
+        noneSelected = "<none selected>"
+
         def start(stack):
             return Wye.codeFrame(WyeUI.EditVerbCallback, stack)
 
@@ -2439,6 +2488,7 @@ class WyeUI(Wye.staticObj):
                     libFrm.params.parent = [None]
                     libFrm.params.label = ["Library"]
                     frame.vars.libNames[0] = [lib.__name__ for lib in WyeCore.World.libList]
+                    frame.vars.libName[0] = libName
                     libFrm.params.list = frame.vars.libNames
                     libFrm.params.selectionIx = [frame.vars.libNames[0].index(libName)]
                     libFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback.SelectLibCallback]
@@ -2456,10 +2506,11 @@ class WyeUI(Wye.staticObj):
                     btnFrm.params.parent = [None]
                     verbFrm.params.label = ["Verb"]
                     verbFrm.params.list = frame.vars.verbNames
+                    frame.vars.verbName[0] = verbName
                     #print("find verName", verbName, " in ", frame.vars.verbNames)
                     verbFrm.params.selectionIx = [frame.vars.verbNames[0].index(verbName)]
                     verbFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback.SelectVerbCallback]
-                    verbFrm.params.optData = ((varIx, verbFrm, dlgFrm, verb, verbName),)
+                    verbFrm.params.optData = ((varIx, verbFrm, dlgFrm, verb, frame.vars.verbName),)
                     verbFrm.verb.run(verbFrm)
                     dlgFrm.params.inputs[0].append([verbFrm])
 
@@ -2470,8 +2521,12 @@ class WyeUI(Wye.staticObj):
                     frame.PC += 1
                 case 1:
                     dlgFrm = frame.SP.pop()
-                    #if dlgFrm.status == Wye.status.SUCCESS:
-                    #    frame.vars.rowFrm[0].verb.setValue(frame.vars.rowFrm[0], dlgFrm.vars.currInp[0])
+                    if frame.vars.dlgStat[0] == Wye.status.SUCCESS:
+                        # print("InputDropdownCallback done, success, set row label to", dlgFrm.vars.currInp[0])
+                        print("EditVerbCallback Success: lib", frame.vars.libName[0], " verb", frame.vars.verbName[0])
+                        if frame.vars.verbName[0] == WyeCore.libs.WyeUI.EditVerbCallback.noneSelected:
+                            print("no valid verb")
+
 
                     frame.status = dlgFrm.status
 
@@ -2488,7 +2543,7 @@ class WyeUI(Wye.staticObj):
             return verbLst
 
         class SelectLibCallback:
-            mode = Wye.mode.MULTI_CYCLE
+            mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
             paramDescr = ()
             varDescr = ()
@@ -2505,34 +2560,24 @@ class WyeUI(Wye.staticObj):
                 verb = data[1][3]
                 libNameLst = data[1][4]
                 verbFrm = data[1][5]
-                match (frame.PC):
-                    case 0:
-                        print("SelectLibCallback data='" + str(frame.eventData) + "'")
-                        print("  varIx", varIx)
-                        print("  btnFrm", btnFrm.verb.__name__)
-                        print("  parentFrm", parentFrame.verb.__name__)
-                        print("  verb", verb.__name__)
-                        print("  libName", libNameLst[0])
-                        print("  verbFrm", verbFrm.verb.__name__)
 
-                        # if lib changed, invalidate verb dropdown
-                        if libNameLst[0] != btnFrm.params.label:
-                            print("Library changed, invalidate selected verb. verbFrm", verbFrm.verb.__name__, " vars", verbFrm.varsToStringV())
-                            print("                                           btnFrm", btnFrm.verb.__name__, " vars", btnFrm.varsToStringV())
-                            verbLst = WyeCore.libs.WyeUI.EditVerbCallback.buildVerbList(libNameLst[0])
-                            verbLst.append('<none selected>')
+                # if lib changed, invalidate verb dropdown
+                newLib = btnFrm.vars.list[0][btnFrm.params.selectionIx[0]]
+                #print("SelectLibCallback old lib", libNameLst[0], " new lib", newLib)
 
-                            verbFrm.verb.setList(verbFrm,verbLst, len(verbLst)-1)
+                if libNameLst[0] != newLib:
+                    libNameLst[0] = newLib
+                    verbLst = WyeCore.libs.WyeUI.EditVerbCallback.buildVerbList(libNameLst[0])
+                    verbLst.append(WyeCore.libs.WyeUI.EditVerbCallback.noneSelected)
+                    verbFrm.verb.setList(verbFrm,verbLst, len(verbLst)-1)
 
-                        # Note: if we're here, then the
+                    # todo - uggly - better to just use the index everywhere
+                    verbFrm.params.optData[0][4][0] = verbFrm.vars.list[0][len(verbLst)-1]
 
-                        frame.PC += 1
-                    case 1:
-                        pass
 
 
         class SelectVerbCallback:
-            mode = Wye.mode.MULTI_CYCLE
+            mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
             paramDescr = ()
             varDescr = ()
@@ -2543,14 +2588,16 @@ class WyeUI(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                match (frame.PC):
-                    case 0:
-                        print("SelectVerbCallback data='" + str(frame.eventData) + "'")
+                varIx = data[1][0]  # offset to parameter in object's paramDescr list
+                btnFrm = data[1][1]
+                parentFrame = data[1][2]
+                verb = data[1][3]
+                verbNameLst = data[1][4]
 
-                        frame.PC += 1
-                    case 1:
-                        pass
-
+                #print("SelectVerbCallback data='" + str(frame.eventData) + "'")
+                newVerb = btnFrm.vars.list[0][btnFrm.params.selectionIx[0]]
+                #print("SelectLibCallback old verb", verbNameLst[0], " new verb", newVerb)
+                verbNameLst[0] = newVerb
 
 
     class EditCodeCallback:
@@ -2564,6 +2611,13 @@ class WyeUI(Wye.staticObj):
             return Wye.codeFrame(WyeUI.EditCodeCallback, stack)
 
         def run(frame):
+            data = frame.eventData
+            rowIx = data[1][0]  # offset to parameter in object's paramDescr list
+            btnFrm = data[1][1]
+            dlgFrame = data[1][2]
+            verb = data[1][3]
+            tuple = data[1][4]
+
             match (frame.PC):
                 case 0:
                     print("EditCodeCallback data='" + str(frame.eventData) + "'")
