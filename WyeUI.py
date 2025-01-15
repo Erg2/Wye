@@ -304,6 +304,9 @@ class WyeUI(Wye.staticObj):
         def getText(self):
             return self.text.getText()
 
+        def getWidth(self):
+            return self.gFrame[1] - self.gFrame[0]
+
         def getWordWrap(self):
             return self.text.setWordwrap()
 
@@ -862,17 +865,16 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            frame.vars.position[0] = pos  # save this position
 
-            pos[2] -= WyeUI.LINE_HEIGHT
-            frame.vars.position[0] = pos
+            dlgHeader = dlgFrm.vars.dragObj[0]
 
             lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
             # update dialog pos to next free space downward
-            frame.vars.position[0] = pos        # save this position
+
             pos[2] -= lbl.getHeight()           # update to next position
 
             return []       # no clickable object tags
@@ -928,6 +930,8 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
+            frame.vars.position[0] = pos  # save this position
+
             dlgHeader = dlgFrm.vars.dragObj[0]
 
 
@@ -952,7 +956,6 @@ class WyeUI(Wye.staticObj):
             frame.vars.tags[0] = gTags
 
             # update dialog pos to next free space downward
-            frame.vars.position[0] = pos        # save this position
             pos[2] -= txt.getHeight()           # update to next position
 
             return gTags
@@ -1005,6 +1008,8 @@ class WyeUI(Wye.staticObj):
             return frame
 
         def display(frame, dlgFrm, pos):
+            frame.vars.position[0] = pos  # save this position
+
             dlgHeader = dlgFrm.vars.dragObj[0]
 
 
@@ -1030,7 +1035,6 @@ class WyeUI(Wye.staticObj):
             frame.vars.tags[0] = gTags
 
             # update dialog pos to next free space downward
-            frame.vars.position[0] = pos  # save this position
             pos[2] -= txt.getHeight()  # update to next position
 
             return gTags
@@ -1086,6 +1090,8 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
+            frame.vars.position[0] = pos  # save this position
+
             dlgHeader = dlgFrm.vars.dragObj[0]
 
             #print("InputButton display: pos", pos)
@@ -1097,7 +1103,6 @@ class WyeUI(Wye.staticObj):
             frame.vars.tags[0] = tags
 
             # update dialog pos to next free space downward
-            frame.vars.position[0] = pos  # save this position
             pos[2] -= btn.getHeight()  # update to next position
 
             return tags
@@ -1165,6 +1170,8 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
+            frame.vars.position[0] = pos  # save this position
+
             frame.vars.dlgFrm[0] = dlgFrm
             dlgHeader = dlgFrm.vars.dragObj[0]
 
@@ -1181,10 +1188,8 @@ class WyeUI(Wye.staticObj):
             # add tag, input index to dictionary
             gTags.append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
             # offset 3d input field right past end of 3d label
-            lblGFrm = lbl.text.getFrameActual()
-            width = (lblGFrm[1] - lblGFrm[0]) + .5
             btn = WyeUI._3dText(frame.params.list[0][frame.params.selectionIx[0]], Wye.color.LABEL_COLOR,
-                                pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
+                                pos=(lbl.getWidth() + .5, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
             btn.setColor(Wye.color.TEXT_COLOR)
             # print("    Dialog inWdg", btn)
             gTags.append(btn.getTag())  # save graphic widget for deleting on dialog close
@@ -1193,7 +1198,6 @@ class WyeUI(Wye.staticObj):
             frame.vars.tags[0] = gTags
 
             # update dialog pos to next free space downward
-            frame.vars.position[0] = pos  # save this position
             pos[2] -= btn.getHeight()  # update to next position
 
             return gTags
@@ -2020,8 +2024,7 @@ class WyeUI(Wye.staticObj):
                     #print("EditLibCallback called, library row", libRow, " name", lib.__name__)
                     #print("parentDlg '"+ parentDlgFrm.params.title[0] +"'")
                     #print("parentDlgFrm", parentDlgFrm)
-                    lineOffset = (1.25 + libRow) * -WyeUI.LINE_HEIGHT
-                    frame.vars.coord[0] = (.5, -.5, lineOffset) # position rel to parent dlg
+                    frame.vars.coord[0] = (.5, -.5, -.5 - btnFrm.vars.position[0][2]) # position rel to parent dlg
 
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start(parentDlgFrm.SP)
 
@@ -2100,8 +2103,7 @@ class WyeUI(Wye.staticObj):
                         edFrm = WyeCore.libs.WyeUI.EditVerb.start(frame.SP)
                         edFrm.params.verb = [verb]
                         edFrm.params.parent = [dlgFrm]
-                        lineOffset = (2.25 + rowIx) * -WyeUI.LINE_HEIGHT
-                        edFrm.params.position = [(.5, -1.3, lineOffset)]
+                        edFrm.params.position = [(.5, -1.3, -.5 - btnFrm.vars.position[0][2])]
 
                         frame.SP.append(edFrm)
                         frame.PC += 1
@@ -2445,6 +2447,8 @@ class WyeUI(Wye.staticObj):
         # global list of frames being edited
         activeVerbs = {}
 
+        tempLib = None      # lib holding new version of verb
+
         noneSelected = "<none selected>"
 
         def start(stack):
@@ -2462,8 +2466,7 @@ class WyeUI(Wye.staticObj):
                     # build verb select/edit dialog
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
                     dlgFrm.params.retVal = frame.vars.dlgStat
-                    offset = (2.5 + varIx) * -WyeUI.LINE_HEIGHT
-                    dlgFrm.params.position = [(.5, offset, .5)]
+                    dlgFrm.params.position = [(.5, -.5, -.5 + btnFrm.vars.position[0][2])]
                     dlgFrm.params.parent = [parentFrame]
                     dlgFrm.params.title = ["Select Library and Verb"]
 
@@ -2532,7 +2535,7 @@ class WyeUI(Wye.staticObj):
 
         # given the name of a library, get the list of verb names in the library
         def buildVerbList(libName):
-            print("libName", libName)
+            #print("libName", libName)
             verbLst = []
             lib = WyeCore.World.libDict[libName]
             for attr in dir(lib):
@@ -2564,13 +2567,13 @@ class WyeUI(Wye.staticObj):
                 # if lib changed, invalidate verb dropdown
                 newLib = btnFrm.vars.list[0][btnFrm.params.selectionIx[0]]
                 #print("SelectLibCallback old lib", libNameLst[0], " new lib", newLib)
-
                 if libNameLst[0] != newLib:
                     libNameLst[0] = newLib
                     verbLst = WyeCore.libs.WyeUI.EditVerbCallback.buildVerbList(libNameLst[0])
                     verbLst.append(WyeCore.libs.WyeUI.EditVerbCallback.noneSelected)
                     verbFrm.verb.setList(verbFrm,verbLst, len(verbLst)-1)
 
+                    # jam <none selected> into current verb"
                     # todo - uggly - better to just use the index everywhere
                     verbFrm.params.optData[0][4][0] = verbFrm.vars.list[0][len(verbLst)-1]
 
@@ -2684,8 +2687,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Parameter"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("EditParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    lineOffset = (2.25 + nParams + paramIx) * -WyeUI.LINE_HEIGHT
-                    dlgFrm.params.position = [(.5,-.3,lineOffset)]
+                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
 
                     # param name
                     frame.vars.paramName[0] = verb.paramDescr[paramIx][0]
@@ -2813,8 +2815,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Variable"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("EditVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    lineOffset = (3.25 + nParams + varIx) * -WyeUI.LINE_HEIGHT
-                    dlgFrm.params.position = [(.5,-.3,lineOffset)]
+                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
 
                     # Var name
                     frame.vars.varName[0] = verb.varDescr[varIx][0]
@@ -3373,8 +3374,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Parameter"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("DebugParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    lineOffset = (3.25 + nParams + paramIx) * -WyeUI.LINE_HEIGHT
-                    dlgFrm.params.position = [(.5,-.3,lineOffset)]
+                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
 
                     # Param name
                     frame.vars.paramName[0] = paramDescr[paramIx][0]
@@ -3470,8 +3470,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Variable"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("DebugVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    lineOffset = (3.25 + nParams + varIx) * -WyeUI.LINE_HEIGHT
-                    dlgFrm.params.position = [(.5,-.3,lineOffset)]
+                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
 
                     # Var name
                     frame.vars.varName[0] = varDescr[varIx][0]

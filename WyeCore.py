@@ -327,7 +327,8 @@ class WyeCore(Wye.staticObj):
                 # if active object completed, remove the stack it is on from run list
                 if len(WyeCore.World.objKillList) > 0:
                     for frame in WyeCore.World.objKillList:
-                        WyeCore.World.objStacks.remove(frame.SP)
+                        if frame.PS in WyeCore.World.objStacks:
+                            WyeCore.World.objStacks.remove(frame.SP)
                     WyeCore.World.objKillList.clear()
 
             return Task.cont  # tell panda3d we want to run next frame too
