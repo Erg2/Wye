@@ -620,7 +620,7 @@ class WyeUI(Wye.staticObj):
 #
 #                    base.camera.setPos(base.camera.getPos() + fwd * (y - self.m1DownPos[1]) * self.speed + right * (x - self.m1DownPos[0]) * self.speed)
 
-            # do drag
+            # dragging dialog
             else:
                 if self.m1Down:
                     # camera forward vec
@@ -646,7 +646,9 @@ class WyeUI(Wye.staticObj):
                         # from where user clicked rel to position of dialog
                         tgtPos = newPos - WyeCore.libs.WyeUI.dragOffset
                         objPath.setPos(tgtPos)
-
+                        if hasattr(WyeCore.libs.WyeUI.dragFrame.params, "position"):
+                            WyeCore.libs.WyeUI.dragFrame.params.position[0] = tgtPos
+                            #print(WyeCore.libs.WyeUI.dragFrame.params.title, " pos", tgtPos)
                 else:
                     Wye.dragging = False
                     WyeCore.libs.WyeUI.dragFrame = None
@@ -871,7 +873,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            frame.vars.position[0] = pos  # save this position
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
             dlgHeader = dlgFrm.vars.dragObj[0]
 
@@ -936,7 +938,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            frame.vars.position[0] = pos  # save this position
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
             dlgHeader = dlgFrm.vars.dragObj[0]
 
@@ -1014,7 +1016,7 @@ class WyeUI(Wye.staticObj):
             return frame
 
         def display(frame, dlgFrm, pos):
-            frame.vars.position[0] = pos  # save this position
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
             dlgHeader = dlgFrm.vars.dragObj[0]
 
@@ -1096,7 +1098,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            frame.vars.position[0] = pos  # save this position
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
             dlgHeader = dlgFrm.vars.dragObj[0]
 
@@ -1176,7 +1178,7 @@ class WyeUI(Wye.staticObj):
             frame.status = Wye.status.SUCCESS
 
         def display(frame, dlgFrm, pos):
-            frame.vars.position[0] = pos  # save this position
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
             frame.vars.dlgFrm[0] = dlgFrm
             dlgHeader = dlgFrm.vars.dragObj[0]
@@ -1263,6 +1265,7 @@ class WyeUI(Wye.staticObj):
                         dlgFrm.params.retVal = frame.vars.retStat
                         dlgFrm.params.title = ["Data Type"]
                         dlgFrm.params.position = [pos]
+                        #print("InputDropdown pos", dlgFrm.params.position)
                         dlgFrm.params.parent = [rowFrm.parentFrame]
                         frame.vars.dlgFrm[0] = dlgFrm
 
@@ -1360,7 +1363,7 @@ class WyeUI(Wye.staticObj):
                     parent = frame.params.parent[0]
 
                     #print("Dialog put frame in param[0][0]", frame)
-                    frame.vars.position[0] = frame.params.position[0]      # save display position
+                    frame.vars.position[0] = (frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2])      # save display position
                     # return frame
 
                     #print("Dialog display: pos=frame.params.position", frame.params.position)
@@ -1396,7 +1399,9 @@ class WyeUI(Wye.staticObj):
                         # display inputs
                         # Note: each Input's display function updates draw "pos" downward
                         # stash returned display obj tags in lookup dict to detect what user clicked on
+                        #print("Build dialog", frame.params.title[0])
                         if hasattr(inFrm.verb, "display"):
+                            #print("Put input", inFrm.verb.__name__, " '" + inFrm.params.label[0] + "' at pos", pos)
                             for lbl in inFrm.verb.display(inFrm, frame, pos):  # displays label, updates pos, returns selection tags
                                 frame.vars.inpTags[0][lbl] = ii
                         else:
@@ -1805,7 +1810,7 @@ class WyeUI(Wye.staticObj):
                     parent = frame.params.parent[0]
 
                     # print("DropDown put frame in param[0][0]", frame)
-                    frame.vars.position[0] = frame.params.position[0]  # save display position
+                    frame.vars.position[0] = (frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2])  # save display position
                     # return frame
 
                     # handle scale and parent obj, if any
@@ -2074,13 +2079,14 @@ class WyeUI(Wye.staticObj):
                     #print("EditLibCallback called, library row", libRow, " name", lib.__name__)
                     #print("parentDlg '"+ parentDlgFrm.params.title[0] +"'")
                     #print("parentDlgFrm", parentDlgFrm)
-                    frame.vars.coord[0] = (.5, -.5, -.5 - btnFrm.vars.position[0][2]) # position rel to parent dlg
+                    frame.vars.coord[0] = (.5, -.5, -.5 + btnFrm.vars.position[0][2]) # position rel to parent dlg
 
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start(parentDlgFrm.SP)
 
                     dlgFrm.params.retVal = frame.vars.vrbStat
                     dlgFrm.params.title = ["Library" + lib.__name__ + " Select Verb to Edit"]
                     dlgFrm.params.position = [frame.vars.coord[0]]
+                    print("EditLibCallback pos", dlgFrm.params.position)
                     dlgFrm.params.parent = [parentDlgFrm]
                     frame.vars.dlgFrm[0] = dlgFrm
 
@@ -2153,7 +2159,8 @@ class WyeUI(Wye.staticObj):
                         edFrm = WyeCore.libs.WyeUI.EditVerb.start(frame.SP)
                         edFrm.params.verb = [verb]
                         edFrm.params.parent = [dlgFrm]
-                        edFrm.params.position = [(.5, -1.3, -.5 - btnFrm.vars.position[0][2])]
+                        edFrm.params.position = [(.5, -1.3, -.5 + btnFrm.vars.position[0][2])]
+                        print("EditLibraryVerbCallback pos", edFrm.params.position)
 
                         frame.SP.append(edFrm)
                         frame.PC += 1
@@ -2186,6 +2193,7 @@ class WyeUI(Wye.staticObj):
                     #print("ObjEditorCtl: Create ObjEditor")
                     edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditVerb)
                     edFrm.params.position = frm.vars.position
+                    print("ObjEditCtl pos", edFrm.params.position)
                     edFrm.params.parent = [None]
                     #print("ObjEditorCtl: Fill in ObjEditor objFrm param")
 
@@ -2211,6 +2219,7 @@ class WyeUI(Wye.staticObj):
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(stk)  # start obj debugger and get its stack frame
                     dbgFrm.params.objFrm = [frm]  # put object to edit in editor frame
                     dbgFrm.params.position = [frm.vars.position[0]]
+                    print("ObjectDebugger pos", dbgFrm.params.position)
                     stk.append(dbgFrm)  # put obj debugger on its stack
 
                     # put object frame on active list
@@ -2282,6 +2291,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Edit Object " + verb.__name__]
                     dlgFrm.params.position = frame.params.position
+                    print("EditVerb pos", dlgFrm.params.position)
                     #print("EditVerb at position", frame.params.position, " parent=frame.params.parent")
                     dlgFrm.params.parent = frame.params.parent
                     frame.vars.dlgFrm[0] = dlgFrm
@@ -2422,7 +2432,7 @@ class WyeUI(Wye.staticObj):
             btnFrm.params.parent = [None]  # return value
 
             # fill in text and callback based on code row type
-            if "." in tuple[0]:
+            if not tuple[0] is None and "." in tuple[0]:
                 vStr = str(tuple[0])
                 if vStr.startswith("WyeCore.libs."):
                     vStr = vStr[13:]
@@ -2516,6 +2526,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.position = [(.5, -.5, -.5 + btnFrm.vars.position[0][2])]
+                    print("EditVerbCallback pos", dlgFrm.params.position)
                     dlgFrm.params.parent = [parentFrame]
                     dlgFrm.params.title = ["Select Library and Verb"]
 
@@ -2736,7 +2747,8 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Parameter"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("EditParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
+                    dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2])]
+                    print("EditParamCallback pos", dlgFrm.params.position)
 
                     # param name
                     frame.vars.paramName[0] = verb.paramDescr[paramIx][0]
@@ -2864,7 +2876,9 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Variable"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("EditVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
+                    dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2])]
+                    print("EditVarCallback pos", dlgFrm.params.position)
+                    print("  parent button", btnFrm.params.label, " pos", btnFrm.vars.position[0])
 
                     # Var name
                     frame.vars.varName[0] = verb.varDescr[varIx][0]
@@ -3084,6 +3098,7 @@ class WyeUI(Wye.staticObj):
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
                     dbgFrm.params.objFrm = [objFrm]
                     dbgFrm.params.position = [objPos]
+                    print("DebugFrameCallback pos", dbgFrm.params.position)
                     dbgFrm.params.parent = [parentFrame]
                     frame.SP.append(dbgFrm)
                     frame.PC += 1
@@ -3151,6 +3166,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Debug " + name]
                     dlgFrm.params.position = frame.params.position
+                    print("ObjectDebugger pos", dlgFrm.params.position)
                     #print("ObjectDebugger frame.params.parent[0]", frame.params.parent[0])
                     if len(frame.params.parent) == 0 or isinstance(frame.params.parent[0], list):
                         dlgFrm.params.parent = [None]
@@ -3423,7 +3439,8 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Parameter"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("DebugParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
+                    dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2])]
+                    print("DebugParamCallback pos", dlgFrm.params.position)
 
                     # Param name
                     frame.vars.paramName[0] = paramDescr[paramIx][0]
@@ -3442,6 +3459,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.inputs[0].append([paramTypeFrm])
 
                     # Param current value
+                    print("DebugParamCallback get param", frame.vars.paramName[0])
                     frame.vars.paramVal[0] = getattr(objFrm.params, frame.vars.paramName[0])[0]
                     #print("paramVal[0]", frame.vars.paramVal[0])
                     paramValFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
@@ -3519,7 +3537,8 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.title = ["Edit Variable"]
                     dlgFrm.params.parent = [parentFrm]
                     #print("DebugVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                    dlgFrm.params.position = [(.5,-.3, -.5 - btnFrm.vars.position[0][2])]
+                    dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2])]
+                    print("DebugVarCallback pos", dlgFrm.params.position)
 
                     # Var name
                     frame.vars.varName[0] = varDescr[varIx][0]
