@@ -2703,8 +2703,9 @@ class WyeUI(Wye.staticObj):
 
                 case 1:
                     dlgFrm = frame.SP.pop()
-
-
+                    if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
+                        # save back to code
+                        pass
 
                     frame.status = dlgFrm.status
 
@@ -2712,20 +2713,74 @@ class WyeUI(Wye.staticObj):
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         paramDescr = ()
-        varDescr = (("count", Wye.dType.INTEGER, 0),)
+        varDescr = (("count", Wye.dType.INTEGER, 0),
+                    ("tuple", Wye.dType.OBJECT, None),
+                    ("dlgStat", Wye.dType.INTEGER, -1),
+                   )
 
         def start(stack):
-            #print("EditCodeCallback started")
             return Wye.codeFrame(WyeUI.EditSpecialCallback, stack)
 
         def run(frame):
+            data = frame.eventData
+            rowIx = data[1][0]  # offset to parameter in object's paramDescr list
+            btnFrm = data[1][1]
+            parentFrm = data[1][2]
+            verb = data[1][3]
+            tuple = data[1][4]
+
             match (frame.PC):
                 case 0:
                     print("EditSpecialCallback data='" + str(frame.eventData) + "'")
-                    data = frame.eventData
+
+                    # build code dialog
+                    # TODO - build this out to handle all diff code types
+                    dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
+
+                    frame.vars.tuple[0] = tuple
+
+                    if verb.mode == Wye.mode.PARALLEL:
+                        print("Don't know how to edit parallel code yet")
+                        dlgFrm.params.retVal = frame.vars.dlgStat
+                        dlgFrm.params.title = ["Editing parallel code not supported yet"]
+                        dlgFrm.params.parent = [dlgFrm]
+                        dlgFrm.params.position = [(.5, -.3, -.5 + btnFrm.vars.position[0][2]), ]
+
+                    else:
+                        dlgFrm.params.retVal = frame.vars.dlgStat
+                        dlgFrm.params.title = ["Edit Code"]
+                        dlgFrm.params.parent = [parentFrm]
+                        dlgFrm.params.position = [(.5, -.3, -.5 + btnFrm.vars.position[0][2]), ]
+
+                        # Code type
+                        verbType = verb.codeDescr[rowIx][0]
+
+                        # verb type/name
+                        verbNameFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
+                        verbNameFrm.params.frame = [None]  # placeholder
+                        verbNameFrm.params.label = ["Verb:"]
+                        verbNameFrm.params.value = [verbType]
+                        WyeCore.libs.WyeUI.InputText.run(verbNameFrm)
+                        dlgFrm.params.inputs[0].append([verbNameFrm])
+
+                        # Code
+                        codeFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
+                        codeFrm.params.frame = [None]  # placeholder
+                        codeFrm.params.label = ["Verb:"]
+                        codeFrm.params.value = [tuple[1]]
+                        WyeCore.libs.WyeUI.InputText.run(codeFrm)
+                        dlgFrm.params.inputs[0].append([codeFrm])
+
+                    frame.SP.append(dlgFrm)
                     frame.PC += 1
+
                 case 1:
-                    pass
+                    dlgFrm = frame.SP.pop()
+                    if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
+                        # save back to code
+                        pass
+
+                    frame.status = dlgFrm.status
 
 
     class EditParamCallback:
@@ -2856,12 +2911,11 @@ class WyeUI(Wye.staticObj):
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
         paramDescr = ()
-        varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
-                       ("dlgStat", Wye.dType.INTEGER, -1),
-                       ("varName", Wye.dType.STRING, "<name>"),
-                       ("varType", Wye.dType.STRING, "<type>"),
-                       ("varVal", Wye.dType.STRING, "<val>"),
-                     )
+        varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
+                    ("varName", Wye.dType.STRING, "<name>"),
+                    ("varType", Wye.dType.STRING, "<type>"),
+                    ("varVal", Wye.dType.STRING, "<val>"),
+                    )
 
         def start(stack):
             #print("EditVarCallback started")
@@ -3103,7 +3157,7 @@ class WyeUI(Wye.staticObj):
                     objPos = (2, -.5, -objOffset)
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
                     dbgFrm.params.objFrm = [objFrm]
-                    dbgFrm.params.position = [objPos[0], objPos[1], objPos[2]]
+                    dbgFrm.params.position = [[objPos[0], objPos[1], objPos[2]]]
                     dbgFrm.params.parent = [parentFrame]
                     frame.SP.append(dbgFrm)
                     frame.PC += 1

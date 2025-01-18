@@ -88,7 +88,7 @@ class EditLib:
 
             ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
                 (None, "['Fish Angle Dialog']"),                   # title
-                (None, "((-3,2,1.5),)"),                                # position
+                (None, "[(-3,2,1.5),]"),                                # position
                 (None, "[None]"),                                  # parent
                 ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
                     (None, "['XAngle']"),

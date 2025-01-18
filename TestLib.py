@@ -73,148 +73,148 @@ class TestLib:
                     #frame.PC = 0    # do it again
 
 
-    class libButton:
-        cType = Wye.cType.OBJECT
-        #autoStart = True
-        mode = Wye.mode.PARALLEL
-        parTermType = Wye.parTermType.FIRST_FAIL
-        dataType = Wye.dType.NONE
-        paramDescr = ()
-        varDescr = (("libButton", Wye.dType.OBJECT, None),                # 0
-                    ("doitId", Wye.dType.STRING, ""),                   # 1
-                    ("retChar", Wye.dType.STRING, ""),                   # 2
-                    ("retStat", Wye.dType.INTEGER, -1),                   # 2
-                    )
-
-        codeDescr = (
-            (
-                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._3dText(text='Display Library',color=(1,1,1,1), pos=(1.5,10,2), scale=(.2,.2,.2))"),
-                (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
-                #(None, "print('libButton frame0: loaded button & id vars')"),
-                (None, "frame.status = Wye.status.SUCCESS")
-            ),
-            (
-                ("Label", "ClickLoop"),
-                #(None, "print('libButton wait for click')"),
-                ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                #(None, "print('libButton put up lib dialog')"),
-                ("WyeCore.libs.TestLib.libDialog", (None, "frame.vars.retStat"), (None, "[(1.5,10,1.5)]")),
-                #(None, "print('libButton returned from libDialog. retVal', frame.vars.retStat)"),
-                ("GoTo", "ClickLoop"),
-            ),
-        #    (
-        #        ("Label", "TextLoop"),
-        #        #(None, "print('libButton stream2: wait for char')"),
-        #        ("WyeCore.libs.WyeLib.waitChar", (None, "frame.vars.retChar"), (None, "frame.vars.doitId")),
-        #        (None, "print('libButton stream2: received char', frame.vars.retChar[0])"),
-        #        ("GoTo", "TextLoop")
-        #    )
-        )
-
-        def build():
-            #print("Testlib2 build testCompiledPar")
-            return WyeCore.Utils.buildParallelText("TestLib", "libButton", TestLib.libButton.codeDescr)
-
-        def start(stack):
-            return TestLib.TestLib_rt.libButton_start_rt(stack)        # run compiled start code to build parallel code stacks
-
-        def run(frame):
-            frame.runParallel()      # run compiled run code
-
-
-    class BtnCallback:
-        mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.dType.STRING
-        paramDescr = ()
-        varDescr = (("count", Wye.dType.INTEGER, 0),)
-
-        def start(stack):
-            return Wye.codeFrame(TestLib.BtnCallback, stack)
-
-        def run(frame):
-            #print("BtnCallback data=", frame.eventData, " count = ", frame.vars.count[0])
-
-            # really bad coding / wizardry required here
-            # Get the text widget of the
-            inFrm = frame.eventData[1][0]       #
-            var = frame.eventData[1][1]         # caller's counter variable
-            # print("data [1]", frame.eventData[1][1], " var", var)
-            dlgFrm = inFrm.parentFrame
-            # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
-
-            var[0] += 1
-
-            # get label input's frame from parent dialog
-            lblFrame = dlgFrm.params.inputs[0][3][0]
-
-            # supreme hackery - look up the display label in the label's graphic widget list
-            # Update its text string with the current count value
-            inWidg = lblFrame.vars.gWidgetStack[0][0]
-            txt = "Count " + str(var[0])
-            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
-            inWidg.setText(txt)
-
-            if var[0] >= 10:
-                var[0] = 0
-
-    class testDialog:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.INTEGER
-        #autoStart = True
-        paramDescr = ()
-        varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
-                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),
-                    ("txt1ID", Wye.dType.STRING, ""),
-                    ("text1Val", Wye.dType.STRING, ""),
-                    ("txt2IO", Wye.dType.STRING, ""),
-                    ("text2Val", Wye.dType.STRING, "starting text"),
-                    ("BtnID", Wye.dType.OBJECT, None),
-                    ("lblID", Wye.dType.OBJECT, None),
-                    ("clickCt", Wye.dType.INTEGER, 0),
-                    ("retList", Wye.dType.INTEGER, -1),
-        )
-
-        codeDescr = (
-            #(None, "print('testDialog, startup - create param list ')"),
-            ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
-             (None, "frame.vars.Title"),                        # title
-             (None, "((-1,11,1))"),                              # position
-             (None, "[None]"),                                  # parent
-             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
-              (None, "['TextLabel']"),
-              (None, "frame.vars.text1Val")
-              ),
-             ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
-              (None, "['Text2Label']"),
-              (None, "frame.vars.text2Val")
-              ),
-             ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
-              (None, "['Click Me counter']"),
-              (None, "[TestLib.BtnCallback]"),
-              (None, "[[frame.f1,frame.vars.clickCt]]")
-              ),
-             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")
-              ),
-            ),
-            ("WyeCore.libs.WyeLib.setEqual",
-                (None, "frame.vars.retList"),
-                (None, "[10]"),
-             ),
-            #(None, "print('testDialog retList=', frame.vars.retList[0])"),
-            (None, "frame.status = Wye.status.SUCCESS")
-        )
-
-        def build():
-            #print("Build testDialog")
-            return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr)
-
-        def start(stack):
-            #print("testDialog object start")
-            return Wye.codeFrame(TestLib.testDialog, stack)
-
-        def run(frame):
-            #print("Run testDialog")
-            TestLib.TestLib_rt.testDialog_run_rt(frame)
+#    class libButton:
+#        cType = Wye.cType.OBJECT
+#        #autoStart = True
+#        mode = Wye.mode.PARALLEL
+#        parTermType = Wye.parTermType.FIRST_FAIL
+#        dataType = Wye.dType.NONE
+#        paramDescr = ()
+#        varDescr = (("libButton", Wye.dType.OBJECT, None),                # 0
+#                    ("doitId", Wye.dType.STRING, ""),                   # 1
+#                    ("retChar", Wye.dType.STRING, ""),                   # 2
+#                    ("retStat", Wye.dType.INTEGER, -1),                   # 2
+#                    )
+#
+#        codeDescr = (
+#            (
+#                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._3dText(text='Display Library',color=(1,1,1,1), pos=(1.5,10,2), scale=(.2,.2,.2))"),
+#                (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
+#                #(None, "print('libButton frame0: loaded button & id vars')"),
+#                (None, "frame.status = Wye.status.SUCCESS")
+#            ),
+#            (
+#                ("Label", "ClickLoop"),
+#                #(None, "print('libButton wait for click')"),
+#                ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
+#                #(None, "print('libButton put up lib dialog')"),
+#                ("WyeCore.libs.TestLib.libDialog", (None, "frame.vars.retStat"), (None, "[(1.5,10,1.5)]")),
+#                #(None, "print('libButton returned from libDialog. retVal', frame.vars.retStat)"),
+#                ("GoTo", "ClickLoop"),
+#            ),
+#        #    (
+#        #        ("Label", "TextLoop"),
+#        #        #(None, "print('libButton stream2: wait for char')"),
+#        #        ("WyeCore.libs.WyeLib.waitChar", (None, "frame.vars.retChar"), (None, "frame.vars.doitId")),
+#        #        (None, "print('libButton stream2: received char', frame.vars.retChar[0])"),
+#        #        ("GoTo", "TextLoop")
+#        #    )
+#        )
+#
+#        def build():
+#            #print("Testlib2 build testCompiledPar")
+#            return WyeCore.Utils.buildParallelText("TestLib", "libButton", TestLib.libButton.codeDescr)
+#
+#        def start(stack):
+#            return TestLib.TestLib_rt.libButton_start_rt(stack)        # run compiled start code to build parallel code stacks
+#
+#        def run(frame):
+#            frame.runParallel()      # run compiled run code
+#
+#
+#    class BtnCallback:
+#        mode = Wye.mode.SINGLE_CYCLE
+#        dataType = Wye.dType.STRING
+#        paramDescr = ()
+#        varDescr = (("count", Wye.dType.INTEGER, 0),)
+#
+#        def start(stack):
+#            return Wye.codeFrame(TestLib.BtnCallback, stack)
+#
+#        def run(frame):
+#            #print("BtnCallback data=", frame.eventData, " count = ", frame.vars.count[0])
+#
+#            # really bad coding / wizardry required here
+#            # Get the text widget of the
+#            inFrm = frame.eventData[1][0]       #
+#            var = frame.eventData[1][1]         # caller's counter variable
+#            # print("data [1]", frame.eventData[1][1], " var", var)
+#            dlgFrm = inFrm.parentFrame
+#            # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
+#
+#            var[0] += 1
+#
+#            # get label input's frame from parent dialog
+#            lblFrame = dlgFrm.params.inputs[0][3][0]
+#
+#            # supreme hackery - look up the display label in the label's graphic widget list
+#            # Update its text string with the current count value
+#            inWidg = lblFrame.vars.gWidgetStack[0][0]
+#            txt = "Count " + str(var[0])
+#            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
+#            inWidg.setText(txt)
+#
+#            if var[0] >= 10:
+#                var[0] = 0
+#
+#    class testDialog:
+#        mode = Wye.mode.MULTI_CYCLE
+#        dataType = Wye.dType.INTEGER
+#        #autoStart = True
+#        paramDescr = ()
+#        varDescr = (("dlgRetVal", Wye.dType.INTEGER, -1),
+#                    ("Title", Wye.dType.INTEGER, "Test Dialog 3"),
+#                    ("txt1ID", Wye.dType.STRING, ""),
+#                    ("text1Val", Wye.dType.STRING, ""),
+#                    ("txt2IO", Wye.dType.STRING, ""),
+#                    ("text2Val", Wye.dType.STRING, "starting text"),
+#                    ("BtnID", Wye.dType.OBJECT, None),
+#                    ("lblID", Wye.dType.OBJECT, None),
+#                    ("clickCt", Wye.dType.INTEGER, 0),
+#                    ("retList", Wye.dType.INTEGER, -1),
+#        )
+#
+#        codeDescr = (
+#            #(None, "print('testDialog, startup - create param list ')"),
+#            ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
+#             (None, "frame.vars.Title"),                        # title
+#             (None, "[(-1,11,1)]"),                              # position
+#             (None, "[None]"),                                  # parent
+#             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
+#              (None, "['TextLabel']"),
+#              (None, "frame.vars.text1Val")
+#              ),
+#             ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
+#              (None, "['Text2Label']"),
+#              (None, "frame.vars.text2Val")
+#              ),
+#             ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
+#              (None, "['Click Me counter']"),
+#              (None, "[TestLib.BtnCallback]"),
+#              (None, "[[frame.f1,frame.vars.clickCt]]")
+#              ),
+#             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")
+#              ),
+#            ),
+#            ("WyeCore.libs.WyeLib.setEqual",
+#                (None, "frame.vars.retList"),
+#                (None, "[10]"),
+#             ),
+#            #(None, "print('testDialog retList=', frame.vars.retList[0])"),
+#            (None, "frame.status = Wye.status.SUCCESS")
+#        )
+#
+#        def build():
+#            #print("Build testDialog")
+#            return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr)
+#
+#        def start(stack):
+#            #print("testDialog object start")
+#            return Wye.codeFrame(TestLib.testDialog, stack)
+#
+#        def run(frame):
+#            #print("Run testDialog")
+#            TestLib.TestLib_rt.testDialog_run_rt(frame)
 
 
 
@@ -497,7 +497,7 @@ class TestLib:
 #                ("Var", "frame.vars.dialogFrm"),
 #                ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
 #                 ("Const", "['Fish Angle Dialog']"),                   # title
-#                 ("Const", "((-3,8,1),)"),                              # position
+#                 ("Const", "[(-3,8,1),]"),                              # position
 #                 ("Const", "[None]"),                                  # parent
 #                 ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
 #                  ("Const", "['XAngle']"),
@@ -1042,6 +1042,7 @@ else:
                     ("bubblePop", Wye.dType.INTEGER_LIST, []),
                     ("bubbleMin", Wye.dType.FLOAT, 180),
                     ("bubbleRand", Wye.dType.FLOAT, 180),
+                    ("audio3d", Wye.dType.OBJECT, None),
                     )
 
         codeDescr=(
@@ -1050,6 +1051,8 @@ else:
 floorPos = [] #[[0]*20]*20      # 20x20 floor tile heights
 from random import random
 import math
+from direct.showbase import Audio3DManager
+frame.vars.audio3d[0] = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
 floorX = 80
 floorY = 80
 for yy in range(floorX + 1):
@@ -1078,9 +1081,8 @@ from random import random
 
 # load audio manager and buffer up a bunch of pop sound slots so each bubble can play a full pop before the sound gets reused
 from direct.showbase import Audio3DManager
-audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
 for ii in range(100):
-    frame.vars.sounds[0].append(audio3d.loadSfx("WyePop.wav"))
+    frame.vars.sounds[0].append(frame.vars.audio3d[0].loadSfx("WyePop.wav"))
     
 # Weeds and bubbles decorating the floor
 for xx in range(int(floorX * floorY * .08)):
@@ -1121,10 +1123,10 @@ WyeCore.World.registerObjTag(tag, frame)
 # float bubbles up randomly 
 from random import random
 from direct.showbase import Audio3DManager
-audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
+
 # set fall off
-#audio3d.setDistanceFactor(.1)
-audio3d.setDropOffFactor(5)
+#frame.vars.audio3d[0].setDistanceFactor(.1)
+frame.vars.audio3d[0].setDropOffFactor(5)
 
 for ii in range(len(frame.vars.bubbles[0])):
     bubble = frame.vars.bubbles[0][ii]
@@ -1148,7 +1150,7 @@ for ii in range(len(frame.vars.bubbles[0])):
             # pop bubble
             viewerDist = (base.camera.getPos() - bubble.path.getPos()).length()
             if viewerDist < 100:
-                audio3d.attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble.path)
+                frame.vars.audio3d[0].attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble.path)
                 frame.vars.sounds[0][frame.vars.currSnd[0]].play()
                 frame.vars.currSnd[0] = (frame.vars.currSnd[0] + 1) % 100
             
