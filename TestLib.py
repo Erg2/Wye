@@ -35,7 +35,7 @@ class TestLib:
 
                     dlgFrm.params.retVal = frame.params.retStat
                     dlgFrm.params.title = [lib.__name__]
-                    dlgFrm.params.position = [frame.params.coord[0]]
+                    dlgFrm.params.position = [[frame.params.coord[0][0], frame.params.coord[0][1], frame.params.coord[0][2]],]
                     print("libDialog pos", dlgFrm.params.position)
                     dlgFrm.params.parent = [None]
                     frame.vars.dlgFrm[0] = dlgFrm
