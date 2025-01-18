@@ -66,7 +66,7 @@ else:
 
 # import libraries
 for libFile in libLoadList:
-    #print("Load lib '", libFile, "'")
+    print("Load lib '", libFile, "'")
     libName = libFile.split(".")[0]
 
 
@@ -78,7 +78,7 @@ for libFile in libLoadList:
         libModule = SourceFileLoader(libName, path).load_module()
         # print("libModule ", libModule)
         libClass = getattr(libModule, libName)
-        # print("libClass ", libClass)
+        print("add libClass", libClass, " to libList")
         WyeCore.World.libList.append(libClass)
         #print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
     #except:

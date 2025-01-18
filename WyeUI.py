@@ -498,11 +498,17 @@ class WyeUI(Wye.staticObj):
             else:
                 self.ctl = False
 
+            if self.m1Pressed and self.ctl and self.alt:
+                if not WyeCore.World.mainMenu:
+                    WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.MainMenuDialog)
+                else:
+                    print("Already have Wye Main Menu")
+
             # if don't have the edit menu and the user wants it, start it
-            if self.m1Pressed and self.shift and self.ctl:
-                if not WyeCore.World.editor:
-                    WyeCore.World.editor = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditMainDialog)
-                    WyeCore.World.editor.eventData = ("", (0))
+            elif self.m1Pressed and self.shift and self.ctl:
+                if not WyeCore.World.editMenu:
+                    WyeCore.World.editMenu = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditMainDialog)
+                    WyeCore.World.editMenu.eventData = ("", (0))
                 else:
                     print("Already have editor")
 
@@ -1920,6 +1926,50 @@ class WyeUI(Wye.staticObj):
             lst[0] = rowIx
             # print("DropdownCallback data=", frame.eventData, " index = ", frame.eventData[1])
 
+
+    # Wye main menu - user settings n stuff
+    class MainMenuDialog:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = False
+        paramDescr = ()
+        varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
+                    ("dlgStat", Wye.dType.INTEGER, -1),
+                    )
+
+        # global list of libs being edited
+        activeFrames = {}
+
+        def start(stack):
+            return Wye.codeFrame(WyeUI.MainMenuDialog, stack)
+
+        def run(frame):
+            match(frame.PC):
+                case 0:
+                    # create top level edit dialog
+                    dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
+                    dlgFrm.params.retVal = frame.vars.dlgStat
+                    dlgFrm.params.title = ["Wye Main Menu"]
+                    dlgFrm.params.position = [(0,10,0)] # todo - get from viewpoint and mouse
+                    #print("Library list pos", dlgFrm.params.position)
+                    dlgFrm.params.parent = [None]
+                    frame.vars.dlgFrm[0] = dlgFrm
+
+                    # todo - buttons
+
+                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
+
+                    frame.PC += 1  # on return from dialog, run next case
+
+                case 1:
+                    dlgFrm = frame.SP.pop()  # remove dialog frame from stack
+                    frame.status = Wye.status.SUCCESS  # done
+                    print("MainMenuDialog: Done")
+
+                    # stop ourselves
+                    WyeCore.World.stopActiveObject(WyeCore.World.mainMenu)
+                    WyeCore.World.mainMenu = None
+
     # Create dialog showing loaded libraries so user can edit them
     class EditMainDialog:
         mode = Wye.mode.MULTI_CYCLE
@@ -1989,8 +2039,8 @@ class WyeUI(Wye.staticObj):
                     print("EditMainDialog: Done")
 
                     # stop ourselves
-                    WyeCore.World.stopActiveObject(WyeCore.World.editor)
-                    WyeCore.World.editor = None
+                    WyeCore.World.stopActiveObject(WyeCore.World.editMenu)
+                    WyeCore.World.editMenu = None
 
     # put up dialog showing verbs in given library
     class EditLibCallback:
@@ -2126,7 +2176,6 @@ class WyeUI(Wye.staticObj):
         def tagClicked(self, wyeID, pos):
             status = False      # assume we won't use this tag
             #print("ObjEditCtl tagClicked")
-            # if ctrl then edit
             if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
                 frm = WyeCore.World.getRegisteredObj(wyeID)
                 if not frm is None:

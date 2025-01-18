@@ -90,14 +90,14 @@ class WyeCore(Wye.staticObj):
     # used to detect first call for initialization
     worldInitialized = False
 
-    debugListCode = True       # true to list Python code generated from Wye code
+    # DEBUG
+    debugListCode = False       # true to list Python code generated from Wye code
 
     picker = None   # object picker object
     base = None     # panda3d base - set by application
     focusManager = None # dialog input field focus manager
-    editor = None   # user editor of registered Wye objects
 
-    lastIsNothingToRun = False
+    lastIsNothingToRun = False  # Debug: used to print "nothing to do" only on transition to nothing to do
 
     class libs:
         placeholder = ""
@@ -112,7 +112,9 @@ class WyeCore(Wye.staticObj):
         keyHandler = None           # keyboard handler slot
         mouseHandler = None         # mouse handler slot
         debugger = None             # no debugger running
-        editor = None               # no editor running
+        editMenu = None             # no edit menu running
+        objEditor = None  # user editor of registered Wye objects
+        mainMenu = None  # no main menu currently being displayed
         mouseCallbacks = []         # any function wanting mouse events
                                     #   Control seems to jam mouse events,
                                     #   (neither mouse nor control-mouse gets called)
@@ -226,7 +228,7 @@ class WyeCore(Wye.staticObj):
 
                 # build all libraries - compiles any Wye code words in each lib
                 for lib in WyeCore.World.libList:
-                    # print("Build ", lib)
+                    print("Build", lib)
                     lib.build()  # build all Wye code segments in code words
 
                 # parse starting object names and find the objects in the known libraries
@@ -250,13 +252,13 @@ class WyeCore(Wye.staticObj):
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
                 # set up editor
-                WyeCore.editor = WyeCore.libs.WyeUI.ObjEditCtl()
+                WyeCore.World.objEditor = WyeCore.libs.WyeUI.ObjEditCtl()
 
                 # WyeCore.picker.makePickable(_3dText)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
                 # _3dText.setTag("wyeTag", tag)
 
-                # print("worldRunner done World Init")
+                print("worldRunner done World Init")
 
             # run
             else:
@@ -327,7 +329,7 @@ class WyeCore(Wye.staticObj):
                 # if active object completed, remove the stack it is on from run list
                 if len(WyeCore.World.objKillList) > 0:
                     for frame in WyeCore.World.objKillList:
-                        if frame.PS in WyeCore.World.objStacks:
+                        if frame.SP in WyeCore.World.objStacks:
                             WyeCore.World.objStacks.remove(frame.SP)
                     WyeCore.World.objKillList.clear()
 
@@ -673,8 +675,8 @@ class WyeCore(Wye.staticObj):
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                         # if there's a user input focus manager, call it
                         status = False
-                        if WyeCore.editor:
-                            status = WyeCore.editor.tagClicked(wyeID, self.pickedObj.getPos())
+                        if WyeCore.World.objEditor:
+                            status = WyeCore.World.objEditor.tagClicked(wyeID, self.pickedObj.getPos())
                             #if status:
                             #    print("objSelectEvent: Editor used tag", wyeID)
 
@@ -1168,7 +1170,7 @@ class WyeCore(Wye.staticObj):
         # build a runtime library function for this library
         def buildLib(libClass):
             libName = libClass.__name__
-            #print("WyeCore buildLib: libName", libName)
+            print("WyeCore buildLib: libName", libName)
             codeStr = "class "+libName+"_rt:\n"
             parFnStr = ""     # any parallel stream fns to add to end of codeStr
 
@@ -1181,7 +1183,7 @@ class WyeCore(Wye.staticObj):
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(val, "build"):
                             doBuild = True      # there is code to compile
-                            # print("class ", attr, " has build method.  attr is ", dType(attr), " val is ", dType(val))
+                            #print("class ", attr, " has build method.  attr is ", dType(attr), " val is ", dType(val))
                             build = getattr(val, "build")  # get child's build method
                             # call the build function to get the "run" code string
                             cdStr, parStr = build()  # call it to get child's runtime code string(s)
@@ -1205,12 +1207,12 @@ class WyeCore(Wye.staticObj):
 
                 # DEBUG PRINT GENERATED CODE
                 # If compiled Wye code, print it
-                #if WyeCore.debugListCode:
-                #    print("\nlib '"+libClass.__name__+"' code=")
-                #    lnIx = 1
-                #    for ln in codeStr.split('\n'):
-                #        print("%2d "%lnIx, ln)
-                #        lnIx += 1
+                if WyeCore.debugListCode:
+                    print("\nlib '"+libClass.__name__+"' code=")
+                    lnIx = 1
+                    for ln in codeStr.split('\n'):
+                        print("%2d "%lnIx, ln)
+                        lnIx += 1
 
                 # compile the runtime class containing methods for all the verb runtimes
                 code = compile(codeStr, "<string>", "exec")
@@ -1241,6 +1243,9 @@ class WyeCore(Wye.staticObj):
                         retLst.append(verb)
             return retLst
 
+        # Create a new in-memory library
+        def createLib(name):
+            pass
 
     # Very special verb  used to execute parallel code
     # Each parallel stream needs its own stack and its own parent frame with stack pointer.

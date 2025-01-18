@@ -9,6 +9,7 @@ from panda3d.core import LQuaternionf
 
 class TestLib:
     def build():
+        print("build TestLib")
         WyeCore.Utils.buildLib(TestLib)
 
     class showAvailLibs:
