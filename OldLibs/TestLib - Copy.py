@@ -6,10 +6,6 @@ class TestLib:
     def build():
         WyeCore.Utils.buildLib(TestLib)
 
-    class showAvailLibs:
-        cType = Wye.cType.VERB
-        mode = Wye.mode.MULTI_CYCLE
-
     class doitButton:
         cType = Wye.cType.OBJECT
         autoStart = True

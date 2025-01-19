@@ -11,10 +11,6 @@ class EditLib:
     def build():
         WyeCore.Utils.buildLib(EditLib)
 
-    class ShowAvailLibs:
-        cType = Wye.cType.VERB
-        mode = Wye.mode.MULTI_CYCLE
-
 
     class UpdateCallback:
         mode = Wye.mode.SINGLE_CYCLE

@@ -12,10 +12,6 @@ class TestLib:
         print("build TestLib")
         WyeCore.Utils.buildLib(TestLib)
 
-    class showAvailLibs:
-        cType = Wye.cType.VERB
-        mode = Wye.mode.MULTI_CYCLE
-
     class libDialog:
         mode = Wye.mode.MULTI_CYCLE
         paramDescr = (("retStat", Wye.dType.INTEGER, Wye.access.REFERENCE),
@@ -971,6 +967,7 @@ else:
 
                 '''),
                 # Step forward
+                ("Var=", "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
                 ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
                 #("Code", "print('leaderfish new pos', frame.vars.fish[0].getPos())"),
                 # save new position
@@ -1042,6 +1039,7 @@ else:
                     ("bubblePop", Wye.dType.INTEGER_LIST, []),
                     ("bubbleMin", Wye.dType.FLOAT, 180),
                     ("bubbleRand", Wye.dType.FLOAT, 180),
+                    ("bubbleFloat", Wye.dType.FLOAT_LIST, [.001, .001, .1]),
                     ("audio3d", Wye.dType.OBJECT, None),
                     )
 
@@ -1144,7 +1142,7 @@ for ii in range(len(frame.vars.bubbles[0])):
 
     else:
         # float bubble up
-        bubble.path.setPos(bubble.path, .001, .001, .1)
+        bubble.path.setPos(bubble.path, frame.vars.bubbleFloat[0][0], frame.vars.bubbleFloat[0][1], frame.vars.bubbleFloat[0][2])
         # trigger pop now so it sounds when bubble pops
         if frame.vars.bubblePop[0][ii]-9 > frame.vars.bubbleCt[0][ii] > frame.vars.bubblePop[0][ii]-10:
             # pop bubble

@@ -228,7 +228,7 @@ class WyeCore(Wye.staticObj):
 
                 # build all libraries - compiles any Wye code words in each lib
                 for lib in WyeCore.World.libList:
-                    print("Build", lib)
+                    #print("Build", lib)
                     lib.build()  # build all Wye code segments in code words
 
                 # parse starting object names and find the objects in the known libraries
@@ -241,6 +241,9 @@ class WyeCore(Wye.staticObj):
                         WyeCore.World.startActiveObject(obj)
                     else:
                         print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
+
+                print("createLibrary test")
+                WyeCore.Utils.createLib("TemplateTestLib")
 
                 # set up for text input events
                 WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
@@ -1170,7 +1173,7 @@ class WyeCore(Wye.staticObj):
         # build a runtime library function for this library
         def buildLib(libClass):
             libName = libClass.__name__
-            print("WyeCore buildLib: libName", libName)
+            #print("WyeCore buildLib: libName", libName)
             codeStr = "class "+libName+"_rt:\n"
             parFnStr = ""     # any parallel stream fns to add to end of codeStr
 
@@ -1218,7 +1221,13 @@ class WyeCore(Wye.staticObj):
                 code = compile(codeStr, "<string>", "exec")
                 # exec the lib method - contains one line to setattr the lib_rt class to the library
                 # so all the verb functions are available at runtime
-                exec(code, {libName:libClass, "Wye":Wye, "WyeCore":WyeCore, "WyeUI":WyeCore.libs.WyeUI})
+                libDict = {
+                    libName:libClass,
+                    "Wye":Wye,
+                    "WyeCore":WyeCore,
+                    "WyeUI":WyeCore.libs.WyeUI
+                }
+                exec(code, libDict)
 
         # do we already have a UI input focus manager?
         def haveFocusManager():
@@ -1245,7 +1254,28 @@ class WyeCore(Wye.staticObj):
 
         # Create a new in-memory library
         def createLib(name):
-            pass
+            libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
+            libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
+            libTpl += "    def test():\n        print('Hi from "+name+"')\n"
+            libTpl += "WyeCore.World.libList.append("+name+")\n"
+            libTpl += "WyeCore.World.libDict["+name+"] = "+name + "\n"
+            libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
+
+            print("Compile this:\n" + libTpl)
+            code = compile(libTpl, "<string>", "exec")
+            print("createLib compiled", name, " contains:\n", dir(code))
+
+            libDict = {
+                name: name,
+                "Wye": Wye,
+                "WyeCore": WyeCore,
+                "WyeUI": WyeCore.libs.WyeUI
+            }
+            print("createLib exec library", name)
+            exec(code, libDict)
+            lib = getattr(WyeCore.libs, name)
+            print("Run test from template lib")
+            lib.test()
 
     # Very special verb  used to execute parallel code
     # Each parallel stream needs its own stack and its own parent frame with stack pointer.

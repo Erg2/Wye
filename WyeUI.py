@@ -2275,7 +2275,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]  # return value
-                    lblFrm.params.label = ["Params:"]
+                    lblFrm.params.label = ["Parameters:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
@@ -2290,7 +2290,7 @@ class WyeUI(Wye.staticObj):
                             dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
                             btnFrm.params.parent = [None]  # return value
-                            btnFrm.params.label = ["  "+param[0] + " type:"+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])]
+                            btnFrm.params.label = ["  '"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])]
                             btnFrm.params.callback = [WyeCore.libs.WyeUI.EditParamCallback]  # button callback
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
                             WyeCore.libs.WyeUI.InputButton.run(btnFrm)
@@ -2310,7 +2310,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]  # return value
-                    lblFrm.params.label = ["Vars:"]
+                    lblFrm.params.label = ["Variables:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
@@ -2324,7 +2324,7 @@ class WyeUI(Wye.staticObj):
                             dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
                             btnFrm.params.parent = [None]  # return value
-                            btnFrm.params.label = ["  "+var[0] + " type:"+Wye.dType.tostring(var[1]) + " = "+str(var[2])]
+                            btnFrm.params.label = ["  '"+var[0] + "' "+Wye.dType.tostring(var[1]) + " = "+str(var[2])]
                             btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVarCallback]  # button callback
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
                             WyeCore.libs.WyeUI.InputButton.run(btnFrm)
@@ -2408,7 +2408,7 @@ class WyeUI(Wye.staticObj):
                 vStr = str(tuple[0])
                 if vStr.startswith("WyeCore.libs."):
                     vStr = vStr[13:]
-                btnFrm.params.label = [indent + "Verb:" + vStr]
+                btnFrm.params.label = [indent + "Verb: " + vStr]
                 btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerbCallback]  # button callback
 
                 # display verb's params (if any)
@@ -2419,36 +2419,36 @@ class WyeUI(Wye.staticObj):
             else:
                 match tuple[0]:
                     case "Code" | None:  # raw Python
-                        btnFrm.params.label = [indent + "Code:" + tuple[1]]
+                        btnFrm.params.label = [indent + "Code: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
                     case "CodeBlock":  # multi-line raw Python
-                        btnFrm.params.label = [indent + "CodeBLock:" + tuple[1]]
+                        btnFrm.params.label = [indent + "CodeBLock: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
                     case "Expr":
-                        btnFrm.params.label = [indent + "Expression:" + tuple[1]]
+                        btnFrm.params.label = [indent + "Expression: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
                     case "Const":
-                        btnFrm.params.label = [indent + "Constant:" + tuple[1]]
+                        btnFrm.params.label = [indent + "Constant: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
                     case "Var":
-                        btnFrm.params.label = [indent + "Variable:" + tuple[1]]
+                        btnFrm.params.label = [indent + "Variable: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
                     case "Var=":
-                        btnFrm.params.label = [indent + "Variable:" + tuple[1]]
+                        btnFrm.params.label = [indent + "Variable=: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditCodeCallback]  # button callback
 
                     case "GoTo":
-                        btnFrm.params.label = [indent + " GoTo:" + tuple[1]]
+                        btnFrm.params.label = [indent + " GoTo: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
                     case "Label":
-                        btnFrm.params.label = [indent + "Label:" + tuple[1]]
+                        btnFrm.params.label = [indent + "Label: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
                     case "IfGoTo":
-                        btnFrm.params.label = [indent + "If GoTo:" + tuple[1]]
+                        btnFrm.params.label = [indent + "If GoTo: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditSpecialCallback]  # button callback
 
             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb, tuple)]  # button row, dialog frame
@@ -2508,7 +2508,8 @@ class WyeUI(Wye.staticObj):
                     rowIx = [0]
 
                     libName, verbName = btnFrm.params.label[0].split(".")
-                    libName = libName.split(":")[1]
+                    libName = libName.split(":")[1].strip()
+                    verbName = verbName.strip()
                     frame.vars.libName[0] = libName
 
                     #print("lib", libName, " verb", verbName, " from ", btnFrm.params.label[0])
@@ -2823,7 +2824,7 @@ class WyeUI(Wye.staticObj):
                     frame.vars.paramName[0] = verb.paramDescr[paramIx][0]
                     paramNameFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                     paramNameFrm.params.frame = [None]        # placeholder
-                    paramNameFrm.params.label = ["Name:"]
+                    paramNameFrm.params.label = ["Name: "]
                     paramNameFrm.params.value = frame.vars.paramName
                     WyeCore.libs.WyeUI.InputText.run(paramNameFrm)
                     dlgFrm.params.inputs[0].append([paramNameFrm])
@@ -2832,7 +2833,7 @@ class WyeUI(Wye.staticObj):
                     frame.vars.paramType[0] = verb.paramDescr[paramIx][1]
                     paramTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                     paramTypeFrm.params.frame = [None]
-                    paramTypeFrm.params.label = ["Type:"]
+                    paramTypeFrm.params.label = ["Type: "]
                     paramTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.dTypeList]]
                     paramTypeFrm.params.selectionIx = [Wye.dType.dTypeList.index(frame.vars.paramType[0])]
                     paramTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditParamTypeCallback]
@@ -2844,7 +2845,7 @@ class WyeUI(Wye.staticObj):
                     frame.vars.paramAccess[0] = Wye.access.tostring(verb.paramDescr[paramIx][2])
                     paramAccessFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                     paramAccessFrm.params.frame = [None]
-                    paramAccessFrm.params.label = ["Access:"]
+                    paramAccessFrm.params.label = ["Access: "]
                     paramAccessFrm.params.value = frame.vars.paramAccess
                     WyeCore.libs.WyeUI.InputText.run(paramAccessFrm)
                     dlgFrm.params.inputs[0].append([paramAccessFrm])
@@ -2875,7 +2876,7 @@ class WyeUI(Wye.staticObj):
                         descr = ((label, wType, accessCode), )
                         verb.paramDescr = preDescr + descr + postDescr
 
-                        rowTxt = "  " + label + " type:" + Wye.dType.tostring(wType) + " call by:" + accessStr
+                        rowTxt = "  '" + label + "' " + Wye.dType.tostring(wType) + " call by:" + accessStr
                         #print("new row", rowTxt)
                         btnFrm.verb.setLabel(btnFrm, rowTxt)
 
@@ -2948,7 +2949,7 @@ class WyeUI(Wye.staticObj):
                     frame.vars.varName[0] = verb.varDescr[varIx][0]
                     varNameFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                     varNameFrm.params.frame = [None]        # placeholder
-                    varNameFrm.params.label = ["Name:"]
+                    varNameFrm.params.label = ["Name: "]
                     varNameFrm.params.value = frame.vars.varName
                     WyeCore.libs.WyeUI.InputText.run(varNameFrm)
                     dlgFrm.params.inputs[0].append([varNameFrm])
@@ -2957,7 +2958,7 @@ class WyeUI(Wye.staticObj):
                     frame.vars.varType[0] = verb.varDescr[varIx][1]
                     varTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                     varTypeFrm.params.frame = [None]
-                    varTypeFrm.params.label = ["Type:"]
+                    varTypeFrm.params.label = ["Type: "]
                     varTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.dTypeList]]
                     varTypeFrm.params.selectionIx = [Wye.dType.dTypeList.index(frame.vars.varType[0])]
                     varTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVarTypeCallback]
@@ -2969,7 +2970,7 @@ class WyeUI(Wye.staticObj):
                     frame.vars.varVal[0] = str(verb.varDescr[varIx][2])
                     varValFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                     varValFrm.params.frame = [None]
-                    varValFrm.params.label = ["Value:"]
+                    varValFrm.params.label = ["Value: "]
                     varValFrm.params.value = frame.vars.varVal
                     WyeCore.libs.WyeUI.InputText.run(varValFrm)
                     dlgFrm.params.inputs[0].append([varValFrm])
@@ -2995,7 +2996,7 @@ class WyeUI(Wye.staticObj):
                         descr = ((label, wType, initVal), )
                         verb.varDescr = preDescr + descr + postDescr
 
-                        rowTxt = "  " + label + " type:" + Wye.dType.tostring(wType) + " = " + str(initVal)
+                        rowTxt = "  '" + label + "' " + Wye.dType.tostring(wType) + " = " + str(initVal)
                         #print("new row", rowTxt)
                         btnFrm.verb.setLabel(btnFrm, rowTxt)
 
@@ -3236,7 +3237,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
-                    lblFrm.params.label = ["Params:"]
+                    lblFrm.params.label = ["Parameters:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
@@ -3252,7 +3253,7 @@ class WyeUI(Wye.staticObj):
                             btnFrm.params.frame = [None]  # return value
                             btnFrm.params.parent = [None]
                             paramVal = getattr(objFrm.params, param[0])
-                            btnFrm.params.label = ["  " + param[0] + " type:" + Wye.dType.tostring(
+                            btnFrm.params.label = ["  '" + param[0] + "' " + Wye.dType.tostring(
                                 param[1]) + " = " + str(paramVal)]
                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugParamCallback]  # button callback
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm)]  # button row, dialog frame
@@ -3273,7 +3274,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
-                    lblFrm.params.label = ["Vars:"]
+                    lblFrm.params.label = ["Variables:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
@@ -3293,7 +3294,7 @@ class WyeUI(Wye.staticObj):
                             btnFrm.params.parent = [None]
                             varVal = getattr(objFrm.vars, var[0])
                             btnFrm.params.label = [
-                                "  " + var[0] + " type:" + Wye.dType.tostring(var[1]) + " = " + str(varVal[0])]
+                                "  '" + var[0] + "' " + Wye.dType.tostring(var[1]) + " = " + str(varVal[0])]
                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugVarCallback]  # button callback
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm)]  # button row, dialog frame
                             WyeCore.libs.WyeUI.InputButton.run(btnFrm)
@@ -3363,47 +3364,47 @@ class WyeUI(Wye.staticObj):
 
                                 # fill in text and callback based on code row type
                                 if tuple[0] is None:
-                                    btnFrm.params.label = ["  Code:" + tuple[1]]
+                                    btnFrm.params.label = ["  Code: " + tuple[1]]
                                     btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
                                 elif "." in tuple[0]:
                                     vStr = str(tuple[0])
                                     if vStr.startswith("WyeCore.libs."):
                                         vStr = vStr[13:]
-                                    btnFrm.params.label = ["  Verb:" + vStr + "," + str(tuple[1])]
+                                    btnFrm.params.label = ["  Verb: " + vStr + ", " + str(tuple[1])]
                                     btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugVerbCallback]  # button callback
                                 else:
                                     match tuple[0]:
                                         case "Code":         # raw Python
-                                            btnFrm.params.label = ["  Code:" + tuple[1]]
+                                            btnFrm.params.label = ["  Code: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
                                         case "CodeBlock":    # multi-line raw Python
-                                            btnFrm.params.label = ["  CodeBLock:" + tuple[1]]
+                                            btnFrm.params.label = ["  CodeBLock: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
                                         case "Expr":
-                                            btnFrm.params.label = ["  Expression:" + tuple[1]]
+                                            btnFrm.params.label = ["  Expression: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
                                         case "Const":
-                                            btnFrm.params.label = ["  Constant:" + tuple[1]]
+                                            btnFrm.params.label = ["  Constant: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
 
                                         case "Var":
-                                            btnFrm.params.label = ["  Variable:" + tuple[1]]
+                                            btnFrm.params.label = ["  Variable: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
 
                                         case "Var=":
-                                            btnFrm.params.label = ["  Variable:" + tuple[1]]
+                                            btnFrm.params.label = ["  Variable=: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugCodeCallback]  # button callback
 
                                         case "GoTo":
-                                            btnFrm.params.label = ["  GoTo:" + tuple[1]]
+                                            btnFrm.params.label = ["  GoTo: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugSpecialCallback]  # button callback
 
                                         case "Label":
-                                            btnFrm.params.label = ["  Label:" + tuple[1]]
+                                            btnFrm.params.label = ["  Label: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugSpecialCallback]  # button callback
 
                                         case "IfGoTo":
-                                            btnFrm.params.label = ["  If GoTo:" + tuple[1]]
+                                            btnFrm.params.label = ["  If GoTo: " + tuple[1]]
                                             btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugSpecialCallback]  # button callback
 
                                 btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, tuple)]  # button row, dialog frame
@@ -3446,7 +3447,7 @@ class WyeUI(Wye.staticObj):
                 # update the given input
                 var = varDescr[attrIx]
                 varVal = getattr(objFrm.vars, var[0])
-                btnFrm.verb.setLabel(btnFrm, "  " + var[0] + " type:" + Wye.dType.tostring(var[1]) + " = " + str(varVal[0]))
+                btnFrm.verb.setLabel(btnFrm, "  '" + var[0] + "' " + Wye.dType.tostring(var[1]) + " = " + str(varVal[0]))
 
                 attrIx += 1
 
@@ -3517,7 +3518,7 @@ class WyeUI(Wye.staticObj):
                     #print("paramVal[0]", frame.vars.paramVal[0])
                     paramValFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                     paramValFrm.params.frame = [None]
-                    paramValFrm.params.label = ["Value:"]
+                    paramValFrm.params.label = ["Value: "]
                     paramValFrm.params.value = [str(frame.vars.paramVal[0])]
                     WyeCore.libs.WyeUI.InputText.run(paramValFrm)
                     dlgFrm.params.inputs[0].append([paramValFrm])
@@ -3538,7 +3539,7 @@ class WyeUI(Wye.staticObj):
                         if val != frame.vars.paramVal[0]:
                             getattr(objFrm.params, frame.vars.paramName[0])[0] = val
 
-                        rowStr = "  " + frame.vars.paramName[0] + " type:" + Wye.dType.tostring(frame.vars.paramType[0]) + " = " + str(val)
+                        rowStr = "  '" + frame.vars.paramName[0] + "' " + Wye.dType.tostring(frame.vars.paramType[0]) + " = " + str(val)
                         btnFrm.verb.setLabel(btnFrm, str(rowStr))
 
                     # either way, we're done
@@ -3610,7 +3611,7 @@ class WyeUI(Wye.staticObj):
                     #print("varVal[0]", frame.vars.varVal[0])
                     varValFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                     varValFrm.params.frame = [None]
-                    varValFrm.params.label = ["Value:"]
+                    varValFrm.params.label = ["Value: "]
                     varValFrm.params.value = [str(frame.vars.varVal[0])]
                     WyeCore.libs.WyeUI.InputText.run(varValFrm)
                     dlgFrm.params.inputs[0].append([varValFrm])
@@ -3632,7 +3633,7 @@ class WyeUI(Wye.staticObj):
                         if val != frame.vars.varVal[0]:
                             getattr(objFrm.vars, frame.vars.varName[0])[0] = val
 
-                        rowStr = "  " + frame.vars.varName[0] + " type:" + Wye.dType.tostring(frame.vars.varType[0]) + " = " + str(val)
+                        rowStr = "  '" + frame.vars.varName[0] + "' " + Wye.dType.tostring(frame.vars.varType[0]) + " = " + str(val)
                         btnFrm.verb.setLabel(btnFrm, str(rowStr))
 
                     # either way, we're done
