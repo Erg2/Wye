@@ -49,7 +49,7 @@ class TestLib:
 
                                 txt = lib.__name__ + "." + verb.__name__
                                 btnFrm.params.frame = [None]
-                                btnFrm.params.parent = [None]  # return value
+                                btnFrm.params.parent = [None]
                                 btnFrm.params.label = [txt]  # button label is verb name
                                 btnFrm.params.callback = [WyeCore.libs.WyeUI.DropdownCallback]  # button callback
                                 btnFrm.params.optData = [(attrIx, frame)]  # button data - offset to button

@@ -100,7 +100,7 @@ class WyeCore(Wye.staticObj):
     lastIsNothingToRun = False  # Debug: used to print "nothing to do" only on transition to nothing to do
 
     class libs:
-        placeholder = ""
+        pass
 
     class World(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
@@ -241,9 +241,6 @@ class WyeCore(Wye.staticObj):
                         WyeCore.World.startActiveObject(obj)
                     else:
                         print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
-
-                print("createLibrary test")
-                WyeCore.Utils.createLib("TemplateTestLib")
 
                 # set up for text input events
                 WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
@@ -1256,14 +1253,13 @@ class WyeCore(Wye.staticObj):
         def createLib(name):
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
-            libTpl += "    def test():\n        print('Hi from "+name+"')\n"
+            libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
             libTpl += "WyeCore.World.libList.append("+name+")\n"
             libTpl += "WyeCore.World.libDict["+name+"] = "+name + "\n"
             libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
 
-            print("Compile this:\n" + libTpl)
+            #print("Compile this:\n" + libTpl)
             code = compile(libTpl, "<string>", "exec")
-            print("createLib compiled", name, " contains:\n", dir(code))
 
             libDict = {
                 name: name,

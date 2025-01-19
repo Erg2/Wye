@@ -215,7 +215,7 @@ class WyeUI(Wye.staticObj):
                 self.parent = render
             else:
                 self.parent = parent
-            self.tag = tag          # if caller supplied, ele will auto-gen unique tag
+            self.tag = tag          # if caller supplied, else will auto-gen unique tag
             self.marginL = .1
             self.marginR = .2
             self.marginB = .1
@@ -1945,6 +1945,16 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.parent = [None]
 
                     # todo - buttons
+                    # make the dialog row
+                    btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([btnFrm])
+                    btnFrm.params.frame = [None]
+                    btnFrm.params.parent = [None]
+                    btnFrm.params.label = ["Test Button"]
+                    btnFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestButtonCallback]  # button callback
+                    #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
+                    WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
 
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
 
@@ -1958,6 +1968,29 @@ class WyeUI(Wye.staticObj):
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.mainMenu)
                     WyeCore.World.mainMenu = None
+
+
+        class TestButtonCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("TestButtonCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.TestButtonCallback, stack)
+
+
+            def run(frame):
+                print("createLibrary test")
+                WyeCore.Utils.createLib("TemplateTestLib")
+                print("Run test from TestButtonCallback")
+                WyeCore.libs.TemplateTestLib.test()
+                print("Known libs")
+                for libName in dir(WyeCore.libs):
+                    if not libName.startswith("__"):
+                        print("  ", libName)
+
 
     # Create dialog showing loaded libraries so user can edit them
     class EditMainDialog:
@@ -2089,7 +2122,7 @@ class WyeUI(Wye.staticObj):
                                 else:
                                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                                     lblFrm.params.frame = [None]
-                                    lblFrm.params.parent = [None]  # return value
+                                    lblFrm.params.parent = [None]
                                     txt = "  " + lib.__name__ + "." + verb.__name__
                                     lblFrm.params.label = [txt]
                                     lblFrm.params.color = [Wye.color.DISABLED_COLOR]
@@ -2274,7 +2307,7 @@ class WyeUI(Wye.staticObj):
                     # params
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
-                    lblFrm.params.parent = [None]  # return value
+                    lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Parameters:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
@@ -2289,7 +2322,7 @@ class WyeUI(Wye.staticObj):
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                             dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
-                            btnFrm.params.parent = [None]  # return value
+                            btnFrm.params.parent = [None]
                             btnFrm.params.label = ["  '"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])]
                             btnFrm.params.callback = [WyeCore.libs.WyeUI.EditParamCallback]  # button callback
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
@@ -2309,7 +2342,7 @@ class WyeUI(Wye.staticObj):
                     # vars
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
-                    lblFrm.params.parent = [None]  # return value
+                    lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Variables:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
@@ -2323,7 +2356,7 @@ class WyeUI(Wye.staticObj):
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                             dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
-                            btnFrm.params.parent = [None]  # return value
+                            btnFrm.params.parent = [None]
                             btnFrm.params.label = ["  '"+var[0] + "' "+Wye.dType.tostring(var[1]) + " = "+str(var[2])]
                             btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVarCallback]  # button callback
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
@@ -2345,7 +2378,7 @@ class WyeUI(Wye.staticObj):
                     # code
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
-                    lblFrm.params.parent = [None]  # return value
+                    lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Wye Code:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
@@ -2401,7 +2434,7 @@ class WyeUI(Wye.staticObj):
             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
             dlgFrm.params.inputs[0].append([btnFrm])
             btnFrm.params.frame = [None]
-            btnFrm.params.parent = [None]  # return value
+            btnFrm.params.parent = [None]
 
             # fill in text and callback based on code row type
             if not tuple[0] is None and "." in tuple[0]:
@@ -3335,7 +3368,7 @@ class WyeUI(Wye.staticObj):
                     # build dialog frame params list of input frames
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
-                    lblFrm.params.parent = [None]  # return value
+                    lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Wye Code:"]
                     lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
