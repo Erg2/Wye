@@ -1098,11 +1098,11 @@ for xx in range(int(floorX * floorY * .08)):
         color = (.25+random()*.75,.25+random()*.75,.25+random()*.75, .5)
         weed = WyeCore.libs.WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
         frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
-        weed.path.setColor(color)
+        weed._nodePath.setColor(color)
         frame.vars.weeds[0].append(weed)
-        weed.path.setTag("wyeTag", tag)
-        WyeCore.picker.makePickable(weed.path)
-        #print("Set tag", tag, " on weed", weed.path)
+        weed._nodePath.setTag("wyeTag", tag)
+        WyeCore.picker.makePickable(weed._nodePath)
+        #print("Set tag", tag, " on weed", weed._nodePath)
         
         # Create bubble, init color change amt and countdown to pop
         bubble = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
@@ -1133,12 +1133,12 @@ for ii in range(len(frame.vars.bubbles[0])):
     if frame.vars.bubbleCt[0][ii] >= frame.vars.bubblePop[0][ii]:
         # reset bubble
         weed = frame.vars.weeds[0][ii]
-        pos = weed.path.getPos()
+        pos = weed._nodePath.getPos()
         pos[2] += 2
         bubble.path.setPos(pos)
         frame.vars.bubbleCt[0][ii] = 0
         frame.vars.bubblePop[0][ii] = frame.vars.bubbleMin[0] + frame.vars.bubbleRand[0] * random()
-        #weed.path.setColor(bubble.path.getColor())
+        #weed._nodePath.setColor(bubble.path.getColor())
 
     else:
         # float bubble up
@@ -1153,7 +1153,7 @@ for ii in range(len(frame.vars.bubbles[0])):
                 frame.vars.currSnd[0] = (frame.vars.currSnd[0] + 1) % 100
             
         # do weed color
-        color = weed.path.getColor()
+        color = weed._nodePath.getColor()
         # cycle weed colors before resetting bubble
         if frame.vars.bubbleCt[0][ii] > frame.vars.bubblePop[0][ii]-30:
             for cc in range(3):
@@ -1164,7 +1164,7 @@ for ii in range(len(frame.vars.bubbles[0])):
                 if color[cc] < .25:
                     color[cc] = .25
                     frame.vars.weedColorInc[0][ii][cc] *= -1
-            weed.path.setColor(color)
+            weed._nodePath.setColor(color)
         # bubble reset, pick up weed color
         if frame.vars.bubbleCt[0][ii] < 2:
             bubble.path.setColor(color)

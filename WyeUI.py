@@ -39,6 +39,7 @@ class WyeUI(Wye.staticObj):
     class _ball:
         def __init__(self, radius, pos=[0,0,0]):
             # see https: // github.com / Epihaius / procedural_panda3d_model_primitives
+            self.radius = radius
             ballBuilder = SphereMaker(radius=radius)
             self.node = ballBuilder.generate()
             if self.node:
@@ -47,13 +48,49 @@ class WyeUI(Wye.staticObj):
             else:
                 print("WyeUI _ball: SphereMaker didn't")
 
+        def removeNode(self):
+            self._nodePath.removeNode()
+
+        def setColor(self, val):
+            self._nodePath.setColor(val)
+
+        def setScale(self, val):
+            self._nodePath.setScale(val)
+
+        def setPos(self, val):
+            self._nodePath.setPos(val)
+
+        def setTag(self, tag):
+            self.node.setTag("wyeTag", tag)
+
+        def getColor(self):
+            return self._nodePath.getColor()
+
+        def getNodePath(self):
+            return self._nodePath
+
+        def getPos(self):
+            return self._nodePath.getPos()
+
+        def getScale(self):
+            return self._nodePath.getScale()
+
+        def getTag(self):
+            return self.node.getTag()
+
+        def getHeight(self):
+            return self.radius
+
+        def getWidth(self):
+            return self.radius
+
 
     # create a scaled rectangular prism
     # (primarily used for InputText cursor)
     # NOTE: this class gets instantiated
     class _box:
 
-        def __init__(self, size, pos=[0,0,0]):
+        def __init__(self, size, pos=[0,0,0], parent=None):
             # Instantiate a vertex buffer
             # https://stackoverflow.com/questions/75774821/how-to-create-three-dimensional-geometric-shapes-in-panda3d-in-python
             # https://docs.panda3d.org/1.10/python/programming/internal-structures/procedural-generation/creating-vertex-data
@@ -62,6 +99,7 @@ class WyeUI(Wye.staticObj):
             vdata = GeomVertexData("name", format, Geom.UHStatic)
             vertex = GeomVertexWriter(vdata, "vertex")
             color = GeomVertexWriter(vdata, "color")
+            self.size = size
 
             # Add vertices and colors
             vertex.addData3f(-1*size[0], -1*size[1], -1*size[2])
@@ -106,14 +144,58 @@ class WyeUI(Wye.staticObj):
 
             geom = Geom(vdata)
             geom.addPrimitive(prim)
-            node = GeomNode("node")
-            node.addGeom(geom)
+            self.node = GeomNode("node")
+            self.node.addGeom(geom)
 
-            self.node = node
+            self._nodePath = render.attachNewNode(self.node)
+            if parent:
+                self._nodePath.reparentTo(parent)
+            self._nodePath.setPos(pos[0], pos[1], pos[2])
 
-            self.path = render.attachNewNode(self.node)
-            self.path.setPos(pos[0], pos[1], pos[2])
 
+        def removeNode(self):
+            self._nodePath.removeNode()
+
+        def setColor(self, val):
+            self._nodePath.setColor(val)
+
+        def setScale(self, val):
+            self._nodePath.setScale(val)
+
+        def setPos(self, val):
+            self._nodePath.setPos(val)
+
+        def setTag(self, tag):
+            return self.node.setTag("wyeTag", tag)
+
+        def show(self):
+            self._nodePath.show()
+        def hide(self):
+            self._nodePath.hide()
+
+        def getColor(self):
+            return self._nodePath.getColor()
+
+        def getNodePath(self):
+            return self._nodePath
+
+        def getPos(self):
+            return self._nodePath.getPos()
+
+        def getScale(self):
+            return self._nodePath.getScale()
+
+        def getTag(self):
+            return self.text.name
+
+        def getHeight(self):
+            return self.size[2]
+
+        def getTag(self):
+            return self.node.getTag()
+
+        def getWidth(self):
+            return self.size[0]
 
     # create a scaled surface from a point grid
     # NOTE: this class gets instantiated
@@ -198,6 +280,9 @@ class WyeUI(Wye.staticObj):
             self.path = render.attachNewNode(self.node)
             self.path.setPos(pos[0], pos[1], pos[2])
 
+
+        def removeNode(self):
+            self._nodePath.removeNode()
 
     # Build run_rt methods on each class in library
     def build():
@@ -991,7 +1076,7 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
-                      ("value", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("value", Wye.dType.BOOL, Wye.access.REFERENCE),  # user supplied var to return value in
                       ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
@@ -1076,7 +1161,6 @@ class WyeUI(Wye.staticObj):
                     ("callback", Wye.dType.OBJECT, None),                     # 2 verb to call
                     ("clickCount", Wye.dType.INTEGER, 0),                 # 3 button depressed count
                     ("verbStack", Wye.dType.OBJECT_LIST, None),           # 4 verb callback stack
-                    ("callback", Wye.dType.OBJECT, None),  # verb to call
                     ("optData", Wye.dType.ANY, None),
                     )
 
@@ -1124,6 +1208,141 @@ class WyeUI(Wye.staticObj):
 
         def setColor(frame, color):
             frame.vars.gWidget[0].setColor(color)
+
+    # checkbox
+    class InputCheckbox:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
+                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
+                      ("value", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
+                      ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
+                      )
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
+                    ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
+                    ("parent", Wye.dType.OBJECT, None),
+                    ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
+                    ("tags", Wye.dType.STRING_LIST, None),  # assigned tags
+                    ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
+                    ("currVal", Wye.dType.STRING, ""),                    # current string value
+                    ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
+                    ("gWidget", Wye.dType.OBJECT, None),                  # stashed graphic widget
+                    ("callback", Wye.dType.OBJECT, None),  # verb to call
+                    ("optData", Wye.dType.ANY, None),
+                    ("userCallback", Wye.dType.OBJECT, None),  # user verb to call when done
+                    ("userOptData", Wye.dType.ANY, None),
+                    )
+        def start(stack):
+            frame = Wye.codeFrame(WyeUI.InputCheckbox, stack)
+            frame.vars.gWidgetStack[0] = []
+            return frame
+
+        def run(frame):
+            #print("InputText label", frame.params.label, " value=", frame.params.value)
+            frame.vars.currVal[0] = frame.params.value[0]
+            frame.params.frame[0] = frame  # self referential!
+            frame.vars.callback[0] = WyeUI.InputCheckbox.InputCheckboxCallback       # save verb to call
+            frame.vars.optData[0] = (frame,)       # don't know position yet
+            frame.vars.userCallback[0] = frame.params.callback[0]
+            frame.vars.userOptData = frame.params.optData
+
+            # return frame and success, caller dialog will use frame as placeholder for input
+            frame.status = Wye.status.SUCCESS
+
+        def display(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
+
+            dlgHeader = dlgFrm.vars.dragObj[0]
+
+
+            gTags = []      # clickable graphic object tags assoc with this input
+            lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath())
+
+            frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
+
+            # add tag, input index to dictionary
+            gTags.append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
+            # offset 3d input field right past end of 3d label
+            lblGFrm = lbl.text.getFrameActual()
+            width = (lblGFrm[1] - lblGFrm[0]) + .5
+
+            check = WyeCore.libs.WyeUI._box(size=[.5, .05, .5], pos=[pos[0]+width+.5, pos[1], pos[2]+.25], parent=dlgHeader.getNodePath())
+            tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
+            check.setTag(tag)
+            gTags.append(tag)  # save graphic widget for deleting on dialog close
+            frame.vars.gWidgetStack[0].append(check)  # save graphic widget for deleting on close
+            frame.vars.gWidget[0] = check
+
+            # set checkbox color to match data
+            print("InputCheckbox display: init value to", frame.params.value[0])
+            frame.verb.setValue(frame, frame.params.value[0])
+
+            frame.vars.tags[0] = gTags
+            print("InputCheckbox tags", gTags)
+
+            # update dialog pos to next free space downward
+            pos[2] -= max(lbl.getHeight(), check.getHeight())           # update to next position
+
+            return gTags
+
+        def close(frame):
+            for gObj in frame.vars.gWidgetStack[0]:
+                gObj.removeNode()
+
+        def setLabel(frame, text):
+            frame.vars.gWidgetStack[0][0].setText(text)
+
+        def setValue(frame, isOn):
+            print("InputCheckbox setValue", isOn, " color", Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
+            frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
+
+        def setColor(frame, color):
+            frame.vars.gWidgetStack[0][0].setColor(color)
+            frame.vars.gWidget[0].setColor(color)
+
+        def setCurrentPos(frame, index):
+            frame.vars.currPos[0] = index       # TODO needs validating!
+
+
+        # User clicked input, generate the DropDown
+        class InputCheckboxCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("retStat", Wye.dType.INTEGER, -1),
+                        ("rowFrm", Wye.dType.OBJECT, None),
+                        )
+
+            def start(stack):
+                # print("InputDropdownCallback started")
+                return Wye.codeFrame(WyeUI.InputCheckbox.InputCheckboxCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                #print("InputDropdownCallback run: data", data)
+                rowFrm = data[1][0]
+                print("InputCheckboxCallback run: rowFrm", rowFrm.params.label[0], " ", rowFrm.verb.__name__)
+
+                # toggle value
+                rowFrm.vars.currVal[0] = not rowFrm.vars.currVal[0]     # toggle value
+                rowFrm.verb.setValue(rowFrm, rowFrm.vars.currVal[0])    # make graphic match value state
+
+                # if the user supplied a callback, call it
+                if rowFrm.vars.userCallback[0]:
+                    # put user's callback info in std callback location, call doCallback, put our callback data back
+                    tmpCallback = rowFrm.vars.callback[0]
+                    tmpOptData = rowFrm.vars.optData[0]
+                    rowFrm.vars.callback[0] = rowFrm.vars.userCallback[0]
+                    rowFrm.vars.optData[0] = rowFrm.vars.userOptData[0]
+                    WyeCore.libs.WyeUI.Dialog.doCallback(rowFrm, rowFrm, "none")
+                    rowFrm.vars.callback[0] = tmpCallback
+                    rowFrm.vars.optData[0] = tmpOptData
+
+
+
 
     # dropdown input field
     class InputDropdown:
@@ -1339,7 +1558,7 @@ class WyeUI(Wye.staticObj):
             # If there isn't a text input cursor, make it
             if WyeUI.Dialog._cursor is None:
                 WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._box([.05, .05, .6], [0, 0, 0])
-                WyeUI.Dialog._cursor.path.hide()
+                WyeUI.Dialog._cursor.hide()
             return frame
 
         # first time through run, draw dialog and all its fields
@@ -1552,8 +1771,8 @@ class WyeUI(Wye.staticObj):
                             WyeUI.Dialog._activeInputInteger = inFrm
 
                     # button callback
-                    elif inFrm.verb is WyeUI.InputButton or inFrm.verb is WyeUI.InputDropdown:
-                        #print("Dialog", frame.params.title[0], " doSelect: clicked on",inFrm.verb.__name__, " label", inFrm.params.label[0])
+                    elif inFrm.verb is WyeUI.InputButton:
+                        print("Dialog", frame.params.title[0], " doSelect: clicked on", inFrm.verb.__name__, " label", inFrm.params.label[0])
 
                         inFrm.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR) # set button color pressed
                         if inFrm.vars.clickCount[0] <= 0:     # if not in an upclick count, process click
@@ -1566,6 +1785,15 @@ class WyeUI(Wye.staticObj):
                                 # so special inputs like dropdown can have internal callback that is called before the
                                 # user's param callback
                                 WyeCore.libs.WyeUI.Dialog.doCallback(frame, inFrm, tag)
+
+                        frame.vars.currInp[0] = -1       # no input has focus
+
+                    elif inFrm.verb is WyeUI.InputCheckbox or inFrm.verb is WyeUI.InputDropdown:
+                        if inFrm.params.callback:
+                            # note: call inFrm.vars.callback, not infrm.params.callback
+                            # so special inputs like dropdown can have internal callback that is called before the
+                            # user's param callback
+                            WyeCore.libs.WyeUI.Dialog.doCallback(frame, inFrm, tag)
 
                         frame.vars.currInp[0] = -1       # no input has focus
 
@@ -1755,8 +1983,8 @@ class WyeUI(Wye.staticObj):
             inWidg = inFrm.vars.gWidget[0]
             #wPos = inWidg.getPos()
             xOff = 0
-            WyeUI.Dialog._cursor.path.reparentTo(inWidg._nodePath)
-            WyeUI.Dialog._cursor.path.setColor(Wye.color.CURSOR_COLOR)
+            WyeUI.Dialog._cursor._nodePath.reparentTo(inWidg._nodePath)
+            WyeUI.Dialog._cursor.setColor(Wye.color.CURSOR_COLOR)
             # If cursor not at beginning of text in widget,
             # get length of text before insert pt by generating temp text obj
             # with just pre-insert chars and getting its width
@@ -1767,11 +1995,11 @@ class WyeUI(Wye.staticObj):
                 tFrm = tmp.getFrameActual()
                 xOff = tFrm[1] - tFrm[0] - .2  # get width of text. Subtract off trailing period hack
             # put cursor after current character
-            WyeUI.Dialog._cursor.path.setPos(xOff + .01, -.1, .3)
-            WyeUI.Dialog._cursor.path.show()
+            WyeUI.Dialog._cursor.setPos(xOff + .01, -.1, .3)
+            WyeUI.Dialog._cursor.show()
 
         def hideCursor():
-            WyeUI.Dialog._cursor.path.hide()
+            WyeUI.Dialog._cursor.hide()
 
     # dropdown menu
     # subclass of Dialog so FocusManager can handle focus properly
@@ -1787,7 +2015,7 @@ class WyeUI(Wye.staticObj):
             # If we don't have a text input cursor, make one
             #if WyeUI.Dialog._cursor is None:
             #    WyeUI.Dialog._cursor = WyeCore.libs.WyeUI._geom3d([.05, .05, .6], [0, 0, 0])
-            #    WyeUI.Dialog._cursor.path.hide()
+            #    WyeUI.Dialog._cursor.hide()
             return frame
 
         def run(frame):
@@ -1955,6 +2183,15 @@ class WyeUI(Wye.staticObj):
                     #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
                     WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
+                    chkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([chkFrm])
+                    chkFrm.params.frame = [None]
+                    chkFrm.params.parent = [None]
+                    chkFrm.params.value = [True]
+                    chkFrm.params.label = ["Test Check"]
+                    chkFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestCheckCallback]  # button callback
+                    chkFrm.params.optData = [chkFrm]
+                    chkFrm.verb.run(chkFrm)
 
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
 
@@ -1970,6 +2207,26 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.mainMenu = None
 
 
+        class TestCheckCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("TestCheckCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.TestCheckCallback, stack)
+
+
+            def run(frame):
+                data = frame.eventData
+                #print("TestCheckCallback run: data", data)
+                rowFrm = data[1]
+                #print("       frame 1", data[1].verb.__name__, " frame 2", data[2].verb.__name__)
+
+                print("TestCheckCallback: checkbox value", rowFrm.vars.currVal[0])
+
+
         class TestButtonCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -1980,7 +2237,6 @@ class WyeUI(Wye.staticObj):
                 # print("TestButtonCallback started")
                 return Wye.codeFrame(WyeUI.MainMenuDialog.TestButtonCallback, stack)
 
-
             def run(frame):
                 print("createLibrary test")
                 WyeCore.Utils.createLib("TemplateTestLib")
@@ -1990,7 +2246,6 @@ class WyeUI(Wye.staticObj):
                 for libName in dir(WyeCore.libs):
                     if not libName.startswith("__"):
                         print("  ", libName)
-
 
     # Create dialog showing loaded libraries so user can edit them
     class EditMainDialog:
@@ -2297,7 +2552,7 @@ class WyeUI(Wye.staticObj):
 
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Edit Object " + verb.__name__]
-                    print("Edit object", verb.__name__)
+                    #print("Edit object", verb.__name__)
                     dlgFrm.params.position = [[frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2]],]
                     dlgFrm.params.parent = frame.params.parent
 

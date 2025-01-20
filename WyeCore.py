@@ -90,8 +90,8 @@ class WyeCore(Wye.staticObj):
     # used to detect first call for initialization
     worldInitialized = False
 
-    # DEBUG
-    debugListCode = False       # true to list Python code generated from Wye code
+    # DEBUG - SHOW COMPILED CODE
+    debugListCode = True       # true to list Python code generated from Wye code
 
     picker = None   # object picker object
     base = None     # panda3d base - set by application
