@@ -335,15 +335,11 @@ class WyeUI(Wye.staticObj):
             self.text.setAlign(ctr)
 
         def setColor(self, color):
-            self._nodePath.setColor(color)
             self.text.setTextColor(color)
-            self.text.setFrameColor(0, 0, 1, 1)
             self._regen3d()
-            print("_3dText setColor", color)
 
         # update the frame color
         def setFrameColor(self, color):
-            print("_3dText setFrameColor", color)
             self._nodePath.setColor(color)
 
         # update the margin spacing
@@ -2613,8 +2609,11 @@ class WyeUI(Wye.staticObj):
                       ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE),   # parent dialog, if any
                       ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))  # object frame to edit
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
-                    ("paramInpLst", Wye.dType.OBJECT_LIST, None),
-                    ("varInpLst", Wye.dType.OBJECT_LIST, None),
+                    ("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
+                    ("varInpLst", Wye.dType.OBJECT_LIST, None),     # Inputs showing vars
+                    ("newParamDesc", Wye.dType.OBJECT_LIST, None),  # Build new verb params here
+                    ("newVarDesc", Wye.dType.OBJECT_LIST, None),    # Build new verb vars here
+                    ("newCodeDesc", Wye.dType.OBJECT_LIST, None),   # Build new verb code here
                     )
 
         # global list of frames being edited
@@ -2625,12 +2624,18 @@ class WyeUI(Wye.staticObj):
             f = Wye.codeFrame(WyeUI.EditVerb, stack)
             f.vars.paramInpLst[0] = []
             f.vars.varInpLst[0] = []
+            f.vars.newParamDesc = []
+            f.vars.newVarDesc = []
+            f.vars.newCodeDesc = []
             return f
 
         def run(frame):
+            verb = frame.params.verb[0]  # shorthand
             match(frame.PC):
                 case 0:
                     #print("EditVerb run case 0")
+
+                    # test midi player
                     #pygame.midi.init()
                     #player = pygame.midi.Output(0)
                     #for ins in range(127):
@@ -2641,9 +2646,6 @@ class WyeUI(Wye.staticObj):
                     #    player.note_off(64, 64)
                     #del player
                     #pygame.midi.quit()
-
-
-                    verb = frame.params.verb[0]       # shorthand
 
                     # only edit frame once
                     if verb in WyeUI.EditVerb.activeVerbs:
@@ -2777,6 +2779,24 @@ class WyeUI(Wye.staticObj):
                         WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                         dlgFrm.params.inputs[0].append([lblFrm])
 
+                    # Test edited code
+                    tstLblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    tstLblFrm.params.frame = [None]
+                    tstLblFrm.params.parent = [None]
+                    tstLblFrm.params.label = ["Test:"]
+                    tstLblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    WyeCore.libs.WyeUI.InputLabel.run(tstLblFrm)
+                    dlgFrm.params.inputs[0].append([tstLblFrm])
+
+                    tstBtnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([tstBtnFrm])
+                    tstBtnFrm.params.frame = [None]
+                    tstBtnFrm.params.parent = [None]
+                    tstBtnFrm.params.label = ["  Check Code"]
+                    tstBtnFrm.params.callback = [WyeCore.libs.WyeUI.TestCodeCallback]  # button callback
+                    tstBtnFrm.params.optData = [(tstBtnFrm, dlgFrm, verb)]  # button row, dialog frame
+                    WyeCore.libs.WyeUI.InputButton.run(tstBtnFrm)
+
                     # WyeUI.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
 
@@ -2784,6 +2804,7 @@ class WyeUI(Wye.staticObj):
 
                 case 1:
                     frame.SP.pop()  # remove dialog frame from stack
+                    WyeUI.EditVerb.activeVerbs.pop(verb)
                     #print("ObjEditor: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
                     frame.status = Wye.status.SUCCESS  # done
 
@@ -3086,7 +3107,7 @@ class WyeUI(Wye.staticObj):
                         # verb type/name
                         verbNameFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                         verbNameFrm.params.frame = [None]        # placeholder
-                        verbNameFrm.params.label = ["Verb:"]
+                        verbNameFrm.params.label = ["Op:"]
                         verbNameFrm.params.value = [verbType]
                         WyeCore.libs.WyeUI.InputText.run(verbNameFrm)
                         dlgFrm.params.inputs[0].append([verbNameFrm])
@@ -3094,7 +3115,7 @@ class WyeUI(Wye.staticObj):
                         # Code
                         codeFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                         codeFrm.params.frame = [None]        # placeholder
-                        codeFrm.params.label = ["Verb:"]
+                        codeFrm.params.label = ["Expr:"]
                         codeFrm.params.value = [tuple[1]]
                         WyeCore.libs.WyeUI.InputText.run(codeFrm)
                         dlgFrm.params.inputs[0].append([codeFrm])
@@ -3159,7 +3180,7 @@ class WyeUI(Wye.staticObj):
                         # verb type/name
                         verbNameFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                         verbNameFrm.params.frame = [None]  # placeholder
-                        verbNameFrm.params.label = ["Verb:"]
+                        verbNameFrm.params.label = ["Op:"]
                         verbNameFrm.params.value = [verbType]
                         WyeCore.libs.WyeUI.InputText.run(verbNameFrm)
                         dlgFrm.params.inputs[0].append([verbNameFrm])
@@ -3167,7 +3188,7 @@ class WyeUI(Wye.staticObj):
                         # Code
                         codeFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
                         codeFrm.params.frame = [None]  # placeholder
-                        codeFrm.params.label = ["Verb:"]
+                        codeFrm.params.label = ["Expr:"]
                         codeFrm.params.value = [tuple[1]]
                         WyeCore.libs.WyeUI.InputText.run(codeFrm)
                         dlgFrm.params.inputs[0].append([codeFrm])
@@ -3421,6 +3442,26 @@ class WyeUI(Wye.staticObj):
             print("EditVarTypeCallback data='" + str(data) + "'")
             frm = data[1][1]
             print("param ix", data[1][0], " data frame", frm.verb.__name__)
+
+    # check code for compile errors and highlight anything that needs fixing
+    class TestCodeCallback:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = ()
+
+        def start(stack):
+            #print("TestCodeCallback started")
+            return Wye.codeFrame(WyeUI.TestCodeCallback, stack)
+
+        def run(frame):
+            data = frame.eventData
+            print("TestCodeCallback data='" + str(data) + "'")
+            btnFrm = data[1][0]
+            parentFrm = data[1][1]
+            verb = data[1][2]
+            #print("param ix", data[1][0], " parentFrm", parentFrm.verb.__name__, " verb", verb.__name__)
+
 
 
     # show active objects (currently running object stacks)
