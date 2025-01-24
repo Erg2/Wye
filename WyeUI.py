@@ -161,8 +161,8 @@ class WyeUI(Wye.staticObj):
         def setScale(self, val):
             self._nodePath.setScale(val)
 
-        def setPos(self, val):
-            self._nodePath.setPos(val)
+        def setPos(self, *args):
+            self._nodePath.setPos(args)
 
         def setTag(self, tag):
             return self.node.setTag("wyeTag", tag)
@@ -323,11 +323,15 @@ class WyeUI(Wye.staticObj):
         def setAlign(self, ctr):
             self.text.setAlign(ctr)
 
-        def setColor(self, val):
-            self._nodePath.setColor(val)
+        def setColor(self, color):
+            #self._nodePath.setColor(color)
+            self.text.setTextColor(color)
+            self.text.setFrameColor(0, 0, 1, 1)
+            print("_3dText setColor", color)
 
         # update the frame color
         def setFrameColor(self, color):
+            print("_3dText setFrameColor", color)
             self._nodePath.setColor(color)
 
         # update the margin spacing
@@ -1677,10 +1681,10 @@ class WyeUI(Wye.staticObj):
                     delLst = []
                     # decrement flash count.  if zero, turn off button highlight
                     for btnFrm in frame.vars.clickedBtns[0]:
-                        #print("button ", btnFrm.verb.__name__, " count ", btnFrm.vars.clickCount[0])
+                        print("button ", btnFrm.verb.__name__, " count ", btnFrm.vars.clickCount[0])
                         btnFrm.vars.clickCount[0] -= 1
                         if btnFrm.vars.clickCount[0] <= 0:
-                            #print("Dialog run: Done click flash for button ", btnFrm.verb.__name__)
+                            print("Dialog run: Done click flash for button ", btnFrm.verb.__name__, ". Set color", Wye.color.BACKGROUND_COLOR)
                             delLst.append(btnFrm)
                             btnFrm.vars.gWidget[0].setColor(Wye.color.BACKGROUND_COLOR)
                     # remove any buttons whose count is finished
@@ -1776,8 +1780,10 @@ class WyeUI(Wye.staticObj):
                         print("Dialog", frame.params.title[0], " doSelect: clicked on", inFrm.verb.__name__, " label", inFrm.params.label[0])
 
                         inFrm.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR) # set button color pressed
+                        print("gWidget", inFrm.vars.gWidget[0])
+                        print("set button", inFrm.params.label[0], " selected color", Wye.color.SELECTED_COLOR,". click count", inFrm.vars.clickCount[0])
                         if inFrm.vars.clickCount[0] <= 0:     # if not in an upclick count, process click
-                            #print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
+                            print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
                             inFrm.vars.clickCount[0] = 10       # start flash countdown (in display frames)
                             frame.vars.clickedBtns[0].append(inFrm)  # stash button for flash countdown
 
@@ -1965,7 +1971,7 @@ class WyeUI(Wye.staticObj):
                                 insPt += 1
                                 inFrm.vars.currInsPt[0] = insPt        # set text insert point after new char
 
-                    if inFrm.verb is WyeUI.InputInteger and len(txt) == 0:
+                    if inFrm.verb is WyeUI.InputInteger and len(txt) == 0 or txt == "-":
                         txt = '0'
                     inFrm.vars.currVal[0] = txt
 
@@ -2637,7 +2643,7 @@ class WyeUI(Wye.staticObj):
 
                             attrIx += 1
 
-                    # else nothing to do here
+                    # else no params to edit
                     else:
                         lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                         lblFrm.params.frame = [None]  # return value
@@ -2672,7 +2678,7 @@ class WyeUI(Wye.staticObj):
                             attrIx += 1
 
 
-                    # else nothing to do here
+                    # else no vars to edit
                     else:
                         lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                         lblFrm.params.frame = [None]  # return value
@@ -2709,6 +2715,8 @@ class WyeUI(Wye.staticObj):
                                 WyeCore.libs.WyeUI.EditVerb.displayTuple(tuple, level, verb, attrIx, row, dlgFrm)
 
                                 attrIx += 1
+
+                    # no code to edit
                     else:
                         lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                         lblFrm.params.frame = [None]  # return value
