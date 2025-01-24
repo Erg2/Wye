@@ -84,6 +84,11 @@ class WyeUI(Wye.staticObj):
             return self.radius
 
 
+        def show(self):
+            self._nodePath.show()
+        def hide(self):
+            self._nodePath.hide()
+
     # create a scaled rectangular prism
     # (primarily used for InputText cursor)
     # NOTE: this class gets instantiated
@@ -282,6 +287,12 @@ class WyeUI(Wye.staticObj):
 
         def removeNode(self):
             self._nodePath.removeNode()
+
+        def show(self):
+            self._nodePath.show()
+
+        def hide(self):
+            self._nodePath.hide()
 
     # Build run_rt methods on each class in library
     def build():

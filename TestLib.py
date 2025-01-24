@@ -825,7 +825,7 @@ class TestLib:
                     ("fishTag", Wye.dType.STRING, ""),
                     ("tgtPos", Wye.dType.FLOAT_LIST, [0, 10, 0]),
                     ("tgtDist", Wye.dType.FLOAT, 1.),
-                    ("posStep", Wye.dType.FLOAT, .06),
+                    ("posStep", Wye.dType.FLOAT, .04),
                     ("dAngleX", Wye.dType.FLOAT, .5),
                     ("dAngleY", Wye.dType.FLOAT, .5),
                     ("dAngleZ", Wye.dType.FLOAT, .5),
