@@ -183,7 +183,7 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.dlight = DirectionalLight('dlight')
                 WyeCore.World.dlight.setColor((1, 1, 1, 1))  # (0.8, 0.8, 0.5, 1))
                 WyeCore.World.dlightPath = render.attachNewNode(WyeCore.World.dlight)
-                WyeCore.World.dlightPath.setHpr(45, -65, 0)
+                WyeCore.World.dlightPath.setHpr(Wye.startLightAngle[0], Wye.startLightAngle[1], Wye.startLightAngle[2])
                 render.setLight(WyeCore.World.dlightPath)
 
                 # Fog
@@ -954,13 +954,13 @@ class WyeCore(Wye.staticObj):
                             #print("*** parseWyeTuple: finished params")
                             
                             # debug hook placeholder
-                            codeText += "    if Wye.debugOn:\n"
-                            codeText += "     Wye.debug(frame."+eff+",'Exec run:'+frame."+eff+".verb.__name__)\n"
-                            codeText += "    else:\n"
+                            codeText += "    if not Wye.debugOn:\n"
                             #codeText += "     print('run',frame." + eff + ".verb.__name__)\n"
                             codeText += "     "+wyeTuple[0] + ".run(frame."+eff+")\n"
+                            codeText += "    else:\n"
+                            codeText += "     Wye.debug(frame."+eff+",'Exec run:'+frame."+eff+".verb.__name__)\n"
                             codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
-                            codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
+                            #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
                             codeText += "     frame.status = frame."+eff+".status\n     return\n"
 
                     # multi-cycle verbs create code that pushes a new frame on the stack which will run on the next display cycle and

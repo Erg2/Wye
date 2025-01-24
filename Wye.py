@@ -18,10 +18,11 @@ class Wye:
 
     dragging = False
 
-    version = "0.4"
+    version = "0.5"
 
     startPos = (0, -10, 0)      # initial camera position
 
+    startLightAngle = (45, -65, 0)
 
     # if debugging is on, check for what to do on run()
     def debug(frame, msg):

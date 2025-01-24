@@ -324,9 +324,10 @@ class WyeUI(Wye.staticObj):
             self.text.setAlign(ctr)
 
         def setColor(self, color):
-            #self._nodePath.setColor(color)
+            self._nodePath.setColor(color)
             self.text.setTextColor(color)
             self.text.setFrameColor(0, 0, 1, 1)
+            self._regen3d()
             print("_3dText setColor", color)
 
         # update the frame color
@@ -420,20 +421,20 @@ class WyeUI(Wye.staticObj):
             self.text.setTextColor(color)
 
         # internal rtn to gen 3d Card clickable background object
-        def _genCardObj(self):
-            #print("initial txtNode frame ", self.text.getFrameActual())
-            self.card = CardMaker("Txt Card")
-            self.gFrame = self.text.getFrameActual()
-            if self.gFrame[1] == 0:      # if empty frame
-                self.gFrame[1] = 1
-                self.gFrame[3] = 1
-            #print("self.gFrame", self.gFrame)
-            self.gFrame[0] -= self.marginL
-            self.gFrame[1] += self.marginR
-            self.gFrame[2] -= self.marginB
-            self.gFrame[3] += self.marginT
-            #print("initial adjusted self.gFrame", self.gFrame)
-            self.card.setFrame(self.gFrame)
+        #def _genCardObj(self):
+        #    #print("initial txtNode frame ", self.text.getFrameActual())
+        #    self.card = CardMaker("Txt Card")
+        #    self.gFrame = self.text.getFrameActual()
+        #    if self.gFrame[1] == 0:      # if empty frame
+        #        self.gFrame[1] = 1
+        #        self.gFrame[3] = 1
+        #    #print("self.gFrame", self.gFrame)
+        #    self.gFrame[0] -= self.marginL
+        #    self.gFrame[1] += self.marginR
+        #    self.gFrame[2] -= self.marginB
+        #    self.gFrame[3] += self.marginT
+        #    #print("initial adjusted self.gFrame", self.gFrame)
+        #    self.card.setFrame(self.gFrame)
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
@@ -975,6 +976,9 @@ class WyeUI(Wye.staticObj):
 
             return []       # no clickable object tags
 
+        def redisplay(frame):
+            pass
+
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.removeNode()
@@ -1056,6 +1060,11 @@ class WyeUI(Wye.staticObj):
 
             return gTags
 
+        def redisplay(inFrm):
+            inWidg = inFrm.vars.gWidget[0]
+            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
+            inWidg.setText(inFrm.vars.currVal[0])
+
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.removeNode()
@@ -1136,6 +1145,11 @@ class WyeUI(Wye.staticObj):
 
             return gTags
 
+        def redisplay(inFrm):
+            inWidg = inFrm.vars.gWidget[0]
+            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
+            inWidg.setText(str(inFrm.vars.currVal[0]))
+
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
 
@@ -1202,6 +1216,9 @@ class WyeUI(Wye.staticObj):
             pos[2] -= btn.getHeight()  # update to next position
 
             return tags
+
+        def redisplay(frame):
+            pass
 
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
@@ -1282,16 +1299,19 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidget[0] = check
 
             # set checkbox color to match data
-            print("InputCheckbox display: init value to", frame.params.value[0])
+            #print("InputCheckbox display: init value to", frame.params.value[0])
             frame.verb.setValue(frame, frame.params.value[0])
 
             frame.vars.tags[0] = gTags
-            print("InputCheckbox tags", gTags)
+            #print("InputCheckbox tags", gTags)
 
             # update dialog pos to next free space downward
             pos[2] -= max(lbl.getHeight(), check.getHeight())           # update to next position
 
             return gTags
+
+        def redisplay(frame):
+            frame.verb.setValue(frame, frame.params.value[0])
 
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
@@ -1394,8 +1414,6 @@ class WyeUI(Wye.staticObj):
 
             # copy the list over for later
             frame.vars.list[0] = frame.params.list[0][:]
-            #print("Dropdown", frame.params.label, " list", frame.vars.list[0])
-            #print("InputDropdown params.frame=", frame.params.frame)
             # return frame and success, caller dialog will use frame as placeholder for input
             frame.status = Wye.status.SUCCESS
 
@@ -1426,6 +1444,9 @@ class WyeUI(Wye.staticObj):
             pos[2] -= btn.getHeight()  # update to next position
 
             return gTags
+
+        def redisplay(frame):
+            frame.verb.setValue(frame, frame.params.selectionIx[0])
 
         def setList(frame, newList, newIndex):
             print("frame", frame.verb.__name__, " setList: newList", newList, " newIndex", newIndex)
@@ -1484,7 +1505,6 @@ class WyeUI(Wye.staticObj):
 
                         # build dialog frame params list of input frames
                         attrIx = 0
-                        # print("_displayLib: process library", lib.__name__)
                         for rowTxt in rowFrm.vars.list[0]:
                             # print("lib", lib.__name__, " verb", verb.__name__)
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
@@ -1686,7 +1706,7 @@ class WyeUI(Wye.staticObj):
                         if btnFrm.vars.clickCount[0] <= 0:
                             print("Dialog run: Done click flash for button ", btnFrm.verb.__name__, ". Set color", Wye.color.BACKGROUND_COLOR)
                             delLst.append(btnFrm)
-                            btnFrm.vars.gWidget[0].setColor(Wye.color.BACKGROUND_COLOR)
+                            btnFrm.vars.gWidget[0].setColor(btnFrm.params.color[0])
                     # remove any buttons whose count is finished
                     for btnFrm in delLst:
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
@@ -2059,10 +2079,6 @@ class WyeUI(Wye.staticObj):
                     for ii in range(nInputs):
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
                         inFrm = frame.params.inputs[0][ii][0]
-                        #print("    inFrm", inFrm)
-                        #print("    Dialog input ", ii, " inFrm", inFrm)
-                        #print("       inFrm.params.title", inFrm.params.title)
-                        #print("")
 
                         setattr(inFrm, "parentFrame", frame)
 
@@ -2076,7 +2092,7 @@ class WyeUI(Wye.staticObj):
                             print("Dialog: Error. Only Label and Button allowed in dropdown", inFrm.verb.__class__)
 
                     # Cancel button
-                    pos[2] -= 1.5
+
                     #print("Dialog Cancel btn at", pos)
                     txt = WyeUI._3dText("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos),
                                         scale=(1,1,1), parent=dlgHeader.getNodePath())
@@ -2179,7 +2195,12 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Wye Main Menu"]
-                    dlgFrm.params.position = [(0,10,0),] # todo - get from viewpoint and mouse
+                    point = NodePath("point")
+                    point.reparentTo(render)
+                    point.setPos(base.camera, (0,10,0))
+                    pos = point.getPos()
+                    point.removeNode()
+                    dlgFrm.params.position = [(pos[0], pos[1], pos[2]),]
                     dlgFrm.params.parent = [None]
 
                     # Settings
@@ -2327,7 +2348,12 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Select Library to Edit"]
-                    dlgFrm.params.position = [(0,10,0),] # todo - get from viewpoint and mouse
+                    point = NodePath("point")
+                    point.reparentTo(render)
+                    point.setPos(base.camera, (0,10,0))
+                    pos = point.getPos()
+                    point.removeNode()
+                    dlgFrm.params.position = [(pos[0], pos[1], pos[2]),]
                     dlgFrm.params.parent = [None]
 
                     # build dialog
@@ -2457,7 +2483,7 @@ class WyeUI(Wye.staticObj):
                     # hang here forever?  that's not good
                     frame.status = Wye.status.SUCCESS
 
-
+        # edit verb in lib
         class EditLibaryVerbCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
@@ -3396,7 +3422,12 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Wye Debugger"]
-                    dlgFrm.params.position = [(0,10,0),] # todo - get from viewpoint and mouse
+                    point = NodePath("point")
+                    point.reparentTo(render)
+                    point.setPos(base.camera, (0,10,0))
+                    pos = point.getPos()
+                    point.removeNode()
+                    dlgFrm.params.position = [(pos[0], pos[1], pos[2]),]
                     dlgFrm.params.parent = [None]
 
 

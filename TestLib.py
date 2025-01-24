@@ -725,7 +725,7 @@ class TestLib:
                     ("position", Wye.dType.FLOAT_LIST, [0,0,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -0.02]),
                     ("angle", Wye.dType.FLOAT_LIST, [0., 90., 0.]),
-                    ("followDist", Wye.dType.FLOAT, 1),
+                    ("followDist", Wye.dType.FLOAT, 2),
                     ("target", Wye.dType.OBJECT, None),             # leader fish Wye obj frame
                     ("tgtDist", Wye.dType.FLOAT, 0),
                     ("count", Wye.dType.INTEGER, 0),        # loop counter
@@ -750,7 +750,7 @@ class TestLib:
              ("Var", "[objNm]"),
              ("Expr", "[[frame.vars.count[0] ,2, -.5]]"),  # posVec
              ("Const", "[[0, 90, 0]]"),  # rotVec
-             ("Const", "[[.5,.5,.5]]"),  # scaleVec
+             ("Const", "[[1,1,1]]"),  # scaleVec
              ("Expr", "frame.vars.fishTags[frame.vars.count[0]]"),
              ("Expr", "[[((frame.vars.count[0] % 3)+1)/3.,1,0,1]]")  # color
              ),
@@ -823,23 +823,21 @@ class TestLib:
         paramDescr = ()
         varDescr = (("fish", Wye.dType.OBJECT, None),
                     ("fishTag", Wye.dType.STRING, ""),
-                    ("tgtPos", Wye.dType.FLOAT_LIST, [0, 0, 0]),
+                    ("tgtPos", Wye.dType.FLOAT_LIST, [0, 10, 0]),
                     ("tgtDist", Wye.dType.FLOAT, 1.),
-                    ("dPos", Wye.dType.FLOAT_LIST, [0.,0.,0.]),
-                    ("posStep", Wye.dType.FLOAT, .03),
-                    ("fudge0", Wye.dType.FLOAT, .5),
-                    ("fudge1", Wye.dType.FLOAT, .5),
-                    ("fudge2", Wye.dType.FLOAT, .5),
+                    ("posStep", Wye.dType.FLOAT, .06),
+                    ("dAngleX", Wye.dType.FLOAT, .5),
+                    ("dAngleY", Wye.dType.FLOAT, .5),
+                    ("dAngleZ", Wye.dType.FLOAT, .5),
                     ("sound", Wye.dType.OBJECT, None),
-                    ("box", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, (0,0,0)),
                     ("prevState", Wye.dType.INTEGER, 0),
                     ("startQ", Wye.dType.OBJECT, None),
                     ("endQ", Wye.dType.OBJECT, None),
                     ("deltaT", Wye.dType.FLOAT, 0.005),
                     ("lerpT", Wye.dType.FLOAT, 0.),
-                    ("border", Wye.dType.FLOAT, 5.),
-                    ("ceil", Wye.dType.FLOAT, 2.),
+                    ("horizLim", Wye.dType.FLOAT, 10.),
+                    ("vertLim", Wye.dType.FLOAT, 3.),
                     ("tgtChgCt", Wye.dType.INTEGER, 60 * 10)
                     )
 
@@ -852,24 +850,20 @@ class TestLib:
                  (None, "['flyer_01.glb']"),
                  (None, "frame.vars.position"),  # posVec
                  (None, "[[0, 0, 0]]"),  # rotVec
-                 (None, "[[.5,.5,.5]]"),  # scaleVec
+                 (None, "[[1,1,1]]"),  # scaleVec
                  (None, "frame.vars.fishTag"),
                  (None, "[[1,0,0,1]]")
                  ),
 
-
-                #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
-                ("Code", "from panda3d.core import LPoint3f"),
-                #(None, "print('tgtPos', frame.vars.tgtPos)"),
                 # convert tgtPos from list to LPoint3f
+                ("Code", "from panda3d.core import LPoint3f"),
                 ("Var=", "frame.vars.tgtPos[0] = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])"),
-                ("Var=", "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
                 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.fish"), (None, "[[0,90,0]]")),
-                #(None, "frame.vars.box[0] = WyeCore.libs.WyeUI._box([.1,.1,.1], frame.vars.tgtPos[0])"),
+
                 ("Var=", "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyeHop.wav')"),
                 ("Code", "Wye.audio3d.attachSoundToObject(frame.vars.sound[0], frame.vars.fish[0])"),
-                ("Label", "RunLoop"),
 
+                ("Label", "RunLoop"),
                 # Test raw code block
                 ("CodeBlock",'''
 #quat = Quat()
@@ -883,95 +877,90 @@ tgtPos = frame.vars.tgtPos[0]
 dist = (frame.vars.fish[0].getPos() - tgtPos).length()
 
 # if we're outside the space around the target area or we're above or below the swim lane, do turning
-if fishPos[2] > (tgtPos[2] + frame.vars.ceil[0]) or fishPos[2] < (tgtPos[2] - frame.vars.ceil[0]) or dist > frame.vars.border[0]:
-        global render
-        from panda3d.core import lookAt, Quat, LQuaternionf, LVector3f, Vec3
+if fishPos[2] > (tgtPos[2] + frame.vars.vertLim[0]) or fishPos[2] < (tgtPos[2] - frame.vars.vertLim[0]) or dist > frame.vars.horizLim[0]:
+    global render
+    from panda3d.core import lookAt, Quat, LQuaternionf, LVector3f, Vec3
 
-        alpha = frame.vars.deltaT[0]      # how much to rotate each step (0..1)    
-                
-        # if not turning (in turning state), calculate the turn toward the center
-        if frame.vars.prevState[0] != 2:
-            # save rotation start, calc rotation end and nlerp time delta
+    alpha = frame.vars.deltaT[0]      # how much to rotate each step (0..1)    
             
-            # start
-            fishQ = LQuaternionf()
-            fishHPR = fish.getHpr()
-            fishQ.setHpr(fishHPR)
-
-            # end
-            tgtDeltaVec = tgtPos - fishPos    # note: guaranteed 10 units away, so zero length not an issue
-            tgtVec = (tgtDeltaVec).normalized()
-            
-            #fwdVec = render.getRelativeVector(fish, Vec3.down()).normalized()
-            #deltaVec = LVector3f(tgtVec[0]-fwdVec[0], tgtVec[1]-fwdVec[1], tgtVec[2]-fwdVec[2])
-            #deltaVec = tgtVec - fwdVec            
-            #newVec = fwdVec + deltaVec * alpha
-            #tgtQuat = Quat()
-            #lookAt(tgtQuat, newVec, Vec3.up())
-            
-            tgtQuat = Quat()
-            lookAt(tgtQuat, tgtVec, Vec3.up())
-            q90 = Quat()
-            q90.setHpr((0,90,0))
-            tgtQ = q90 * tgtQuat
-            
-            # put info in frame for nlerp
-            frame.vars.startQ[0] = fishQ   
-            frame.vars.endQ[0] = tgtQ
-            frame.vars.lerpT[0] = alpha
-            
-            frame.vars.prevState[0] = 2    
-            
-            #print("tgtPos", tgtPos, " tgtQ", tgtQ) #fish.setQuat(tgtQ)")
-            #fish.setQuat(tgtQ)
+    # if not turning (in turning state), calculate the turn toward the center
+    if frame.vars.prevState[0] != 2:
+        # save rotation start, calc rotation end and nlerp time delta
         
-        # We'turning, lerp that nose around the curve we calc'd above
-        if frame.vars.lerpT[0] < 1.0:
-            fishQ = frame.vars.startQ[0]
-            tgtQ = frame.vars.endQ[0]
-            tt = frame.vars.lerpT[0]
-            quat = WyeCore.Utils.nlerp(fishQ, tgtQ, tt)
-            fish.setQuat(quat)
-            frame.vars.lerpT[0] += alpha
-            #fish.setP(fish, 90)
-        # done turning
-        else:
-            # flag that we finished the turn
-            frame.vars.prevState[0] = 0    
+        # start
+        fishQ = LQuaternionf()
+        fishHPR = fish.getHpr()
+        fishQ.setHpr(fishHPR)
+
+        # end
+        tgtDeltaVec = tgtPos - fishPos    # note: guaranteed 10 units away, so zero length not an issue
+        tgtVec = (tgtDeltaVec).normalized()
+        
+        #fwdVec = render.getRelativeVector(fish, Vec3.down()).normalized()
+        #deltaVec = LVector3f(tgtVec[0]-fwdVec[0], tgtVec[1]-fwdVec[1], tgtVec[2]-fwdVec[2])
+        #deltaVec = tgtVec - fwdVec            
+        #newVec = fwdVec + deltaVec * alpha
+        #tgtQuat = Quat()
+        #lookAt(tgtQuat, newVec, Vec3.up())
+        
+        tgtQuat = Quat()
+        lookAt(tgtQuat, tgtVec, Vec3.up())
+        q90 = Quat()
+        q90.setHpr((0,90,0))
+        tgtQ = q90 * tgtQuat
+        
+        # put info in frame for nlerp
+        frame.vars.startQ[0] = fishQ   
+        frame.vars.endQ[0] = tgtQ
+        frame.vars.lerpT[0] = alpha
+        
+        frame.vars.prevState[0] = 2    
+        
+        #print("tgtPos", tgtPos, " tgtQ", tgtQ) #fish.setQuat(tgtQ)")
+        #fish.setQuat(tgtQ)
+    
+    # We'turning, lerp that nose around the curve we calc'd above
+    if frame.vars.lerpT[0] < 1.0:
+        fishQ = frame.vars.startQ[0]
+        tgtQ = frame.vars.endQ[0]
+        tt = frame.vars.lerpT[0]
+        quat = WyeCore.Utils.nlerp(fishQ, tgtQ, tt)
+        fish.setQuat(quat)
+        frame.vars.lerpT[0] += alpha
+        #fish.setP(fish, 90)
+    # done turning
+    else:
+        # flag that we finished the turn
+        frame.vars.prevState[0] = 0    
 
 # within "nice" distance from center, just chug happily along   
 else:
-        #print("2<d<=10")
-        fishHPR = fish.getHpr()     # get current direction         
+    #print("2<d<=10")
+    fishHPR = fish.getHpr()     # get current direction         
+    
+    # flip turn direction every new pass through the middle area
+    if frame.vars.prevState[0] != 1:
+        from random import random            
+        frame.vars.dAngleX[0] *= (1 if random() >= .5 else -1)
+        frame.vars.dAngleY[0] *= (1 if random() >= .5 else -1)
+        frame.vars.dAngleZ[0] *= (1 if random() >= .5 else -1)
         
-        # flip turn direction every new pass through the middle area
-        if frame.vars.prevState[0] != 1:
-            from random import random            
-            frame.vars.fudge0[0] *= (1 if random() > .5 else -1)
-            frame.vars.fudge1[0] *= (1 if random() > .5 else -1)
-            frame.vars.fudge2[0] *= (1 if random() > .5 else -1)
-            
-        f0 = frame.vars.fudge0[0]
-        f1 = frame.vars.fudge1[0]
-        f2 = frame.vars.fudge2[0]
-        
-        moveAngle = (f0, f1/2, f2/5)
-        #moveAngle = (eA, eA/10, eA/20)        
-        fishHPR += moveAngle
-        #print("leaderfish fishHPR", fishHPR)
-        #print("leaderfish fishHPR", fishHPR, " tgtHPR", tgtHPR, " moveAngle", moveAngle," setHpr", fishHPR)
-        fish.setHpr(fishHPR)        
-        frame.vars.prevState[0] = 1
-
-                '''),
+    f0 = frame.vars.dAngleX[0]
+    f1 = frame.vars.dAngleY[0]
+    f2 = frame.vars.dAngleZ[0]
+    
+    moveAngle = (f0, f1/2, f2/5)
+    #moveAngle = (eA, eA/10, eA/20)        
+    fishHPR += moveAngle
+    #print("leaderfish fishHPR", fishHPR)
+    #print("leaderfish fishHPR", fishHPR, " tgtHPR", tgtHPR, " moveAngle", moveAngle," setHpr", fishHPR)
+    fish.setHpr(fishHPR)        
+    frame.vars.prevState[0] = 1
+'''),
                 # Step forward
-                ("Var=", "frame.vars.dPos[0][2] = -frame.vars.posStep[0]"),
-                ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "frame.vars.dPos")),
-                #("Code", "print('leaderfish new pos', frame.vars.fish[0].getPos())"),
+                ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.fish"), (None, "[[0,0,-frame.vars.posStep[0]]]")),
                 # save new position
                 ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.fish")),
-                #(None, "print('leaderfish running. new pos', frame.vars.position)"),
-
                 # don't relocate target
                 ("GoTo", "RunLoop"),
 
@@ -984,10 +973,6 @@ else:
                 ("Code", "from panda3d.core import LPoint3f"),
                 ("Var=", "frame.vars.tgtPos[0] = LPoint3f((random()-.5)*5, (random()-.5)*5, 0)"),
                 ("Var=", "frame.vars.tgtChgCt[0] = 600 + random() * 1200"),
-                #("Code", "print('new target point', frame.vars.tgtPos[0])"),
-                #("Var=", "frame.vars.fudge[0] = frame.vars.fudge[0] * -1"),
-                #("Code", "frame.vars.box[0].path.setPos(frame.vars.tgtPos[0])"),
-
                 ("GoTo", "RunLoop")
 
             ),
@@ -995,14 +980,13 @@ else:
                 ("Label", "top"),
                 ("IfGoTo", "frame.vars.fishTag[0] == ''", "top"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.fishTag")),
-                ("Expr", "frame.vars.fudge0[0] = frame.vars.fudge0[0] * -1"),
+                ("Expr", "frame.vars.dAngleX[0] = frame.vars.dAngleX[0] * -1"),
                 ("Code", "frame.vars.sound[0].play()"),
                 #(None, "print('clicked leaderFish')"),
 
                 ("GoTo", "top")
             )
         )
-
 
         def build():
             #print("Build leaderFish")
@@ -1078,35 +1062,35 @@ for ii in range(100):
     
 # Weeds and bubbles decorating the floor
 for xx in range(int(floorX * floorY * .08)):
-        if xx < 35:
-            posX = (random()-.5)*20 - 25
-            posY = (random()-.5)*20 + 75
-        else:
-            posX = (random()-.5)*floorX*10
-            posY = (random()-.5)*floorY*10
-        ixX = int(posX/floorX)
-        ixY = int(posY/floorY)
-        posZ = floorPos[ixY][ixX]
-        #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
-        ht  = 2+3*random()
-        color = (.25+random()*.75,.25+random()*.75,.25+random()*.75, .5)
-        weed = WyeCore.libs.WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
-        frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
-        weed._nodePath.setColor(color)
-        frame.vars.weeds[0].append(weed)
-        weed._nodePath.setTag("wyeTag", tag)
-        WyeCore.picker.makePickable(weed._nodePath)
-        #print("Set tag", tag, " on weed", weed._nodePath)
-        
-        # Create bubble, init color change amt and countdown to pop
-        bubble = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
-        bubble.path.setColor(color)
-        bubble.path.setTag("wyeTag", tag)
-        WyeCore.picker.makePickable(bubble.path)
-        frame.vars.bubbles[0].append(bubble)
-        pop = 60 + frame.vars.bubbleRand[0] * random()
-        frame.vars.bubblePop[0].append(pop)
-        frame.vars.bubbleCt[0].append(10+random()*(pop-10))
+    if xx < 35:
+        posX = (random()-.5)*20 - 25
+        posY = (random()-.5)*20 + 75
+    else:
+        posX = (random()-.5)*floorX*10
+        posY = (random()-.5)*floorY*10
+    ixX = int(posX/floorX)
+    ixY = int(posY/floorY)
+    posZ = floorPos[ixY][ixX]
+    #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
+    ht  = 2+3*random()
+    color = (.25+random()*.75,.25+random()*.75,.25+random()*.75, .5)
+    weed = WyeCore.libs.WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
+    frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
+    weed._nodePath.setColor(color)
+    frame.vars.weeds[0].append(weed)
+    weed._nodePath.setTag("wyeTag", tag)
+    WyeCore.picker.makePickable(weed._nodePath)
+    #print("Set tag", tag, " on weed", weed._nodePath)
+    
+    # Create bubble, init color change amt and countdown to pop
+    bubble = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
+    bubble.path.setColor(color)
+    bubble.path.setTag("wyeTag", tag)
+    WyeCore.picker.makePickable(bubble.path)
+    frame.vars.bubbles[0].append(bubble)
+    pop = 60 + frame.vars.bubbleRand[0] * random()
+    frame.vars.bubblePop[0].append(pop)
+    frame.vars.bubbleCt[0].append(10+random()*(pop-10))
 
 WyeCore.World.registerObjTag(tag, frame)
 '''),
@@ -1201,7 +1185,7 @@ for ii in range(len(frame.vars.bubbles[0])):
                 (None, "['flyer_01.glb']"),
                 (None, "frame.vars.position"),       # posVec
                 (None, "[[0, 90, 0]]"),      # rotVec
-                (None, "[[.5,.5,.5]]"),    # scaleVec
+                (None, "[[1,1,1]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
                 (None, "[[0,1,0,1]]")
             ),

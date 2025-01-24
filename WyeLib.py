@@ -286,9 +286,9 @@ class WyeLib:
             #print("setObjRelPos run: params ", frame.params)
             gObj = frame.params.obj[0]
             vec = frame.params.posVec[0]
-            #oldPos = gObj.getPos()
+            oldPos = gObj.getPos()
             gObj.setPos(gObj, vec[0], vec[1], vec[2])
-            #newPos = gObj.getPos()
+            newPos = gObj.getPos()
             #print("setObjRelPos old", oldPos, " new", newPos)
 
     # get model pos
@@ -303,7 +303,7 @@ class WyeLib:
         code = None
 
         def start(stack):
-            return Wye.codeFrame(WyeLib.setObjPos, stack)
+            return Wye.codeFrame(WyeLib.getObjPos, stack)
 
         def run(frame):
             #print("getObjPos run: params ", frame.params)
@@ -311,7 +311,7 @@ class WyeLib:
             pos = gObj.getPos()
             #print("getObjPos get obj pos", gObj, " ", pos)
 
-            frame.params.posVec[0] = pos[0], pos[1], pos[2]
+            frame.params.posVec[0] = [pos[0], pos[1], pos[2]]
 
     # set object to given angle
     class setObjAngle:
