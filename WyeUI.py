@@ -401,6 +401,11 @@ class WyeUI(Wye.staticObj):
 
         ## methods
 
+        def show(self):
+            self._nodePath.show()
+        def hide(self):
+            self._nodePath.hide()
+
         # rebuild card and path for updated text object
         def _regen3d(self):
             bg = self._nodePath.getColor()
@@ -1701,10 +1706,10 @@ class WyeUI(Wye.staticObj):
                     delLst = []
                     # decrement flash count.  if zero, turn off button highlight
                     for btnFrm in frame.vars.clickedBtns[0]:
-                        print("button ", btnFrm.verb.__name__, " count ", btnFrm.vars.clickCount[0])
+                        #print("button", btnFrm.verb.__name__, " count ", btnFrm.vars.clickCount[0])
                         btnFrm.vars.clickCount[0] -= 1
                         if btnFrm.vars.clickCount[0] <= 0:
-                            print("Dialog run: Done click flash for button ", btnFrm.verb.__name__, ". Set color", Wye.color.BACKGROUND_COLOR)
+                            #print("Dialog run: Done click flash for button ", btnFrm.verb.__name__, ". Set color", Wye.color.BACKGROUND_COLOR)
                             delLst.append(btnFrm)
                             btnFrm.vars.gWidget[0].setColor(btnFrm.params.color[0])
                     # remove any buttons whose count is finished
@@ -1797,13 +1802,13 @@ class WyeUI(Wye.staticObj):
 
                     # button callback
                     elif inFrm.verb is WyeUI.InputButton:
-                        print("Dialog", frame.params.title[0], " doSelect: clicked on", inFrm.verb.__name__, " label", inFrm.params.label[0])
+                        #print("Dialog", frame.params.title[0], " doSelect: clicked on", inFrm.verb.__name__, " label", inFrm.params.label[0])
 
                         inFrm.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR) # set button color pressed
-                        print("gWidget", inFrm.vars.gWidget[0])
-                        print("set button", inFrm.params.label[0], " selected color", Wye.color.SELECTED_COLOR,". click count", inFrm.vars.clickCount[0])
+                        #print("gWidget", inFrm.vars.gWidget[0])
+                        #print("set button", inFrm.params.label[0], " selected color", Wye.color.SELECTED_COLOR,". click count", inFrm.vars.clickCount[0])
                         if inFrm.vars.clickCount[0] <= 0:     # if not in an upclick count, process click
-                            print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
+                            #print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
                             inFrm.vars.clickCount[0] = 10       # start flash countdown (in display frames)
                             frame.vars.clickedBtns[0].append(inFrm)  # stash button for flash countdown
 
@@ -2208,18 +2213,19 @@ class WyeUI(Wye.staticObj):
                     settingsLblFrm.params.frame = [None]  # return value
                     settingsLblFrm.params.parent = [None]
                     settingsLblFrm.params.label = ["Settings"]
+                    settingsLblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(settingsLblFrm)
                     dlgFrm.params.inputs[0].append([settingsLblFrm])
 
-                    sndChckFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([sndChckFrm])
-                    sndChckFrm.params.frame = [None]
-                    sndChckFrm.params.parent = [None]
-                    sndChckFrm.params.value = [True]
-                    sndChckFrm.params.label = ["3D Sound On"]
-                    sndChckFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.SoundCheckCallback]  # button callback
-                    sndChckFrm.params.optData = [sndChckFrm]
-                    sndChckFrm.verb.run(sndChckFrm)
+                    sndChkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([sndChkFrm])
+                    sndChkFrm.params.frame = [None]
+                    sndChkFrm.params.parent = [None]
+                    sndChkFrm.params.value = [True]
+                    sndChkFrm.params.label = ["3D Sound On"]
+                    sndChkFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.SoundCheckCallback]  # button callback
+                    sndChkFrm.params.optData = [sndChkFrm]
+                    sndChkFrm.verb.run(sndChkFrm)
 
                     #
                     # Test
@@ -2229,28 +2235,29 @@ class WyeUI(Wye.staticObj):
                     testLblFrm.params.frame = [None]  # return value
                     testLblFrm.params.parent = [None]
                     testLblFrm.params.label = ["Test"]
+                    testLblFrm.params.color = [Wye.color.SUBHDR_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(testLblFrm)
                     dlgFrm.params.inputs[0].append([testLblFrm])
 
-                    # make the dialog row
+                    obj2ChkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([obj2ChkFrm])
+                    obj2ChkFrm.params.frame = [None]
+                    obj2ChkFrm.params.parent = [None]
+                    obj2ChkFrm.params.value = [True]
+                    obj2ChkFrm.params.label = ["Show Test Fish"]
+                    obj2ChkFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.Obj2CheckCallback]  # button callback
+                    obj2ChkFrm.params.optData = [obj2ChkFrm]
+                    obj2ChkFrm.verb.run(obj2ChkFrm)
+
                     btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                     dlgFrm.params.inputs[0].append([btnFrm])
                     btnFrm.params.frame = [None]
                     btnFrm.params.parent = [None]
-                    btnFrm.params.label = ["Test Button"]
+                    btnFrm.params.label = ["Test Create Lib"]
                     btnFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestButtonCallback]  # button callback
                     #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
                     WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
-                    chkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([chkFrm])
-                    chkFrm.params.frame = [None]
-                    chkFrm.params.parent = [None]
-                    chkFrm.params.value = [Wye.soundOn]
-                    chkFrm.params.label = ["Test Check"]
-                    chkFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestCheckCallback]  # button callback
-                    chkFrm.params.optData = [chkFrm]
-                    chkFrm.verb.run(chkFrm)
 
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
 
@@ -2266,7 +2273,7 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.mainMenu = None
 
 
-        # enable/disable 3d sound
+        # turn sound on/off
         class SoundCheckCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -2285,25 +2292,33 @@ class WyeUI(Wye.staticObj):
                 print("3D Sound On", Wye.soundOn)
 
 
+        #
+        # test callbacks
+        #
 
-        class TestCheckCallback:
+        class Obj2CheckCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
             paramDescr = ()
             varDescr = ()
 
             def start(stack):
-                # print("TestCheckCallback started")
-                return Wye.codeFrame(WyeUI.MainMenuDialog.TestCheckCallback, stack)
+                # print("Obj2CheckCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.Obj2CheckCallback, stack)
 
 
             def run(frame):
                 data = frame.eventData
-                #print("TestCheckCallback run: data", data)
                 rowFrm = data[1]
-                #print("       frame 1", data[1].verb.__name__, " frame 2", data[2].verb.__name__)
-
-                print("TestCheckCallback: checkbox value", rowFrm.vars.currVal[0])
+                showObj = rowFrm.vars.currVal[0]
+                testObj2 = WyeCore.World.findActiveObj('testObj2')
+                testText = WyeCore.World.findActiveObj('showFishDialog')
+                if showObj:
+                    testObj2.vars.gObj[0].show()
+                    testText.vars.dlgButton[0].show()
+                else:
+                    testObj2.vars.gObj[0].hide()
+                    testText.vars.dlgButton[0].hide()
 
 
         class TestButtonCallback:
