@@ -10,7 +10,6 @@ import inspect
 import traceback
 import sys
 from sys import exit
-from direct.showbase import Audio3DManager
 
 from direct.showbase.DirectObject import DirectObject
 

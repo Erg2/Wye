@@ -11,6 +11,7 @@
 class Wye:
 
     debugOn = 0         # > 0 if exec should check debug flags
+    soundOn = True
     trace = False           # true if tracing
     step = False            # true if single stepping
     breakList = []          # list of frames to break on

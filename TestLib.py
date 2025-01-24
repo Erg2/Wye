@@ -2,7 +2,6 @@ from Wye import Wye
 from WyeCore import WyeCore
 import sys
 import traceback
-from direct.showbase import Audio3DManager
 import math
 import inspect      # for debugging
 from panda3d.core import LQuaternionf
@@ -624,9 +623,8 @@ class TestLib:
                 case 0:
                     WyeCore.World.setEventCallback("click", frame.params.tag[0], frame)
                     # frame.vars.sound[0] = base.loader.loadSfx("WyePop.wav")
-                    audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
-                    frame.vars.sound[0] = audio3d.loadSfx("WyePew.wav")
-                    audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
+                    frame.vars.sound[0] = Wye.audio3d.loadSfx("WyePew.wav")
+                    Wye.audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
                     frame.PC += 1
                     #print("clickWiggle waiting for event 'click' on tag ", frame.params.tag[0])
                 case 1:
@@ -1040,7 +1038,6 @@ else:
                     ("bubbleMin", Wye.dType.FLOAT, 180),
                     ("bubbleRand", Wye.dType.FLOAT, 180),
                     ("bubbleFloat", Wye.dType.FLOAT_LIST, [.001, .001, .1]),
-                    ("audio3d", Wye.dType.OBJECT, None),
                     )
 
         codeDescr=(
@@ -1049,8 +1046,6 @@ else:
 floorPos = [] #[[0]*20]*20      # 20x20 floor tile heights
 from random import random
 import math
-from direct.showbase import Audio3DManager
-frame.vars.audio3d[0] = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
 floorX = 80
 floorY = 80
 for yy in range(floorX + 1):
@@ -1078,9 +1073,8 @@ WyeCore.picker.makePickable(floor.path)
 from random import random
 
 # load audio manager and buffer up a bunch of pop sound slots so each bubble can play a full pop before the sound gets reused
-from direct.showbase import Audio3DManager
 for ii in range(100):
-    frame.vars.sounds[0].append(frame.vars.audio3d[0].loadSfx("WyePop.wav"))
+    frame.vars.sounds[0].append(Wye.audio3d.loadSfx("WyePop.wav"))
     
 # Weeds and bubbles decorating the floor
 for xx in range(int(floorX * floorY * .08)):
@@ -1120,11 +1114,11 @@ WyeCore.World.registerObjTag(tag, frame)
         ("CodeBlock", '''
 # float bubbles up randomly 
 from random import random
-from direct.showbase import Audio3DManager
+
 
 # set fall off
-#frame.vars.audio3d[0].setDistanceFactor(.1)
-frame.vars.audio3d[0].setDropOffFactor(5)
+#Wye.audio3d.setDistanceFactor(.1)
+Wye.audio3d.setDropOffFactor(5)
 
 for ii in range(len(frame.vars.bubbles[0])):
     bubble = frame.vars.bubbles[0][ii]
@@ -1148,7 +1142,7 @@ for ii in range(len(frame.vars.bubbles[0])):
             # pop bubble
             viewerDist = (base.camera.getPos() - bubble.path.getPos()).length()
             if viewerDist < 100:
-                frame.vars.audio3d[0].attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble.path)
+                Wye.audio3d.attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble.path)
                 frame.vars.sounds[0][frame.vars.currSnd[0]].play()
                 frame.vars.currSnd[0] = (frame.vars.currSnd[0] + 1) % 100
             

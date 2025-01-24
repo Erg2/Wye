@@ -11,7 +11,6 @@ from panda3d.core import LVector3f
 #import traceback
 #import sys
 #from sys import exit
-#from direct.showbase import Audio3DManager
 
 #for 3d geometry (input cursor)
 #from direct.showbase.ShowBase import ShowBase
@@ -1062,6 +1061,7 @@ class WyeUI(Wye.staticObj):
 
         def setValue(frame, text):
             frame.vars.gWidget[0].setText(text)
+            frame.vars.currVal[0] = text
 
         def setColor(frame, color):
             frame.vars.gWidgetStack[0][0].setColor(color)
@@ -1076,7 +1076,7 @@ class WyeUI(Wye.staticObj):
         dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
-                      ("value", Wye.dType.BOOL, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("value", Wye.dType.INTEGER, Wye.access.REFERENCE),  # user supplied var to return value in
                       ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
@@ -1137,6 +1137,7 @@ class WyeUI(Wye.staticObj):
 
         def setValue(frame, int):
             frame.vars.gWidget[1].setText(str(int))
+            frame.vars.currVal[0] = str(int)
 
         def setColor(frame, color):
             frame.vars.gWidgetStack[0][0].setColor(color)
@@ -1822,10 +1823,13 @@ class WyeUI(Wye.staticObj):
                     for ii in range(nInputs):
                         inFrm = frame.params.inputs[0][ii][0]
                         # for any text inputs, copy working string to return string
-                        if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
+                        if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputCheckbox:
                             #print("input", ii, " frame", inFrm, "\n", WyeCore.Utils.frameToString(inFrm))
                             #print("input old val '"+ inFrm.params[2][0]+ "' replaced with '"+ inFrm.vars[1][0]+"'")
                             inFrm.params.value[0] = inFrm.vars.currVal[0]
+                        elif inFrm.verb is WyeUI.InputInteger:
+                            inFrm.params.value[0] = int(inFrm.vars.currVal[0])
+
                     frame.params.retVal[0] = Wye.status.SUCCESS
                     #print("doSelect OK button, return status", frame.params.retVal)
                     retStat = True
@@ -2172,7 +2176,35 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.position = [(0,10,0),] # todo - get from viewpoint and mouse
                     dlgFrm.params.parent = [None]
 
-                    # todo - buttons
+                    # Settings
+                    settingsLblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    settingsLblFrm.params.frame = [None]  # return value
+                    settingsLblFrm.params.parent = [None]
+                    settingsLblFrm.params.label = ["Settings"]
+                    WyeCore.libs.WyeUI.InputLabel.run(settingsLblFrm)
+                    dlgFrm.params.inputs[0].append([settingsLblFrm])
+
+                    sndChckFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([sndChckFrm])
+                    sndChckFrm.params.frame = [None]
+                    sndChckFrm.params.parent = [None]
+                    sndChckFrm.params.value = [True]
+                    sndChckFrm.params.label = ["3D Sound On"]
+                    sndChckFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.SoundCheckCallback]  # button callback
+                    sndChckFrm.params.optData = [sndChckFrm]
+                    sndChckFrm.verb.run(sndChckFrm)
+
+                    #
+                    # Test
+                    #
+
+                    testLblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    testLblFrm.params.frame = [None]  # return value
+                    testLblFrm.params.parent = [None]
+                    testLblFrm.params.label = ["Test"]
+                    WyeCore.libs.WyeUI.InputLabel.run(testLblFrm)
+                    dlgFrm.params.inputs[0].append([testLblFrm])
+
                     # make the dialog row
                     btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                     dlgFrm.params.inputs[0].append([btnFrm])
@@ -2187,7 +2219,7 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.inputs[0].append([chkFrm])
                     chkFrm.params.frame = [None]
                     chkFrm.params.parent = [None]
-                    chkFrm.params.value = [True]
+                    chkFrm.params.value = [Wye.soundOn]
                     chkFrm.params.label = ["Test Check"]
                     chkFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestCheckCallback]  # button callback
                     chkFrm.params.optData = [chkFrm]
@@ -2205,6 +2237,26 @@ class WyeUI(Wye.staticObj):
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.mainMenu)
                     WyeCore.World.mainMenu = None
+
+
+        # enable/disable 3d sound
+        class SoundCheckCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("SoundCheckCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.SoundCheckCallback, stack)
+
+
+            def run(frame):
+                data = frame.eventData
+                rowFrm = data[1]
+                Wye.soundOn = rowFrm.vars.currVal[0]
+                print("3D Sound On", Wye.soundOn)
+
 
 
         class TestCheckCallback:

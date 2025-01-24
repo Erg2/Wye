@@ -2,7 +2,6 @@ from Wye import Wye
 from WyeCore import WyeCore
 import sys
 import traceback
-from direct.showbase import Audio3DManager
 import math
 import inspect      # for debugging
 

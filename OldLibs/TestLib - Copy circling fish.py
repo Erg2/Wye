@@ -322,10 +322,9 @@ class TestLib:
             match frame.PC:
                 case 0:
                     WyeCore.World.setEventCallback("click", frame.params.tag[0], frame)
-                    # frame.vars.sound[0] = base.loader.loadSfx("WyePop.wav")
-                    audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
-                    frame.vars.sound[0] = audio3d.loadSfx("WyePew.wav")
-                    audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
+                    # frame.vars.sound[0] = Wye.audio3d.loadSfx("WyePop.wav")
+                    frame.vars.sound[0] = Wye.audio3d.loadSfx("WyePew.wav")
+                    Wye.audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
                     frame.PC += 1
                     #print("clickWiggle waiting for event 'click' on tag ", frame.params.tag[0])
                 case 1:
@@ -435,7 +434,7 @@ class TestLib:
                 (None, "[1,1,0,1]")
             ),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
-            #(None, "frame.vars.sound[0] = base.loader.loadSfx('WyePew.wav')"),
+            #(None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
             ("TestLib.clickWiggle", (None, "frame.vars.fish"), (None, "frame.vars.fishTag"), (None, "[1]")),
             #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.fishTag")),
@@ -567,7 +566,7 @@ class TestLib:
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.obj"), (None, "[-90,90,0]")),
 
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj"),(None, "[0,5,-.5]")),
-            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePew.wav')"),
+            (None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
             ("TestLib.clickWiggle", (None, "frame.vars.obj"), (None, "frame.vars.objTag"), (None, "[1]")),
             #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.objTag")),

@@ -326,7 +326,7 @@ class TestLib:
             match frame.PC:
                 case 0:
                     WyeCore.World.setEventCallback("click", frame.params[1][0], frame)
-                    # frame.vars[1][0] = base.loader.loadSfx("WyePop.wav")
+                    # frame.vars[1][0] = Wye.audio3d.kiadSfx("WyePop.wav")
                     audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                     frame.vars[1][0] = audio3d.loadSfx("WyePop.wav")
                     audio3d.attachSoundToObject(frame.vars[1][0], frame.params[0][0])
@@ -658,7 +658,7 @@ def f():
         WyeCore.libs.WyeLib.setObjPos.run(f2)
         
         # load click sound
-        frame.vars[4][0] = base.loader.loadSfx("WyePew.wav")
+        frame.vars[4][0] = Wye.audio3d.kiadSfx("WyePew.wav")
         #audio3d = base.Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
         #frame.vars[4][0] = audio3d.loadSfx("WyePop.wav")
         #audio3d.attachSoundToObject(frame.vars[4][0], frame.params[0][0])

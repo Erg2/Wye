@@ -86,6 +86,7 @@ class VerbConst:
     def __init__(self):
         pass
 
+
 class WyeCore(Wye.staticObj):
     # used to detect first call for initialization
     worldInitialized = False
@@ -102,6 +103,26 @@ class WyeCore(Wye.staticObj):
     class libs:
         pass
 
+    class WyeAudioSound:
+        def __init__(self, sound):
+            self.sound = sound
+        def play(self):
+            if Wye.soundOn:
+                self.sound.play()
+
+        def set3dAttributes(self, p1, p2, p3, v1, v2, v3):
+            self.sound.set3dAttributes(p1, p2, p3, v1, v2, v3)
+
+
+    class WyeAudio3d(Audio3DManager.Audio3DManager):
+        def __init__(self, sfx, camera):
+            super().__init__(sfx, camera)
+
+        def loadSfx(self, name):
+            sfx = super().loadSfx(name)
+            #print("Loaded Sfx", sfx)
+            return WyeCore.WyeAudioSound(sfx)
+
     class World(Wye.staticObj):
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
@@ -109,6 +130,7 @@ class WyeCore(Wye.staticObj):
         varDescr = ()
         codeDescr = ()
 
+        audio3d = None
         keyHandler = None           # keyboard handler slot
         mouseHandler = None         # mouse handler slot
         debugger = None             # no debugger running
@@ -197,9 +219,10 @@ class WyeCore(Wye.staticObj):
 
                 ####### Test 3d sound
 
-                audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
-                snd = audio3d.loadSfx("WyePop.wav")
-                audio3d.attachSoundToObject(snd, _3dText)
+                #Wye.audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
+                Wye.audio3d = WyeCore.WyeAudio3d(base.sfxManagerList[0], base.camera)
+                snd = Wye.audio3d.loadSfx("WyePop.wav")
+                Wye.audio3d.attachSoundToObject(snd, _3dText)
 
                 ###########
 
