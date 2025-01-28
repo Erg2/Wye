@@ -639,7 +639,7 @@ class WyeUI(Wye.staticObj):
                         quaternion = base.camera.getQuat()
                         fwd = quaternion.getForward()
 
-                        fwd = LVector3f(fwd[0], fwd[1], 0)
+                        #fwd = LVector3f(fwd[0], fwd[1], 0)
                         quat = Quat()
                         quat.setFromAxisAngle(-90, LVector3f.up())
                         right = quat.xform(fwd)
@@ -673,15 +673,17 @@ class WyeUI(Wye.staticObj):
 
                 # slide sideways and up
                 elif self.m3Down:
-                    quaternion = base.camera.getQuat()
-                    fwd = quaternion.getForward()
-                    fwd = LVector3f(fwd[0], fwd[1], 0)  # no roll
-                    quat = Quat()
-                    quat.setFromAxisAngle(-90, LVector3f.up())
-                    right = quat.xform(fwd)
+                    #quaternion = base.camera.getQuat()
+                    #fwd = quaternion.getForward()
+                    #fwd = LVector3f(fwd[0], fwd[1], 0)  # no roll
+                    #quat = Quat()
+                    #quat.setFromAxisAngle(-90, LVector3f.up())
+                    #right = quat.xform(fwd)
+                    right = LVector3f(1,0,0)
 
                     up = LVector3f(0, 0, 1)
-                    base.camera.setPos(base.camera.getPos() + up * (y - self.m3DownPos[1]) * self.speed + right * (x - self.m3DownPos[0]) * self.speed)
+                    #base.camera.setPos(base.camera.getPos() + up * (y - self.m3DownPos[1]) * self.speed + right * (x - self.m3DownPos[0]) * self.speed)
+                    base.camera.setPos(base.camera, up * (y - self.m3DownPos[1]) * self.speed + right * (x - self.m3DownPos[0]) * self.speed)
 
 
 #                # rotate viewpoint
