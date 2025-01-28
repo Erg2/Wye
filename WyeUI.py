@@ -11,6 +11,7 @@ from panda3d.core import LVector3f
 #import traceback
 #import sys
 #from sys import exit
+import math
 
 #for 3d geometry (input cursor)
 #from direct.showbase.ShowBase import ShowBase
@@ -56,8 +57,8 @@ class WyeUI(Wye.staticObj):
         def setScale(self, val):
             self._nodePath.setScale(val)
 
-        def setPos(self, val):
-            self._nodePath.setPos(val)
+        def setPos(self, *args):
+            self._nodePath.setPos(args)
 
         def setTag(self, tag):
             self.node.setTag("wyeTag", tag)
@@ -350,8 +351,11 @@ class WyeUI(Wye.staticObj):
             self.marginT = marginT
             self._regen3d()
 
-        def setPos(self, val):
-            self._nodePath.setPos(val)
+        def setPos(self, *args):
+            self._nodePath.setPos(*args)
+
+        def setHpr(self, *args):
+            self._nodePath.setHpr(*args)
 
         def setScale(self, val):
             self._nodePath.setScale(val)
@@ -603,22 +607,28 @@ class WyeUI(Wye.staticObj):
                 if not WyeCore.World.mainMenu:
                     WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.MainMenuDialog)
                 else:
-                    print("Already have Wye Main Menu")
+                    print("Already have Wye Main Menu", WyeCore.World.mainMenu.verb.__name__)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,10,0)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
 
-            # if don't have the edit menu and the user wants it, start it
+            # if don't have the main edit menu and the user wants it, start it
             elif self.m1Pressed and self.shift and self.ctl:
                 if not WyeCore.World.editMenu:
                     WyeCore.World.editMenu = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditMainDialog)
                     WyeCore.World.editMenu.eventData = ("", (0))
                 else:
                     print("Already have editor")
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,10,0)
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
 
-            # if don't have the debug menu and the user wants it, start it
+            # if don't have the main debug menu and the user wants it, start it
             elif self.m1Pressed and self.shift and self.alt:
                 if not WyeCore.World.debugger:
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.DebugMainDialog)
                 else:
                     print("Already have debugger")
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,10,0)
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
 
             # if not dragging then moving
             # mouseY is fwd/back
@@ -1335,7 +1345,6 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setText(text)
 
         def setValue(frame, isOn):
-            print("InputCheckbox setValue", isOn, " color", Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
             frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
 
         def setColor(frame, color):
@@ -1617,6 +1626,7 @@ class WyeUI(Wye.staticObj):
                     if parent is None:
                         #print("  params.inputs", frame.params.inputs)
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
+                        dlgHeader.setHpr(base.camera, 0,1,0)
                     else:
                         dlgHeader = WyeUI._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
                                                   scale=(1,1,1), parent=parent.vars.dragObj[0].getNodePath())
@@ -1675,14 +1685,16 @@ class WyeUI(Wye.staticObj):
                         scMult = 5
                     else:
                         scMult = 1
-                    dlgNodePath = frame.vars.dragObj[0].getNodePath()
-                    dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
+                    dlgNodePath = dlgHeader.getNodePath()
+                    #dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
                     dlgBounds = dlgNodePath.getTightBounds()
                     card = CardMaker("Dlg Bgnd")
                     gFrame = LVecBase4f(0, 0, 0, 0)
                     # print("gFrame", gFrame)
                     ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
-                    wd = (dlgBounds[1][0] - dlgBounds[0][0]) * scMult + 1
+                    dx = dlgBounds[1][0] - dlgBounds[0][0]
+                    dy = dlgBounds[1][1] - dlgBounds[0][1]
+                    wd = (math.sqrt(dx*dx + dy*dy)) * scMult + 1
                     gFrame[0] = 0                                  # marginL
                     gFrame[1] = wd  # marginR
                     gFrame[2] = 0  # marginB
@@ -2194,6 +2206,7 @@ class WyeUI(Wye.staticObj):
         autoStart = False
         paramDescr = ()
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
+                    ("dlgFrm", Wye.dType.OBJECT, None),
                     )
 
         # global list of libs being edited
@@ -2216,6 +2229,7 @@ class WyeUI(Wye.staticObj):
                     point.removeNode()
                     dlgFrm.params.position = [(pos[0], pos[1], pos[2]),]
                     dlgFrm.params.parent = [None]
+                    frame.vars.dlgFrm[0] = dlgFrm
 
                     # Settings
                     settingsLblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -2357,6 +2371,7 @@ class WyeUI(Wye.staticObj):
         autoStart = False
         paramDescr = ()
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
+                    ("dlgFrm", Wye.dType.OBJECT, None),
                     )
 
         # global list of libs being edited
@@ -2379,6 +2394,7 @@ class WyeUI(Wye.staticObj):
                     point.removeNode()
                     dlgFrm.params.position = [(pos[0], pos[1], pos[2]),]
                     dlgFrm.params.parent = [None]
+                    frame.vars.dlgFrm[0] = dlgFrm
 
                     # build dialog
 
@@ -2565,7 +2581,13 @@ class WyeUI(Wye.staticObj):
                     # fire up object editor with given frame
                     #print("ObjEditorCtl: Create ObjEditor")
                     edFrm = WyeCore.World.startActiveObject(WyeCore.libs.WyeUI.EditVerb)
-                    edFrm.params.position = [(frm.vars.position[0][0], frm.vars.position[0][1], frm.vars.position[0][2]),]
+                    point = NodePath("point")
+                    point.reparentTo(render)
+                    point.setPos(base.camera, (0,10,0))
+                    pos = point.getPos()
+                    point.removeNode()
+                    edFrm.params.position = [(pos[0], pos[1], pos[2]),]
+                    #edFrm.params.position = [(frm.vars.position[0][0], frm.vars.position[0][1], frm.vars.position[0][2]),]
                     edFrm.params.parent = [None]
                     #print("ObjEditorCtl: Fill in ObjEditor objFrm param")
 
@@ -2590,7 +2612,12 @@ class WyeUI(Wye.staticObj):
                     stk = []            # create stack to run object on
                     dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(stk)  # start obj debugger and get its stack frame
                     dbgFrm.params.objFrm = [frm]  # put object to edit in editor frame
-                    dbgFrm.params.position = [[frm.vars.position[0][0], frm.vars.position[0][1], frm.vars.position[0][2]],]
+                    point = NodePath("point")
+                    point.reparentTo(render)
+                    point.setPos(base.camera, (0, 10, 0))
+                    pos = point.getPos()
+                    point.removeNode()
+                    dbgFrm.params.position = [[pos[0], pos[1], pos[2]],]
                     stk.append(dbgFrm)  # put obj debugger on its stack
 
                     # put object frame on active list
@@ -2654,11 +2681,15 @@ class WyeUI(Wye.staticObj):
                         print("Already editing this library", verb.library.__name__, " verb", verb.__name__)
                         # take self off active object list
                         WyeCore.World.stopActiveObject(frame)
+
+                        # bring lib in front of user
+                        frm = WyeUI.EditVerb.activeVerbs[verb]
+                        frm.vars.dragObj[0].setPos(base.camera, 0, 10, 0)
+                        frm.vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+
                         frame.status = Wye.status.FAIL
                         return
 
-                    # mark this frame actively being edited
-                    WyeUI.EditVerb.activeVerbs[verb] = True
 
                     # create object dialog
                     #dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
@@ -2798,6 +2829,10 @@ class WyeUI(Wye.staticObj):
                     tstBtnFrm.params.callback = [WyeCore.libs.WyeUI.TestCodeCallback]  # button callback
                     tstBtnFrm.params.optData = [(tstBtnFrm, dlgFrm, verb)]  # button row, dialog frame
                     WyeCore.libs.WyeUI.InputButton.run(tstBtnFrm)
+
+
+                    # mark this frame actively being edited
+                    WyeUI.EditVerb.activeVerbs[verb] = dlgFrm
 
                     # WyeUI.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
@@ -3498,7 +3533,7 @@ class WyeUI(Wye.staticObj):
                     point.removeNode()
                     dlgFrm.params.position = [(pos[0], pos[1], pos[2]),]
                     dlgFrm.params.parent = [None]
-
+                    frame.vars.dlgFrm[0] = dlgFrm
 
                     # build dialog
 
@@ -3633,6 +3668,9 @@ class WyeUI(Wye.staticObj):
                     ("breakLst", Wye.dType.OBJECT_LIST, None),
                     )
 
+        # global list of frames being edited
+        activeObjs = {}
+
         def start(stack):
             # print("EditVarTypeCallback started")
             f = Wye.codeFrame(WyeUI.ObjectDebugger, stack)
@@ -3645,6 +3683,21 @@ class WyeUI(Wye.staticObj):
             match (frame.PC):
                 case 0:
                     objFrm = frame.params.objFrm[0]
+
+                    # only edit frame once
+                    if objFrm in WyeUI.ObjectDebugger.activeObjs:
+                        print("Already debugging this object", objFrm.verb.__name__)
+                        # take self off active object list
+                        WyeCore.World.stopActiveObject(frame)
+
+                        # bring lib in front of user
+                        frm = WyeUI.ObjectDebugger.activeObjs[objFrm]
+                        frm.vars.dragObj[0].setPos(base.camera, 0, 10, 0)
+                        frm.vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+
+                        frame.status = Wye.status.FAIL
+                        return
+
 
                     # print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
@@ -3857,6 +3910,8 @@ class WyeUI(Wye.staticObj):
 
                                 btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, tuple)]  # button row, dialog frame
                                 WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+                    WyeUI.ObjectDebugger.activeObjs[objFrm] = dlgFrm
 
                     # WyeUI.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
