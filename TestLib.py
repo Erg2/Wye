@@ -748,11 +748,11 @@ class TestLib:
              ("Expr", "[frame]"),
              ("Expr", "frame.vars.fishes[frame.vars.count[0]]"),
              ("Var", "[objNm]"),
-             ("Expr", "[[frame.vars.count[0] ,2, -.5]]"),  # posVec
+             ("Expr", "[[frame.vars.count[0]*4 + 4,0, -.5]]"),  # posVec
              ("Const", "[[0, 90, 0]]"),  # rotVec
              ("Const", "[[1,1,1]]"),  # scaleVec
              ("Expr", "frame.vars.fishTags[frame.vars.count[0]]"),
-             ("Expr", "[[((frame.vars.count[0] % 3)+1)/3.,1,0,1]]")  # color
+             ("Expr", "[[frame.vars.count[0] % 3,(frame.vars.count[0] + 1) % 3,(frame.vars.count[0] + 2) % 3,1]]")  # color
              ),
             ("Var=", "frame.vars.count[0] += 1"),     # next fish
             ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "MakeFish"),      # if not done, loop for next fish
@@ -1021,7 +1021,7 @@ else:
                     ("bubblePop", Wye.dType.INTEGER_LIST, []),
                     ("bubbleMin", Wye.dType.FLOAT, 180),
                     ("bubbleRand", Wye.dType.FLOAT, 180),
-                    ("bubbleFloat", Wye.dType.FLOAT_LIST, [.001, .001, .1]),
+                    ("bubbleFloat", Wye.dType.FLOAT_LIST, [.001, .001, .075]),
                     )
 
         codeDescr=(

@@ -10,7 +10,7 @@
 # Wye container class that holds Wye classes
 class Wye:
 
-    debugOn = 0         # > 0 if exec should check debug flags
+    debugOn = 0             # > 0 if exec should check debug flags
     soundOn = True
     trace = False           # true if tracing
     step = False            # true if single stepping

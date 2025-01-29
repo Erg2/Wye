@@ -13,7 +13,7 @@ from panda3d.core import *
 from direct.showbase import Audio3DManager
 import sys, os
 import math
-
+import pygame.midi
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -92,7 +92,7 @@ class WyeCore(Wye.staticObj):
     worldInitialized = False
 
     # DEBUG - SHOW COMPILED CODE
-    debugListCode = True       # true to list Python code generated from Wye code
+    debugListCode = False       # true to list Python code generated from Wye code
 
     picker = None   # object picker object
     base = None     # panda3d base - set by application
@@ -112,6 +112,25 @@ class WyeCore(Wye.staticObj):
 
         def set3dAttributes(self, p1, p2, p3, v1, v2, v3):
             self.sound.set3dAttributes(p1, p2, p3, v1, v2, v3)
+
+    # Midi output class
+    # todo - finish this
+    midiInitialized = False
+    class WyeMidi(pygame.midi.Output):
+        def __init__(self, *args):
+            if not WyeCore.midiInitialized:
+                pygame.midi.init()
+            super().__init__(*args)
+
+        def set_instrument(self, *args):
+            super().set_instrument(*args)
+        def note_on(self, *args):
+            super().note_on(*args)
+        def note_off(self, *args):
+            super().note_off(*args)
+
+        def output(self, *args):
+            super().Output(*args)
 
 
     class WyeAudio3d(Audio3DManager.Audio3DManager):
@@ -217,10 +236,21 @@ class WyeCore(Wye.staticObj):
 
                 _3dText.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
-                ####### Test 3d sound
+                ####### 3d sound
 
                 #Wye.audio3d = Audio3DManager.Audio3DManager(base.sfxManagerList[0], base.camera)
                 Wye.audio3d = WyeCore.WyeAudio3d(base.sfxManagerList[0], base.camera)
+
+                ######## Midi sound
+
+                Wye.midi = WyeCore.WyeMidi(0)
+
+                # test midi sound
+                Wye.midi.set_instrument(50)
+                Wye.midi.note_on(64, 64)
+
+
+                # test 3d sound
                 snd = Wye.audio3d.loadSfx("WyePop.wav")
                 Wye.audio3d.attachSoundToObject(snd, _3dText)
 
@@ -265,6 +295,9 @@ class WyeCore(Wye.staticObj):
                     else:
                         print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
 
+                # started them, clear list
+                WyeCore.World.startObjs.clear()
+
                 # set up for text input events
                 WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
 
@@ -281,7 +314,7 @@ class WyeCore(Wye.staticObj):
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
                 # _3dText.setTag("wyeTag", tag)
 
-                print("worldRunner done World Init")
+                #print("worldRunner done World Init")
 
             # run
             else:
@@ -1193,7 +1226,7 @@ class WyeCore(Wye.staticObj):
         # build a runtime library function for this library
         def buildLib(libClass):
             libName = libClass.__name__
-            #print("WyeCore buildLib: libName", libName)
+            print("WyeCore buildLib: libName", libName)
             codeStr = "class "+libName+"_rt:\n"
             parFnStr = ""     # any parallel stream fns to add to end of codeStr
 
@@ -1206,7 +1239,7 @@ class WyeCore(Wye.staticObj):
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(val, "build"):
                             doBuild = True      # there is code to compile
-                            #print("class ", attr, " has build method.  attr is ", dType(attr), " val is ", dType(val))
+                            print("class ", attr, " has build method") #  attr is ", type(attr), " val is ", type(val))
                             build = getattr(val, "build")  # get child's build method
                             # call the build function to get the "run" code string
                             cdStr, parStr = build()  # call it to get child's runtime code string(s)
@@ -1217,7 +1250,7 @@ class WyeCore(Wye.staticObj):
                         if hasattr(val, "autoStart"):
                             if val.autoStart:
                                 classStr = libName + "." + libName + "." + val.__name__
-                                #print("buildLib Startobj: ", classStr)
+                                print("buildLib autoStart: ", classStr)
                                 WyeCore.World.startObjs.append(classStr)
 
                         # add pointer from verb class to parent library class
@@ -1276,9 +1309,81 @@ class WyeCore(Wye.staticObj):
         def createLib(name):
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
-            libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
-            libTpl += "WyeCore.World.libList.append("+name+")\n"
-            libTpl += "WyeCore.World.libDict["+name+"] = "+name + "\n"
+            #libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
+            libTpl += '''
+            # circling fish
+    class TestObject123:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.INTEGER
+        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
+        varDescr = (("gObj", Wye.dType.OBJECT, None),
+                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("sound", Wye.dType.OBJECT, None),
+                    ("position", Wye.dType.FLOAT_LIST, [0, 75, 0]),
+                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
+                    ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
+                    ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
+                    ("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
+                    ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+                    )  # var 4
+    
+        codeDescr = (
+            # (None, ("print('TestObject123 case 0: start - set up object')")),
+            ("WyeCore.libs.WyeLib.loadObject",
+             (None, "[frame]"),
+             (None, "frame.vars.gObj"),
+             (None, "['flyer_01.glb']"),
+             (None, "frame.vars.position"),  # posVec
+             (None, "[[0, 90, 0]]"),  # rotVec
+             (None, "[[2,2,2]]"),  # scaleVec
+             (None, "frame.vars.objTag"),
+             (None, "frame.vars.color")
+             ),
+            # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
+            # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
+            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            ("Label", "Repeat"),
+            # set angle
+            # ("Code", "print('TestObject123 run')"),
+            ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
+            # Step forward
+            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+            # set color
+            ("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+            # todo Next two lines are horrible - if followed by then expression indented - they have to be together
+            # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
+            ("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
+            ("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+            ("Var=",
+             "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            (
+            "WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
+    
+            ("GoTo", "Repeat")
+        )
+    
+        def build():
+            # print("Build TestObject123")
+            return WyeCore.Utils.buildCodeText("TestObject123", '''
+            libTpl += name
+            libTpl += '''.TestObject123.codeDescr)
+    
+        def start(stack):
+            # print("TestObject123 object start")
+            return Wye.codeFrame('''
+            libTpl += name
+            libTpl += '''.TestObject123, stack)
+    
+        def run(frame):
+            # print("Run TestObject123")
+            '''
+            libTpl += name + "." + name + '''_rt.TestObject123_run_rt(frame)
+'''
+            # only added to local copy, do this after build
+            #libTpl += "WyeCore.World.libList.append("+name+")\n"
+            #libTpl += "WyeCore.World.libDict["+name+"] = "+name + "\n"
             libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
 
             #print("Compile this:\n" + libTpl)
@@ -1293,8 +1398,27 @@ class WyeCore(Wye.staticObj):
             print("createLib exec library", name)
             exec(code, libDict)
             lib = getattr(WyeCore.libs, name)
-            print("Run test from template lib")
-            lib.test()
+            #print("Run test from template lib")
+            #lib.test()
+            print("Build", name)
+            lib.build()
+            WyeCore.World.libDict[name] = lib
+            WyeCore.World.libList.append(lib)
+
+            for objStr in WyeCore.World.startObjs:
+                print("createLib start: obj ", objStr," in startObjs")
+                namStrs = objStr.split(".")  # parse name of object
+                if namStrs[1] in WyeCore.World.libDict:
+                    obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
+                    print("start", obj.__name__)
+                    WyeCore.World.startActiveObject(obj)
+                else:
+                    print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
+            WyeCore.World.startObjs.clear()
+
+            
+            #print("Start TestObj123")
+            #WyeCore.World.startActiveObject(lib.TestObject123)
 
     # Very special verb  used to execute parallel code
     # Each parallel stream needs its own stack and its own parent frame with stack pointer.

@@ -1372,7 +1372,7 @@ class WyeUI(Wye.staticObj):
                 data = frame.eventData
                 #print("InputDropdownCallback run: data", data)
                 rowFrm = data[1][0]
-                print("InputCheckboxCallback run: rowFrm", rowFrm.params.label[0], " ", rowFrm.verb.__name__)
+                #print("InputCheckboxCallback run: rowFrm", rowFrm.params.label[0], " ", rowFrm.verb.__name__)
 
                 # toggle value
                 rowFrm.vars.currVal[0] = not rowFrm.vars.currVal[0]     # toggle value
@@ -2190,7 +2190,7 @@ class WyeUI(Wye.staticObj):
             return Wye.codeFrame(WyeUI.DropdownCallback, stack)
 
         def run(frame):
-            print("DropdownCallback run: event data", frame.eventData)
+            #print("DropdownCallback run: event data", frame.eventData)
             rowIx = frame.eventData[1][0]
             dlgFrm = frame.eventData[1][1]
             # return dropdown index in dropdown dialog's first param
@@ -2249,6 +2249,16 @@ class WyeUI(Wye.staticObj):
                     sndChkFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.SoundCheckCallback]  # button callback
                     sndChkFrm.params.optData = [sndChkFrm]
                     sndChkFrm.verb.run(sndChkFrm)
+
+                    codeChkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([codeChkFrm])
+                    codeChkFrm.params.frame = [None]
+                    codeChkFrm.params.parent = [None]
+                    codeChkFrm.params.value = [WyeCore.debugListCode]
+                    codeChkFrm.params.label = ["List Compiled Code"]
+                    codeChkFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.ListCodeCallback]  # button callback
+                    codeChkFrm.params.optData = [codeChkFrm]
+                    codeChkFrm.verb.run(codeChkFrm)
 
                     #
                     # Test
@@ -2315,6 +2325,24 @@ class WyeUI(Wye.staticObj):
                 print("3D Sound On", Wye.soundOn)
 
 
+        # turn sound on/off
+        class ListCodeCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("ListCodeCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.ListCodeCallback, stack)
+
+
+            def run(frame):
+                data = frame.eventData
+                rowFrm = data[1]
+                WyeCore.debugListCode = rowFrm.vars.currVal[0]
+                print("List Code On", WyeCore.debugListCode)
+
         #
         # test callbacks
         #
@@ -2358,7 +2386,7 @@ class WyeUI(Wye.staticObj):
                 print("createLibrary test")
                 WyeCore.Utils.createLib("TemplateTestLib")
                 print("Run test from TestButtonCallback")
-                WyeCore.libs.TemplateTestLib.test()
+                #WyeCore.libs.TemplateTestLib.test()
                 print("Known libs")
                 for libName in dir(WyeCore.libs):
                     if not libName.startswith("__"):
@@ -2675,6 +2703,8 @@ class WyeUI(Wye.staticObj):
                     #    player.note_off(64, 64)
                     #del player
                     #pygame.midi.quit()
+
+
 
                     # only edit frame once
                     if verb in WyeUI.EditVerb.activeVerbs:
