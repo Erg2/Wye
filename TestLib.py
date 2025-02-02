@@ -8,7 +8,7 @@ from panda3d.core import LQuaternionf
 
 class TestLib:
     def build():
-        print("build TestLib")
+        #print("build TestLib")
         WyeCore.Utils.buildLib(TestLib)
 
     class libDialog:

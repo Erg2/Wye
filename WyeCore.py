@@ -100,6 +100,8 @@ class WyeCore(Wye.staticObj):
 
     lastIsNothingToRun = False  # Debug: used to print "nothing to do" only on transition to nothing to do
 
+    versionText = None
+
     class libs:
         pass
 
@@ -227,14 +229,14 @@ class WyeCore(Wye.staticObj):
                 text.setCardDecal(True)
                 #
                 # create 3d text object
-                _3dText = NodePath(text.generate())  # supposed to, but does not, generate pickable node
+                WyeCore.World.versionText = NodePath(text.generate())  # supposed to, but does not, generate pickable node
                 # _3dText = NodePath(text)
-                _3dText.reparentTo(render)
-                _3dText.setScale(.2, .2, .2)
-                _3dText.setPos(-.5, 17, 4)
-                _3dText.setTwoSided(True)
+                WyeCore.World.versionText.reparentTo(render)
+                WyeCore.World.versionText.setScale(.2, .2, .2)
+                WyeCore.World.versionText.setPos(-.5, 17, 4)
+                WyeCore.World.versionText.setTwoSided(True)
 
-                _3dText.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
+                WyeCore.World.versionText.node().setIntoCollideMask(GeomNode.getDefaultCollideMask())
 
                 ####### 3d sound
 
@@ -252,7 +254,7 @@ class WyeCore(Wye.staticObj):
 
                 # test 3d sound
                 snd = Wye.audio3d.loadSfx("WyePop.wav")
-                Wye.audio3d.attachSoundToObject(snd, _3dText)
+                Wye.audio3d.attachSoundToObject(snd, WyeCore.World.versionText)
 
                 ###########
 
@@ -1226,7 +1228,7 @@ class WyeCore(Wye.staticObj):
         # build a runtime library function for this library
         def buildLib(libClass):
             libName = libClass.__name__
-            print("WyeCore buildLib: libName", libName)
+            #print("WyeCore buildLib: libName", libName)
             codeStr = "class "+libName+"_rt:\n"
             parFnStr = ""     # any parallel stream fns to add to end of codeStr
 
@@ -1239,7 +1241,7 @@ class WyeCore(Wye.staticObj):
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(val, "build"):
                             doBuild = True      # there is code to compile
-                            print("class ", attr, " has build method") #  attr is ", type(attr), " val is ", type(val))
+                            #print("class ", attr, " has build method") #  attr is ", type(attr), " val is ", type(val))
                             build = getattr(val, "build")  # get child's build method
                             # call the build function to get the "run" code string
                             cdStr, parStr = build()  # call it to get child's runtime code string(s)
@@ -1250,7 +1252,7 @@ class WyeCore(Wye.staticObj):
                         if hasattr(val, "autoStart"):
                             if val.autoStart:
                                 classStr = libName + "." + libName + "." + val.__name__
-                                print("buildLib autoStart: ", classStr)
+                                #print("buildLib autoStart: ", classStr)
                                 WyeCore.World.startObjs.append(classStr)
 
                         # add pointer from verb class to parent library class
@@ -1400,7 +1402,7 @@ class WyeCore(Wye.staticObj):
             lib = getattr(WyeCore.libs, name)
             #print("Run test from template lib")
             #lib.test()
-            print("Build", name)
+            #print("Build", name)
             lib.build()
             WyeCore.World.libDict[name] = lib
             WyeCore.World.libList.append(lib)
@@ -1416,7 +1418,7 @@ class WyeCore(Wye.staticObj):
                     print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
             WyeCore.World.startObjs.clear()
 
-            
+
             #print("Start TestObj123")
             #WyeCore.World.startActiveObject(lib.TestObject123)
 
