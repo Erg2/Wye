@@ -1332,6 +1332,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setText(text)
 
         def setValue(frame, isOn):
+            frame.vars.currVal[0] = isOn
             frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
 
         def setColor(frame, color):
@@ -3862,17 +3863,20 @@ class WyeUI(Wye.staticObj):
                             attrIx += 1
 
                         # Step
+                        runChkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)    # Do early, Need to pass to step
+
                         btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                         dlgFrm.params.inputs[0].append([btnFrm])
                         btnFrm.params.frame = [None]  # return value
                         btnFrm.params.parent = [None]
                         btnFrm.params.label = ["  Step"]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.ObjectDebugger.DebugStepCallback]  # button callback
-                        btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, dialog frame
+                        btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame, runChkFrm)]  # button row, dialog frame
                         btnFrm.params.color = [(1,1,0,1)]
                         WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
-                        runChkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                        # note: step needs runChkFrm to hack run state
+                        #runChkFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
                         dlgFrm.params.inputs[0].append([runChkFrm])
                         runChkFrm.params.frame = [None]
                         runChkFrm.params.parent = [None]
@@ -4362,6 +4366,7 @@ class WyeUI(Wye.staticObj):
 
                 objFrm = data[1][3]
                 dbgFrm = data[1][4]
+                chkBxFrm = data[1][5]
                 # if parallel, set flag on actual object frame (parent of this frame)
                 if objFrm.verb is WyeCore.ParallelStream:
                     objFrm = objFrm.parentFrame
@@ -4371,7 +4376,9 @@ class WyeUI(Wye.staticObj):
                         if objFrm.verb is WyeCore.ParallelStream:
                             objFrm.parentFrame.breakpt = True  # make sure the brake is on
                         else:
-                            objFrm.breakpt = True  # make sure the brake is on
+                            if not objFrm.breakpt:  # make sure the brake is on
+                                objFrm.breakpt = True
+                                chkBxFrm.verb.setValue(chkBxFrm, False)
 
                         objFrm.breakCt += 1  # step object once
                         # print("DebugStepCallback increment breakCt to", objFrm.breakCt," on objFrm", objFrm.verb.__name__)
