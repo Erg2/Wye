@@ -15,6 +15,8 @@ class Wye:
     trace = False           # true if tracing
     step = False            # true if single stepping
     breakList = []          # list of frames to break on
+    midi = None
+    midiLastIns = 0
 
     dragging = False
 

@@ -245,7 +245,7 @@ class TestLib:
             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
-            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            #(None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
             ("Label", "Repeat"),
             # set angle
             #("Code", "print('testObj3 run')"),
@@ -313,7 +313,7 @@ class TestLib:
             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
-            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            #(None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
             ("Label", "Repeat"),
             # set angle
             #("Code", "print('testObj3 run')"),
@@ -378,7 +378,7 @@ class TestLib:
             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
-            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            #(None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
             ("Label", "Repeat"),
             # set angle
             #("Code", "print('testObj3 run')"),
@@ -623,8 +623,8 @@ class TestLib:
                 case 0:
                     WyeCore.World.setEventCallback("click", frame.params.tag[0], frame)
                     # frame.vars.sound[0] = base.loader.loadSfx("WyePop.wav")
-                    frame.vars.sound[0] = Wye.audio3d.loadSfx("WyePew.wav")
-                    Wye.audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
+                    #frame.vars.sound[0] = Wye.audio3d.loadSfx("WyePew.wav")
+                    #Wye.audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
                     frame.PC += 1
                     #print("clickWiggle waiting for event 'click' on tag ", frame.params.tag[0])
                 case 1:
@@ -632,7 +632,8 @@ class TestLib:
                     # do nothing until event occurs
 
                 case 2:
-                    frame.vars.sound[0].play()
+                    #frame.vars.sound[0].play()
+                    Wye.midi.playNote(91, 50, 64, 1)
                     frame.PC += 1
 
                 case 3:
@@ -1126,6 +1127,7 @@ for ii in range(len(frame.vars.bubbles[0])):
             # pop bubble
             viewerDist = (base.camera.getPos() - bubble.path.getPos()).length()
             if viewerDist < 100:
+                #Wye.midi.playNote(118, 60, int(127-viewerDist), .1)
                 Wye.audio3d.attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble.path)
                 frame.vars.sounds[0][frame.vars.currSnd[0]].play()
                 frame.vars.currSnd[0] = (frame.vars.currSnd[0] + 1) % 100
@@ -1248,7 +1250,7 @@ for ii in range(len(frame.vars.bubbles[0])):
                 ),
                 # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
                 # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
-                (None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePop.wav')"),
+                #(None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePop.wav')"),
                 ("Label", "Done"),
             ),
             (

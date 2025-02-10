@@ -14,6 +14,7 @@ from direct.showbase import Audio3DManager
 import sys, os
 import math
 import pygame.midi
+import time
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -115,24 +116,81 @@ class WyeCore(Wye.staticObj):
         def set3dAttributes(self, p1, p2, p3, v1, v2, v3):
             self.sound.set3dAttributes(p1, p2, p3, v1, v2, v3)
 
+
     # Midi output class
     # todo - finish this
     midiInitialized = False
+
+    # midi
+    # pygame.midi.init()
+    # player = pygame.midi.Output(0)
+    # for ins in range(127):
+    #    print("Midi Instrument", ins)
+    #    player.set_instrument(ins)
+    #    player.note_on(64, 64)
+    #    time.sleep(1)
+    #    player.note_off(64, 64)
+    # del player
+    # pygame.midi.quit()
     class WyeMidi(pygame.midi.Output):
+        # device_id 0..127, latency, buffer_size
         def __init__(self, *args):
             if not WyeCore.midiInitialized:
                 pygame.midi.init()
             super().__init__(*args)
 
-        def set_instrument(self, *args):
+        # instrument_id 0..127, channel
+        def setInstrument(self, *args):
+            Wye.midiLastIns = args[0]       # risky
             super().set_instrument(*args)
-        def note_on(self, *args):
+
+        # note 0..127?, velocity 0..127, channel
+        def noteOn(self, *args):
             super().note_on(*args)
-        def note_off(self, *args):
+
+        # start note and put frame on queue to stop it after duration
+        def playNote(self, instrument, note, velocity, duration):
+            Wye.midiLastIns = instrument
+            Wye.midi.setInstrument(instrument)
+            super().note_on(note, velocity)
+            start = time.time()
+            end = start + duration
+            frm = WyeCore.World.startActiveObject(WyeCore.NoteDone)
+            frm.params.stopTime = [end]
+            frm.params.note = [note]
+            frm.instrument = [instrument]
+
+        # note, velocity 0..127, channel
+        def noteOff(self, *args):
             super().note_off(*args)
 
-        def output(self, *args):
-            super().Output(*args)
+    class NoteDone:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = (("stopTime", Wye.dType.INTEGER, Wye.access.REFERENCE),
+                      ("note", Wye.dType.INTEGER, Wye.access.REFERENCE),
+                      ("instrument", Wye.dType.INTEGER, Wye.access.REFERENCE))
+        varDescr = (("stopTime", Wye.dType.INTEGER,0),
+                    ("note", Wye.dType.INTEGER, Wye.access.REFERENCE),
+                    ("instrument", Wye.dType.INTEGER, Wye.access.REFERENCE))
+
+        def start(stack):
+            # print("NoteDone started")
+            return Wye.codeFrame(WyeCore.NoteDone, stack)
+
+        def run(frame):
+            match(frame.PC):
+                case 0:
+                    frame.vars.stopTime[0] = frame.params.stopTime[0]
+                    frame.vars.note[0] = frame.params.note[0]
+                    frame.PC += 1
+                case 1:
+                    if time.time() > frame.vars.stopTime[0]:
+                        oldIns = Wye.midiLastIns
+                        Wye.midi.setInstrument(frame.vars.instrument[0])
+                        Wye.midi.noteOff(frame.vars.note[0], 64)
+                        Wye.midi.setInstrument(oldIns)
+                        frame.status = Wye.status.SUCCESS
 
 
     class WyeAudio3d(Audio3DManager.Audio3DManager):
@@ -177,6 +235,7 @@ class WyeCore(Wye.staticObj):
         eventCallbackDict = {}              # dictionary of event callbacks
         repeatEventCallbackDict = {}        # dictionary of repeated event frames
         _repEventAddList = []               # can't add event frame from within event callback, so queue here
+        _repEventDelList = []               # can't del event frame from within event callback, so queue here
 
         displayCycleCount = 0           # DEBUG
 
@@ -248,9 +307,11 @@ class WyeCore(Wye.staticObj):
                 Wye.midi = WyeCore.WyeMidi(0)
 
                 # test midi sound
-                Wye.midi.set_instrument(50)
-                Wye.midi.note_on(64, 64)
-
+                Wye.midi.playNote(50, 45,64,.25)
+                time.sleep(.1)
+                Wye.midi.playNote(51, 55,64,.5)
+                time.sleep(.1)
+                Wye.midi.playNote(52, 65, 64, .75)
 
                 # test 3d sound
                 snd = Wye.audio3d.loadSfx("WyePop.wav")
@@ -493,9 +554,8 @@ class WyeCore(Wye.staticObj):
         # even if their context has gone away
         # Note that they keep references to any variables up the stack that they need
         # even if those variable's frames have been GC'd
+        # (>> todo need to check that the refs are actually kept!<<)
         def setRepeatEventCallback(eventName, frame, data=None):
-
-
             frameID = "frm"+str(WyeCore.Utils.getId()) # get unique id for frame list
             # note: list in repEvtCallbackDict acts as global stack frame as well as
             # holding onto the event tags this event is for
@@ -504,16 +564,16 @@ class WyeCore(Wye.staticObj):
             WyeCore.World._repEventAddList.append(repEvt)
             #print("setRepeatEventCallback on event ", eventName, " object ", frame, " add frameID ", frameID, "\nrepDict now=", WyeCore.World.repeatEventCallbackDict)
             return frameID
-            pass
+
 
         # find frame entry in rep event dict
         # remove it from rep dict and from event dict
+        # >> bad to call this from within the repeated event callback
         def clearRepeatEventCallback(frameTag):
             if frameTag in WyeCore.World.repeatEventCallbackDict:
-                del WyeCore.World.repeatEventCallbackDict[frameTag]
+                WyeCore.World._repEventDelList.append(frameTag)
                 #print("clrRepEvt: frame ", frame, " evt ", eventName, " tag ", tag, " frmID ", frameID)
                 #print("clrRepEvt: callbackDict ", WyeCore.World.eventCallbackDict)
-
             else:
                 print("Error: clearRepeatEventCallback failed to find frameTag '", frameTag,
                       "' in WyeCore.World.repeatEventCallbackDict")
@@ -586,10 +646,16 @@ class WyeCore(Wye.staticObj):
             def run(frame):
                 delList = []
                 #print("repEventObj run: Event dict:", WyeCore.World.repeatEventCallbackDict)
+
+                # if repeat events queued up to be added or removed
                 if len(WyeCore.World._repEventAddList) > 0:
                     for repEvt in WyeCore.World._repEventAddList:
                         WyeCore.World.repeatEventCallbackDict[repEvt[3]] = repEvt
-                    WyeCore.World._repEventAddList = []
+                    WyeCore.World._repEventAddList.clear()
+                if len(WyeCore.World._repEventDelList) > 0:
+                    for repEvt in WyeCore.World._repEventDelList:
+                        del WyeCore.World.repeatEventCallbackDict[repEvt]
+                    WyeCore.World._repEventDelList.clear()
 
                 evtIx = 0       # debug
                 for evtID in WyeCore.World.repeatEventCallbackDict:
@@ -1212,6 +1278,7 @@ class WyeCore(Wye.staticObj):
                 parFnText += "  fs = Wye.codeFrame(WyeCore.ParallelStream, stk)\n" # frame for stream
                 #parFnText += "  print('gen parallel frame.  Old frame var: ', dir(f.vars))\n  print('   new frame var: ', dir(fs.vars))\n"
                 parFnText += "  fs.vars = f.vars\n"
+                parFnText += "  fs.vars = f.vars\n"
                 parFnText += "  fs.params = f.params\n"
                 parFnText += "  fs.parentFrame = f\n"
                 parFnText += "  fs.run = " + libName + "."  + libName + "_rt." + verbName + "_stream"+str(ix)+"_run_rt\n"
@@ -1352,6 +1419,7 @@ class WyeCore(Wye.staticObj):
             ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
             # Step forward
             ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+            ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.gObj")),
             # set color
             ("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
             # todo Next two lines are horrible - if followed by then expression indented - they have to be together

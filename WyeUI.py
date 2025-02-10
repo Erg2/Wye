@@ -2214,6 +2214,7 @@ class WyeUI(Wye.staticObj):
         def run(frame):
             match(frame.PC):
                 case 0:
+
                     # create top level edit dialog
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
                     dlgFrm.params.retVal = frame.vars.dlgStat
@@ -2296,6 +2297,16 @@ class WyeUI(Wye.staticObj):
                     btnFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestButtonCallback]  # button callback
                     #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
                     WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+                    midFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([midFrm])
+                    midFrm.params.frame = [None]
+                    midFrm.params.parent = [None]
+                    midFrm.params.label = ["Test Midi"]
+                    midFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestMidiCallback]  # button callback
+                    #midFrm.params.optData = [(attrIx, midFrm, dlgFrm, verb)]  # button row, dialog frame
+                    WyeCore.libs.WyeUI.InputButton.run(midFrm)
+
 
 
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
@@ -2418,6 +2429,31 @@ class WyeUI(Wye.staticObj):
                 for libName in dir(WyeCore.libs):
                     if not libName.startswith("__"):
                         print("  ", libName)
+
+
+        class TestMidiCallback:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("ins", Wye.dType.INTEGER, 0),
+                        ("ct", Wye.dType.INTEGER, 0),)
+
+            def start(stack):
+                # print("TestMidiCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.TestMidiCallback, stack)
+
+            def run(frame):
+                ct = frame.vars.ct[0]
+                if ct < 12:
+                    frame.vars.ct[0] += 1
+                else:
+                    frame.vars.ct[0] = 0
+                    ins = frame.vars.ins[0]
+                    if ins < 128:
+                        Wye.midi.playNote(ins, 60, 64, 1)
+                        print("Ins", ins)
+                        frame.vars.ins[0] = ins + 1
+
 
     # Create dialog showing loaded libraries so user can edit them
     class EditMainDialog:
@@ -2720,20 +2756,6 @@ class WyeUI(Wye.staticObj):
             match(frame.PC):
                 case 0:
                     #print("EditVerb run case 0")
-
-                    # test midi player
-                    #pygame.midi.init()
-                    #player = pygame.midi.Output(0)
-                    #for ins in range(127):
-                    #    print("Midi Instrument", ins)
-                    #    player.set_instrument(ins)
-                    #    player.note_on(64, 64)
-                    #    time.sleep(1)
-                    #    player.note_off(64, 64)
-                    #del player
-                    #pygame.midi.quit()
-
-
 
                     # only edit frame once
                     if verb in WyeUI.EditVerb.activeVerbs:
@@ -3919,7 +3941,11 @@ class WyeUI(Wye.staticObj):
                     attrIx = 0
 
                     # Need meta layer to display parallel code blocks
-                    if isinstance(objFrm, Wye.parallelFrame):
+                    if objFrm.verb is WyeCore.ParallelStream:
+                        oFrm = objFrm.parentFrame
+                    else:
+                        oFrm = objFrm
+                    if oFrm.verb.mode == Wye.mode.PARALLEL:
                         lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                         lblFrm.params.frame = [None]  # return value
                         lblFrm.params.parent = [None]
@@ -3929,28 +3955,17 @@ class WyeUI(Wye.staticObj):
                     # regular boring normal single stream code
                     else:
                         print("Do single thread code")
-                        if objFrm.verb is WyeCore.ParallelStream:
-                            oFrm = objFrm.parentFrame
-                        else:
-                            oFrm = objFrm
                         if hasattr(oFrm.verb, "codeDescr"):
                             codeDescr = oFrm.verb.codeDescr
                             for tuple in codeDescr:
-                                print("  do tuple ", tuple)
-                                lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
-                                lblFrm.params.frame = [None]  # return value
-                                lblFrm.params.parent = [None]
-                                lblFrm.params.label = ["  " + str(tuple[1])]
-                                lblFrm.params.color = [Wye.color.DISABLED_COLOR]
-                                WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                                dlgFrm.params.inputs[0].append([lblFrm])
-                                continue
-
                                 # make the dialog row
-                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                                # >> disable debug on code lines until decide how to actually do it! <<
+                                #btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                                btnFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                                 dlgFrm.params.inputs[0].append([btnFrm])
                                 btnFrm.params.frame = [None]  # return value
                                 btnFrm.params.parent = [None]
+                                btnFrm.params.color = [Wye.color.DISABLED_COLOR]
 
                                 # fill in text and callback based on code row type
                                 if tuple[0] is None:
