@@ -1228,10 +1228,10 @@ for ii in range(len(frame.vars.bubbles[0])):
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [3 ,2,-1]),
-                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.03]),
+                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., .03]),
                     ("posAngle", Wye.dType.FLOAT, 4.712388),
-                    ("dAngleDeg", Wye.dType.FLOAT_LIST, [0., 0., -.5]),
-                    ("dAngleRad", Wye.dType.FLOAT, 0.0087266462),
+                    ("dAngleDeg", Wye.dType.FLOAT_LIST, [0., 0., .5]),
+                    ("dAngleRad", Wye.dType.FLOAT, -0.0087266462),
                     )  # var 4
 
         codeDescr=(
@@ -1241,15 +1241,15 @@ for ii in range(len(frame.vars.bubbles[0])):
                 ("WyeCore.libs.WyeLib.loadObject",
                     (None, "[frame]"),
                     (None, "frame.vars.gObj"),
-                    (None, "['flyer_01.glb']"),
+                    (None, "['fish1a.glb']"),
                     (None, "frame.vars.position"),       # posVec
                     (None, "[[0, 90, 0]]"),      # rotVec
-                    (None, "[[.5,.5,.5]]"),    # scaleVec
+                    (None, "[[.25,.25,.25]]"),    # scaleVec
                     (None, "frame.vars.objTag"),
-                    (None, "[[.5,0.5,.5,1]]")
+                    (None, "[[.9,0.5,0,1]]")
                 ),
                 # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
-                # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
+                #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "frame.vars.dPos")),
                 #(None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePop.wav')"),
                 ("Label", "Done"),
             ),
@@ -1272,8 +1272,11 @@ x = ctrPos[0] + math.sin(angle)
 y = ctrPos[1] + math.cos(angle)
 frame.vars.gObj[0].setPos(x,y,ctrPos[2])
 angle += frame.vars.dAngleRad[0]
-if angle < 0:
-    angle = math.pi * 2
+#if angle < 0:
+#    angle = math.pi * 2
+#if angle > math.pi * 2:
+#    angle = 0
+angle = angle % (math.pi * 2)
 frame.vars.posAngle[0] = angle
                 '''),
                 #("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
