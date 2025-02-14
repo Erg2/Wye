@@ -879,19 +879,11 @@ class WyeUI(Wye.staticObj):
         def doSelect(id):
             status = False
             WyeUI.Dialog.hideCursor()
-            # if there is an active dialog, deactivate it
-            #if WyeUI.FocusManager._activeDialog:
-            #    WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
-            #    WyeUI.FocusManager._activeDialog = None
-            # loop through all the dialog hierarchies checking leaf dialogs to see if one wants this tag
             for hier in WyeUI.FocusManager._dialogHierarchies:       # loop through them all to be sure only one dialog has field selected
-                #print("FocusManager doSelect hier=", hier)
                 if len(hier) > 0:
                     frm = hier[-1]
-                    #print("FocusManager doSelect", frm, ",", frm.params.title[0], ",", id)
                     # if dialog uses the tag, mark it active
                     if frm.verb.doSelect(frm, id):
-                        #print("doSelect: Active dialog", WyeUI.FocusManager._activeDialog.params.title)
                         WyeUI.Dialog.select(frm, True)
                         break   # Found user of tag. Done with loop
 
@@ -990,6 +982,9 @@ class WyeUI(Wye.staticObj):
         def redisplay(frame):
             pass
 
+        def doSelect(frame, dlgFrame, tag):
+            return False        # label never accepts a hit
+
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.removeNode()
@@ -1076,6 +1071,16 @@ class WyeUI(Wye.staticObj):
             # print("  set text", txt," ix", ix, " txtWidget", inWidg)
             inWidg.setText(inFrm.vars.currVal[0])
 
+        def doSelect(frame, dlgFrame, tag):
+            if tag in frame.vars.tags[0]:
+                inWidg = frame.vars.gWidget[0]
+                # print("  found ix", ix, " inWdg", inWidg, " Set selected color")
+                inWidg.setColor(Wye.color.SELECTED_COLOR)  # set input background to "has focus" color
+                WyeUI.Dialog.drawCursor(frame)
+                return True
+            else:
+                return False
+
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.removeNode()
@@ -1161,6 +1166,17 @@ class WyeUI(Wye.staticObj):
             # print("  set text", txt," ix", ix, " txtWidget", inWidg)
             inWidg.setText(str(inFrm.vars.currVal[0]))
 
+        def doSelect(frame, dlgFrame, tag):
+            if tag in frame.vars.tags[0]:
+                inWidg = frame.vars.gWidget[0]
+                # print("  found ix", ix, " inWdg", inWidg, " Set selected color")
+                inWidg.setColor(Wye.color.SELECTED_COLOR)  # set input background to "has focus" color
+                WyeUI.Dialog.drawCursor(frame)
+                WyeUI.Dialog._activeInputInteger = frame
+                return True
+            else:
+                return False
+
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
 
@@ -1230,6 +1246,23 @@ class WyeUI(Wye.staticObj):
 
         def redisplay(frame):
             pass
+
+        def doSelect(frame, dlgFrame, tag):
+            if tag in frame.vars.tags[0]:
+                #print("InputButton", frame.params.label[0])
+
+                frame.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR)  # set button color pressed
+                if frame.vars.clickCount[0] <= 0:  # if not in an upclick count, process click
+                    frame.vars.clickCount[0] = 10  # start flash countdown (in display frames)
+                    dlgFrame.vars.clickedBtns[0].append(frame)  # stash button for flash countdown
+
+                    if frame.params.callback:
+                        # user's param callback
+                        #print("InputButton doCallback")
+                        WyeCore.libs.WyeUI.Dialog.doCallback(dlgFrame, frame, tag)
+                return True
+            else:
+                return False
 
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
@@ -1323,6 +1356,15 @@ class WyeUI(Wye.staticObj):
 
         def redisplay(frame):
             frame.verb.setValue(frame, frame.params.value[0])
+
+        def doSelect(frame, dlgFrame, tag):
+            if tag in frame.vars.tags[0]:
+                if frame.params.callback:
+                    # user's param callback
+                    WyeCore.libs.WyeUI.Dialog.doCallback(dlgFrame, frame, tag)
+                return True
+            else:
+                return False
 
         def close(frame):
             for gObj in frame.vars.gWidgetStack[0]:
@@ -1459,6 +1501,23 @@ class WyeUI(Wye.staticObj):
         def redisplay(frame):
             frame.verb.setValue(frame, frame.params.selectionIx[0])
 
+        def doSelect(frame, dlgFrame, tag):
+            if tag in frame.vars.tags[0]:
+                dlgFrame.params.retVal[0] = Wye.status.SUCCESS
+                # call callback
+                if frame.params.callback:
+                    # user's param callback
+                    #print("InputDropdown doSelect: doCallback", frame.params.callback[0].__name__)
+                    WyeCore.libs.WyeUI.Dialog.doCallback(dlgFrame, frame, tag)
+
+                # Done with dialog
+                #print("InputDropdown doSelect: closeDialog")
+                #WyeCore.libs.WyeUI.Dialog.closeDialog(dlgFrame)
+
+                return True
+            else:
+                return False
+
         def setList(frame, newList, newIndex):
             print("frame", frame.verb.__name__, " setList: newList", newList, " newIndex", newIndex)
             frame.vars.list[0] = newList
@@ -1474,7 +1533,7 @@ class WyeUI(Wye.staticObj):
 
         def setValue(frame, index):
             # todo Range check index!
-            print("InputDropdown setValue. Label", frame.params.label, " index", index, " vars", frame.varsToStringV())
+            #print("InputDropdown setValue. Label", frame.params.label, " index", index, " vars", frame.varsToStringV())
             frame.vars.gWidget[0].setText(frame.vars.list[0][index])
             frame.params.selectionIx[0] = index
 
@@ -1482,7 +1541,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setColor(color)
             frame.vars.gWidget[0].setColor(color)
 
-        # User clicked input, generate the DropDown
+        # User clicked input, generate the DropDown and return selected row /
         class InputDropdownCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
@@ -1538,9 +1597,8 @@ class WyeUI(Wye.staticObj):
                         #print("InputDropdownCallback run case1: dlgFrm", dlgFrm.verb.__name__, " status", \
                         #      Wye.status.tostring(frame.status), " selIx", dlgFrm.vars.currInp[0], \
                         #      " retStat", frame.vars.retStat[0])
-                        if frame.vars.retStat[0] == Wye.status.SUCCESS:
-                            #print("InputDropdownCallback done, success, set row label to", dlgFrm.vars.currInp[0])
-                            rowFrm.verb.setValue(rowFrm, dlgFrm.vars.currInp[0])
+                        if dlgFrm.status == Wye.status.SUCCESS:
+                            rowFrm.verb.setValue(rowFrm, dlgFrm.params.retVal[0])
 
                             #print("parentFrm", rowFrm.verb.__name__, " callback", rowFrm.params.callback)
                             if rowFrm.vars.userCallback[0]:
@@ -1573,7 +1631,7 @@ class WyeUI(Wye.staticObj):
                     ("dlgWidgets", Wye.dType.OBJECT_LIST, None),            # 1 standard dialog widgets
                     ("dlgTags", Wye.dType.STRING_LIST, None),               # 2 OK, Cancel widget tags
                     ("inpTags", Wye.dType.OBJECT, None),                    # 3 dictionary return param ix of input by graphic tag
-                    ("currInp", Wye.dType.INTEGER, -1),                     # 4 index to current focus widget, if any
+                    ("currInp", Wye.dType.OBJECT, None),                     # 4 index to current focus widget, if any
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # 5 list of buttons that need to be unclicked
                     ("dragObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj *** REF'D BY CHILDREN ***
                     ("topTag", Wye.dType.STRING, ""),                       # 6 Wye tag for top object (used for dragging)
@@ -1647,12 +1705,9 @@ class WyeUI(Wye.staticObj):
                         # stash returned display obj tags in lookup dict to detect what user clicked on
                         #print("Build dialog", frame.params.title[0])
                         if hasattr(inFrm.verb, "display"):
-                            for lbl in inFrm.verb.display(inFrm, frame, pos):  # displays label, updates pos, returns selection tags
-                                frame.vars.inpTags[0][lbl] = ii
+                            inFrm.verb.display(inFrm, frame, pos)  # displays label, updates pos
                         else:
                             print("Dialog: Error. Unknown input verb", inFrm.verb.__name__)
-
-                    #print("Dialog has input widgets", frame.vars.inpTags[0])
 
                     # display OK, Cancel buttons
                     pos[1] -= .1  # hack fwd just a tad in case text overran the dialog space and covered the ok/cancel
@@ -1736,7 +1791,7 @@ class WyeUI(Wye.staticObj):
                 verbFrm = callVerb.start(frame.SP)
                 # handle user data
                 if len(inFrm.vars.optData) > 0:
-                    # print("Button callback", callVerb.__name__, " user data", inFrm.vars.optData)
+                    #print("Dialog doCallback", callVerb.__name__, " user data", inFrm.vars.optData)
                     data = inFrm.vars.optData[0]
                 else:
                     data = None
@@ -1750,7 +1805,7 @@ class WyeUI(Wye.staticObj):
                     if Wye.debugOn:
                         Wye.debug(verbFrm,"Dialog doSelect: call single cycle verb " + verbFrm.verb.__name__ + " data" + str(verbFrm.eventData))
                     else:
-                        # print("doSelect run", verbFrm.verb.__name__)
+                        #print("Dialog doSelect run", verbFrm.verb.__name__)
                         verbFrm.verb.run(verbFrm)
 
         # User clicked on a tag. It might belong to a field in our dialog.
@@ -1793,68 +1848,18 @@ class WyeUI(Wye.staticObj):
 
                     retStat = True  # used up the tag
 
-            # if clicked on input field
-            if tag in frame.vars.inpTags[0]:        # do we have a matching tag?
-                #print("doSelect: clicked on input tag", tag, " frame", frame.verb.__name__)
+            # for all inputs check to see if they want the tag
+            else:
+                for inp in frame.params.inputs[0]:
+                    inFrm = inp[0]
+                    if inFrm.verb.doSelect(inFrm, frame, tag):
+                        #print("Dialog doSelect set currInp", inFrm.verb.__name__)
+                        frame.vars.currInp[0] = inFrm
+                        retStat = True
 
-                ix = frame.vars.inpTags[0][tag]     # Yes
-                retStat = True
-
-                # handle dialog inputs
-                if frame.verb is WyeUI.Dialog:
-                    inFrm = frame.params.inputs[0][ix][0]
-
-                    # if is text input make it selected
-                    if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
-                        inWidg = inFrm.vars.gWidget[0]
-                        #print("  found ix", ix, " inWdg", inWidg, " Set selected color")
-                        inWidg.setColor(Wye.color.SELECTED_COLOR)        # set input background to "has focus" color
-                        WyeUI.Dialog.drawCursor(inFrm)
-                        frame.vars.currInp[0] = ix           # save as current input focus
-
-                        if inFrm.verb is WyeUI.InputInteger:
-                            WyeUI.Dialog._activeInputInteger = inFrm
-
-                    # button callback
-                    elif inFrm.verb is WyeUI.InputButton:
-                        #print("Dialog", frame.params.title[0], " doSelect: clicked on", inFrm.verb.__name__, " label", inFrm.params.label[0])
-
-                        inFrm.vars.gWidget[0].setColor(Wye.color.SELECTED_COLOR) # set button color pressed
-                        #print("gWidget", inFrm.vars.gWidget[0])
-                        #print("set button", inFrm.params.label[0], " selected color", Wye.color.SELECTED_COLOR,". click count", inFrm.vars.clickCount[0])
-                        if inFrm.vars.clickCount[0] <= 0:     # if not in an upclick count, process click
-                            #print("Dialog doSelect: Start clicked countdown for", inFrm.verb.__name__)
-                            inFrm.vars.clickCount[0] = 10       # start flash countdown (in display frames)
-                            frame.vars.clickedBtns[0].append(inFrm)  # stash button for flash countdown
-
-                            if inFrm.params.callback:
-                                # note: call inFrm.vars.callback, not infrm.params.callback
-                                # so special inputs like dropdown can have internal callback that is called before the
-                                # user's param callback
-                                WyeCore.libs.WyeUI.Dialog.doCallback(frame, inFrm, tag)
-
-                        frame.vars.currInp[0] = -1       # no input has focus
-
-                    elif inFrm.verb is WyeUI.InputCheckbox or inFrm.verb is WyeUI.InputDropdown:
-                        if inFrm.params.callback:
-                            # note: call inFrm.vars.callback, not infrm.params.callback
-                            # so special inputs like dropdown can have internal callback that is called before the
-                            # user's param callback
-                            WyeCore.libs.WyeUI.Dialog.doCallback(frame, inFrm, tag)
-
-                        frame.vars.currInp[0] = -1       # no input has focus
-
-                # if dropdown, currInp is dropdown index
-                elif frame.verb is WyeUI.DropDown:
-                    #print("Dropdown selected line ", ix)
-                    frame.vars.currInp[0] = ix
-                    frame.params.retVal[0] = Wye.status.SUCCESS
-                    closing = True
-                    # Done with dialog
-                    WyeCore.libs.WyeUI.Dialog.closeDialog(frame)
 
             # if clicked on OK or Cancel
-            elif tag in frame.vars.dlgTags[0]:
+            if not retStat and tag in frame.vars.dlgTags[0]:
                 # if is Cancel button
                 if tag == frame.vars.dlgTags[0][-1]:    # if cancel button
                     frame.params.retVal[0] = Wye.status.FAIL
@@ -1887,13 +1892,13 @@ class WyeUI(Wye.staticObj):
                 #print("Closing dialog.  Status", frame.status)
 
             # selected graphic tag not recognized as a control in this dialog
-            else:
-                frame.vars.currInp[0] = -1   # no currInp
+            if not retStat:
+                frame.vars.currInp[0] = None   # no currInp
 
             # If there was a diff selection before, fix that
             # (if closing dialog, nevermind)
-            if prevSel > -1 and prevSel != frame.vars.currInp[0] and not closing:
-                inFrm =frame.params.inputs[0][prevSel][0]
+            if not prevSel is None and prevSel != frame.vars.currInp[0] and not closing:
+                inFrm =prevSel
                 if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputButton]:
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(Wye.color.TEXT_COLOR)
@@ -1959,9 +1964,8 @@ class WyeUI(Wye.staticObj):
         def doKey(frame, key):
             #print("Dialog doKey: key", key)
             # if we have an input with focus
-            ix = frame.vars.currInp[0]
-            if ix >= 0:
-                inFrm = frame.params.inputs[0][ix][0]
+            inFrm = frame.vars.currInp[0]
+            if not inFrm is None:
                 if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
 
                     txt = str(inFrm.vars.currVal[0])    # handle either text or integer
@@ -2060,7 +2064,7 @@ class WyeUI(Wye.staticObj):
             frame = Wye.codeFrame(WyeUI.DropDown, stack)
             frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
             frame.vars.dlgTags[0] = []         # not used
-            frame.vars.inpTags[0] = {}         # map input widget to input sequence number
+
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed"
 
             # If we don't have a text input cursor, make one
@@ -2107,9 +2111,7 @@ class WyeUI(Wye.staticObj):
                         # tell input to display itself.  Collect returned objects to close when dlg closes
                         # Note: each Input's display function updates pos downward
                         if inFrm.verb in [WyeUI.InputLabel, WyeUI.InputButton]:
-                            for lbl in inFrm.verb.display(inFrm, frame, pos):  # displays label, updates pos, returns selection tags
-                                frame.vars.inpTags[0][lbl] = ii
-
+                            inFrm.verb.display(inFrm, frame, pos)  # displays label, updates pos
                         else:
                             print("Dialog: Error. Only Label and Button allowed in dropdown", inFrm.verb.__class__)
 
@@ -2161,38 +2163,24 @@ class WyeUI(Wye.staticObj):
                     frame.PC += 1
 
                 case 1:
-                    #print("DropDown case 1")
                     # if click event, callback set status to selected row, clean up dialog
-                    if frame.vars.currInp[0] > -1:
-                        #print("DropDown got click event.  CurrInp", frame.vars.currInp[0], " ")
-                        frame.params.retVal[0] = frame.vars.currInp[0]
+                    if not frame.vars.currInp[0] is None:
+                        frame.params.retVal[0] = -1
+                        ix = 0
+                        for inLst in frame.params.inputs[0]:
+                            if inLst[0] == frame.vars.currInp[0]:
+                                frame.params.retVal[0] = ix
+                                break
+                            ix += 1
+
                         # remove dialog from active dialog list
                         WyeUI.FocusManager.closeDialog(frame)
                         # delete the graphic widgets associated with the dialog
                         for wdg in frame.vars.dlgWidgets[0]:
                             # print("del ctl ", wdg.text.name)
                             wdg.removeNode()
+                        # and we're done!
                         frame.status = Wye.status.SUCCESS
-
-    # Button callback for each dropdown row
-    class DropdownCallback:
-        mode = Wye.mode.SINGLE_CYCLE
-        dataType = Wye.dType.STRING
-        paramDescr = ()
-        varDescr = (("count", Wye.dType.INTEGER, 0),)
-
-        def start(stack):
-            print("DropdownCallback start")
-            return Wye.codeFrame(WyeUI.DropdownCallback, stack)
-
-        def run(frame):
-            #print("DropdownCallback run: event data", frame.eventData)
-            rowIx = frame.eventData[1][0]
-            dlgFrm = frame.eventData[1][1]
-            # return dropdown index in dropdown dialog's first param
-            lst = getattr(dlgFrm.params, dlgFrm.firstParamName())
-            lst[0] = rowIx
-            # print("DropdownCallback data=", frame.eventData, " index = ", frame.eventData[1])
 
 
     # Wye main menu - user settings n stuff
@@ -2800,7 +2788,6 @@ class WyeUI(Wye.staticObj):
 
                         for param in verb.paramDescr:
                             # make the dialog row
-                            print("param", param)
                             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
                             dlgFrm.params.inputs[0].append([btnFrm])
                             btnFrm.params.frame = [None]
@@ -3558,9 +3545,9 @@ class WyeUI(Wye.staticObj):
             #print("EditVarTypeCallback")
 
             data = frame.eventData
-            print("EditVarTypeCallback data='" + str(data) + "'")
+            #print("EditVarTypeCallback data='" + str(data) + "'")
             frm = data[1][1]
-            print("param ix", data[1][0], " data frame", frm.verb.__name__)
+            #print("param ix", data[1][0], " data frame", frm.verb.__name__)
 
     # check code for compile errors and highlight anything that needs fixing
     class TestCodeCallback:

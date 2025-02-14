@@ -11,61 +11,61 @@ class TestLib:
         #print("build TestLib")
         WyeCore.Utils.buildLib(TestLib)
 
-    class libDialog:
-        mode = Wye.mode.MULTI_CYCLE
-        paramDescr = (("retStat", Wye.dType.INTEGER, Wye.access.REFERENCE),
-                      ("coord", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
-        varDescr = (("dlgFrm", Wye.dType.OBJECT, [None]),
-                    ("selVerb", Wye.dType.INTEGER, -1),)
-
-        def start(stack):
-            return Wye.codeFrame(TestLib.libDialog, stack)
-
-        def run(frame):
-            match (frame.PC):
-                case 0:
-                    #print("libDialog, put up lib dropdown")
-                    lib = WyeCore.libs.TestLib
-                    dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
-
-                    dlgFrm.params.retVal = frame.params.retStat
-                    dlgFrm.params.title = [lib.__name__]
-                    dlgFrm.params.position = [[frame.params.coord[0][0], frame.params.coord[0][1], frame.params.coord[0][2]],]
-                    print("libDialog pos", dlgFrm.params.position)
-                    dlgFrm.params.parent = [None]
-                    frame.vars.dlgFrm[0] = dlgFrm
-
-                    # build dialog frame params list of input frames
-                    attrIx = 0
-                    # print("_displayLib: process library", lib.__name__)
-                    for attr in dir(lib):
-                        if attr != "__class__":
-                            verb = getattr(lib, attr)
-                            if inspect.isclass(verb):
-                                # print("lib", lib.__name__, " verb", verb.__name__)
-                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-                                dlgFrm.params.inputs[0].append([btnFrm])
-
-                                txt = lib.__name__ + "." + verb.__name__
-                                btnFrm.params.frame = [None]
-                                btnFrm.params.parent = [None]
-                                btnFrm.params.label = [txt]  # button label is verb name
-                                btnFrm.params.callback = [WyeCore.libs.WyeUI.DropdownCallback]  # button callback
-                                btnFrm.params.optData = [(attrIx, frame)]  # button data - offset to button
-                                WyeCore.libs.WyeUI.InputButton.run(btnFrm)
-
-                                attrIx += 1
-
-                    # WyeUI.Dialog.run(dlgFrm)
-                    frame.SP.append(dlgFrm)     # push dialog so it runs next cycle
-
-                    frame.PC += 1               # on return from dialog, run next case
-
-                case 1:
-                    frame.SP.pop()  # remove dialog frame from stack
-                    print("libDialog: returned status", frame.params.retStat[0]) # Wye.status.tostring(frame.))
-                    frame.status = Wye.status.SUCCESS  # done
-                    #frame.PC = 0    # do it again
+#    class libDialog:
+#        mode = Wye.mode.MULTI_CYCLE
+#        paramDescr = (("retStat", Wye.dType.INTEGER, Wye.access.REFERENCE),
+#                      ("coord", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
+#        varDescr = (("dlgFrm", Wye.dType.OBJECT, [None]),
+#                    ("selVerb", Wye.dType.INTEGER, -1),)
+#
+#        def start(stack):
+#            return Wye.codeFrame(TestLib.libDialog, stack)
+#
+#        def run(frame):
+#            match (frame.PC):
+#                case 0:
+#                    #print("libDialog, put up lib dropdown")
+#                    lib = WyeCore.libs.TestLib
+#                    dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
+#
+#                    dlgFrm.params.retVal = frame.params.retStat
+#                    dlgFrm.params.title = [lib.__name__]
+#                    dlgFrm.params.position = [[frame.params.coord[0][0], frame.params.coord[0][1], frame.params.coord[0][2]],]
+#                    print("libDialog pos", dlgFrm.params.position)
+#                    dlgFrm.params.parent = [None]
+#                    frame.vars.dlgFrm[0] = dlgFrm
+#
+#                    # build dialog frame params list of input frames
+#                    attrIx = 0
+#                    # print("_displayLib: process library", lib.__name__)
+#                    for attr in dir(lib):
+#                        if attr != "__class__":
+#                            verb = getattr(lib, attr)
+#                            if inspect.isclass(verb):
+#                                # print("lib", lib.__name__, " verb", verb.__name__)
+#                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+#                                dlgFrm.params.inputs[0].append([btnFrm])
+#
+#                                txt = lib.__name__ + "." + verb.__name__
+#                                btnFrm.params.frame = [None]
+#                                btnFrm.params.parent = [None]
+#                                btnFrm.params.label = [txt]  # button label is verb name
+#                                btnFrm.params.callback = [WyeCore.libs.WyeUI.DropdownCallback]  # button callback
+#                                btnFrm.params.optData = [(attrIx, frame)]  # button data - offset to button
+#                                WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+#
+#                                attrIx += 1
+#
+#                    # WyeUI.Dialog.run(dlgFrm)
+#                    frame.SP.append(dlgFrm)     # push dialog so it runs next cycle
+#
+#                    frame.PC += 1               # on return from dialog, run next case
+#
+#                case 1:
+#                    frame.SP.pop()  # remove dialog frame from stack
+#                    print("libDialog: returned status", frame.params.retStat[0]) # Wye.status.tostring(frame.))
+#                    frame.status = Wye.status.SUCCESS  # done
+#                    #frame.PC = 0    # do it again
 
 
 #    class libButton:
