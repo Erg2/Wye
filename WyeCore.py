@@ -800,7 +800,7 @@ class WyeCore(Wye.staticObj):
                         # if there's a user input focus manager, call it
                         status = False
                         if WyeCore.World.objEditor:
-                            status = WyeCore.World.objEditor.tagClicked(wyeID, self.pickedObj.getPos())
+                            status = WyeCore.World.objEditor.tagClicked(wyeID)
                             #if status:
                             #    print("objSelectEvent: Editor used tag", wyeID)
 

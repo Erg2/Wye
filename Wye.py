@@ -457,6 +457,10 @@ class Wye:
                 case _:
                     return "--unknown access value " + str(access) + "--"
 
+    class layout:
+        VERTICAL = 0        # input should go below the previous one
+        ADD_RIGHT = 1       # input should be added to the right of the previous one
+
     # known event types that a word can wait for
     class event:
         PICK = 1

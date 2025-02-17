@@ -64,9 +64,9 @@ class EditLib:
             dlgFrm.params.inputs[0][1][0].vars.currVal[0] = y
             dlgFrm.params.inputs[0][2][0].vars.currVal[0] = z
 
-            dlgFrm.params.inputs[0][0][0].verb.redisplay(dlgFrm.params.inputs[0][0][0])
-            dlgFrm.params.inputs[0][1][0].verb.redisplay(dlgFrm.params.inputs[0][1][0])
-            dlgFrm.params.inputs[0][2][0].verb.redisplay(dlgFrm.params.inputs[0][2][0])
+            dlgFrm.params.inputs[0][0][0].verb.update(dlgFrm.params.inputs[0][0][0])
+            dlgFrm.params.inputs[0][1][0].verb.update(dlgFrm.params.inputs[0][1][0])
+            dlgFrm.params.inputs[0][2][0].verb.update(dlgFrm.params.inputs[0][2][0])
 
             frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
 
