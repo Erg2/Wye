@@ -949,6 +949,29 @@ class WyeCore(Wye.staticObj):
 
             return result.normalized()
 
+        # find the enclosing list of a given code tuple in verb's codeDescr
+        def findTupleParent(parent, tuple):
+            if tuple in parent:
+                return parent
+            else:
+                if len(parent) > 1:
+                    for childTuple in parent[1:]:
+                        if WyeCore.Utils.findTupleParent(childTuple, tuple):
+                            return childTuple
+            # if get here, failed to find tuple
+            return None
+
+        # deep copy list
+        # recursively copy oldLst to newLst
+        def listCopy(newLst, oldLst):
+            for oldElem in oldLst:
+                if isinstance(oldElem, list):
+                    subLst = []
+                    newLst.append(subLst)
+                    WyeCore.libs.WyeUI.EditVerb.varCpy(subLst, oldElem)
+                else:
+                    newElem = oldElem
+                    newLst.append(newElem)
 
         # Take a Wye code description tuple and return compilable Python code
         # Resulting code pushes all the params to the frame, then runs the function

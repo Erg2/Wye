@@ -20,6 +20,31 @@ class WyeLib:
     def build():
         WyeCore.Utils.buildLib(WyeLib)
 
+
+    # set model pos
+    class noop:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.NONE
+        autoStart = False
+        paramDescr = (("placeHolder", Wye.dType.ANY, Wye.access.REFERENCE),
+                      )
+        varDescr = (("placeHolder", Wye.dType.INTEGER, 0),)
+        codeDescr = (("Label", "Repeat"),)
+
+
+        def build():
+            #print("Build testObj2")
+            return WyeCore.Utils.buildCodeText("noop", WyeLib.noop.codeDescr)
+
+        def start(stack):
+            #print("testObj2 object start")
+            return Wye.codeFrame(WyeLib.noop, stack)
+
+        def run(frame):
+            #print("Run testObj2")
+            WyeLib.WyeLib_rt.noop_run_rt(frame)
+
+
     # Wait for click on graphic object
     # caller puts wyeTag of graphic obj in waitClick param[0]
     # caller pushes waitClick frame on stack and updates frame.PC to state it wants to go to when click happens
