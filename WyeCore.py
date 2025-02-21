@@ -407,7 +407,7 @@ class WyeCore(Wye.staticObj):
                         ranNothing = False
                         # run the frame furthest down the stack
                         frame = stack[-1]
-                        # if frame:
+                        #if frame:
                             #print("worldRunner stack # ", stackNum, " verb", frame.verb.__name__) #,
 
                             #      " status ", Wye.status.tostring(frame.status),

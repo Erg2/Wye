@@ -37,29 +37,36 @@ class WyeUI(Wye.staticObj):
     dragOffset = (0,0,0)   # mouse position at drag downclick
 
     # utilities
+
+    # put up popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
     dummy = [0]
-    def doPopUpDialog(titleText, mainText, color):
-        dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
+    def doPopUpDialog(titleText, mainText, color=Wye.color.NORMAL_COLOR):
+        print("doPopUpDialog title", titleText, " text", mainText, " color", color)
+        stk = []
+        dlgFrm = WyeCore.libs.WyeUI.Dialog.start(stk)
+        stk.append(dlgFrm)
         dlgFrm.params.retVal = WyeCore.libs.WyeUI.dummy
         dlgFrm.params.title = [titleText]
         point = NodePath("point")
         point.reparentTo(render)
-        point.setPos(base.camera, (0, 10, 0))
+        point.setPos(base.camera, (-1.5, 7, 1))
         pos = point.getPos()
         point.removeNode()
         dlgFrm.params.position = [(pos[0], pos[1], pos[2]), ]
         dlgFrm.params.parent = [None]
-        WyeCore.libs.WyeUIdummy[0] = dlgFrm
+        WyeCore.libs.WyeUI.dummy[0] = dlgFrm
 
         settingsLblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
         settingsLblFrm.params.frame = [None]  # return value
         settingsLblFrm.params.parent = [None]
         settingsLblFrm.params.label = [mainText]
-        settingsLblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+        settingsLblFrm.params.color = [color]
         WyeCore.libs.WyeUI.InputLabel.run(settingsLblFrm)
         dlgFrm.params.inputs[0].append([settingsLblFrm])
+        dlgFrm.verb.run(dlgFrm)
+        #dlgFrm.vars.dragObj[0].setColor(color)
 
-        WyeCore.World.startActiveObject(dlgFrm)
+        WyeCore.World.startActiveFrame(dlgFrm)
         pass
 
     # classes
@@ -1688,15 +1695,16 @@ class WyeUI(Wye.staticObj):
                       ("inputs", Wye.dType.VARIABLE, Wye.access.REFERENCE)) # 5+ variable length list of input control frames
                       # input widgets go here (Input fields, Buttons, and who knows what all cool stuff that may come
 
-        varDescr = (("position", Wye.dType.FLOAT_LIST, (0,0,0)),            # 0 pos copy  *** REQUIRED ***
-                    ("dlgWidgets", Wye.dType.OBJECT_LIST, None),            # 1 standard dialog widgets
-                    ("dlgTags", Wye.dType.STRING_LIST, None),               # 2 OK, Cancel widget tags
-                    ("inpTags", Wye.dType.OBJECT, None),                    # 3 dictionary return param ix of input by graphic tag
-                    ("currInp", Wye.dType.OBJECT, None),                     # 4 index to current focus widget, if any
-                    ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # 5 list of buttons that need to be unclicked
-                    ("dragObj", Wye.dType.OBJECT, None),                    # 6 path to top graphic obj *** REF'D BY CHILDREN ***
-                    ("topTag", Wye.dType.STRING, ""),                       # 6 Wye tag for top object (used for dragging)
-                    ("bgndGObj", Wye.dType.OBJECT, None),                   # 7 background card
+        varDescr = (("position", Wye.dType.FLOAT_LIST, (0,0,0)),            # pos copy  *** REQUIRED ***
+                    ("dlgWidgets", Wye.dType.OBJECT_LIST, None),            # standard dialog widgets
+                    ("dlgTags", Wye.dType.STRING_LIST, None),               # OK, Cancel widget tags
+                    ("inpTags", Wye.dType.OBJECT, None),                    # dictionary return param ix of input by graphic tag
+                    ("currInp", Wye.dType.OBJECT, None),                    # index to current focus widget, if any
+                    ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # list of buttons that need to be unclicked
+                    ("dragObj", Wye.dType.OBJECT, None),                    # path to top graphic obj *** REF'D BY CHILDREN ***
+                    ("topTag", Wye.dType.STRING, ""),                       # Wye tag for top object (used for dragging)
+                    ("bgndGObj", Wye.dType.OBJECT, None),                   # background card
+                    ("outlineGObj", Wye.dType.OBJECT, None),                # background outline card
                     )
 
         _cursor = None      # 3d TextInput cursor
@@ -1826,6 +1834,8 @@ class WyeUI(Wye.staticObj):
                     cardPath.reparentTo(dlgNodePath)
                     cardPath.setPos((-.5, .1, 1.2 - ht))
                     cardPath.setColor(Wye.color.BACKGROUND_COLOR)
+                    frame.vars.bgndGObj[0] = cardPath
+
                     # background outline
                     oCard = CardMaker("Dlg Bgnd Outline")
                     # print("gFrame", gFrame)
@@ -1838,8 +1848,8 @@ class WyeUI(Wye.staticObj):
                     oCardPath = NodePath(oCard.generate())
                     oCardPath.reparentTo(dlgNodePath)
                     oCardPath.setPos((-.6, .2, 1.1 - ht))
-                    oCardPath.setColor(Wye.color.BACKGROUND_COLOR)
-                    frame.vars.bgndGObj[0] = oCardPath
+                    oCardPath.setColor(Wye.color.OUTLINE_COLOR)
+                    frame.vars.outlineGObj[0] = oCardPath
 
                     # Add dialog to known dialogs
                     WyeUI.FocusManager.openDialog(frame, parent)        # pass parent, if any
@@ -2020,12 +2030,14 @@ class WyeUI(Wye.staticObj):
                     WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
                 # make this the currently active dialog
                 WyeUI.FocusManager._activeDialog = frame
-                frame.vars.bgndGObj[0].setColor(Wye.color.SELECTED_COLOR)
+                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
+                frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
                 #print("Dialog '"+frame.params.title[0]+ "' Selected")
 
             else:
                 pass
-                frame.vars.bgndGObj[0].setColor(Wye.color.OUTLINE_COLOR)
+                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR)
+                frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR)
                 #print("Dialog '"+frame.params.title[0]+ "' Unselected")
 
 
@@ -2234,6 +2246,7 @@ class WyeUI(Wye.staticObj):
                     cardPath.reparentTo(dlgNodePath)
                     cardPath.setPos((-.5, .1, 1.2 - ht))
                     cardPath.setColor(Wye.color.BACKGROUND_COLOR)
+                    frame.vars.bgndGObj[0] = cardPath
                     # background outline
                     oCard = CardMaker("Dlg Bgnd Outline")
                     # print("gFrame", gFrame)
@@ -2246,8 +2259,8 @@ class WyeUI(Wye.staticObj):
                     oCardPath = NodePath(oCard.generate())
                     oCardPath.reparentTo(dlgNodePath)
                     oCardPath.setPos((-.6, .2, 1.1 - ht))
-                    oCardPath.setColor(Wye.color.BACKGROUND_COLOR)
-                    frame.vars.bgndGObj[0] = oCardPath
+                    oCardPath.setColor(Wye.color.OUTLINE_COLOR)
+                    frame.vars.outlineGObj[0] = oCardPath
                     WyeUI.FocusManager.openDialog(frame, parent)  # pass parent, if any
 
                     frame.PC += 1
@@ -2311,7 +2324,7 @@ class WyeUI(Wye.staticObj):
                     settingsLblFrm.params.frame = [None]  # return value
                     settingsLblFrm.params.parent = [None]
                     settingsLblFrm.params.label = ["Settings"]
-                    settingsLblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    settingsLblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(settingsLblFrm)
                     dlgFrm.params.inputs[0].append([settingsLblFrm])
 
@@ -2353,7 +2366,7 @@ class WyeUI(Wye.staticObj):
                     testLblFrm.params.frame = [None]  # return value
                     testLblFrm.params.parent = [None]
                     testLblFrm.params.label = ["Test"]
-                    testLblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    testLblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(testLblFrm)
                     dlgFrm.params.inputs[0].append([testLblFrm])
 
@@ -2371,8 +2384,17 @@ class WyeUI(Wye.staticObj):
                     dlgFrm.params.inputs[0].append([btnFrm])
                     btnFrm.params.frame = [None]
                     btnFrm.params.parent = [None]
-                    btnFrm.params.label = ["Test Create Lib"]
+                    btnFrm.params.label = ["Test Button"]
                     btnFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestButtonCallback]  # button callback
+                    #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
+                    WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+
+                    btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([btnFrm])
+                    btnFrm.params.frame = [None]
+                    btnFrm.params.parent = [None]
+                    btnFrm.params.label = ["Test Create Lib"]
+                    btnFrm.params.callback = [WyeCore.libs.WyeUI.MainMenuDialog.TestCreatLibCallback]  # button callback
                     #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
                     WyeCore.libs.WyeUI.InputButton.run(btnFrm)
 
@@ -2534,9 +2556,28 @@ class WyeUI(Wye.staticObj):
                 return Wye.codeFrame(WyeUI.MainMenuDialog.TestButtonCallback, stack)
 
             def run(frame):
+                print("Test Button")
+                WyeCore.libs.WyeUI.doPopUpDialog("Test Callback", "Pop Up Dialog Test")
+                WyeCore.libs.WyeUI.doPopUpDialog("Test Callback", "Pop Up Dialog Test n", Wye.color.NORMAL_COLOR)
+                WyeCore.libs.WyeUI.doPopUpDialog("Test Callback", "Pop Up Dialog Test w", Wye.color.WARNING_COLOR)
+                WyeCore.libs.WyeUI.doPopUpDialog("Test Callback", "Pop Up Dialog Test e", Wye.color.ERROR_COLOR)
+
+
+
+        class TestCreatLibCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("TestCreatLibCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.TestCreatLibCallback, stack)
+
+            def run(frame):
                 print("createLibrary test")
-                WyeCore.Utils.createLib("TemplateTestLib")
-                print("Run test from TestButtonCallback")
+                WyeCore.Utils.createLib("TestCreatLibCallback")
+                print("Run test from TestCreatLibCallback")
                 #WyeCore.libs.TemplateTestLib.test()
                 print("Known libs")
                 for libName in dir(WyeCore.libs):
@@ -2955,7 +2996,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Parameters:"]
-                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
@@ -2990,7 +3031,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Variables:"]
-                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
@@ -3026,28 +3067,50 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Wye Code:"]
-                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
-                    if hasattr(verb, "codeDescr") and len(verb.codeDescr) > 0:
-                        # If it's parallel code blocks
-                        if verb.mode == Wye.mode.PARALLEL:
-                                lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
-                                lblFrm.params.frame = [None]  # return value
-                                lblFrm.params.parent = [None]
-                                lblFrm.params.label = ["  <TODO - Parallel Code>"]
-                                WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
-                                dlgFrm.params.inputs[0].append([lblFrm])
-                        # regular boring normal single stream code
-                        else:
-                            level = 2       # starting indent for nesting tuple data
-                            attrIx = 0      # This level code row
-                            row = [0]       # dialog row, including recursively displayed tuple data
-                            for tuple in verb.codeDescr:
-                                WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(tuple, level, frame, attrIx, row, dlgFrm)
+                    if hasattr(verb, "codeDescr"):
+                        if len(verb.codeDescr) > 0:
+                            # If it's parallel code blocks
+                            if verb.mode == Wye.mode.PARALLEL:
+                                    lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                                    lblFrm.params.frame = [None]  # return value
+                                    lblFrm.params.parent = [None]
+                                    lblFrm.params.label = ["  <TODO - Parallel Code>"]
+                                    WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                                    dlgFrm.params.inputs[0].append([lblFrm])
+                            # regular boring normal single stream code
+                            else:
+                                level = 2       # starting indent for nesting tuple data
+                                attrIx = 0      # This level code row
+                                row = [0]       # dialog row, including recursively displayed tuple data
+                                for tuple in verb.codeDescr:
+                                    WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(tuple, level, frame, attrIx, row, dlgFrm)
 
-                                attrIx += 1
+                                    attrIx += 1
+                        else:
+                            # line edit button
+                            editLnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+                            dlgFrm.params.inputs[0].append([editLnFrm])
+                            editLnFrm.params.label = ["+/-"]
+                            editLnFrm.params.callback = [
+                                WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback]  # button callback
+                            # note: optData further down so can pass btnFrm
+                            editLnFrm.params.frame = [None]
+                            editLnFrm.params.parent = [None]
+
+                            lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                            lblFrm.params.layout = [Wye.layout.ADD_RIGHT]  # put after the line edit button
+                            lblFrm.params.frame = [None]  # return value
+                            lblFrm.params.parent = [None]
+                            lblFrm.params.label = ["  <add code here>"]
+                            WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                            dlgFrm.params.inputs[0].append([lblFrm])
+
+                            editLnFrm.params.optData = [(editLnFrm, dlgFrm, frame, None, lblFrm, 0)]  # button row, dialog frame
+                            editLnFrm.verb.run(editLnFrm)
 
                     # no code to edit
                     else:
@@ -3063,7 +3126,7 @@ class WyeUI(Wye.staticObj):
                     tstLblFrm.params.frame = [None]
                     tstLblFrm.params.parent = [None]
                     tstLblFrm.params.label = ["Test:"]
-                    tstLblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    tstLblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(tstLblFrm)
                     dlgFrm.params.inputs[0].append([tstLblFrm])
 
@@ -4032,7 +4095,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Active Objects:"]
-                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
@@ -4228,7 +4291,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Parameters:"]
-                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
@@ -4265,7 +4328,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]  # return value
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Variables:"]
-                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
@@ -4341,7 +4404,7 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.frame = [None]
                     lblFrm.params.parent = [None]
                     lblFrm.params.label = ["Wye Code:"]
-                    lblFrm.params.color = [Wye.color.SUBHDR_COLOR]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
