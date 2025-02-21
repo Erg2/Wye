@@ -307,11 +307,11 @@ class WyeCore(Wye.staticObj):
                 Wye.midi = WyeCore.WyeMidi(0)
 
                 # test midi sound
-                Wye.midi.playNote(50, 45,64,.25)
-                time.sleep(.1)
-                Wye.midi.playNote(51, 55,64,.5)
-                time.sleep(.1)
-                Wye.midi.playNote(52, 65, 64, .75)
+                #Wye.midi.playNote(50, 45,64,.25)
+                #time.sleep(.1)
+                #Wye.midi.playNote(51, 55,64,.5)
+                #time.sleep(.1)
+                #Wye.midi.playNote(52, 65, 64, .75)
 
                 # test 3d sound
                 snd = Wye.audio3d.loadSfx("WyePop.wav")
