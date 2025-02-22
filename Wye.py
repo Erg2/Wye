@@ -289,21 +289,30 @@ class Wye:
                 case Wye.dType.STRING:
                     retVal = []
                     lst = False
+                    print("convertType: string value:"+value+":")
                     elemLst = False      # assume no sublist wrappers
                     # if string, parse it for list structure
                     if isinstance(value, str):
                         lst = True
                         value = "".join(value.split())   # remove all whitespace
                         if value[0] == '[':
+                            value = value.replace("['", "[")
+                            value = value.replace("']", "]")
+                            value = value.replace('["', "[")
+                            value = value.replace('"]', "]")
                             value = value[1:-1]
                             if value[1] == '[':    # if individual element lists
                                 elemLst = True
-                        elems = value.split(',')
-                        for elem in elems:
-                            if elemLst:     # if each element wrapped in list
-                                elem = elem[1:-1]
-                                elem = [elem]
+                                print("elemLst = True")
+                            elems = value.split(',')
+                            for elem in elems:
+                                if elemLst:     # if each element wrapped in list
+                                    elem = elem[1:-1]
+                                    elem = [elem]
                             retVal.append(elem)
+                        else:
+                            retVal = value
+                        print(" converted to:"+str(retVal)+":")
                         return retVal
 
                     # not a string, return it as-is
@@ -504,7 +513,8 @@ class Wye:
         BACKGROUND_COLOR_SEL = (.3, .3, .3, .1)
         OUTLINE_COLOR = (.5, .5, .5, 1)
         OUTLINE_COLOR_SEL = (.1, .1, .1, 1)
-        HEADER_COLOR = (.9, .9, .9, 1)
+        HEADER_COLOR = (1, 1, 1, 1)
+        CONTROL_COLOR = (.9, .9, .9, 1)
         CURSOR_COLOR = (0, 1, 0, 1)
         SUBHD_COLOR = (.7, .7, .7, 1)
         DISABLED_COLOR = (.6, .6, .6, 1)
