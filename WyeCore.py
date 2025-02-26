@@ -951,14 +951,20 @@ class WyeCore(Wye.staticObj):
 
         # find the enclosing list of a given code tuple in verb's codeDescr
         def findTupleParent(parent, tuple):
+            #print("findTupleParent: is", tuple, " in", parent)
+            if isinstance(parent, str):
+                #print("tuple not found")
+                return None
             if tuple in parent:
                 return parent
             else:
                 if len(parent) > 1:
                     for childTuple in parent[1:]:
                         if WyeCore.Utils.findTupleParent(childTuple, tuple):
+                            #print(" Found tuple parent")
                             return childTuple
             # if get here, failed to find tuple
+            #print("tuple not found")
             return None
 
         # deep copy list
