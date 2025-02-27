@@ -221,7 +221,7 @@ class TestLib:
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
-                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("objTag", Wye.dType.STRING, ""),
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [-35,75,2]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
@@ -289,7 +289,7 @@ class TestLib:
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
-                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("objTag", Wye.dType.STRING, ""),
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [-35,75,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
@@ -354,7 +354,7 @@ class TestLib:
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
-                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("objTag", Wye.dType.STRING, ""),
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [-35,75,-2]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
@@ -722,7 +722,7 @@ class TestLib:
         dataType = Wye.dType.NONE
         paramDescr = ()
         varDescr = (("fishes", Wye.dType.OBJECT_LIST, None),        # fish graphic objs
-                    ("fishTags", Wye.dType.STRING, ""),
+                    ("fishTags", Wye.dType.STRING_LIST, []),
                     ("position", Wye.dType.FLOAT_LIST, [0,0,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -0.02]),
                     ("angle", Wye.dType.FLOAT_LIST, [0., 90., 0.]),
@@ -1225,7 +1225,7 @@ for ii in range(len(frame.vars.bubbles[0])):
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
-                    ("objTag", Wye.dType.STRING, "objTag"),
+                    ("objTag", Wye.dType.STRING, ""),
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [3 ,2,-1]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., .03]),

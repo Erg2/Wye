@@ -247,21 +247,21 @@ class Wye:
                     try:
                         num = float(value)
                     except:
-                        print("Invalid conversion of ", value, " to Number. Returning 0.")
+                        #print("Invalid conversion of ", value, " to Number. Returning 0.")
                         num = 0.
                     return num
                 case Wye.dType.INTEGER:
                     try:
                         num = int(value)
                     except:
-                        print("Invalid conversion of ", value, " to Integer. Returning 0")
+                        #print("Invalid conversion of ", value, " to Integer. Returning 0")
                         num = 0
                     return num
                 case Wye.dType.FLOAT:
                     try:
                         num = float(value)
                     except:
-                        print("Invalid conversion of ", value, " to Float. Returning 0.")
+                        #print("Invalid conversion of ", value, " to Float. Returning 0.")
                         num = 0.
                     return num
                 case Wye.dType.BOOL:
@@ -271,7 +271,7 @@ class Wye:
                         try:
                             num = bool(value)
                         except:
-                            print("Invalid conversion of ", value, " to bool. Returning 0")
+                            #print("Invalid conversion of ", value, " to bool. Returning 0")
                             num = False
                     return num
                 # TODO - add string->object look up!!!
@@ -289,31 +289,33 @@ class Wye:
                 case Wye.dType.STRING:
                     retVal = []
                     lst = False
-                    print("convertType: string value:"+value+":")
+                    #print("convertType: string value:"+value+":.  is None", "True" if value is None else "False")
                     elemLst = False      # assume no sublist wrappers
                     # if string, parse it for list structure
                     if isinstance(value, str):
-                        lst = True
-                        value = "".join(value.split())   # remove all whitespace
-                        if value[0] == '[':
-                            value = value.replace("['", "[")
-                            value = value.replace("']", "]")
-                            value = value.replace('["', "[")
-                            value = value.replace('"]', "]")
-                            value = value[1:-1]
-                            if value[1] == '[':    # if individual element lists
-                                elemLst = True
-                                print("elemLst = True")
-                            elems = value.split(',')
-                            for elem in elems:
-                                if elemLst:     # if each element wrapped in list
-                                    elem = elem[1:-1]
-                                    elem = [elem]
-                            retVal.append(elem)
+                        if not value:
+                            return ''
                         else:
-                            retVal = value
-                        print(" converted to:"+str(retVal)+":")
-                        return retVal
+                            value = "".join(value.split())   # remove all whitespace
+                            if value[0] == '[':
+                                value = value.replace("['", "[")
+                                value = value.replace("']", "]")
+                                value = value.replace('["', "[")
+                                value = value.replace('"]', "]")
+                                value = value[1:-1]
+                                if value[1] == '[':    # if individual element lists
+                                    elemLst = True
+                                    #print("elemLst = True")
+                                elems = value.split(',')
+                                for elem in elems:
+                                    if elemLst:     # if each element wrapped in list
+                                        elem = elem[1:-1]
+                                        elem = [elem]
+                                retVal.append(elem)
+                            else:
+                                retVal = value
+                            #print(" converted to:"+str(retVal)+":")
+                            return retVal
 
                     # not a string, return it as-is
                     else:
@@ -412,6 +414,7 @@ class Wye:
                         # Note: if none of the above, return empty list
                     return retVal
 
+                # todo - revisit this logic
                 case Wye.dType.STRING_LIST:
                     retVal = []
                     lst = False
@@ -420,16 +423,20 @@ class Wye:
                         lst = True
                         value = value.strip()   # remove leading/trailing whitespace
                         if value[0] == '[':
-                            value = value[1:-1]
-                            if value[1] == '[':    # if individual element lists
-                                elemLst = True
-                        elems = value.split(',')
-                        for elem in elems:
-                            if elemLst:     # if each element wrapped in list
-                                elem = elem[1:-1]
-                            if elemLst:
-                                num = [num]
-                            retVal.append(num)
+                            value = value[1:-1]     # trim off outer "["..."]'"
+                            if value:               # if not a null string
+                                if value[0] == '[':    # if individual element lists
+                                    elemLst = True
+                                elems = value.split(',')    # todo - this does not correctly handle "," embedded in string
+                                for elem in elems:
+                                    if elemLst:         # if each element wrapped in list, remove brackets from string
+                                        elem = elem[1:-1]
+                                    if elemLst:
+                                        if elem:
+                                            elem = [elem]   # and put string in list
+                                        else:
+                                            elem = []
+                                    retVal.append(elem)
                     return retVal
 
                 # todo Finish these
@@ -554,19 +561,27 @@ class Wye:
             self.breakCt = 0          # when breakpt True, set to n to step n times
 
             #print("code frame for verb ", verb.__name__)
-            if hasattr(verb, "varDescr"):
+            if hasattr(verb, "varDescr") and len(verb.varDescr) > 0:
+                #print("code frame for verb ", verb.__name__)
                 for varDef in verb.varDescr:
-                    if len(varDef) > 1:
+                    if len(varDef) > 2:
                         #print("  vars attr ", varDef[0], "=", varDef[2])
-                        varVal = varDef[2]
+                        if varDef[1] == Wye.dType.STRING and not varDef[2]:
+                            varVal = [""]   # prevent empty string from being optimized away
+                        else:
+                            varVal = varDef[2]
                         #if isinstance(varVal, list):
                         #    print("deep copy", varVal, end="")
                         #    varVal = copy.deepcopy(varVal)
                         #    print(" id varDef[2]", id(varDef[2]), " id varVal", id(varVal))
                         setattr(self.vars, varDef[0], [varVal])
-                        #print("  set vars '", varDef[0], "' to '", str(getattr(self.vars, varDef[0])))
+                    #    print("  set vars '", varDef[0], "' to", str(getattr(self.vars, varDef[0])))
+                    #else:
+                    #    if len(varDef) > 0:
+                    #        print("codeFrame ERROR: verb", verb.__name__, " var", varDef[1], " missing no type or value")
             #else:
             #    print("verb",verb, " has no varDescr")
+
             if hasattr(verb, "paramDescr"):
                 for paramDef in verb.paramDescr:
                     # create parameter
