@@ -470,21 +470,21 @@ class WyeUI(Wye.staticObj):
             self.text.setText(text)
             self.text.setTextColor(color)
 
-        # internal rtn to gen 3d Card clickable background object
-        def _genCardObj(self):
-            #print("initial txtNode frame ", self.text.getFrameActual())
-            self.card = CardMaker("Txt Card")
-            self.gFrame = self.text.getFrameActual()
-            if self.gFrame[1] == 0:      # if empty frame
-                self.gFrame[1] = 1
-                self.gFrame[3] = 1
-            #print("self.gFrame", self.gFrame)
-            self.gFrame[0] -= self.marginL
-            self.gFrame[1] += self.marginR
-            self.gFrame[2] -= self.marginB
-            self.gFrame[3] += self.marginT
-            #print("initial adjusted self.gFrame", self.gFrame)
-            self.card.setFrame(self.gFrame)
+        ## internal rtn to gen 3d Card clickable background object
+        #def _genCardObj(self):
+        #    #print("initial txtNode frame ", self.text.getFrameActual())
+        #    self.card = CardMaker("Txt Card")
+        #    self.gFrame = self.text.getFrameActual()
+        #    if self.gFrame[1] == 0:      # if empty frame
+        #        self.gFrame[1] = 1
+        #        self.gFrame[3] = 1
+        #    #print("self.gFrame", self.gFrame)
+        #    self.gFrame[0] -= self.marginL
+        #    self.gFrame[1] += self.marginR
+        #    self.gFrame[2] -= self.marginB
+        #    self.gFrame[3] += self.marginT
+        #    #print("initial adjusted self.gFrame", self.gFrame)
+        #    self.card.setFrame(self.gFrame)
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
@@ -1007,6 +1007,7 @@ class WyeUI(Wye.staticObj):
 
         # reposition in dialog
         def redisplay(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos)
             pos[2] -= lbl.getHeight()
@@ -1101,6 +1102,7 @@ class WyeUI(Wye.staticObj):
 
         # reposition in dialog
         def redisplay(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos)
             pos[2] -= lbl.getHeight()
@@ -1206,10 +1208,10 @@ class WyeUI(Wye.staticObj):
 
         # reposition in dialog
         def redisplay(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos)
             pos[2] -= lbl.getHeight()
-            width = (lblGFrm[1] - lblGFrm[0]) + .5
             lbl = frame.vars.gWidgetStack[0][1]
             lbl.setPos(pos)
             pos[2] -= lbl.getHeight()
@@ -1301,6 +1303,7 @@ class WyeUI(Wye.staticObj):
 
         # reposition in dialog
         def redisplay(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos)
             pos[2] -= lbl.getHeight()
@@ -1416,6 +1419,7 @@ class WyeUI(Wye.staticObj):
 
         # reposition in dialog
         def redisplay(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos)
             pos[2] -= lbl.getHeight()
@@ -1567,6 +1571,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.size[0] = (width + .5, 0, max(lbl.getHeight(), btn.getHeight()))
 
         def redisplay(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos)
             pos[2] -= lbl.getHeight()
@@ -1777,12 +1782,14 @@ class WyeUI(Wye.staticObj):
                     # Note that input returns its frame as parameter value
                     nInputs = len(frame.params.inputs[0])
                     # draw user- supplied label and text inputs
+                    print("Dialog run: display %i inputs" % nInputs)
                     newX = pos[0]
                     prevZ = pos[2]
                     for ii in range(nInputs):
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
                         inFrm = frame.params.inputs[0][ii][0]
                         setattr(inFrm, "parentFrame", frame)
+                        print("  Dialog input", ii, " frame", inFrm.verb.__name__, inFrm.params.label if hasattr(inFrm.params, "label") else "<no label>")
 
                         # display inputs
                         # Note: each Input's display function updates draw "pos" downward
@@ -1823,46 +1830,7 @@ class WyeUI(Wye.staticObj):
                     frame.PC += 1
 
                     # make a background for entire dialog
-                    if parent is None:
-                        scMult = 5
-                    else:
-                        scMult = 1
-                    dlgNodePath = dlgHeader.getNodePath()
-                    #dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
-                    dlgBounds = dlgNodePath.getTightBounds()
-                    card = CardMaker("Dlg Bgnd")
-                    gFrame = LVecBase4f(0, 0, 0, 0)
-                    # print("gFrame", gFrame)
-                    ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
-                    dx = dlgBounds[1][0] - dlgBounds[0][0]
-                    dy = dlgBounds[1][1] - dlgBounds[0][1]
-                    wd = (math.sqrt(dx*dx + dy*dy)) * scMult + 1
-                    gFrame[0] = 0                                  # marginL
-                    gFrame[1] = wd  # marginR
-                    gFrame[2] = 0  # marginB
-                    gFrame[3] = ht # marginT
-                    # print("initial adjusted gFrame", gFrame)
-                    card.setFrame(gFrame)
-                    cardPath = NodePath(card.generate())
-                    cardPath.reparentTo(dlgNodePath)
-                    cardPath.setPos((-.5, .1, 1.2 - ht))
-                    cardPath.setColor(Wye.color.BACKGROUND_COLOR)
-                    frame.vars.bgndGObj[0] = cardPath
-
-                    # background outline
-                    oCard = CardMaker("Dlg Bgnd Outline")
-                    # print("gFrame", gFrame)
-                    gFrame[0] = -.1    # marginL
-                    gFrame[1] = wd+.3  # marginR
-                    gFrame[2] = -.1    # marginB
-                    gFrame[3] = ht+.3  # marginT
-                    # print("initial adjusted gFrame", gFrame)
-                    oCard.setFrame(gFrame)
-                    oCardPath = NodePath(oCard.generate())
-                    oCardPath.reparentTo(dlgNodePath)
-                    oCardPath.setPos((-.6, .2, 1.1 - ht))
-                    oCardPath.setColor(Wye.color.OUTLINE_COLOR)
-                    frame.vars.outlineGObj[0] = oCardPath
+                    WyeCore.libs.WyeUI.Dialog.genBackground(frame)
 
                     # Add dialog to known dialogs
                     WyeUI.FocusManager.openDialog(frame, parent)        # pass parent, if any
@@ -1882,8 +1850,96 @@ class WyeUI(Wye.staticObj):
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
                         frame.vars.clickedBtns[0].remove(btnFrm)
 
+        def genBackground(frame):
+            if frame.params.parent[0] is None:
+                scMult = 5
+            else:
+                scMult = 1
+            dlgNodePath = frame.vars.dragObj[0].getNodePath()
+            # dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
+            dlgBounds = dlgNodePath.getTightBounds()
+            card = CardMaker("Dlg Bgnd")
+            gFrame = LVecBase4f(0, 0, 0, 0)
+            # print("gFrame", gFrame)
+            ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
+            dx = dlgBounds[1][0] - dlgBounds[0][0]
+            dy = dlgBounds[1][1] - dlgBounds[0][1]
+            wd = (math.sqrt(dx * dx + dy * dy)) * scMult + 1
+            gFrame[0] = 0  # marginL
+            gFrame[1] = wd  # marginR
+            gFrame[2] = 0  # marginB
+            gFrame[3] = ht  # marginT
+            # print("initial adjusted gFrame", gFrame)
+            card.setFrame(gFrame)
+            cardPath = NodePath(card.generate())
+            cardPath.reparentTo(dlgNodePath)
+            cardPath.setPos((-.5, .1, 1.2 - ht))
+            cardPath.setColor(Wye.color.BACKGROUND_COLOR)
+            frame.vars.bgndGObj[0] = cardPath
+
+            # background outline
+            oCard = CardMaker("Dlg Bgnd Outline")
+            # print("gFrame", gFrame)
+            gFrame[0] = -.1  # marginL
+            gFrame[1] = wd + .3  # marginR
+            gFrame[2] = -.1  # marginB
+            gFrame[3] = ht + .3  # marginT
+            # print("initial adjusted gFrame", gFrame)
+            oCard.setFrame(gFrame)
+            oCardPath = NodePath(oCard.generate())
+            oCardPath.reparentTo(dlgNodePath)
+            oCardPath.setPos((-.6, .2, 1.1 - ht))
+            oCardPath.setColor(Wye.color.OUTLINE_COLOR)
+            frame.vars.outlineGObj[0] = oCardPath
+
+        # dialog's input list changed, update all row positions
         def redisplay(frame):
-            pass
+            # readjust the position for all the inputs
+            pos = LVecBase3f(0, 0, 0 - frame.vars.dragObj[0].getHeight())
+            nInputs = len(frame.params.inputs[0])
+            print("redisplay", nInputs, " lines of dialog")
+
+            # draw user-supplied label and text inputs
+            newX = pos[0]
+            prevZ = pos[2]
+            for ii in range(nInputs):
+                inFrm = frame.params.inputs[0][ii][0]
+                print("  Dialog input", ii, " frame", inFrm.verb.__name__, inFrm.params.label if hasattr(inFrm.params, "label") else "<no label>")
+                # print("    inFrm", inFrm)
+                # print("    Dialog input ", ii, " inFrm", inFrm)
+                # print("       inFrm.params.title", inFrm.params.title)
+                # print("")
+
+                # update position of all inputs
+                # Note: each Input's display function updates draw "pos" downward
+                # stash returned display obj tags in lookup dict to detect what user clicked on
+                # print("Build dialog", frame.params.title[0])
+
+                if hasattr(inFrm.verb, "display"):
+                    if inFrm.params.layout[0] == Wye.layout.ADD_RIGHT:
+                        pos[0] = newX
+                        pos[2] = prevZ
+                        inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
+                    else:
+                        prevZ = pos[2]
+                        pos[0] = 0
+                        inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
+                    newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0]
+                else:
+                    print("EditModline: Error. Unknown input verb", inFrm.verb.__name__)
+
+            # update Ok/Cancel positions
+            pos[0] = 0
+            pos[1] -= .1
+            frame.vars.dlgWidgets[0][-2].setPos(pos)        # Ok
+            pos[0] += 2.5  # shove Cancel to the right of OK
+            frame.vars.dlgWidgets[0][-1].setPos(pos)
+
+            # update background
+            frame.vars.bgndGObj[0].removeNode()
+            frame.vars.outlineGObj[0].removeNode()
+            frame.verb.genBackground(frame)
+
 
         def doCallback(frame, inFrm, tag):
             # if something to call
@@ -2181,9 +2237,10 @@ class WyeUI(Wye.staticObj):
         def start(stack):
             frame = Wye.codeFrame(WyeUI.DropDown, stack)
             frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
-            frame.vars.dlgTags[0] = []         # not used
-
-            frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed"
+            frame.vars.okTags[0] = []         # tags for OK buttons
+            frame.vars.canTags[0] = []         # tags for Cancel buttons
+            frame.vars.inpTags[0] = {}         # map input widget to input sequence number
+            frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
 
             # If we don't have a text input cursor, make one
             #if WyeUI.Dialog._cursor is None:
@@ -2239,7 +2296,7 @@ class WyeUI(Wye.staticObj):
                     txt = WyeUI._3dText("Cancel", color=(Wye.color.HEADER_COLOR), pos=tuple(pos),
                                         scale=(1,1,1), parent=dlgHeader.getNodePath())
                     frame.vars.dlgWidgets[0].append(txt)
-                    frame.vars.dlgTags[0].append(txt.getTag())
+                    frame.vars.canTags[0].append(txt.getTag())
 
                     # make a background for entire DropDown
                     if parent is None:
@@ -3102,11 +3159,11 @@ class WyeUI(Wye.staticObj):
                             else:
                                 level = 2       # starting indent for nesting tuple data
                                 attrIx = 0      # This level code row
-                                row = [0]       # dialog row, including recursively displayed tuple data
-                                for tuple in verb.codeDescr:
-                                    WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(tuple, level, frame, attrIx, row, dlgFrm)
-
+                                rowLst = []     # build rows here
+                                for tuple in frame.vars.newCodeDescr[0]:
+                                    WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(tuple, level, frame, dlgFrm, rowLst)
                                     attrIx += 1
+                                dlgFrm.params.inputs[0].extend(rowLst)
                         else:
                             # line edit button
                             editLnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
@@ -3175,34 +3232,31 @@ class WyeUI(Wye.staticObj):
         # make the object editor dialog code row recursively
         # level is the recursion level (starting at 2)
         # verb is the verb being edited
-        # attrIx is the row within the verb's codeDescr
-        # row is the dialog row (since recursion expands the codeDescr rows)
         # dlgFrm is the dialog being added to
-        def bldEditCodeLine(tuple, level, editVerbFrm, attrIx, row, dlgFrm):
-            indent = "".join(["    " for l in range(level)])      # indent by recursion depth
+        def bldEditCodeLine(tuple, level, editVerbFrm, dlgFrm, rowLst):
             #print("level", level, " indent '"+indent+"' tuple", tuple)
 
             # line edit button
             editLnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-            dlgFrm.params.inputs[0].append([editLnFrm])
+            rowLst.append([editLnFrm])
             editLnFrm.params.label = ["+/-"]
             editLnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback]  # button callback
-            # note: optData further down so can pass btnFrm
+            # note: fill in optData further down so can pass btnFrm
             editLnFrm.params.frame = [None]
             editLnFrm.params.parent = [None]
 
-
+            # convert level number into indent space
             indent = "".join(["    " for l in range(level)])      # indent by recursion depth
 
             # code button
             btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
-            dlgFrm.params.inputs[0].append([btnFrm])
+            rowLst.append([btnFrm])
             btnFrm.params.layout = [Wye.layout.ADD_RIGHT]       # put after the line edit button
             btnFrm.params.frame = [None]
             btnFrm.params.parent = [None]
 
-            # fill in prev button opt data inlcuding ptr to this ctl
-            editLnFrm.params.optData = [(editLnFrm, dlgFrm, editVerbFrm, tuple, btnFrm, level)]  # button row, dialog frame
+            # fill in prev button opt data including ptr to this ctl
+            editLnFrm.params.optData = [(editLnFrm, dlgFrm, editVerbFrm, tuple, btnFrm, level)]  # button frame, dialog frame
             editLnFrm.verb.run(editLnFrm)
             #print("editLnFrm optData for EditCodeLineCallback", editLnFrm.params.optData)
 
@@ -3217,8 +3271,7 @@ class WyeUI(Wye.staticObj):
                 # display verb's params (if any)
                 if len(tuple) > 1:
                     for paramTuple in tuple[1:]:
-                        row[0] += 1
-                        WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, attrIx, row, dlgFrm)
+                        WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, dlgFrm, rowLst)
             else:
                 match tuple[0]:
                     case "Code" | None:  # raw Python
@@ -3254,8 +3307,11 @@ class WyeUI(Wye.staticObj):
                         btnFrm.params.label = [indent + "If GoTo: " + tuple[1]]
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditSpecialCallback]  # button callback
 
-            btnFrm.params.optData = [(btnFrm, dlgFrm, editVerbFrm, tuple, level, editLnFrm)]  # button row, dialog frame
+            btnFrm.params.optData = [(btnFrm, dlgFrm, editVerbFrm, tuple, level, editLnFrm)]  # button frame, dialog frame
             btnFrm.verb.run(btnFrm)
+
+
+
 
         ######################
         # VerbEditor Button Callback classes
@@ -3552,10 +3608,12 @@ class WyeUI(Wye.staticObj):
                     #print("            ediLnFrm", editLnFrm.params.label[0])
                     #print("            codeFrm", codeFrm.params.label[0])
 
+                    # Placeholder for "add line" so user has row to fill in with their code
+                    #newLn = ["WyeLib.noop", ["Const", "[0]"]]
+                    newLn = ("Code", ("#< your code goes here>#"))
 
-                    newLn = ("WyeLib.noop", ("Const", [0]))
-                    indent = "".join(["    " for l in range(level)])  # indent by recursion depth
-                    vStr = str(newLn[0])
+                    #indent = "".join(["    " for l in range(level)])  # indent by recursion depth
+                    #vStr = str(newLn[0])
 
                     #print("EditModline run: data", data, " op", op)
 
@@ -3572,19 +3630,16 @@ class WyeUI(Wye.staticObj):
                                 ix = parentList.index(tuple)
                                 #print("found tuple", tuple, " at", ix, " in", parentList)
                             else:
-                                print("EditModLine: failed to find tuple '", tuple," parent list.  Bad news")
+                                print("EditModLine: failed to find tuple '" + str(tuple) + "' in parent list:\n", editVerbFrm.vars.newCodeDescr[0])
 
-                            # TODO - this is going to fail 'cause codeDescr is a const.
-                            # Need to have an AST to modify!!!!!
-                            editVerbFrm.vars.newCodeDescr[0].insert(ix, newLn)
-
-                            # get position of current dlg row in this location
-                            currPos = btnFrm.vars.position[0]
-                            pos = [currPos[0], currPos[1], currPos[2]]
+                            # Insert new line into code desr
+                            # todo would simplify life to have an AST holding var, call info and
+                            #  linking relevant parts to relevant controls/data
+                            parentList.insert(ix, newLn)
 
                             # create new dialog row for this code line
 
-                            # find index to row
+                            # find index to row to insert before
                             ix = -1
                             #print("***** input list. Look for", editLnFrm.params.label, ", ", editLnFrm, " in dialog", parentFrm.params.title[0])
                             for ii in range(len(parentFrm.params.inputs[0])):
@@ -3593,75 +3648,26 @@ class WyeUI(Wye.staticObj):
                                     #print("   match at", ii)
                                     ix = ii
                                     break
-                            # debug
+                            # Debug: if the unthinkable happens, give us a hint
                             if ix < 0:
                                 print("EditModLine ERROR: input", editLnFrm.verb.__name__, " not in input list")
 
-                            # new line edit button
-                            newEditLn = WyeCore.libs.WyeUI.InputButton.start(parentFrm.SP)
-                            parentFrm.params.inputs[0].insert(ix, [newEditLn])  # insert
-                            newEditLn.params.label = ["+/-"]
-                            newEditLn.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback]  # button callback
-                            # note: optData further down so can pass btnFrm
-                            newEditLn.params.frame = [None]
-                            newEditLn.params.parent = [None]
-                            newEditLn.verb.run(newEditLn)
-                            setattr(newEditLn, "parentFrame", parentFrm)
+                            # build dialog rows
+                            rowLst = []     # put dialog row(s) here
+                            print("newLn", newLn, " tuple[1]", newLn[1])
+                            WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(newLn, level, editVerbFrm, parentFrm, rowLst)
 
-                            # new code line
-                            newBtn = WyeCore.libs.WyeUI.InputButton.start(parentFrm.SP)
-                            parentFrm.params.inputs[0].insert(ix+1, [newBtn])
-                            newBtn.params.layout = [Wye.layout.ADD_RIGHT]
-                            newBtn.params.frame = [None]
-                            newBtn.params.parent = [None]
-                            newBtn.params.label = [indent + "Verb: " + vStr]
-                            newBtn.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVerbCallback]  # button callback
-                            setattr(newBtn, "parentFrame", parentFrm)
+                            # insert new dialog rows into dialog
+                            # display new dialog rows (don't sweat the position, they will be correctly
+                            # placed by dialog redisplay, below)
+                            pos = [0,0,0]
+                            for rowFrmLst in rowLst:
+                                parentFrm.params.inputs[0].insert(ix, rowFrmLst)
+                                ix += 1
+                                rowFrmLst[0].verb.display(rowFrmLst[0], parentFrm, pos)
 
-                            # fill in callback data and run the display
-                            # todo - figure out how to pass correct level
-                            newEditLn.params.optData = [(newEditLn, parentFrm, editVerbFrm, tuple, btnFrm, level)]  # button row, dialog frame
-                            newEditLn.verb.run(editLnFrm)
-                            newEditLn.verb.display(newEditLn, parentFrm,LVecBase3f(0,0,0))  # position will be updated by redisplay, below
-
-                            newBtn.params.optData = [(newBtn, parentFrm, editVerbFrm, tuple, level, editLnFrm)]  # button row, dialog frame
-                            newBtn.verb.run(newEditLn)
-                            newBtn.verb.display(newBtn, parentFrm,LVecBase3f(0,0,0))  # position will be updated by redisplay, below
-
-                            # readjust the position for all the inputs
-                            pos = LVecBase3f(0, 0, 0-parentFrm.vars.dragObj[0].getHeight())
-                            nInputs = len(parentFrm.params.inputs[0])
-                            print("redisplay", nInputs, " lines of dialog")
-
-                            # draw user-supplied label and text inputs
-                            newX = pos[0]
-                            prevZ = pos[2]
-                            for ii in range(nInputs):
-                                # print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
-                                inFrm = parentFrm.params.inputs[0][ii][0]
-                                # print("    inFrm", inFrm)
-                                # print("    Dialog input ", ii, " inFrm", inFrm)
-                                # print("       inFrm.params.title", inFrm.params.title)
-                                # print("")
-
-                                # update position of all inputs
-                                # Note: each Input's display function updates draw "pos" downward
-                                # stash returned display obj tags in lookup dict to detect what user clicked on
-                                # print("Build dialog", frame.params.title[0])
-
-                                if hasattr(inFrm.verb, "display"):
-                                    if inFrm.params.layout[0] == Wye.layout.ADD_RIGHT:
-                                        pos[0] = newX
-                                        pos[2] = prevZ
-                                        inFrm.verb.redisplay(inFrm, parentFrm, pos)  # displays label, updates pos
-                                    else:
-                                        prevZ = pos[2]
-                                        pos[0] = 0
-                                        inFrm.verb.redisplay(inFrm, parentFrm, pos)  # displays label, updates pos
-                                    newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0]
-                                else:
-                                    print("EditModline: Error. Unknown input verb", inFrm.verb.__name__)
-
+                            # update position of all fields
+                            parentFrm.verb.redisplay(parentFrm)
 
                         case WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback.COPY:
                             print("EditModline: Copy")

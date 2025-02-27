@@ -971,10 +971,10 @@ class WyeCore(Wye.staticObj):
         # recursively copy oldLst to newLst
         def listCopy(newLst, oldLst):
             for oldElem in oldLst:
-                if isinstance(oldElem, list):
+                if isinstance(oldElem, list) or isinstance(oldElem, tuple):
                     subLst = []
                     newLst.append(subLst)
-                    WyeCore.libs.WyeUI.EditVerb.varCpy(subLst, oldElem)
+                    WyeCore.Utils.listCopy(subLst, oldElem)
                 else:
                     newElem = oldElem
                     newLst.append(newElem)
