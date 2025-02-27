@@ -2677,6 +2677,13 @@ class WyeUI(Wye.staticObj):
                 print("createVerb test")
 
                 # libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
+                verbConstants = {
+                    'mode': 'Wye.mode.MULTI_CYCLE',
+                    'autoStart': 'True',
+                    'dataType':' Wye.dType.NONE'
+                }
+
+
                 paramDescr = '''
 ("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),
 '''
@@ -2684,7 +2691,7 @@ class WyeUI(Wye.staticObj):
 ("gObj", Wye.dType.OBJECT, None),
 ("objTag", Wye.dType.STRING, "objTag"),
 ("sound", Wye.dType.OBJECT, None),
-("position", Wye.dType.FLOAT_LIST, [0, 75, 0]),
+("position", Wye.dType.FLOAT_LIST, [0, 15, 0]),
 ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
 ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
 ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
@@ -2709,17 +2716,17 @@ class WyeUI(Wye.staticObj):
 (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
 ("Label", "Repeat"),
 # set angle
-# ("Code", "print('MyTestVerb run')"),
+#("Code", "print('MyTestVerb run')"),
 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
 # Step forward
 ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
 ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.gObj")),
 # set color
-("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+("Var=", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
 # todo Next two lines are horrible - if followed by then expression indented - they have to be together
 # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
-("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
-("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+("Code", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
+("Code", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
 ("Var=",
  "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
 (
@@ -2727,14 +2734,16 @@ class WyeUI(Wye.staticObj):
 
 ("GoTo", "Repeat")
 '''
-                WyeCore.Utils.createVerb(lib, "MyTestVerb", paramDescr, varDescr, codeDescr)
+                WyeCore.Utils.createVerb(lib, "MyTestVerb", verbConstants, paramDescr, varDescr, codeDescr)
 
 
-                print("Run MyTestVerb")
-                frm = WyeCore.libs.MyTestLibrary.MyTestVerb.start(frame.SP)
-                frm.params.ret = [0]
-                frm.verb.run(frm)
-                print("Ran MyTestVerb")
+                # - don't need to run it, it's got autoStart set True
+                #print("Run MyTestVerb")
+
+                #frm = WyeCore.libs.MyTestLibrary.MyTestVerb.start(frame.SP)
+                #frm.params.ret = [0]
+                #frm.verb.run(frm)
+                print("Started MyTestVerb")
 
         class TestMidiCallback:
             mode = Wye.mode.SINGLE_CYCLE

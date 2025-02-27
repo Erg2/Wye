@@ -1474,14 +1474,23 @@ class WyeCore(Wye.staticObj):
             return lib
 
 
-        def createVerb(vrbLib, name, paramDescr, varDescr, codeDescr):
-            pass
+        def createVerb(vrbLib, name, verbConstants, paramDescr, varDescr, codeDescr):
+
+
             # build verb
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
-            vrbStr += "\nclass "+name+":"
+            vrbStr += "\nclass "+name+":\n"
+            if 'mode' in verbConstants:
+                vrbStr += "    mode = "+verbConstants['mode']+"\n"
+            if 'cType' in verbConstants:
+                vrbStr += "    cType = "+verbConstants['cType']+"\n"
+            if 'parTermType' in verbConstants:
+                vrbStr += "    parTermType = "+verbConstants['parTermType']+"\n"
+            if 'autoStart' in verbConstants:
+                vrbStr += "    autoStart = "+verbConstants['autoStart']+"\n"
+            if 'dataType' in verbConstants:
+                vrbStr += "    dataType = "+verbConstants['dataType']+"\n"
             vrbStr += '''
-    mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
 '''
             vrbStr += "    paramDescr = ("+paramDescr+")\n"
             vrbStr += "    varDescr = ("+varDescr+")\n"
@@ -1553,7 +1562,10 @@ except Exception as e:
     print("compile failed\\n", str(e))
 
 '''
-
+            # if verb has autostart, start it
+            vrbStr += "if hasattr(WyeCore.libs."+vrbLib.__name__+"."+name+", 'autoStart'):\n"
+            vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
+            vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
             #vrbStr += "        " + lib.__name__ + "." + lib.__name__ + "_rt."+name+"_run_rt(frame)\n"
             print("createVerb: verb text:")
@@ -1583,8 +1595,6 @@ except Exception as e:
                 except Exception as e:
                     print("exec failed\n", str(e))
                     return
-
-
 
             except Exception as e:
                 print("compile failed\n", str(e))
