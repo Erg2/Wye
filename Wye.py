@@ -91,31 +91,43 @@ class Wye:
         SUCCESS = 1
         FAIL = -1
 
-        def tostring(status):        # static print function
-            match status:
-                case Wye.status.CONTINUE:
-                    return "CONTINUE"
-                case Wye.status.SUCCESS:
-                    return "SUCCESS"
-                case Wye.status.FAIL:
-                    return "FAIL"
-                case _:
-                    return "--unknown status value " + str(status) + "--"
+        valList = [
+            CONTINUE,
+            SUCCESS,
+            FAIL
+        ]
+
+        stringLookup = {
+            CONTINUE: 'CONTINUE',
+            SUCCESS: 'SUCCESS ',
+            FAIL: 'FAIL'
+        }
+
+        def tostring(val):
+            if val in Wye.status.stringLookup:
+                return Wye.status.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
     class pType:
         REQUIRED = 0        # default
         OPTIONAL = 1
 
-        def tostring(pType):
-            match pType:
-                case Wye.status.REQUIRED:
-                    return "REQUIRED"
+        pTypeList = [
+            REQUIRED,
+            OPTIONAL
+        ]
 
-                case Wye.status.OPTIONAL:
-                    return "OPTIONAL"
+        toString = {
+            REQUIRED: 'REQUIRED',
+            OPTIONAL: 'OPTIONAL'
+        }
 
-                case _:
-                    return "unknown pType "+str(pType)
+        def tostring(val):
+            if val in Wye.pType.stringLookup:
+                return Wye.pType.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
 
     # Wye cType - verb, object, function verb
@@ -123,18 +135,25 @@ class Wye:
         FUNCTION = "F"      # Function that immediately returns a value of given dType (see dType)
         OBJECT = "O"        # multi-cycle object that has a "runnable" test and returns status (above) on each cycle
         VERB = "V"          # regular verb (default)
+
+        valList = [
+            FUNCTION,
+            OBJECT,
+            VERB
+        ]
+
+        stringLookup = {
+            FUNCTION: "FUNCTION",
+            OBJECT: "OBJECT",
+            VERB: "VERB"
+        }
         
         def tostring(val):            # static print function
-            match val:
-                case Wye.mode.FUNCTION:
-                    return "FUNCTION"
-                case Wye.mode.OBJECT:
-                    return "OBJECT"
-                case Wye.mode.VERB:
-                    return "VERB"
+            if val in Wye.cType.stringLookup:
+                return Wye.cType.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
-                case _:
-                    return "--unknown cType value " + str(val) + "--"
             
     # verb modes
     class mode:
@@ -142,23 +161,35 @@ class Wye:
         MULTI_CYCLE = "M"   # multi-cycle subroutine that returns status (see above) on each cycle
         PARALLEL = "P"      # parallel processing of parameters
 
+        valList = [
+            SINGLE_CYCLE,
+            MULTI_CYCLE,
+            PARALLEL
+        ]
 
-        def tostring(mode):            # static print function
-            match mode:
-                case Wye.mode.PARALLEL:
-                    return "PARALLEL"
-                case Wye.mode.SINGLE_CYCLE:
-                    return "SINGLE_CYCLE"
-                case Wye.mode.MULTI_CYCLE:
-                    return "MULTI_CYCLE"
-                case _:
-                    return "--unknown mode value " + str(mode) + "--"
+        stringLookup = {
+            SINGLE_CYCLE: 'SINGLE_CYCLE',
+            MULTI_CYCLE: 'MULTI_CYCLE',
+            PARALLEL: 'PARALLEL'
+        }
+
+        def tostring(val):            # static print function
+            if val in Wye.mode.stringLookup:
+                return Wye.mode.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
     # parallel completion requirement
     class parTermType:
         FIRST_FAIL = "F"        # done when any fails or all succeed
         FIRST_SUCCESS = "S"     # done when any succeeds or all fail
         FIRST_ANY = "A"         # done on first non-CONTINUE (i.e don on succeed or fail)
+
+        parTermTypeList = [
+            FIRST_FAIL,
+            FIRST_SUCCESS,
+            FIRST_ANY
+        ]
 
     # Data types
     class dType:
@@ -179,7 +210,7 @@ class Wye:
         STRING_LIST =   "SL"
         VARIABLE =      "V"     # first of variable number of parameter
 
-        dTypeList = [
+        valList = [
             NONE,
             ANY,
             NUMBER,
@@ -198,43 +229,30 @@ class Wye:
             VARIABLE,
         ]
 
-        def tostring(dataType):            # static print function
-            match dataType:
-                case Wye.dType.NONE:
-                    return "None"
-                case Wye.dType.ANY:
-                    return "Any"
-                case Wye.dType.NUMBER:
-                    return "Number"
-                case Wye.dType.INTEGER:
-                    return "Integer"
-                case Wye.dType.FLOAT:
-                    return "Float"
-                case Wye.dType.BOOL:
-                    return "Bool"
-                case Wye.dType.OBJECT:
-                    return "Object"
-                case Wye.dType.STRING:
-                    return "String"
-                case Wye.dType.ANY_LIST:
-                    return "Any_list"
-                case Wye.dType.NUMBER_LIST:
-                    return "Number_list"
-                case Wye.dType.INTEGER_LIST:
-                    return "Integer_list"
-                case Wye.dType.FLOAT_LIST:
-                    return "Float_list"
-                case Wye.dType.BOOL_LIST:
-                    return "Bool_list"
-                case Wye.dType.OBJECT_LIST:
-                    return "Object_list"
-                case Wye.dType.STRING_LIST:
-                    return "String_list"
-                case Wye.dType.VARIABLE:
-                    return "Variable"
+        stringLookup = {
+            NONE: 'NONE',
+            ANY: 'ANY',
+            NUMBER: 'NUMBER',
+            INTEGER: 'INTEGER',
+            FLOAT: 'FLOAT',
+            BOOL: 'BOOL',
+            OBJECT: 'OBJECT',
+            STRING: 'STRING',
+            ANY_LIST: 'ANY_LIST',
+            NUMBER_LIST: 'NUMBER_LIST',
+            INTEGER_LIST: 'INTEGER_LIST',
+            FLOAT_LIST: 'FLOAT_LIST',
+            BOOL_LIST: 'BOOL_LIST',
+            OBJECT_LIST: 'OBJECT_LIST',
+            STRING_LIST: 'STRING_LIST',
+            VARIABLE: 'VARIABLE',
+        }
 
-                case _:
-                    return "--unknown data dType value " + str(dataType) + "--"
+        def tostring(val):            # static print function
+            if val in Wye.dType.stringLookup:
+                return Wye.dType.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
         def convertType(value, dataType):
             #print("Convert", value, " ", type(value), " dataType", Wye.dType.tostring(dataType))
@@ -462,20 +480,41 @@ class Wye:
         REFERENCE = 1
         # decide if worth doing OUT = 2
 
-        def tostring(access):            # static print function
-            match access:
-                case Wye.access.VALUE:
-                    return "VALUE"
-                case Wye.access.REFERENCE:
-                    return "REFERENCE"
-                #case Wye.dType.OUT:
-                #    return "OUT"
-                case _:
-                    return "--unknown access value " + str(access) + "--"
+        valList = [
+            VALUE,
+            REFERENCE
+        ]
+
+        stringLookup = {
+            VALUE: "VALUE",
+            REFERENCE: "REFERENCE"
+        }
+
+        def tostring(val):            # static print function
+            if val in Wye.access.stringLookup:
+                return Wye.access.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
     class layout:
         VERTICAL = 0        # input should go below the previous one
         ADD_RIGHT = 1       # input should be added to the right of the previous one
+
+        valList = [
+           VERTICAL,
+           ADD_RIGHT
+        ]
+
+        stringLookup = {
+            VERTICAL: 'VERTICAL',
+            ADD_RIGHT: 'ADD_RIGHT'
+        }
+
+        def tostring(val):            # static print function
+            if val in Wye.cType.stringLookup:
+                return Wye.cType.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
     # known event types that a word can wait for
     class event:
@@ -582,7 +621,7 @@ class Wye:
             #else:
             #    print("verb",verb, " has no varDescr")
 
-            if hasattr(verb, "paramDescr"):
+            if hasattr(verb, "paramDescr") and len(self.verb.paramDescr) > 0:
                 for paramDef in verb.paramDescr:
                     # create parameter
                     if len(paramDef) > 1:

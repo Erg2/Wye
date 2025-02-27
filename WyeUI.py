@@ -1549,6 +1549,7 @@ class WyeUI(Wye.staticObj):
             dlgHeader = dlgFrm.vars.dragObj[0]
 
             gTags = []  # clickable graphic object tags assoc with this input
+            print("InputDropdown display: label", frame.params.label[0])
             lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
@@ -1642,7 +1643,7 @@ class WyeUI(Wye.staticObj):
 
                         dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
                         dlgFrm.params.retVal = frame.vars.retStat
-                        dlgFrm.params.title = ["Data Type"]
+                        dlgFrm.params.title = rowFrm.params.label
                         dlgFrm.params.position = [[pos[0], pos[1], pos[2]],]
                         dlgFrm.params.parent = [rowFrm.parentFrame]
 
@@ -2663,26 +2664,25 @@ class WyeUI(Wye.staticObj):
                 return Wye.codeFrame(WyeUI.MainMenuDialog.TestCreatLibCallback, stack)
 
             def run(frame):
-                print("createLibrary test")
+                #print("createLibrary test")
                 lib = WyeCore.Utils.createLib("MyTestLibrary")
 
-                print("created lib", lib.__name__)
+                #print("created lib", lib.__name__)
 
                 #WyeCore.libs.TemplateTestLib.test()
-                print("Known libs")
-                for libName in dir(WyeCore.libs):
-                    if not libName.startswith("__"):
-                        print("  ", libName)
+           #     print("Known libs")
+           #     for libName in dir(WyeCore.libs):
+           #         if not libName.startswith("__"):
+           #             print("  ", libName)
 
-                print("createVerb test")
+           #     print("createVerb test")
 
                 # libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
-                verbConstants = {
+                vertSettings = {
                     'mode': 'Wye.mode.MULTI_CYCLE',
                     'autoStart': 'True',
                     'dataType':' Wye.dType.NONE'
                 }
-
 
                 paramDescr = '''
 ("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),
@@ -2692,11 +2692,11 @@ class WyeUI(Wye.staticObj):
 ("objTag", Wye.dType.STRING, "objTag"),
 ("sound", Wye.dType.OBJECT, None),
 ("position", Wye.dType.FLOAT_LIST, [0, 15, 0]),
-("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
-("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
+("dPos", Wye.dType.FLOAT_LIST, [0., 0., .1]),
+("dAngle", Wye.dType.FLOAT_LIST, [0., 0., .30]),
 ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
-("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
-("color", Wye.dType.FLOAT_LIST, [1, 1, 1, 1]),
+("colorInc", Wye.dType.FLOAT_LIST, [5, 5, 5]),
+("color", Wye.dType.FLOAT_LIST, [.5, .5, .5, 1]),
 '''
 
                 codeDescr = '''
@@ -2704,10 +2704,10 @@ class WyeUI(Wye.staticObj):
 ("WyeCore.libs.WyeLib.loadObject",
  (None, "[frame]"),
  (None, "frame.vars.gObj"),
- (None, "['flyer_01.glb']"),
+ (None, "['fish.glb']"),
  (None, "frame.vars.position"),  # posVec
  (None, "[[0, 90, 0]]"),  # rotVec
- (None, "[[2,2,2]]"),  # scaleVec
+ (None, "[[.25,.25,.25]]"),  # scaleVec
  (None, "frame.vars.objTag"),
  (None, "frame.vars.color")
  ),
@@ -2734,7 +2734,7 @@ class WyeUI(Wye.staticObj):
 
 ("GoTo", "Repeat")
 '''
-                WyeCore.Utils.createVerb(lib, "MyTestVerb", verbConstants, paramDescr, varDescr, codeDescr)
+                WyeCore.Utils.createVerb(lib, "MyTestVerb", vertSettings, paramDescr, varDescr, codeDescr)
 
 
                 # - don't need to run it, it's got autoStart set True
@@ -2743,7 +2743,7 @@ class WyeUI(Wye.staticObj):
                 #frm = WyeCore.libs.MyTestLibrary.MyTestVerb.start(frame.SP)
                 #frm.params.ret = [0]
                 #frm.verb.run(frm)
-                print("Started MyTestVerb")
+                #print("Started MyTestVerb")
 
         class TestMidiCallback:
             mode = Wye.mode.SINGLE_CYCLE
@@ -3077,6 +3077,7 @@ class WyeUI(Wye.staticObj):
                     ("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
                     ("varInpLst", Wye.dType.OBJECT_LIST, None),     # Inputs showing vars
                     ("oldVerb", Wye.dType.OBJECT, None),            # verb used as a source
+                    ("newVerbSettings", Wye.dType.OBJECT, None),            # verb used as a source
                     ("newParamDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb params here
                     ("newVarDescr", Wye.dType.OBJECT_LIST, None),    # Build new verb vars here
                     ("newCodeDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb code here
@@ -3088,11 +3089,19 @@ class WyeUI(Wye.staticObj):
         def start(stack):
             #print("EditVerb start")
             f = Wye.codeFrame(WyeUI.EditVerb, stack)
+            # fill in local copies of lists
             f.vars.paramInpLst[0] = []
             f.vars.varInpLst[0] = []
             f.vars.newParamDescr[0] = []
             f.vars.newVarDescr[0] = []
             f.vars.newCodeDescr[0] = []
+            f.vars.newVerbSettings[0] = {
+                'mode': Wye.mode.SINGLE_CYCLE,
+                'cType': Wye.cType.VERB,
+                'parTermType': Wye.parTermType.FIRST_FAIL,
+                'autoStart': False,
+                'dType': Wye.dType.NONE,
+            }
             return f
 
         def run(frame):
@@ -3124,6 +3133,17 @@ class WyeUI(Wye.staticObj):
                     frame.vars.oldVerb[0] = verb
 
                     # copy verb's data into work spaces
+                    if hasattr(verb, 'mode'):
+                        frame.vars.newVerbSettings[0]['mode'] = verb.mode
+                    if hasattr(verb, 'cType'):
+                        frame.vars.newVerbSettings[0]['cType'] = verb.cType
+                    if hasattr(verb, 'parTermType'):
+                        frame.vars.newVerbSettings[0]['parTermType'] = verb.parTermType
+                    if hasattr(verb, 'autoStart'):
+                        frame.vars.newVerbSettings[0]['autoStart'] = verb.autoStart
+                    if hasattr(verb, 'dataType'):
+                        frame.vars.newVerbSettings[0]['dataType'] = verb.dataType
+
                     for param in verb.paramDescr:
                         newP = []
                         frame.vars.newParamDescr[0].append(newP)
@@ -3153,6 +3173,76 @@ class WyeUI(Wye.staticObj):
 
                     # build dialog
 
+                    # settings
+                    lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
+                    lblFrm.params.frame = [None]
+                    lblFrm.params.parent = [None]
+                    lblFrm.params.label = ["Settings:"]
+                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
+                    WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
+                    dlgFrm.params.inputs[0].append([lblFrm])
+
+                    modeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                    modeFrm.params.frame = [None]
+                    modeFrm.params.parent = [None]
+                    modeFrm.params.label = ["  Mode"]
+                    modeNames = [Wye.mode.stringLookup[val] for val in Wye.mode.valList]
+                    modeFrm.params.list = [modeNames]
+                    modeFrm.params.selectionIx = [Wye.mode.valList.index(frame.vars.newVerbSettings[0]['mode'])]
+                    #modeFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVerbSettingsCallback]
+                    #modeFrm.params.optData = ((modeFrm, dlgFrm, frame, Wye.mode),)
+                    modeFrm.verb.run(modeFrm)
+                    dlgFrm.params.inputs[0].append([modeFrm])
+
+                    autoFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    autoFrm.params.frame = [None]
+                    autoFrm.params.parent = [None]
+                    autoFrm.params.value = [False]
+                    autoFrm.params.label = ["  Auto Start"]
+                    #autoFrm.params.callback = [WyeCore.libs.WyeUI.ObjectDebugger.RunCallback]  # button callback
+                    #autoFrm.params.optData = [(autoFrm, objFrm, frame)]
+                    autoFrm.params.color = [(1, 1, 0, 1)]
+                    autoFrm.verb.run(autoFrm)
+                    dlgFrm.params.inputs[0].append([autoFrm])
+
+                    dTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                    dTypeFrm.params.frame = [None]
+                    dTypeFrm.params.parent = [None]
+                    dTypeFrm.params.label = ["  Data Type"]
+                    dTypeNames = [Wye.dType.stringLookup[val] for val in Wye.dType.valList]
+                    dTypeFrm.params.list = [dTypeNames]
+                    dTypeFrm.params.selectionIx = [Wye.dType.valList.index(frame.vars.newVerbSettings[0]['dataType'])]
+                    #dTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVerbSettingsCallback]
+                    #dTypeFrm.params.optData = ((dTypeFrm, dlgFrm, frame, Wye.dType),)
+                    dTypeFrm.verb.run(dTypeFrm)
+                    dlgFrm.params.inputs[0].append([dTypeFrm])
+
+                #    cTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                #    cTypeFrm.params.frame = [None]
+                #    cTypeFrm.params.parent = [None]
+                #    cTypeFrm.params.label = ["Object Type"]
+                #    cTypeNames = [Wye.cType.stringLookup[val] for val in Wye.cType.valList]
+                #    cTypeFrm.params.list = [cTypeNames]
+                #    cTypeFrm.params.selectionIx = [Wye.cType.valList.index(frame.vars.newVerbSettings[0]['dataType'])]
+                #    #cTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVerbSettingsCallback]
+                #    #cTypeFrm.params.optData = ((cTypeFrm, dlgFrm, frame, Wye.cType),)
+                #    cTypeFrm.verb.run(cTypeFrm)
+                #    dlgFrm.params.inputs[0].append([cTypeFrm])
+
+                #    parTermTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                #    parTermTypeFrm.params.frame = [None]
+                #    parTermTypeFrm.params.parent = [None]
+                #    parTermTypeFrm.params.label = ["Parallel Exec Termination"]
+                #    parTermTypeNames = [Wye.parTermType.stringLookup[val] for val in Wye.parTermType.valList]
+                #    parTermTypeFrm.params.list = [parTermTypeNames]
+                #    parTermTypeFrm.params.selectionIx = [Wye.parTermType.valList.index(frame.vars.newVerbSettings[0]['dataType'])]
+                #    #parTermTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVerbSettingsCallback]
+                #    #parTermTypeFrm.params.optData = ((parTermTypeFrm, dlgFrm, frame, Wye.parTermType),)
+                #    parTermTypeFrm.verb.run(parTermTypeFrm)
+                #    dlgFrm.params.inputs[0].append([parTermTypeFrm])
+
+
+
                     # params
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
@@ -3161,6 +3251,11 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
+
+                #    frame.vars.newVerbSettings['cType']
+                #    frame.vars.newVerbSettings['parTermType']
+                #    frame.vars.newVerbSettings['autoStart']
+                #    frame.vars.newVerbSettings['dataType']
 
                     if len(verb.paramDescr) > 0:     # if we have params, list them
 
@@ -3406,6 +3501,25 @@ class WyeUI(Wye.staticObj):
         # Callback gets passed eventData = (buttonTag, optUserData, buttonFrm)
         ######################
 
+        class EditVerbSettingsCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("EditVerbSettingsCallback started")
+                return Wye.codeFrame(WyeUI.EditVerb.EditVerbSettingsCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                btnFrm = data[1][0]
+                parentFrame = data[1][1]
+                editVerbFrm = data[1][2]
+                WyeClass = data[1][3]
+
+                print("EditVerbSetingsCallback: btnFrm", btnFrm.params.label[0], " dlg", parentFrame.params.title[0],
+                      " editFrame", editVerbFrm.verb.__name__, " Wye class", WyeClass.__name__)
 
         # put up code edit dialog for given verb
         # put up dropdown to select other verb from library - or other library
@@ -3537,7 +3651,7 @@ class WyeUI(Wye.staticObj):
                 def run(frame):
                     data = frame.eventData
                     btnFrm = data[1][0]
-                    parentFrame = data[1][12]
+                    parentFrame = data[1][1]
                     editVerbFrm = data[1][2]
                     libNameLst = data[1][3]
                     verbFrm = data[1][4]
@@ -3983,8 +4097,8 @@ class WyeUI(Wye.staticObj):
                         paramTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                         paramTypeFrm.params.frame = [None]
                         paramTypeFrm.params.label = ["Type: "]
-                        paramTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.dTypeList]]
-                        paramTypeFrm.params.selectionIx = [Wye.dType.dTypeList.index(frame.vars.paramType[0])]
+                        paramTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.valList]]
+                        paramTypeFrm.params.selectionIx = [Wye.dType.valList.index(frame.vars.paramType[0])]
                         paramTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditParamTypeCallback]
                         paramTypeFrm.params.optData = ((paramIx, paramTypeFrm, dlgFrm, editVerbFrm, frame.vars.paramType[0]),)    # var to return chosen type in
                         paramTypeFrm.verb.run(paramTypeFrm)
@@ -4007,7 +4121,7 @@ class WyeUI(Wye.staticObj):
                         if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
                             label = dlgFrm.params.inputs[0][0][0].params.value[0]
                             typeIx = dlgFrm.params.inputs[0][1][0].params.selectionIx[0]
-                            wType = Wye.dType.dTypeList[typeIx]
+                            wType = Wye.dType.valList[typeIx]
                             accessVal = dlgFrm.params.inputs[0][2][0].params.value[0]
                             accessCode = Wye.access.REFERENCE    # default
                             accessStr = "REFERENCE"
@@ -4109,9 +4223,9 @@ class WyeUI(Wye.staticObj):
                         varTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                         varTypeFrm.params.frame = [None]
                         varTypeFrm.params.label = ["Type: "]
-                        varTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.dTypeList]]
-                        #print("EditVarCallback find ", frame.vars.varType[0], " in", Wye.dType.dTypeList)
-                        varTypeFrm.params.selectionIx = [Wye.dType.dTypeList.index(frame.vars.varType[0])]
+                        varTypeFrm.params.list = [[Wye.dType.tostring(x) for x in Wye.dType.valList]]
+                        #print("EditVarCallback find ", frame.vars.varType[0], " in", Wye.dType.valList)
+                        varTypeFrm.params.selectionIx = [Wye.dType.valList.index(frame.vars.varType[0])]
                         varTypeFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVarTypeCallback]
                         varTypeFrm.params.optData = ((varIx, varTypeFrm, dlgFrm, editVerbFrm, frame.vars.varType[0]),)    # var to return chosen type in
                         varTypeFrm.verb.run(varTypeFrm)
@@ -4141,7 +4255,7 @@ class WyeUI(Wye.staticObj):
                             label = dlgFrm.params.inputs[0][0][0].params.value[0]
                             typeIx = dlgFrm.params.inputs[0][1][0].params.selectionIx[0]
 
-                            wType = Wye.dType.dTypeList[typeIx]
+                            wType = Wye.dType.valList[typeIx]
                             initVal = dlgFrm.params.inputs[0][2][0].params.value[0]
 
                             #print("EditVarCallbackDone: label", label, " typeIx", typeIx, " type", wType, " initVal", initVal)

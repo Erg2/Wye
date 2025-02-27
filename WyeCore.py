@@ -1380,11 +1380,10 @@ class WyeCore(Wye.staticObj):
                             parFnStr += parStr
 
                         # if this class is an object that should be added to the world's active object list
-                        if hasattr(val, "autoStart"):
-                            if val.autoStart:
-                                classStr = libName + "." + libName + "." + val.__name__
-                                #print("buildLib autoStart: ", classStr)
-                                WyeCore.World.startObjs.append(classStr)
+                        if hasattr(val, "autoStart") and val.autoStart:
+                            classStr = libName + "." + libName + "." + val.__name__
+                            #print("buildLib autoStart: ", classStr)
+                            WyeCore.World.startObjs.append(classStr)
 
                         # add pointer from verb class to parent library class
                         setattr(val, "library", libClass)
@@ -1446,12 +1445,12 @@ class WyeCore(Wye.staticObj):
             libTpl += "    class "+name+"_rt:\n        pass\n"
             libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
 
-            print("createLib: Library text:")
-            lnIx = 1
-            for ln in libTpl.split('\n'):
-                print("%2d " % lnIx, ln)
-                lnIx += 1
-            print("")
+        #    print("createLib: Library text:")
+        #    lnIx = 1
+        #    for ln in libTpl.split('\n'):
+        #        print("%2d " % lnIx, ln)
+        #        lnIx += 1
+        #    print("")
 
             code = compile(libTpl, "<string>", "exec")
 
@@ -1468,28 +1467,31 @@ class WyeCore(Wye.staticObj):
             #lib.test()
             #print("Build", name)
             lib.build()
+            if name in WyeCore.World.libDict:
+                WyeCore.World.libList.remove(WyeCore.World.libDict[name])
             WyeCore.World.libDict[name] = lib
             WyeCore.World.libList.append(lib)
-            print("createLib: Built and installed new library successfully", lib.__name__)
+        #    print("createLib: Built and installed new library successfully", lib.__name__)
             return lib
 
-
-        def createVerb(vrbLib, name, verbConstants, paramDescr, varDescr, codeDescr):
-
+        # create a new verb and attach it to the given library
+        def createVerb(vrbLib, name, vertSettings, paramDescr, varDescr, codeDescr):
 
             # build verb
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             vrbStr += "\nclass "+name+":\n"
-            if 'mode' in verbConstants:
-                vrbStr += "    mode = "+verbConstants['mode']+"\n"
-            if 'cType' in verbConstants:
-                vrbStr += "    cType = "+verbConstants['cType']+"\n"
-            if 'parTermType' in verbConstants:
-                vrbStr += "    parTermType = "+verbConstants['parTermType']+"\n"
-            if 'autoStart' in verbConstants:
-                vrbStr += "    autoStart = "+verbConstants['autoStart']+"\n"
-            if 'dataType' in verbConstants:
-                vrbStr += "    dataType = "+verbConstants['dataType']+"\n"
+            if 'mode' in vertSettings:
+                vrbStr += "    mode = Wye.mode."+"Wye.mode." + Wye.mode.tostring(vertSettings['mode'])+"\n"
+            if 'cType' in vertSettings:
+                vrbStr += "    cType = Wye.cType." + Wye.mode.tostring(vertSettings['cType'])+"\n"
+            if 'parTermType' in vertSettings:
+                vrbStr += "    parTermType = Wye.parTermType." + Wye.mode.tostring(vertSettings['parTermType'])+"\n"
+            if 'autoStart' in vertSettings:
+                vrbStr += "    autoStart = "+"True" if vertSettings['autoStart'] else "False"+"\n"
+            if 'dataType' in vertSettings:
+                vrbStr += "    dataType = Wye.dataType." + Wye.mode.tostring(+vertSettings['dataType'])+"\n"
+            if 'cType' in vertSettings:
+                vrbStr += "    cType = Wye.cType." + Wye.mode.tostring(+vertSettings['cType'])+"\n"
             vrbStr += '''
 '''
             vrbStr += "    paramDescr = ("+paramDescr+")\n"
@@ -1532,13 +1534,13 @@ cdStr = "class tmp:\\n" + cdStr
             #
             vrbStr += "cdStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + name + "_run_rt\", tmp." + name + "_run_rt)\\n'\n"
 
-            vrbStr += "print('cdStr\\n', cdStr)\nprint('parStr', parStr)\n"
-            vrbStr += "print('createVerb: Compile'," + name + ")\n"
+            #vrbStr += "print('cdStr\\n', cdStr)\nprint('parStr', parStr)\n"
+            #vrbStr += "print('createVerb: Compile'," + name + ")\n"
 
             vrbStr += '''
 try:
     code = compile(cdStr, "<string>", "exec")
-    print("createVerb: Compiled verb runtime successfully")
+    #print("createVerb: Compiled verb runtime successfully")
     
 
     # attach verb to lib
@@ -1551,7 +1553,7 @@ try:
         "WyeUI": WyeCore.libs.WyeUI
     }
 '''
-            vrbStr += "    print('createVerb: exec verb " + vrbLib.__name__ + "." + name + "')\n"
+            #vrbStr += "    print('createVerb: exec verb " + vrbLib.__name__ + "." + name + "')\n"
             vrbStr += '''
     try:
         exec(code, libDict)
@@ -1567,19 +1569,18 @@ except Exception as e:
             vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
             vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
-            #vrbStr += "        " + lib.__name__ + "." + lib.__name__ + "_rt."+name+"_run_rt(frame)\n"
-            print("createVerb: verb text:")
-            lnIx = 1
-            for ln in vrbStr.split('\n'):
-                print("%2d " % lnIx, ln)
-                lnIx += 1
-            print("")
+      #      print("createVerb: verb text:")
+      #      lnIx = 1
+      #      for ln in vrbStr.split('\n'):
+      #          print("%2d " % lnIx, ln)
+      #          lnIx += 1
+      #      print("")
 
             # compile verb
             try:
-                print("createVerb: Compile", name)
+                #print("createVerb: Compile", name)
                 code = compile(vrbStr, "<string>", "exec")
-                print("createVerb: Compiled", name, " successfully")
+                #print("createVerb: Compiled", name, " successfully")
 
                 # attach verb to lib
                 libDict = {
@@ -1589,7 +1590,7 @@ except Exception as e:
                     "WyeUI": WyeCore.libs.WyeUI
                 }
 
-                print("createVerb: exec verb", vrbLib.__name__ + "." + name)
+                #print("createVerb: exec verb", vrbLib.__name__ + "." + name)
                 try:
                     exec(code, libDict)
                 except Exception as e:
@@ -1600,7 +1601,7 @@ except Exception as e:
                 print("compile failed\n", str(e))
                 return
 
-            print(name, "compiled successfully")
+            #print(name, "compiled successfully")
 
 
             # start verb
