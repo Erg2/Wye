@@ -116,6 +116,41 @@ class WyeCore(Wye.staticObj):
         def set3dAttributes(self, p1, p2, p3, v1, v2, v3):
             self.sound.set3dAttributes(p1, p2, p3, v1, v2, v3)
 
+    # Very special verb  used to execute parallel code
+    # Each parallel stream needs its own stack and its own parent frame with stack pointer.
+    # However all the parent frame params and vars need to be from the actual parent that owns
+    # all the parallel streams.
+    #
+    # This verb is a construct that allows the rest of the compile and run code
+    # to charge forward as if there was nothing odd going on.
+    #
+    # A verb that uses mode=Wye.mode.PARALLEL has codeDescr that is a list of multiple codeDescr blocks
+    # that will run in parallel.
+    #
+    # At compile time each code block is compiled into its own runtime stream function.
+    # Then a custom start function is defined for the main verb that creates a separate code frame for each
+    # code block with ParallelStream as a verb.  The start function fills the stream's frame vars and params
+    # tuples with references to the parent frame vars and params.
+    # It also puts a custom "run" attribute in each stream frame that points to that code block's runtime stream
+    # function.
+    #
+    # At runtime the ParallelStream verb "run" function calls through the frame's custom run attribute to the
+    # appropriate runtime code.
+    #
+    # Whether this is an elegant or an ugly hack is moot 'cause that's how it works.  So there.
+    class ParallelStream:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        parallelStreamFlag = True  # flag this as special verb (consider alternative way to encode parallel stream headers)
+        paramDescr = ()
+        varDescr = ()
+
+        def start(self, stack):
+            # print("ParallelStream start: stack ", stack)
+            return Wye.codeFrame(WyeCore.ParallelStream, stack)
+
+        def run(frame):
+            frame.run(frame)
 
     # Midi output class
     # todo - finish this
@@ -1405,87 +1440,19 @@ class WyeCore(Wye.staticObj):
 
         # Create a new in-memory library
         def createLib(name):
+
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
-            #libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
-            libTpl += '''
-            # circling fish
-    class TestObject123:
-        mode = Wye.mode.MULTI_CYCLE
-        autoStart = True
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
-        # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
-        varDescr = (("gObj", Wye.dType.OBJECT, None),
-                    ("objTag", Wye.dType.STRING, "objTag"),
-                    ("sound", Wye.dType.OBJECT, None),
-                    ("position", Wye.dType.FLOAT_LIST, [0, 75, 0]),
-                    ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
-                    ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
-                    ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
-                    ("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
-                    ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
-                    )  # var 4
-    
-        codeDescr = (
-            # (None, ("print('TestObject123 case 0: start - set up object')")),
-            ("WyeCore.libs.WyeLib.loadObject",
-             (None, "[frame]"),
-             (None, "frame.vars.gObj"),
-             (None, "['flyer_01.glb']"),
-             (None, "frame.vars.position"),  # posVec
-             (None, "[[0, 90, 0]]"),  # rotVec
-             (None, "[[2,2,2]]"),  # scaleVec
-             (None, "frame.vars.objTag"),
-             (None, "frame.vars.color")
-             ),
-            # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
-            # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
-            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
-            ("Label", "Repeat"),
-            # set angle
-            # ("Code", "print('TestObject123 run')"),
-            ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
-            # Step forward
-            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
-            ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.gObj")),
-            # set color
-            ("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
-            # todo Next two lines are horrible - if followed by then expression indented - they have to be together
-            # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
-            ("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
-            ("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
-            ("Var=",
-             "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
-            (
-            "WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
-    
-            ("GoTo", "Repeat")
-        )
-    
-        def build():
-            # print("Build TestObject123")
-            return WyeCore.Utils.buildCodeText("TestObject123", '''
-            libTpl += name
-            libTpl += '''.TestObject123.codeDescr)
-    
-        def start(stack):
-            # print("TestObject123 object start")
-            return Wye.codeFrame('''
-            libTpl += name
-            libTpl += '''.TestObject123, stack)
-    
-        def run(frame):
-            # print("Run TestObject123")
-            '''
-            libTpl += name + "." + name + '''_rt.TestObject123_run_rt(frame)
-'''
-            # only added to local copy, do this after build
-            #libTpl += "WyeCore.World.libList.append("+name+")\n"
-            #libTpl += "WyeCore.World.libDict["+name+"] = "+name + "\n"
+            libTpl += "    class "+name+"_rt:\n        pass\n"
             libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
 
-            #print("Compile this:\n" + libTpl)
+            print("createLib: Library text:")
+            lnIx = 1
+            for ln in libTpl.split('\n'):
+                print("%2d " % lnIx, ln)
+                lnIx += 1
+            print("")
+
             code = compile(libTpl, "<string>", "exec")
 
             libDict = {
@@ -1494,7 +1461,7 @@ class WyeCore(Wye.staticObj):
                 "WyeCore": WyeCore,
                 "WyeUI": WyeCore.libs.WyeUI
             }
-            print("createLib exec library", name)
+            #print("createLib: exec library", name)
             exec(code, libDict)
             lib = getattr(WyeCore.libs, name)
             #print("Run test from template lib")
@@ -1503,54 +1470,141 @@ class WyeCore(Wye.staticObj):
             lib.build()
             WyeCore.World.libDict[name] = lib
             WyeCore.World.libList.append(lib)
-
-            for objStr in WyeCore.World.startObjs:
-                print("createLib start: obj ", objStr," in startObjs")
-                namStrs = objStr.split(".")  # parse name of object
-                if namStrs[1] in WyeCore.World.libDict:
-                    obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
-                    print("start", obj.__name__)
-                    WyeCore.World.startActiveObject(obj)
-                else:
-                    print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
-            WyeCore.World.startObjs.clear()
+            print("createLib: Built and installed new library successfully", lib.__name__)
+            return lib
 
 
-            #print("Start TestObj123")
-            #WyeCore.World.startActiveObject(lib.TestObject123)
+        def createVerb(vrbLib, name, paramDescr, varDescr, codeDescr):
+            pass
+            # build verb
+            vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
+            vrbStr += "\nclass "+name+":"
+            vrbStr += '''
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = True
+'''
+            vrbStr += "    paramDescr = ("+paramDescr+")\n"
+            vrbStr += "    varDescr = ("+varDescr+")\n"
+            vrbStr += "    codeDescr = ("+codeDescr+")\n"
+            vrbStr += '''
+    def build():
+        # print("Build ",'''
+            vrbStr += name + ")"
+            vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
+            vrbStr += name +"', " + vrbLib.__name__ + "." + name + ".codeDescr)\n"
+            vrbStr += '''
+    def start(stack):
+'''
+            vrbStr += "        # print('"+name+" object start')"
+            vrbStr += '''
+        return Wye.codeFrame('''
+            vrbStr += vrbLib.__name__ + "." + name + ", stack)\n"
+            vrbStr += '''
+    def run(frame):
+'''
+            vrbStr += "        # print('Run '+name)\n"
+            vrbStr += "        " + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt(frame)\n\n"
 
-    # Very special verb  used to execute parallel code
-    # Each parallel stream needs its own stack and its own parent frame with stack pointer.
-    # However all the parent frame params and vars need to be from the actual parent that owns
-    # all the parallel streams.
-    #
-    # This verb is a construct that allows the rest of the compile and run code
-    # to charge forward as if there was nothing odd going on.
-    #
-    # A verb that uses mode=Wye.mode.PARALLEL has codeDescr that is a list of multiple codeDescr blocks
-    # that will run in parallel.
-    #
-    # At compile time each code block is compiled into its own runtime stream function.
-    # Then a custom start function is defined for the main verb that creates a separate code frame for each
-    # code block with ParallelStream as a verb.  The start function fills the stream's frame vars and params
-    # tuples with references to the parent frame vars and params.
-    # It also puts a custom "run" attribute in each stream frame that points to that code block's runtime stream
-    # function.
-    #
-    # At runtime the ParallelStream verb "run" function calls through the frame's custom run attribute to the
-    # appropriate runtime code.
-    #
-    # Whether this is an elegant or an ugly hack is moot 'cause that's how it works.  So there.
-    class ParallelStream:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.NONE
-        parallelStreamFlag = True       # flag this as special verb (consider alternative way to encode parallel stream headers)
-        paramDescr = ()
-        varDescr = ()
+            # put verb in lib
+            vrbStr += "setattr(WyeCore.libs." + vrbLib.__name__ + ", " + name + ".__name__, " + name + ")\n"
+            # build verb's Wye code
+            vrbStr += "cdStr, parStr = WyeCore.libs." + vrbLib.__name__ + "." + name + ".build()\n"
 
-        def start(self, stack):
-            #print("ParallelStream start: stack ", stack)
-            return Wye.codeFrame(WyeCore.ParallelStream, stack)
+            # when the verb string is executed, the verb's build will be run.
+            # The build will return the runtime string for the verb.
+            # So the verb's string we're compiling now will need to compile that returned string into code
+            # that is put into the verb's lib runtime class. (yes, this code when compiled will run the new verb
+            # to generate code that then needs to be compiled...)
+            vrbStr += '''
 
-        def run(frame):
-            frame.run(frame)
+# compile verb runtime
+cdStr = "class tmp:\\n" + cdStr
+'''
+            #
+            vrbStr += "cdStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + name + "_run_rt\", tmp." + name + "_run_rt)\\n'\n"
+
+            vrbStr += "print('cdStr\\n', cdStr)\nprint('parStr', parStr)\n"
+            vrbStr += "print('createVerb: Compile'," + name + ")\n"
+
+            vrbStr += '''
+try:
+    code = compile(cdStr, "<string>", "exec")
+    print("createVerb: Compiled verb runtime successfully")
+    
+
+    # attach verb to lib
+    libDict = {
+'''
+            vrbStr += "        '" + vrbLib.__name__ + "':" + vrbLib.__name__ + ",\n"
+            vrbStr += '''
+        "Wye": Wye,
+        "WyeCore": WyeCore,
+        "WyeUI": WyeCore.libs.WyeUI
+    }
+'''
+            vrbStr += "    print('createVerb: exec verb " + vrbLib.__name__ + "." + name + "')\n"
+            vrbStr += '''
+    try:
+        exec(code, libDict)
+    except Exception as e:
+        print("exec failed\\n", str(e))
+
+except Exception as e:
+    print("compile failed\\n", str(e))
+
+'''
+
+
+            #vrbStr += "        " + lib.__name__ + "." + lib.__name__ + "_rt."+name+"_run_rt(frame)\n"
+            print("createVerb: verb text:")
+            lnIx = 1
+            for ln in vrbStr.split('\n'):
+                print("%2d " % lnIx, ln)
+                lnIx += 1
+            print("")
+
+            # compile verb
+            try:
+                print("createVerb: Compile", name)
+                code = compile(vrbStr, "<string>", "exec")
+                print("createVerb: Compiled", name, " successfully")
+
+                # attach verb to lib
+                libDict = {
+                    vrbLib.__name__: vrbLib,
+                    "Wye": Wye,
+                    "WyeCore": WyeCore,
+                    "WyeUI": WyeCore.libs.WyeUI
+                }
+
+                print("createVerb: exec verb", vrbLib.__name__ + "." + name)
+                try:
+                    exec(code, libDict)
+                except Exception as e:
+                    print("exec failed\n", str(e))
+                    return
+
+
+
+            except Exception as e:
+                print("compile failed\n", str(e))
+                return
+
+            print(name, "compiled successfully")
+
+
+            # start verb
+#            for objStr in WyeCore.World.startObjs:
+#                print("createVerb start: obj ", objStr," in startObjs")
+#                namStrs = objStr.split(".")  # parse name of object
+#                if namStrs[1] in WyeCore.World.libDict:
+#                    obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
+#                    print("start", obj.__name__)
+#                    WyeCore.World.startActiveObject(obj)
+#                else:
+#                    print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
+#            WyeCore.World.startObjs.clear()
+
+
+        #print("Start TestObj123")
+        #WyeCore.World.startActiveObject(lib.TestObject123)

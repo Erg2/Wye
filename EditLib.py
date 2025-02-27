@@ -158,3 +158,69 @@ class EditLib:
             #print("Run testDialogshowFishDialog")
             EditLib.EditLib_rt.showFishDialog_run_rt(frame)
 
+###########################
+
+    class MyTestVerb:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        paramDescr = (
+            ("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),
+        )
+        varDescr = (
+("gObj", Wye.dType.OBJECT, None),
+("objTag", Wye.dType.STRING, "objTag"),
+("sound", Wye.dType.OBJECT, None),
+("position", Wye.dType.FLOAT_LIST, [0, 75, 0]),
+("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
+("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
+("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
+("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
+("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+        )
+        codeDescr = (
+            # (None, ("print('TestObject123 case 0: start - set up object')")),
+            ("WyeCore.libs.WyeLib.loadObject",
+             (None, "[frame]"),
+             (None, "frame.vars.gObj"),
+             (None, "['flyer_01.glb']"),
+             (None, "frame.vars.position"),  # posVec
+             (None, "[[0, 90, 0]]"),  # rotVec
+             (None, "[[2,2,2]]"),  # scaleVec
+             (None, "frame.vars.objTag"),
+             (None, "frame.vars.color")
+             ),
+            # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
+            # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
+            (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            ("Label", "Repeat"),
+            # set angle
+            # ("Code", "print('TestObject123 run')"),
+            ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
+            # Step forward
+            ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+            ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.gObj")),
+            # set color
+            ("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+            # todo Next two lines are horrible - if followed by then expression indented - they have to be together
+            # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
+            ("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
+            ("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+            ("Var=",
+             "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            (
+                "WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
+
+            ("GoTo", "Repeat")
+        )
+
+        def build():
+            # print("Build ",MyTestVerb)
+            return WyeCore.Utils.buildCodeText('MyTestVerb', EditLib.MyTestVerb.codeDescr)
+
+        def start(stack):
+            # print('MyTestVerb object start')
+            return Wye.codeFrame(EditLib.MyTestVerb, stack)
+
+        def run(frame):
+            # print("Run "+name+"")    
+            EditLib.EditLib_rt.MyTestVerb_run_rt(frame)

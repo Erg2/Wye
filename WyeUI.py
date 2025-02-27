@@ -2664,14 +2664,77 @@ class WyeUI(Wye.staticObj):
 
             def run(frame):
                 print("createLibrary test")
-                WyeCore.Utils.createLib("TestCreatLibCallback")
-                print("Run test from TestCreatLibCallback")
+                lib = WyeCore.Utils.createLib("MyTestLibrary")
+
+                print("created lib", lib.__name__)
+
                 #WyeCore.libs.TemplateTestLib.test()
                 print("Known libs")
                 for libName in dir(WyeCore.libs):
                     if not libName.startswith("__"):
                         print("  ", libName)
 
+                print("createVerb test")
+
+                # libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
+                paramDescr = '''
+("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),
+'''
+                varDescr = '''
+("gObj", Wye.dType.OBJECT, None),
+("objTag", Wye.dType.STRING, "objTag"),
+("sound", Wye.dType.OBJECT, None),
+("position", Wye.dType.FLOAT_LIST, [0, 75, 0]),
+("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
+("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
+("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
+("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
+("color", Wye.dType.FLOAT_LIST, [1, 1, 1, 1]),
+'''
+
+                codeDescr = '''
+# (None, ("print('MyTestVerb case 0: start - set up object')")),
+("WyeCore.libs.WyeLib.loadObject",
+ (None, "[frame]"),
+ (None, "frame.vars.gObj"),
+ (None, "['flyer_01.glb']"),
+ (None, "frame.vars.position"),  # posVec
+ (None, "[[0, 90, 0]]"),  # rotVec
+ (None, "[[2,2,2]]"),  # scaleVec
+ (None, "frame.vars.objTag"),
+ (None, "frame.vars.color")
+ ),
+# ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
+# ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
+(None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+("Label", "Repeat"),
+# set angle
+# ("Code", "print('MyTestVerb run')"),
+("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
+# Step forward
+("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
+("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.gObj")),
+# set color
+("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+# todo Next two lines are horrible - if followed by then expression indented - they have to be together
+# todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
+("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
+("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+("Var=",
+ "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+(
+"WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
+
+("GoTo", "Repeat")
+'''
+                WyeCore.Utils.createVerb(lib, "MyTestVerb", paramDescr, varDescr, codeDescr)
+
+
+                print("Run MyTestVerb")
+                frm = WyeCore.libs.MyTestLibrary.MyTestVerb.start(frame.SP)
+                frm.params.ret = [0]
+                frm.verb.run(frm)
+                print("Ran MyTestVerb")
 
         class TestMidiCallback:
             mode = Wye.mode.SINGLE_CYCLE
