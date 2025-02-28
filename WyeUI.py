@@ -3141,7 +3141,6 @@ class WyeUI(Wye.staticObj):
                         frame.vars.newVerbSettings[0]['parTermType'] = verb.parTermType
                     if hasattr(verb, 'autoStart'):
                         frame.vars.newVerbSettings[0]['autoStart'] = verb.autoStart
-                        print("EditVerb autoStart", verb.autoStart)
                     if hasattr(verb, 'dataType'):
                         frame.vars.newVerbSettings[0]['dataType'] = verb.dataType
 
@@ -3246,7 +3245,6 @@ class WyeUI(Wye.staticObj):
                 #    dlgFrm.params.inputs[0].append([parTermTypeFrm])
 
 
-
                     # params
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
@@ -3255,11 +3253,6 @@ class WyeUI(Wye.staticObj):
                     lblFrm.params.color = [Wye.color.SUBHD_COLOR]
                     WyeCore.libs.WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
-
-                #    frame.vars.newVerbSettings['cType']
-                #    frame.vars.newVerbSettings['parTermType']
-                #    frame.vars.newVerbSettings['autoStart']
-                #    frame.vars.newVerbSettings['dataType']
 
                     if len(verb.paramDescr) > 0:     # if we have params, list them
 
@@ -3422,19 +3415,30 @@ class WyeUI(Wye.staticObj):
                         modeFrm = frame.vars.settingsFrms[0]['mode']
                         modeIx = modeFrm.params.selectionIx[0]
                         mode = Wye.mode.valList[modeIx]
+                        frame.vars.newVerbSettings[0]['mode'] = mode
 
                         autoFrm = frame.vars.settingsFrms[0]['autoStart']
                         autoStart = autoFrm.params.value[0]
+                        frame.vars.newVerbSettings[0]['autoStart'] = autoStart
 
                         dTypeFrm = frame.vars.settingsFrms[0]['dataType']
                         dTypeIx = dTypeFrm.params.selectionIx[0]
                         dataType = Wye.dType.valList[dTypeIx]
+                        frame.vars.newVerbSettings[0]['dataType'] = dataType
 
                         print("New class settings\n mode", Wye.mode.tostring(mode), "\n autoStart", autoStart, "\n dataType", Wye.dType.tostring(dataType))
 
                         print("params\n"+str(frame.vars.newParamDescr))
                         print("vars\n"+str(frame.vars.newVarDescr))
                         print("code\n"+str(frame.vars.newCodeDescr))
+
+                        lib = WyeCore.Utils.createLib("MyTestLibrary")
+
+                        WyeCore.Utils.createVerb(lib, "MyTestVerb",
+                                                 frame.vars.newVerbSettings[0],
+                                                 frame.vars.newParamDescr[0],
+                                                 frame.vars.newVarDescr[0],
+                                                 frame.vars.newCodeDescr[0])
 
                     frame.status = dlgFrm.status
 
@@ -4076,7 +4080,7 @@ class WyeUI(Wye.staticObj):
                 editVerbFrm = data[1][2]
                 tuple = data[1][3]
                 level = data[1][4]
-                
+
                 match (frame.PC):
                     case 0:
                         print("EditSpecialCallback data='" + str(frame.eventData) + "'")

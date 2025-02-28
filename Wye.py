@@ -185,11 +185,24 @@ class Wye:
         FIRST_SUCCESS = "S"     # done when any succeeds or all fail
         FIRST_ANY = "A"         # done on first non-CONTINUE (i.e don on succeed or fail)
 
-        parTermTypeList = [
+        valList = [
             FIRST_FAIL,
             FIRST_SUCCESS,
             FIRST_ANY
         ]
+
+        stringLookup = {
+            FIRST_FAIL: 'FIRST_FAIL',
+            FIRST_SUCCESS: 'FIRST_SUCCESS',
+            FIRST_ANY: 'FIRST_ANY'
+        }
+
+        def tostring(val):            # static print function
+            if val in Wye.parTermType.stringLookup:
+                return Wye.parTermType.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
+
 
     # Data types
     class dType:

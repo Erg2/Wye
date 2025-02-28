@@ -1300,3 +1300,29 @@ frame.vars.posAngle[0] = angle
             #TestLib.TestLib_rt.testObj4_run_rt(frame)
             frame.runParallel()
 
+
+
+
+
+    class PlaceHolder:
+        mode = Wye.mode.MULTI_CYCLE
+        autoStart = True
+        dataType = Wye.dType.INTEGER
+        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        varDescr = (("myVar", Wye.dType.INTEGER, 0),)
+        codeDescr = (
+            ("Code", "print('PlaceHolder running!')"),
+            ("Label", "DoNothing"),
+        )
+
+        def build():
+            #print("Build PlaceHolder")
+            return WyeCore.Utils.buildCodeText("PlaceHolder", TestLib.PlaceHolder.codeDescr)
+
+        def start(stack):
+            #print("PlaceHolder object start")
+            return Wye.codeFrame(TestLib.PlaceHolder, stack)
+
+        def run(frame):
+            #print("Run PlaceHolder")
+            TestLib.TestLib_rt.PlaceHolder_run_rt(frame)

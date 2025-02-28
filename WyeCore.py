@@ -1476,26 +1476,26 @@ class WyeCore(Wye.staticObj):
 
 
         # create a new verb and attach it to the given library
-        def createVerb(vrbLib, name, vertSettings, paramDescr, varDescr, codeDescr):
+        def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr):
 
             # build verb
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             vrbStr += "\nclass "+name+":\n"
-            if 'mode' in vertSettings:
-                vrbStr += "    mode = Wye.mode."+Wye.mode.tostring(vertSettings['mode'])+"\n"
-            if 'autoStart' in vertSettings:
-                vrbStr += "    autoStart = "+"True\n" if vertSettings['autoStart'] else "False\n"
-            if 'dataType' in vertSettings:
-                vrbStr += "    dataType = Wye.dType." + Wye.dType.tostring(vertSettings['dataType'])+"\n"
-            if 'cType' in vertSettings:
-                vrbStr += "    cType = Wye.cType." + Wye.cType.tostring(+vertSettings['cType'])+"\n"
-            if 'parTermType' in vertSettings:
-                vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(vertSettings['parTermType'])+"\n"
+            if 'mode' in verbSettings:
+                vrbStr += "    mode = Wye.mode."+Wye.mode.tostring(verbSettings['mode'])+"\n"
+            if 'autoStart' in verbSettings:
+                vrbStr += "    autoStart = "+"True\n" if verbSettings['autoStart'] else "False\n"
+            if 'dataType' in verbSettings:
+                vrbStr += "    dataType = Wye.dType." + Wye.dType.tostring(verbSettings['dataType'])+"\n"
+            if 'cType' in verbSettings:
+                vrbStr += "    cType = Wye.cType." + Wye.cType.tostring(verbSettings['cType'])+"\n"
+            if 'parTermType' in verbSettings:
+                vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(verbSettings['parTermType'])+"\n"
             vrbStr += '''
 '''
-            vrbStr += "    paramDescr = ("+paramDescr+")\n"
-            vrbStr += "    varDescr = ("+varDescr+")\n"
-            vrbStr += "    codeDescr = ("+codeDescr+")\n"
+            vrbStr += "    paramDescr = ("+str(paramDescr)+")\n"
+            vrbStr += "    varDescr = ("+str(varDescr)+")\n"
+            vrbStr += "    codeDescr = ("+str(codeDescr)+")\n"
             vrbStr += '''
     def build():
         # print("Build ",'''
@@ -1599,6 +1599,12 @@ except Exception as e:
 
             except Exception as e:
                 print("compile verb failed\n", str(e))
+                print("verb text:")
+                lnIx = 1
+                for ln in vrbStr.split('\n'):
+                    print("%2d " % lnIx, ln)
+                    lnIx += 1
+                print("")
                 return
 
             #print(name, "compiled successfully")
