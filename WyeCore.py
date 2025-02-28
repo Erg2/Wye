@@ -1474,6 +1474,7 @@ class WyeCore(Wye.staticObj):
         #    print("createLib: Built and installed new library successfully", lib.__name__)
             return lib
 
+
         # create a new verb and attach it to the given library
         def createVerb(vrbLib, name, vertSettings, paramDescr, varDescr, codeDescr):
 
@@ -1481,17 +1482,15 @@ class WyeCore(Wye.staticObj):
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             vrbStr += "\nclass "+name+":\n"
             if 'mode' in vertSettings:
-                vrbStr += "    mode = Wye.mode."+"Wye.mode." + Wye.mode.tostring(vertSettings['mode'])+"\n"
-            if 'cType' in vertSettings:
-                vrbStr += "    cType = Wye.cType." + Wye.mode.tostring(vertSettings['cType'])+"\n"
-            if 'parTermType' in vertSettings:
-                vrbStr += "    parTermType = Wye.parTermType." + Wye.mode.tostring(vertSettings['parTermType'])+"\n"
+                vrbStr += "    mode = Wye.mode."+Wye.mode.tostring(vertSettings['mode'])+"\n"
             if 'autoStart' in vertSettings:
-                vrbStr += "    autoStart = "+"True" if vertSettings['autoStart'] else "False"+"\n"
+                vrbStr += "    autoStart = "+"True\n" if vertSettings['autoStart'] else "False\n"
             if 'dataType' in vertSettings:
-                vrbStr += "    dataType = Wye.dataType." + Wye.mode.tostring(+vertSettings['dataType'])+"\n"
+                vrbStr += "    dataType = Wye.dType." + Wye.dType.tostring(vertSettings['dataType'])+"\n"
             if 'cType' in vertSettings:
-                vrbStr += "    cType = Wye.cType." + Wye.mode.tostring(+vertSettings['cType'])+"\n"
+                vrbStr += "    cType = Wye.cType." + Wye.cType.tostring(+vertSettings['cType'])+"\n"
+            if 'parTermType' in vertSettings:
+                vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(vertSettings['parTermType'])+"\n"
             vrbStr += '''
 '''
             vrbStr += "    paramDescr = ("+paramDescr+")\n"
@@ -1558,10 +1557,10 @@ try:
     try:
         exec(code, libDict)
     except Exception as e:
-        print("exec failed\\n", str(e))
+        print("exec verb runtime failed\\n", str(e))
 
 except Exception as e:
-    print("compile failed\\n", str(e))
+    print("compile verb runtime failed\\n", str(e))
 
 '''
             # if verb has autostart, start it
@@ -1569,12 +1568,13 @@ except Exception as e:
             vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
             vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
-      #      print("createVerb: verb text:")
-      #      lnIx = 1
-      #      for ln in vrbStr.split('\n'):
-      #          print("%2d " % lnIx, ln)
-      #          lnIx += 1
-      #      print("")
+             # DEBUG print verb text string with line numbers
+       #     print("createVerb: verb text:")
+       #     lnIx = 1
+       #     for ln in vrbStr.split('\n'):
+       #         print("%2d " % lnIx, ln)
+       #         lnIx += 1
+       #     print("")
 
             # compile verb
             try:
@@ -1594,28 +1594,12 @@ except Exception as e:
                 try:
                     exec(code, libDict)
                 except Exception as e:
-                    print("exec failed\n", str(e))
+                    print("exec verb failed\n", str(e))
                     return
 
             except Exception as e:
-                print("compile failed\n", str(e))
+                print("compile verb failed\n", str(e))
                 return
 
             #print(name, "compiled successfully")
 
-
-            # start verb
-#            for objStr in WyeCore.World.startObjs:
-#                print("createVerb start: obj ", objStr," in startObjs")
-#                namStrs = objStr.split(".")  # parse name of object
-#                if namStrs[1] in WyeCore.World.libDict:
-#                    obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
-#                    print("start", obj.__name__)
-#                    WyeCore.World.startActiveObject(obj)
-#                else:
-#                    print("Error: Lib '" + namStrs[1] + "' not found for start object ", objStr)
-#            WyeCore.World.startObjs.clear()
-
-
-        #print("Start TestObj123")
-        #WyeCore.World.startActiveObject(lib.TestObject123)

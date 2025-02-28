@@ -1549,7 +1549,6 @@ class WyeUI(Wye.staticObj):
             dlgHeader = dlgFrm.vars.dragObj[0]
 
             gTags = []  # clickable graphic object tags assoc with this input
-            print("InputDropdown display: label", frame.params.label[0])
             lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                 scale=(1, 1, 1), parent=dlgHeader.getNodePath())
 
@@ -2540,7 +2539,6 @@ class WyeUI(Wye.staticObj):
                 case 1:
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                     frame.status = Wye.status.SUCCESS  # done
-                    print("MainMenuDialog: Done")
 
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.mainMenu)
@@ -2679,9 +2677,9 @@ class WyeUI(Wye.staticObj):
 
                 # libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
                 vertSettings = {
-                    'mode': 'Wye.mode.MULTI_CYCLE',
-                    'autoStart': 'True',
-                    'dataType':' Wye.dType.NONE'
+                    'mode': Wye.mode.MULTI_CYCLE,
+                    'autoStart': True,
+                    'dataType': Wye.dType.NONE
                 }
 
                 paramDescr = '''
@@ -3081,6 +3079,7 @@ class WyeUI(Wye.staticObj):
                     ("newParamDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb params here
                     ("newVarDescr", Wye.dType.OBJECT_LIST, None),    # Build new verb vars here
                     ("newCodeDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb code here
+                    ("settingsFrms", Wye.dType.OBJECT_LIST, None),   # Build new verb code here
                     )
 
         # global list of frames being edited
@@ -3102,6 +3101,7 @@ class WyeUI(Wye.staticObj):
                 'autoStart': False,
                 'dType': Wye.dType.NONE,
             }
+            f.vars.settingsFrms[0] = {}
             return f
 
         def run(frame):
@@ -3141,6 +3141,7 @@ class WyeUI(Wye.staticObj):
                         frame.vars.newVerbSettings[0]['parTermType'] = verb.parTermType
                     if hasattr(verb, 'autoStart'):
                         frame.vars.newVerbSettings[0]['autoStart'] = verb.autoStart
+                        print("EditVerb autoStart", verb.autoStart)
                     if hasattr(verb, 'dataType'):
                         frame.vars.newVerbSettings[0]['dataType'] = verb.dataType
 
@@ -3193,17 +3194,19 @@ class WyeUI(Wye.staticObj):
                     #modeFrm.params.optData = ((modeFrm, dlgFrm, frame, Wye.mode),)
                     modeFrm.verb.run(modeFrm)
                     dlgFrm.params.inputs[0].append([modeFrm])
+                    frame.vars.settingsFrms[0]['mode'] = modeFrm
 
                     autoFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
                     autoFrm.params.frame = [None]
                     autoFrm.params.parent = [None]
-                    autoFrm.params.value = [False]
+                    autoFrm.params.value = [frame.vars.newVerbSettings[0]['autoStart']]
                     autoFrm.params.label = ["  Auto Start"]
                     #autoFrm.params.callback = [WyeCore.libs.WyeUI.ObjectDebugger.RunCallback]  # button callback
                     #autoFrm.params.optData = [(autoFrm, objFrm, frame)]
                     autoFrm.params.color = [(1, 1, 0, 1)]
                     autoFrm.verb.run(autoFrm)
                     dlgFrm.params.inputs[0].append([autoFrm])
+                    frame.vars.settingsFrms[0]['autoStart'] = autoFrm
 
                     dTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                     dTypeFrm.params.frame = [None]
@@ -3216,6 +3219,7 @@ class WyeUI(Wye.staticObj):
                     #dTypeFrm.params.optData = ((dTypeFrm, dlgFrm, frame, Wye.dType),)
                     dTypeFrm.verb.run(dTypeFrm)
                     dlgFrm.params.inputs[0].append([dTypeFrm])
+                    frame.vars.settingsFrms[0]['dataType'] = dTypeFrm
 
                 #    cTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                 #    cTypeFrm.params.frame = [None]
@@ -3406,10 +3410,30 @@ class WyeUI(Wye.staticObj):
                     frame.PC += 1  # on return from dialog, run next case
 
                 case 1:
-                    frame.SP.pop()  # remove dialog frame from stack
+                    dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                     WyeUI.EditVerb.activeVerbs.pop(verb)
                     #print("ObjEditor: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
-                    frame.status = Wye.status.SUCCESS  # done
+
+                    if frame.vars.dlgStat[0] == Wye.status.SUCCESS:
+                        # read settings
+                        modeFrm = frame.vars.settingsFrms['mode']
+                        modeIx = modeFrm.params.selectionIx[0]
+                        mode = Wye.mode.valList[modeIx]
+
+                        autoFrm = frame.vars.settingsFrms['mode']
+                        autoStart = autoFrm.params.value[0]
+
+                        dTypeFrm = frame.vars.settingsFrms['dataType']
+                        dTypeIx = dTypeFrm.params.selectionIx[0]
+                        dataType = Wye.dType.valList[dTypeIx]
+
+                        print("New class settings\n mode", Wye.mode.tostring(mode), "\n autoStart", autoStart, "\n dataType", Wye.dType.tostring(dataType))
+
+                        print("params\n"+frame.vars.newParamDescr)
+                        print("vars\n"+frame.vars.newVarDescr)
+                        print("code\n"+frame.vars.newCodeDescr)
+
+                    frame.status = dlgFrm.status
 
 
         # make the object editor dialog code row recursively
