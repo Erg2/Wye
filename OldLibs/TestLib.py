@@ -681,7 +681,7 @@ def f():
         # we won't get here until spin completes
         # spin's frame is at the bottom of the stack
         f = frame.SP.pop()
-        #print("testObj2: spin returned p0 ", frame.params[0][0], " status ", WyeCore.status.tostring(f.status))
+        #print("testObj2: spin returned p0 ", frame.params[0][0], " status ", WyeCore.status.tostring(f.params.retVal[0]))
         #frame.status = Wye.status.SUCCESS   # we're done
 
         #print("testObj2 case 2 start delay")
