@@ -1306,7 +1306,7 @@ frame.vars.posAngle[0] = angle
 
     class PlaceHolder:
         mode = Wye.mode.MULTI_CYCLE
-        autoStart = True
+        autoStart = False
         dataType = Wye.dType.INTEGER
         paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
         varDescr = (("myVar", Wye.dType.INTEGER, 0),)

@@ -1595,6 +1595,12 @@ except Exception as e:
                     exec(code, libDict)
                 except Exception as e:
                     print("exec verb failed\n", str(e))
+                    print("verb text:")
+                    lnIx = 1
+                    for ln in vrbStr.split('\n'):
+                        print("%2d " % lnIx, ln)
+                        lnIx += 1
+                    print("")
                     return
 
             except Exception as e:
