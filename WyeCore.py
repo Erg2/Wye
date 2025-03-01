@@ -1535,12 +1535,12 @@ class WyeCore(Wye.staticObj):
             vrbStr += "cdStr, parStr = "+name + ".build()\n"
 
             # DEBUG - print out verb's runtime code with line numbers
-            vrbStr += "print('cdStr')\n"
-            vrbStr += "lnIx = 1\n"
-            vrbStr += "for ln in cdStr.split('\\n'):\n"
-            vrbStr += "    print('%2d ' % lnIx, ln)\n"
-            vrbStr += "    lnIx += 1\n"
-            vrbStr += "print('')\n"
+            #vrbStr += "print('cdStr')\n"
+            #vrbStr += "lnIx = 1\n"
+            #vrbStr += "for ln in cdStr.split('\\n'):\n"
+            #vrbStr += "    print('%2d ' % lnIx, ln)\n"
+            #vrbStr += "    lnIx += 1\n"
+            #vrbStr += "print('')\n"
 
             # when the verb string is executed, the verb's build will be run.
             # The build will return the runtime string for the verb.
@@ -1606,12 +1606,12 @@ except Exception as e:
                 vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
             # DEBUG print verb code with line numbers
-            print("createVerb: verb text:")
-            lnIx = 1
-            for ln in vrbStr.split('\n'):
-                print("%2d " % lnIx, ln)
-                lnIx += 1
-            print("")
+            #print("createVerb: verb text:")
+            #lnIx = 1
+            #for ln in vrbStr.split('\n'):
+            #    print("%2d " % lnIx, ln)
+            #    lnIx += 1
+            #print("")
 
             # compile verb
             try:
