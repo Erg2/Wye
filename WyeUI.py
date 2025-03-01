@@ -3141,7 +3141,7 @@ class WyeUI(Wye.staticObj):
                 'cType': Wye.cType.VERB,
                 'parTermType': Wye.parTermType.FIRST_FAIL,
                 'autoStart': False,
-                'dType': Wye.dType.NONE,
+                'dataType': Wye.dType.NONE,
             }
             f.vars.settingsFrms[0] = {}
             return f
@@ -3854,17 +3854,17 @@ class WyeUI(Wye.staticObj):
 
                     # add line before
                     case 1:
-                        # print("EditModline: Add up")
+                        # print("EditCodeLineCallback: Add up")
                         # get location of this frame in dialog input list
 
                         # insert new (noop) code before this one in verb's codeDescr
-                        # print("EditModline codeFrm", codeFrm.verb.__name__)
+                        # print("EditCodeLineCallback codeFrm", codeFrm.verb.__name__)
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
                             ix = parentList.index(tuple)
                             # print("found tuple", tuple, " at", ix, " in", parentList)
                         else:
-                            print("EditModLine: failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
                                   editVerbFrm.vars.newCodeDescr[0])
 
                         # Insert new line into code desr
@@ -3889,7 +3889,7 @@ class WyeUI(Wye.staticObj):
                                 break
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
-                            print("EditModLine ERROR: input", editLnFrm.verb.__name__, " not in input list")
+                            print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
 
                         # build dialog rows
                         rowLst = []  # put dialog row(s) here

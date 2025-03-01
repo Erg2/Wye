@@ -455,8 +455,13 @@ class WyeCore(Wye.staticObj):
                             if Wye.debugOn:
                                 Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC))
                             else:
-                                #print("run", frame.verb.__name__)
-                                frame.verb.run(frame)
+                                #print("WorldRun: run", frame.verb.__name__)
+                                # run the object frame.  If it throws an error, kill that object stack
+                                try:
+                                    frame.verb.run(frame)
+                                except Exception as e:
+                                    print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
+                                    WyeCore.World.stopActiveObject(frame)
                             # if frame.status != Wye.status.CONTINUE:
                             #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
                         # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.Utils.statusToString(frame.status),
@@ -468,8 +473,15 @@ class WyeCore(Wye.staticObj):
                                 if Wye.debugOn:
                                     Wye.debug(pFrame, "worldRunner: return from call to"+ pFrame.verb.__name__+". Run parent frame "+pFrame.verb.__name__)
                                 else:
-                                    #print("run", pFrame.verb.__name__)
-                                    pFrame.verb.run(pFrame)  # parent will remove child frame
+                                    #print("WorldRun: child done, run parent", pFrame.verb.__name__)
+                                    # bottom frame done, run its parent
+                                    # If it throws an error, kill that object stack
+                                    try:
+                                        pFrame.verb.run(pFrame)  # parent will remove child frame
+                                    except Exception as e:
+                                        print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
+                                        WyeCore.World.stopActiveObject(frame)
+
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
                                 stack.remove(frame)
@@ -993,10 +1005,10 @@ class WyeCore(Wye.staticObj):
             if tuple in parent:
                 return parent
             else:
-                if len(parent) > 1:
-                    for childTuple in parent[1:]:
+                if len(parent) > 0:
+                    for childTuple in parent:
                         if WyeCore.Utils.findTupleParent(childTuple, tuple):
-                            #print(" Found tuple parent")
+                            #print(" Found tuple ", tuple, " parent", childTuple)
                             return childTuple
             # if get here, failed to find tuple
             #print("tuple not found")
@@ -1479,7 +1491,9 @@ class WyeCore(Wye.staticObj):
             return lib
 
 
-        # create a new verb and attach it to the given library
+        # create a new verb
+        # If test, just compile the verb and its runtime code
+        # Otherwise attach it to the given library and, if autoStart, start it
         def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False):
 
             # build verb
@@ -1488,7 +1502,7 @@ class WyeCore(Wye.staticObj):
             if 'mode' in verbSettings:
                 vrbStr += "    mode = Wye.mode."+Wye.mode.tostring(verbSettings['mode'])+"\n"
             if 'autoStart' in verbSettings:
-                vrbStr += "    autoStart = "+"True\n" if verbSettings['autoStart'] else "False\n"
+                vrbStr += "    autoStart = True\n" if verbSettings['autoStart'] else "    autoStart = False\n"
             if 'dataType' in verbSettings:
                 vrbStr += "    dataType = Wye.dType." + Wye.dType.tostring(verbSettings['dataType'])+"\n"
             if 'cType' in verbSettings:
@@ -1525,7 +1539,7 @@ class WyeCore(Wye.staticObj):
             vrbStr += "        except Exception as e:\n"
             vrbStr += "          if not hasattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "._run_rt, 'errOnce'):\n"
             vrbStr += "            print('" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt failed\\n', str(e))\n"
-            vrbStr += "            setattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + ", 'errOnce', True)\n\n"
+            vrbStr += "            setattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt, 'errOnce', True)\n\n"
 
             # put verb in lib
             if not doTest:
@@ -1626,10 +1640,12 @@ except Exception as e:
                     "WyeUI": WyeCore.libs.WyeUI
                 }
 
-                print("createVerb: exec verb", vrbLib.__name__ + "." + name)
+                if doTest:
+                    print("createVerb: exec verb", vrbLib.__name__ + "." + name)
                 try:
                     exec(code, libDict)
-                    print("executed successfully")
+                    if doTest:
+                        print("executed successfully")
                 except Exception as e:
                     print("exec verb failed\n", str(e))
                     print("verb text:")
