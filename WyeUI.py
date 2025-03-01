@@ -1467,12 +1467,12 @@ class WyeUI(Wye.staticObj):
                         )
 
             def start(stack):
-                # print("InputDropdownCallback started")
+                # print("InputCheckboxCallback started")
                 return Wye.codeFrame(WyeUI.InputCheckbox.InputCheckboxCallback, stack)
 
             def run(frame):
                 data = frame.eventData
-                #print("InputDropdownCallback run: data", data)
+                #print("InputCheckboxCallback run: data", data)
                 rowFrm = data[1][0]
                 #print("InputCheckboxCallback run: rowFrm", rowFrm.params.label[0], " ", rowFrm.verb.__name__)
 
@@ -2306,6 +2306,7 @@ class WyeUI(Wye.staticObj):
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
                         inFrm = frame.params.inputs[0][ii][0]
 
+                        # point each input back at the mother dialog
                         setattr(inFrm, "parentFrame", frame)
 
                         # tell input to display itself.  Collect returned objects to close when dlg closes
@@ -2706,7 +2707,7 @@ class WyeUI(Wye.staticObj):
 ("dPos", Wye.dType.FLOAT_LIST, [0., 0., .1]),
 ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., .30]),
 ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
-("colorInc", Wye.dType.FLOAT_LIST, [5, 5, 5]),
+("colorInc", Wye.dType.FLOAT_LIST, [0, 0, 5]),
 ("color", Wye.dType.FLOAT_LIST, [.5, .5, .5, 1]),
 '''
 
@@ -2725,7 +2726,7 @@ class WyeUI(Wye.staticObj):
 # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
 # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
 (None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
-("Label", ("Const", "Repeat")),
+("Label", "Repeat"),
 # set angle
 #("Code", "print('MyTestVerb run')"),
 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
@@ -2733,9 +2734,15 @@ class WyeUI(Wye.staticObj):
 ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
 ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.gObj")),
 # set color
+("Var=", "frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
+("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
 ("Var=", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
 # todo Next two lines are horrible - if followed by then expression indented - they have to be together
 # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
+("Code", "if frame.vars.colorWk[0][0] >= 255 or frame.vars.colorWk[0][0] <= 0:"),
+("Code", " frame.vars.colorInc[0][0] = -1 * frame.vars.colorInc[0][0]"),
+("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
+("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
 ("Code", "if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
 ("Code", " frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
 ("Var=",
@@ -2743,7 +2750,7 @@ class WyeUI(Wye.staticObj):
 (
 "WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
 
-("GoTo", ("Const", "Repeat"))
+("GoTo", "Repeat")
 '''
                 WyeCore.Utils.createVerb(lib, "MyTestVerb", vertSettings, paramDescr, varDescr, codeDescr)
 
@@ -3463,11 +3470,11 @@ class WyeUI(Wye.staticObj):
                         dataType = Wye.dType.valList[dTypeIx]
                         frame.vars.newVerbSettings[0]['dataType'] = dataType
 
-                        print("New class settings\n mode", Wye.mode.tostring(mode), "\n autoStart", autoStart, "\n dataType", Wye.dType.tostring(dataType))
+                        #print("New class settings\n mode", Wye.mode.tostring(mode), "\n autoStart", autoStart, "\n dataType", Wye.dType.tostring(dataType))
 
-                        print("params\n"+str(frame.vars.newParamDescr))
-                        print("vars\n"+str(frame.vars.newVarDescr))
-                        print("code\n"+str(frame.vars.newCodeDescr))
+                        #print("params\n"+str(frame.vars.newParamDescr))
+                        #print("vars\n"+str(frame.vars.newVarDescr))
+                        #print("code\n"+str(frame.vars.newCodeDescr))
 
                         lib = WyeCore.Utils.createLib("MyTestLibrary")
 
@@ -3480,10 +3487,10 @@ class WyeUI(Wye.staticObj):
                     frame.status = dlgFrm.status
 
 
-        # make the object editor dialog code row recursively
+        # make object editor dialog code rows recursively
         # level is the recursion level (starting at 2)
         # verb is the verb being edited
-        # dlgFrm is the dialog being added to
+        # Put the results in rowLst so this can be used by both Dialog and EditLineCallback
         def bldEditCodeLine(tuple, level, editVerbFrm, dlgFrm, rowLst):
             #print("level", level, " indent '"+indent+"' tuple", tuple)
 
@@ -3509,6 +3516,9 @@ class WyeUI(Wye.staticObj):
             btnFrm.params.layout = [Wye.layout.ADD_RIGHT]       # put after the line edit button
             btnFrm.params.frame = [None]
             btnFrm.params.parent = [None]
+
+            setattr(btnFrm, "parentFrame", dlgFrm)
+            setattr(editLnFrm, "parentFrame", dlgFrm)
 
             # fill in prev button opt data including ptr to this ctl
             editLnFrm.params.optData = [(editLnFrm, dlgFrm, editVerbFrm, tuple, btnFrm, level)]  # button frame, dialog frame
@@ -3677,7 +3687,12 @@ class WyeUI(Wye.staticObj):
                         verbFrm.params.list = frame.vars.verbNames
                         frame.vars.verbName[0] = verbName
                         #print("find verName", verbName, " in ", frame.vars.verbNames)
-                        verbFrm.params.selectionIx = [frame.vars.verbNames[0].index(verbName)]
+                        try:
+                            verbFrm.params.selectionIx = [frame.vars.verbNames[0].index(verbName)]
+                        except:
+                            # todo - figure out how to flag that this is not a good value
+                            print("ERROR invalid verbName", verbName, " not found in library", libName)
+                            verbFrm.params.selectionIx = [0]
                         verbFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVerbCallback.SelectVerbCallback]
                         verbFrm.params.optData = ((verbFrm, dlgFrm, editVerbFrm, frame.vars.verbName),)
                         verbFrm.verb.run(verbFrm)
@@ -3691,7 +3706,7 @@ class WyeUI(Wye.staticObj):
                     case 1:
                         dlgFrm = frame.SP.pop()
                         if frame.vars.dlgStat[0] == Wye.status.SUCCESS:
-                            # print("InputDropdownCallback done, success, set row label to", dlgFrm.vars.currInp[0])
+                            # print("EditVerbCallback done, success, set row label to", dlgFrm.vars.currInp[0])
                             print("EditVerbCallback Success: lib", frame.vars.libName[0], " verb", frame.vars.verbName[0])
                             if frame.vars.verbName[0] == WyeCore.libs.WyeUI.EditVerb.EditVerbCallback.noneSelected:
                                 print("no valid verb")
@@ -3809,10 +3824,6 @@ class WyeUI(Wye.staticObj):
             DELETE = 2
             ADD_DOWN = 3
 
-            # Placeholder for "add line" so user has row to fill in with their code
-            # newLn = ["WyeLib.noop", ["Const", "[0]"]]
-            newLn = ["Code", ["#< your code goes here>#"]]
-
             def start(stack):
                 #print("EditCodeLineCallback started")
                 return Wye.codeFrame(WyeUI.EditVerb.EditCodeLineCallback, stack)
@@ -3859,7 +3870,11 @@ class WyeUI(Wye.staticObj):
                         # Insert new line into code desr
                         # todo would simplify life to have an AST holding var, call info and
                         #  linking relevant parts to relevant controls/data
-                        parentList.insert(ix, WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback.newLn)
+
+                        # Placeholder for "add line" so user has row to fill in with their code
+                        # newLn = ["WyeLib.noop", ["Const", "[0]"]]
+                        newLn = ["Code", "#< your code goes here>"]
+                        parentList.insert(ix, newLn)
 
                         # create new dialog row for this code line
 
@@ -3878,7 +3893,7 @@ class WyeUI(Wye.staticObj):
 
                         # build dialog rows
                         rowLst = []  # put dialog row(s) here
-                        WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback.newLn, level, editVerbFrm, parentFrm, rowLst)
+                        WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(newLn, level, editVerbFrm, parentFrm, rowLst)
 
                         # insert new dialog rows into dialog
                         # display new dialog rows (don't sweat the position, they will be correctly
@@ -4112,7 +4127,7 @@ class WyeUI(Wye.staticObj):
                         dlgFrm = frame.SP.pop()
                         if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
                             opIx = dlgFrm.params.inputs[0][-3][0].params.selectionIx[0]
-                            print("EditCodeCallback done: opIx", opIx)
+                            #print("EditCodeCallback done: opIx", opIx)
                             if opIx >= 0:
                                 newOp = WyeCore.libs.WyeUI.EditVerb.opList[opIx]
                             else:
@@ -4569,13 +4584,46 @@ class WyeUI(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                print("TestCodeCallback data=", data)
+                #print("TestCodeCallback data=", data)
                 btnFrm = data[1][0]
                 parentFrm = data[1][1]
                 editFrm = data[1][2]
 
                 # build a verb and try to compile it
-                WyeCore.libs.WyeUI.doPopUpDialog("Not Implemented", "Code test not implemented yet")
+                #WyeCore.libs.WyeUI.doPopUpDialog("Not Implemented", "Code test not implemented yet")
+
+                # read settings
+                modeFrm = editFrm.vars.settingsFrms[0]['mode']
+                modeIx = modeFrm.params.selectionIx[0]
+                if modeIx >= 0:
+                    mode = Wye.mode.valList[modeIx]
+                else:
+                    mode = editFrm.vars.newVerbSettings[0]['mode']
+                editFrm.vars.newVerbSettings[0]['mode'] = mode
+
+                autoFrm = editFrm.vars.settingsFrms[0]['autoStart']
+                autoStart = autoFrm.params.value[0]
+                editFrm.vars.newVerbSettings[0]['autoStart'] = autoStart
+
+                dTypeFrm = editFrm.vars.settingsFrms[0]['dataType']
+                dTypeIx = dTypeFrm.params.selectionIx[0]
+                dataType = Wye.dType.valList[dTypeIx]
+                editFrm.vars.newVerbSettings[0]['dataType'] = dataType
+
+                # print("New class settings\n mode", Wye.mode.tostring(mode), "\n autoStart", autoStart, "\n dataType", Wye.dType.tostring(dataType))
+
+                # print("params\n"+str(frame.vars.newParamDescr))
+                # print("vars\n"+str(frame.vars.newVarDescr))
+                # print("code\n"+str(frame.vars.newCodeDescr))
+
+                lib = WyeCore.Utils.createLib("MyTestLibrary")
+
+                WyeCore.Utils.createVerb(lib, "MyTestVerb",
+                                         editFrm.vars.newVerbSettings[0],
+                                         editFrm.vars.newParamDescr[0],
+                                         editFrm.vars.newVarDescr[0],
+                                         editFrm.vars.newCodeDescr[0],
+                                         True)
 
     # show active objects (currently running object stacks)
     # so user can debug them

@@ -1231,7 +1231,8 @@ class WyeCore(Wye.staticObj):
         # build run time code for a sequential verb (single or multiple cycle)
         # parse verb's code (list of Wye tuples) into Python code text
         def buildCodeText(name, codeDescr):
-            caseNumList = [0]   # list so called fn can increment it.  This is Python pass by reference
+            #print("buildCodeText for", name)
+            caseNumList = [0]   # current case stmt number - in list so called fn can increment it.  (pass by reference)
             labelDict = {}
             fwdLabelDict = {}
             # define runtime method for this function
@@ -1240,74 +1241,77 @@ class WyeCore(Wye.staticObj):
             firstParam = None
             if len(codeDescr) > 0:
                 for wyeTuple in codeDescr:
-                    # label for branch/loop
-                    if wyeTuple[0] == "Label":
-                        caseNumList[0] += 1
-                        labelDict[wyeTuple[1]] = caseNumList[0]
+                    try:
+                        # label for branch/loop
+                        if wyeTuple[0] == "Label":
+                            caseNumList[0] += 1
+                            labelDict[wyeTuple[1]] = caseNumList[0]
 
-                        codeText += "    frame.PC += 1\n"
-                        codeText += "   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
+                            codeText += "    frame.PC += 1\n"
+                            codeText += "   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
 
-                        # if this is the resolution of any forward label references
-                        lblStr = wyeTuple[1]
-                        if lblStr in fwdLabelDict:
-                            fwdLabelDict.pop(lblStr)        # remove label from fwd ref dict
-                            codeText = codeText.replace(">>>FWDLABEL_"+lblStr+"<<<", str(caseNumList[0]))
-                            #print(">>>>Found forward ref", lblStr, " and replaced it with", caseNumList[0])
+                            # if this is the resolution of any forward label references
+                            lblStr = wyeTuple[1]
+                            if lblStr in fwdLabelDict:
+                                fwdLabelDict.pop(lblStr)        # remove label from fwd ref dict
+                                codeText = codeText.replace(">>>FWDLABEL_"+lblStr+"<<<", str(caseNumList[0]))
+                                #print(">>>>Found forward ref", lblStr, " and replaced it with", caseNumList[0])
 
-                    elif wyeTuple[0] == "IfGoTo":
-                        # if label is behind this position (we've seen it already), it's easy
-                        if wyeTuple[2] in labelDict:
-                            codeText += "    if (" + wyeTuple[1] + "):\n"
-                            codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #GoToLabel " + wyeTuple[2] + "\n"
-                            codeText += "     return\n"     # skips any code following a successful If
-                        # else this is a forward ref to a label we've not seen yet.
-                        # Put a placeholder in the code and make a note to fix it later
-                        else:
-                            # print(">>> ifgoto found fwd ref to label", wyeTuple[1])
-                            if not wyeTuple[2] in fwdLabelDict:
-                                fwdLabelDict[wyeTuple[2]] = 1  # count positions that need fixing when we know the label location
+                        elif wyeTuple[0] == "IfGoTo":
+                            # if label is behind this position (we've seen it already), it's easy
+                            if wyeTuple[2] in labelDict:
+                                codeText += "    if (" + wyeTuple[1] + "):\n"
+                                codeText += "     frame.PC = " + str(labelDict[wyeTuple[2]]) + " #GoToLabel " + wyeTuple[2] + "\n"
+                                codeText += "     return\n"     # skips any code following a successful If
+                            # else this is a forward ref to a label we've not seen yet.
+                            # Put a placeholder in the code and make a note to fix it later
                             else:
-                                fwdLabelDict[wyeTuple[2]] += 1
-                            # mark label location that needs fixing
-                            codeText += "    if (" + wyeTuple[1] + "):\n"
-                            codeText += "     frame.PC = >>>FWDLABEL_" + wyeTuple[2] + "<<< #GoToLabel " + wyeTuple[2] + "\n"
-                            codeText += "     return\n"     # skips any code following a successful If
-                        glideThruLabel = False      # don't auto inc PC when get to next label
-                        #caseNumList[0] += 1
-                        #codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
+                                # print(">>> ifgoto found fwd ref to label", wyeTuple[1])
+                                if not wyeTuple[2] in fwdLabelDict:
+                                    fwdLabelDict[wyeTuple[2]] = 1  # count positions that need fixing when we know the label location
+                                else:
+                                    fwdLabelDict[wyeTuple[2]] += 1
+                                # mark label location that needs fixing
+                                codeText += "    if (" + wyeTuple[1] + "):\n"
+                                codeText += "     frame.PC = >>>FWDLABEL_" + wyeTuple[2] + "<<< #GoToLabel " + wyeTuple[2] + "\n"
+                                codeText += "     return\n"     # skips any code following a successful If
+                            glideThruLabel = False      # don't auto inc PC when get to next label
+                            #caseNumList[0] += 1
+                            #codeText += "    else:\n     frame.PC += 1\n   case " + str(caseNumList[0]) + ":\n    pass\n"
 
 
-                    elif wyeTuple[0] == "GoTo":
-                        # if label is behind this position (we've seen it already), it's easy
-                        if wyeTuple[1] in labelDict:
-                            codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #GoToLabel " + wyeTuple[1] + "\n"
-                        # else this is a forward ref to a label we've not seen yet.
-                        # Put a placeholder in the code and make a note to fix it later
-                        else:
-                            #print(">>> goto found fwd ref to label", wyeTuple[1])
-                            if not wyeTuple[1] in fwdLabelDict:
-                                fwdLabelDict[wyeTuple[1]] = 1       # count positions that need fixing when we know the label location
+                        elif wyeTuple[0] == "GoTo":
+                            # if label is behind this position (we've seen it already), it's easy
+                            if wyeTuple[1] in labelDict:
+                                codeText += "    frame.PC = " + str(labelDict[wyeTuple[1]]) + " #GoToLabel " + wyeTuple[1] + "\n"
+                            # else this is a forward ref to a label we've not seen yet.
+                            # Put a placeholder in the code and make a note to fix it later
                             else:
-                                fwdLabelDict[wyeTuple[1]] += 1
-                            # mark label location that needs fixing
-                            codeText += "    frame.PC = >>>FWDLABEL_" + wyeTuple[1] + "<<< #GoToLabel " + wyeTuple[1] + "\n"
+                                #print(">>> goto found fwd ref to label", wyeTuple[1])
+                                if not wyeTuple[1] in fwdLabelDict:
+                                    fwdLabelDict[wyeTuple[1]] = 1       # count positions that need fixing when we know the label location
+                                else:
+                                    fwdLabelDict[wyeTuple[1]] += 1
+                                # mark label location that needs fixing
+                                codeText += "    frame.PC = >>>FWDLABEL_" + wyeTuple[1] + "<<< #GoToLabel " + wyeTuple[1] + "\n"
 
-                        caseNumList[0] += 1
-                        # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
-                        codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
-                    else: # normal tuple
-                        # DEBUG start vvv
-                        #currFrame = inspect.currentframe()
-                        #callrframe = inspect.getouterframes(currFrame, 2)
-                        #print('WyeCore buildCodeText caller:', callrframe[1][3])
-                        #print('WyeCore buildCodeText caller:', callrframe[1][3])
-                        #print("WyeCore buildCodeText: compile tuple=", wyeTuple)
-                        # DEBUG end ^^^^
-                        cdTxt, parTxt, firstParam = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+                            caseNumList[0] += 1
+                            # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
+                            codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
+                        else: # normal tuple
+                            # DEBUG start vvv
+                            #currFrame = inspect.currentframe()
+                            #callrframe = inspect.getouterframes(currFrame, 2)
+                            #print('WyeCore buildCodeText caller:', callrframe[1][3])
+                            #print('WyeCore buildCodeText caller:', callrframe[1][3])
+                            #print("WyeCore buildCodeText: compile tuple=", wyeTuple)
+                            # DEBUG end ^^^^
+                            cdTxt, parTxt, firstParam = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
 
-                        codeText += cdTxt
-                        parFnText += parTxt
+                            codeText += cdTxt
+                            parFnText += parTxt
+                    except Exception as e:
+                        print("buildCodeText failed at tuple", wyeTuple, "\n", str(e))
 
             # no code, make sure fn compiles
             else:
@@ -1476,7 +1480,7 @@ class WyeCore(Wye.staticObj):
 
 
         # create a new verb and attach it to the given library
-        def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr):
+        def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False):
 
             # build verb
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
@@ -1501,7 +1505,10 @@ class WyeCore(Wye.staticObj):
         # print("Build ",'''
             vrbStr += name + ")"
             vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
-            vrbStr += name +"', " + vrbLib.__name__ + "." + name + ".codeDescr)\n"
+            if doTest:
+                vrbStr += name + "', " + name + ".codeDescr)\n"
+            else:
+                vrbStr += name +"', " + vrbLib.__name__ + "." + name + ".codeDescr)\n"
             vrbStr += '''
     def start(stack):
 '''
@@ -1512,13 +1519,28 @@ class WyeCore(Wye.staticObj):
             vrbStr += '''
     def run(frame):
 '''
-            vrbStr += "        # print('Run '+name)\n"
-            vrbStr += "        " + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt(frame)\n\n"
+            vrbStr += "        # print('Run '"+name+")\n"
+            vrbStr += "        try:\n"
+            vrbStr += "          " + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt(frame)\n"
+            vrbStr += "        except Exception as e:\n"
+            vrbStr += "          if not hasattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "._run_rt, 'errOnce'):\n"
+            vrbStr += "            print('" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt failed\\n', str(e))\n"
+            vrbStr += "            setattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + ", 'errOnce', True)\n\n"
 
             # put verb in lib
-            vrbStr += "setattr(WyeCore.libs." + vrbLib.__name__ + ", " + name + ".__name__, " + name + ")\n"
+            if not doTest:
+                vrbStr += "setattr(WyeCore.libs." + vrbLib.__name__ + ", " + name + ".__name__, " + name + ")\n"
+
             # build verb's Wye code
-            vrbStr += "cdStr, parStr = WyeCore.libs." + vrbLib.__name__ + "." + name + ".build()\n"
+            vrbStr += "cdStr, parStr = "+name + ".build()\n"
+
+            # DEBUG - print out verb's runtime code with line numbers
+            vrbStr += "print('cdStr')\n"
+            vrbStr += "lnIx = 1\n"
+            vrbStr += "for ln in cdStr.split('\\n'):\n"
+            vrbStr += "    print('%2d ' % lnIx, ln)\n"
+            vrbStr += "    lnIx += 1\n"
+            vrbStr += "print('')\n"
 
             # when the verb string is executed, the verb's build will be run.
             # The build will return the runtime string for the verb.
@@ -1530,19 +1552,20 @@ class WyeCore(Wye.staticObj):
 # compile verb runtime
 cdStr = "class tmp:\\n" + cdStr
 '''
-            #
-            vrbStr += "cdStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + name + "_run_rt\", tmp." + name + "_run_rt)\\n'\n"
+            # put verb runtime code function in lib runtime code class
+            if not doTest:
+                vrbStr += "cdStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + name + "_run_rt\", tmp." + name + "_run_rt)\\n'\n"
 
-            #vrbStr += "print('cdStr\\n', cdStr)\nprint('parStr', parStr)\n"
-            #vrbStr += "print('createVerb: Compile'," + name + ")\n"
+            # vrbStr += "print('parStr', parStr)\n"
+            # vrbStr += "print('createVerb: Compile'," + name + ")\n"
 
+            # compile runtime code function
             vrbStr += '''
 try:
+    # compile the verb's runtime code
     code = compile(cdStr, "<string>", "exec")
-    #print("createVerb: Compiled verb runtime successfully")
+    print("createVerb: Compiled verb runtime successfully")
     
-
-    # attach verb to lib
     libDict = {
 '''
             vrbStr += "        '" + vrbLib.__name__ + "':" + vrbLib.__name__ + ",\n"
@@ -1551,30 +1574,44 @@ try:
         "WyeCore": WyeCore,
         "WyeUI": WyeCore.libs.WyeUI
     }
-'''
-            #vrbStr += "    print('createVerb: exec verb " + vrbLib.__name__ + "." + name + "')\n"
-            vrbStr += '''
+    
+    #print('createVerb: exec verb " + vrbLib.__name__ + "." + name + "')
+    
+    # run the compiled code.  This will add the verb's runtime function to the library's runtime class
     try:
         exec(code, libDict)
     except Exception as e:
         print("exec verb runtime failed\\n", str(e))
+        print('cdStr')
+        lnIx = 1
+        for ln in cdStr.split('\\n'):
+            print('%2d ' % lnIx, ln)
+            lnIx += 1
+        print('')
 
 except Exception as e:
     print("compile verb runtime failed\\n", str(e))
-
+    print('cdStr')
+    lnIx = 1
+    for ln in cdStr.split('\\n'):
+        print('%2d ' % lnIx, ln)
+        lnIx += 1
+    print('')
 '''
-            # if verb has autostart, start it
-            vrbStr += "if hasattr(WyeCore.libs."+vrbLib.__name__+"."+name+", 'autoStart'):\n"
-            vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
-            vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
+            if not doTest:
+                # if verb has autostart, start it
+                vrbStr += "if hasattr(WyeCore.libs."+vrbLib.__name__+"."+name+", 'autoStart'):\n"
+                vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
+                #vrbStr += "        print('autoStart "+name+"')\n"
+                vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
-             # DEBUG print verb text string with line numbers
-       #     print("createVerb: verb text:")
-       #     lnIx = 1
-       #     for ln in vrbStr.split('\n'):
-       #         print("%2d " % lnIx, ln)
-       #         lnIx += 1
-       #     print("")
+            # DEBUG print verb code with line numbers
+            print("createVerb: verb text:")
+            lnIx = 1
+            for ln in vrbStr.split('\n'):
+                print("%2d " % lnIx, ln)
+                lnIx += 1
+            print("")
 
             # compile verb
             try:
@@ -1582,7 +1619,6 @@ except Exception as e:
                 code = compile(vrbStr, "<string>", "exec")
                 #print("createVerb: Compiled", name, " successfully")
 
-                # attach verb to lib
                 libDict = {
                     vrbLib.__name__: vrbLib,
                     "Wye": Wye,
@@ -1590,9 +1626,10 @@ except Exception as e:
                     "WyeUI": WyeCore.libs.WyeUI
                 }
 
-                #print("createVerb: exec verb", vrbLib.__name__ + "." + name)
+                print("createVerb: exec verb", vrbLib.__name__ + "." + name)
                 try:
                     exec(code, libDict)
+                    print("executed successfully")
                 except Exception as e:
                     print("exec verb failed\n", str(e))
                     print("verb text:")
@@ -1613,5 +1650,6 @@ except Exception as e:
                 print("")
                 return
 
-            #print(name, "compiled successfully")
+            if doTest:
+                print(name, "compiled successfully")
 
