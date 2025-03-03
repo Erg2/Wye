@@ -1519,7 +1519,7 @@ class WyeCore(Wye.staticObj):
         # create a new verb
         # If test, just compile the verb and its runtime code
         # Otherwise attach it to the given library and, if autoStart, start it
-        def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False):
+        def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False, doAutoStart=True):
 
             # build verb
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
@@ -1641,11 +1641,12 @@ except Exception as e:
     print('')
 '''
             if not doTest:
-                # if verb has autostart, start it
-                vrbStr += "if hasattr(WyeCore.libs."+vrbLib.__name__+"."+name+", 'autoStart'):\n"
-                vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
-                #vrbStr += "        print('autoStart "+name+"')\n"
-                vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
+                # if verb has autostart, do it, unless blocked by caller
+                if doAutoStart:
+                    vrbStr += "if hasattr(WyeCore.libs."+vrbLib.__name__+"."+name+", 'autoStart'):\n"
+                    vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
+                    #vrbStr += "        print('autoStart "+name+"')\n"
+                    vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
             # DEBUG print verb code with line numbers
             if listCode:

@@ -3141,8 +3141,9 @@ class WyeUI(Wye.staticObj):
                     ("nameFrm", Wye.dType.OBJECT, None),            # new verb name
                     ("libRadio", Wye.dType.OBJECT, None),     # existing lib name input
                     ("existingLibFrm", Wye.dType.OBJECT, None),     # existing lib name input
+                    ("disaAutoFrm", Wye.dType.OBJECT, None),        # disable auto for testing (updates running object instead of create new)
                     ("libNameFrm", Wye.dType.OBJECT, None),         # new lib name input, if user wants to create one
-                    ("listCodeFrm", Wye.dType.OBJECT, None),         # new lib name input, if user wants to create one
+                    ("listCodeFrm", Wye.dType.OBJECT, None),        # new lib name input, if user wants to create one
                     ("settingsFrms", Wye.dType.OBJECT_LIST, None),  # new verb settings
                     ("newVerbSettings", Wye.dType.OBJECT, None),    # verb used as a source
                     ("newParamDescr", Wye.dType.OBJECT_LIST, None), # Build new verb params here
@@ -3350,6 +3351,16 @@ class WyeUI(Wye.staticObj):
                     autoFrm.verb.run(autoFrm)
                     dlgFrm.params.inputs[0].append([autoFrm])
                     frame.vars.settingsFrms[0]['autoStart'] = autoFrm
+
+                    disaAutoFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    disaAutoFrm.params.frame = [None]
+                    disaAutoFrm.params.parent = [None]
+                    disaAutoFrm.params.value = [False]
+                    disaAutoFrm.params.label = ["  disable for testing"]
+                    disaAutoFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    disaAutoFrm.verb.run(disaAutoFrm)
+                    dlgFrm.params.inputs[0].append([disaAutoFrm])
+                    frame.vars.disaAutoFrm[0] = disaAutoFrm
 
                     dTypeFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
                     dTypeFrm.params.frame = [None]
@@ -3614,11 +3625,13 @@ class WyeUI(Wye.staticObj):
                         if not name:
                             name = "TestVerb"
 
+                        disableAuto = frame.vars.disaAutoFrm[0].params.value[0]
+
                         WyeCore.Utils.createVerb(lib, name,
                                                  frame.vars.newVerbSettings[0],
                                                  frame.vars.newParamDescr[0],
                                                  frame.vars.newVarDescr[0],
-                                                 frame.vars.newCodeDescr[0])
+                                                 frame.vars.newCodeDescr[0], False, False, not disableAuto)
 
                     frame.status = dlgFrm.status
 
