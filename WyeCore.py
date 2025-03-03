@@ -1512,7 +1512,7 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.libList.remove(WyeCore.World.libDict[name])
             WyeCore.World.libDict[name] = lib
             WyeCore.World.libList.append(lib)
-        #    print("createLib: Built and installed new library successfully", lib.__name__)
+            print("createLib: Built and installed new library successfully", lib.__name__)
             return lib
 
 
@@ -1565,6 +1565,8 @@ class WyeCore(Wye.staticObj):
             vrbStr += "          if not hasattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "._run_rt, 'errOnce'):\n"
             vrbStr += "            print('" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt failed\\n', str(e))\n"
             vrbStr += "            setattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt, 'errOnce', True)\n\n"
+            # put library in verb
+            vrbStr += "setattr(" + name + ", 'library', WyeCore.libs." + vrbLib.__name__ + ")\n"
 
             # put verb in lib
             if not doTest:

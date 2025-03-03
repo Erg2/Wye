@@ -1339,16 +1339,19 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidget[0].setColor(color)
 
     # checkbox
+    # if radioGroup is a list, then will act as part of a group of radio buttons
     class InputCheckbox:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
-        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
+        paramDescr = (("frame", Wye.dType.OBJECT, Wye.access.REFERENCE),  # return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
-                      ("value", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied var to return value in
-                      ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
+                      ("value", Wye.dType.BOOL, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("callback", Wye.dType.OBJECT, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
-                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL)
+                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
+                      ("radioGroup", Wye.dType.STRING, Wye.access.REFERENCE, None),    # name of checkbox radio group, if any
+                      ("selectedRadio", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),  # if radio button, ix of currently selected one
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1363,6 +1366,7 @@ class WyeUI(Wye.staticObj):
                     ("optData", Wye.dType.ANY, None),
                     ("userCallback", Wye.dType.OBJECT, None),  # user verb to call when done
                     ("userOptData", Wye.dType.ANY, None),
+                    ("radioGroupList", Wye.dType.OBJECT, None),
                     )
         def start(stack):
             frame = Wye.codeFrame(WyeUI.InputCheckbox, stack)
@@ -1399,11 +1403,23 @@ class WyeUI(Wye.staticObj):
 
             # check box
             check = WyeCore.libs.WyeUI._box(size=[.5, .05, .5], pos=[width, 0, .25], parent=lbl.getNodePath())
+            check.setColor(Wye.color.FALSE_COLOR)
             tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
             check.setTag(tag)
             gTags.append(tag)  # save graphic widget for deleting on dialog close
             frame.vars.gWidgetStack[0].append(check)  # save graphic widget for deleting on close
             frame.vars.gWidget[0] = check
+
+            # are we part of a radio group?
+            radNm = frame.params.radioGroup[0]
+            if radNm:
+                if radNm in frame.parentFrame.vars.radBtnDict[0]:
+                    frame.vars.radioGroupList[0] = frame.parentFrame.vars.radBtnDict[0][radNm]
+                    frame.vars.radioGroupList[0].append(frame)
+                else:
+                    radGrp = [frame]
+                    frame.parentFrame.vars.radBtnDict[0][radNm] = radGrp
+                    frame.vars.radioGroupList[0] = radGrp
 
             # set checkbox color to match data
             #print("InputCheckbox display: init value to", frame.params.value[0])
@@ -1444,9 +1460,25 @@ class WyeUI(Wye.staticObj):
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
 
+        # for checkbox, set on/off
+        # for checkbox part of radioGroup, only do on
         def setValue(frame, isOn):
-            frame.vars.currVal[0] = isOn
-            frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
+            if frame.vars.radioGroupList[0]:
+                if isOn:
+                    for frm in frame.vars.radioGroupList[0]:
+                        if frm != frame:
+                            frm.vars.currVal[0] = False
+                            frm.vars.gWidget[0].setColor(Wye.color.FALSE_COLOR)
+                    frame.vars.currVal[0] = True
+                    frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR)
+                    ix = frame.vars.radioGroupList[0].index(frame)
+                    for frm in frame.vars.radioGroupList[0]:
+                        frm.params.selectedRadio[0] = ix
+            else:
+                frame.vars.currVal[0] = isOn
+                frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
+
+
 
         def setColor(frame, color):
             frame.vars.gWidgetStack[0][0].setColor(color)
@@ -1716,6 +1748,7 @@ class WyeUI(Wye.staticObj):
                     ("canTags", Wye.dType.STRING_LIST, None),               # Cancel widget tags
                     ("inpTags", Wye.dType.OBJECT, None),                    # dictionary return param ix of input by graphic tag
                     ("currInp", Wye.dType.OBJECT, None),                    # current focus widget, if any
+                    ("radBtnDict", Wye.dType.OBJECT_LIST, None),            # radio button group dictionary
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # list of buttons that need to be unclicked
                     ("dragObj", Wye.dType.OBJECT, None),                    # path to top graphic obj *** REF'D BY CHILDREN ***
                     ("topTag", Wye.dType.STRING, ""),                       # Wye tag for top object (used for dragging)
@@ -1734,6 +1767,7 @@ class WyeUI(Wye.staticObj):
             frame.vars.canTags[0] = []          # tags for Cancel buttons
             frame.vars.inpTags[0] = {}          # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []      # clicked button(s) being "flashed" (so user sees they were clicked)
+            frame.vars.radBtnDict[0] = {}        # dictionary of radio button groups in this dialog
 
             # If there isn't a text input cursor, make it
             if WyeUI.Dialog._cursor is None:
@@ -3102,11 +3136,15 @@ class WyeUI(Wye.staticObj):
                     ("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
                     ("varInpLst", Wye.dType.OBJECT_LIST, None),     # Inputs showing vars
                     ("oldVerb", Wye.dType.OBJECT, None),            # verb used as a source
-                    ("newVerbSettings", Wye.dType.OBJECT, None),            # verb used as a source
-                    ("newParamDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb params here
-                    ("newVarDescr", Wye.dType.OBJECT_LIST, None),    # Build new verb vars here
-                    ("newCodeDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb code here
-                    ("settingsFrms", Wye.dType.OBJECT_LIST, None),   # Build new verb code here
+                    ("nameFrm", Wye.dType.OBJECT, None),            # new verb name
+                    ("libRadio", Wye.dType.OBJECT, None),     # existing lib name input
+                    ("existingLibFrm", Wye.dType.OBJECT, None),     # existing lib name input
+                    ("libNameFrm", Wye.dType.OBJECT, None),         # new lib name input, if user wants to create one
+                    ("settingsFrms", Wye.dType.OBJECT_LIST, None),  # new verb settings
+                    ("newVerbSettings", Wye.dType.OBJECT, None),    # verb used as a source
+                    ("newParamDescr", Wye.dType.OBJECT_LIST, None), # Build new verb params here
+                    ("newVarDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb vars here
+                    ("newCodeDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb code here
                     )
 
         # global list of frames being edited
@@ -3222,8 +3260,60 @@ class WyeUI(Wye.staticObj):
 
                     # build dialog
 
+                    # existing lib
+                    libRad = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([libRad])
+                    libRad.params.frame = [None]
+                    libRad.params.parent = [None]
+                    libRad.params.value = [True]
+                    libRad.params.label = ["Existing Library"]
+                    libRad.params.radioGroup = ["libRadGrp"]
+                    libRad.verb.run(libRad)
+                    frame.vars.libRadio[0] = libRad
+
+                    libList = [lib.__name__ for lib in WyeCore.World.libList]
+                    libFrm = WyeCore.libs.WyeUI.InputDropdown.start(dlgFrm.SP)
+                    libFrm.params.frame = [None]
+                    libFrm.params.parent = [None]
+                    libFrm.params.label = ["Library"]
+                    libFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    libFrm.params.list = [libList]
+                    libFrm.params.selectionIx = [libList.index(verb.library.__name__)]
+                    # libFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditVerbSettingsCallback]
+                    # libFrm.params.optData = ((libFrm, dlgFrm, frame, Wye.mode),)
+                    libFrm.verb.run(libFrm)
+                    dlgFrm.params.inputs[0].append([libFrm])
+                    frame.vars.existingLibFrm[0] = libFrm
+
+                    # new lib
+                    newLibRad = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([newLibRad])
+                    newLibRad.params.frame = [None]
+                    newLibRad.params.parent = [None]
+                    newLibRad.params.value = [False]
+                    newLibRad.params.label = ["New Library"]
+                    newLibRad.params.radioGroup = ["libRadGrp"]
+                    newLibRad.verb.run(newLibRad)
+
+                    libNameFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
+                    libNameFrm.params.frame = [None]        # placeholder
+                    libNameFrm.params.label = ["Name:"]
+                    libNameFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    libNameFrm.params.value = ["TestLibrary"]
+                    WyeCore.libs.WyeUI.InputText.run(libNameFrm)
+                    dlgFrm.params.inputs[0].append([libNameFrm])
+                    frame.vars.libNameFrm[0] = libNameFrm
+
+
                     # object name
 
+                    verbNameFrm = WyeCore.libs.WyeUI.InputText.start(dlgFrm.SP)
+                    verbNameFrm.params.frame = [None]        # placeholder
+                    verbNameFrm.params.label = ["Name:"]
+                    verbNameFrm.params.value = [verb.__name__]
+                    WyeCore.libs.WyeUI.InputText.run(verbNameFrm)
+                    dlgFrm.params.inputs[0].append([verbNameFrm])
+                    frame.vars.nameFrm[0] = verbNameFrm
 
                     # settings
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -3486,9 +3576,32 @@ class WyeUI(Wye.staticObj):
                         #print("vars\n"+str(frame.vars.newVarDescr))
                         #print("code\n"+str(frame.vars.newCodeDescr))
 
-                        lib = WyeCore.Utils.createLib("MyTestLibrary")
+                        # if existing library
+                        print("selectedRadio", frame.vars.libRadio[0].params.selectedRadio[0])
+                        if frame.vars.libRadio[0].params.selectedRadio[0] == 0:
+                            libList = [lib for lib in WyeCore.World.libList]
+                            lib = libList[frame.vars.existingLibFrm[0].params.selectionIx[0]]
+                            print("Put new verb in existing lib", lib.__name__)
+                        # else new library
+                        else:
+                            libName = frame.vars.libNameFrm[0].params.value[0]
+                            if libName:
+                                libName = libName.strip()
+                            # if user didn't supply a name, default
+                            if not libName:
+                                libName = "TestLibrary"
 
-                        WyeCore.Utils.createVerb(lib, "MyTestVerb",
+                            lib = WyeCore.Utils.createLib(libName)
+                            print("put new verb in new library", lib.__name__)
+
+                        # get verb name
+                        name = frame.vars.nameFrm[0].params.value[0]
+                        if name:
+                            name = name.strip()
+                        if not name:
+                            name = "TestVerb"
+
+                        WyeCore.Utils.createVerb(lib, name,
                                                  frame.vars.newVerbSettings[0],
                                                  frame.vars.newParamDescr[0],
                                                  frame.vars.newVarDescr[0],
