@@ -876,9 +876,9 @@ class WyeUI(Wye.staticObj):
 
             # if there's an active dialog, deactivate it and activate this one
             if not WyeUI.FocusManager._activeDialog is None:
-                WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
+                WyeUI.Dialog.activateDialog(WyeUI.FocusManager._activeDialog, False)
 
-            WyeUI.Dialog.select(dialogFrame, True)
+            WyeUI.Dialog.activateDialog(dialogFrame, True)
             #print("FocusManager openDialog", WyeUI.FocusManager._dialogHierarchies)
 
 
@@ -894,7 +894,7 @@ class WyeUI(Wye.staticObj):
             #print("FocusManager closeDialog complete: hierarchies", WyeUI.FocusManager._dialogHierarchies)
             if dialogFrame == WyeUI.FocusManager._activeDialog:
                 if len(hier) > 0:
-                    WyeUI.Dialog.select(hier[-1], True)
+                    WyeUI.Dialog.activateDialog(hier[-1], True)
                 else:
                     WyeUI.FocusManager._activeDialog = None
 
@@ -910,9 +910,8 @@ class WyeUI(Wye.staticObj):
                     frm = hier[-1]
                     # if dialog uses the tag, mark it active
                     if frm.verb.doSelect(frm, id):
-                        WyeUI.Dialog.select(frm, True)
+                        WyeUI.Dialog.postSelect(frm)
                         break   # Found user of tag. Done with loop
-
             return status
 
         # process keys and controls (shift, ctl)
@@ -1716,7 +1715,7 @@ class WyeUI(Wye.staticObj):
                     ("okTags", Wye.dType.STRING_LIST, None),                # OK widget tags
                     ("canTags", Wye.dType.STRING_LIST, None),               # Cancel widget tags
                     ("inpTags", Wye.dType.OBJECT, None),                    # dictionary return param ix of input by graphic tag
-                    ("currInp", Wye.dType.OBJECT, None),                    # index to current focus widget, if any
+                    ("currInp", Wye.dType.OBJECT, None),                    # current focus widget, if any
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # list of buttons that need to be unclicked
                     ("dragObj", Wye.dType.OBJECT, None),                    # path to top graphic obj *** REF'D BY CHILDREN ***
                     ("topTag", Wye.dType.STRING, ""),                       # Wye tag for top object (used for dragging)
@@ -1730,11 +1729,11 @@ class WyeUI(Wye.staticObj):
         def start(stack):
             frame = Wye.codeFrame(WyeUI.Dialog, stack)
             # give frame unique lists
-            frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
-            frame.vars.okTags[0] = []         # tags for OK buttons
-            frame.vars.canTags[0] = []         # tags for Cancel buttons
-            frame.vars.inpTags[0] = {}         # map input widget to input sequence number
-            frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
+            frame.vars.dlgWidgets[0] = []       # standard widgets common to all Dialogs
+            frame.vars.okTags[0] = []           # tags for OK buttons
+            frame.vars.canTags[0] = []          # tags for Cancel buttons
+            frame.vars.inpTags[0] = {}          # map input widget to input sequence number
+            frame.vars.clickedBtns[0] = []      # clicked button(s) being "flashed" (so user sees they were clicked)
 
             # If there isn't a text input cursor, make it
             if WyeUI.Dialog._cursor is None:
@@ -1941,7 +1940,7 @@ class WyeUI(Wye.staticObj):
                         inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
                     newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0]
                 else:
-                    print("EditModline: Error. Unknown input verb", inFrm.verb.__name__)
+                    print("Dialog redisplay: Error. Unknown input verb", inFrm.verb.__name__)
 
             # update Ok/Cancel positions
             pos[0] = 0
@@ -2110,12 +2109,21 @@ class WyeUI(Wye.staticObj):
                 # print("del ctl ", wdg.text.name)
                 wdg.removeNode()
 
-        # mark dialog selected/unselected
-        def select(frame, setOn):
+        # do select-related operations that cannot be done when elements of dialog are executing
+        # (i.e. if a line gets deleted, do it after the line has finished execting its callback
+        # so we don't crash)
+        # setOn - true if something in dialog used the
+        def postSelect(frame):
+            # Something in dialog used the tag, highlight the dialog
+            WyeCore.libs.WyeUI.Dialog.activateDialog(frame, True)
+
+
+        # manage selected/unselected look of dialog
+        def activateDialog(frame, setOn):
             if setOn:
                 # if there's already an active dialog, deactivate it
                 if WyeUI.FocusManager._activeDialog:
-                    WyeUI.Dialog.select(WyeUI.FocusManager._activeDialog, False)
+                    WyeUI.Dialog.activateDialog(WyeUI.FocusManager._activeDialog, False)
                 # make this the currently active dialog
                 WyeUI.FocusManager._activeDialog = frame
                 frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
@@ -2127,7 +2135,6 @@ class WyeUI(Wye.staticObj):
                 frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR)
                 frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR)
                 #print("Dialog '"+frame.params.title[0]+ "' Unselected")
-
 
         # inc/dec InputInteger on wheel event
         def doWheel(dir):
@@ -3215,6 +3222,9 @@ class WyeUI(Wye.staticObj):
 
                     # build dialog
 
+                    # object name
+
+
                     # settings
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
                     lblFrm.params.frame = [None]
@@ -3561,16 +3571,16 @@ class WyeUI(Wye.staticObj):
                         btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "GoTo":
-                        btnFrm.params.label = [indent + " GoTo: " + str(tuple[1])]
-                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditSpecialCallback]  # button callback
+                        btnFrm.params.label = [indent + "GoTo: " + str(tuple[1])]
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "Label":
                         btnFrm.params.label = [indent + "Label: " + str(tuple[1])]
-                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditSpecialCallback]  # button callback
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "IfGoTo":
                         btnFrm.params.label = [indent + "If: " + str(tuple[1]) + " GoTo: " + str(tuple[2])]
-                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditSpecialCallback]  # button callback
+                        btnFrm.params.callback = [WyeCore.libs.WyeUI.EditVerb.EditCodeCallback]  # button callback
 
             btnFrm.params.optData = [(btnFrm, dlgFrm, editVerbFrm, tuple, level, editLnFrm)]  # button frame, dialog frame
             #print("bldEditCodeLine create code button", btnFrm.params.label)
@@ -3868,7 +3878,7 @@ class WyeUI(Wye.staticObj):
                                   editVerbFrm.vars.newCodeDescr[0])
 
                         # Insert new line into code desr
-                        # todo would simplify life to have an AST holding var, call info and
+                        # todo - it would simplify life to have an AST tree holding var, call info and
                         #  linking relevant parts to relevant controls/data
 
                         # Placeholder for "add line" so user has row to fill in with their code
@@ -3913,121 +3923,122 @@ class WyeUI(Wye.staticObj):
 
                     # delete line
                     case 3:
-                        pass
+                        # print("EditCodeLineCallback: Delete")
+                        # get location of this frame in dialog input list
+
+                        # insert new (noop) code before this one in verb's codeDescr
+                        # print("EditCodeLineCallback codeFrm", codeFrm.verb.__name__)
+                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
+                        if parentList:
+                            ix = parentList.index(tuple)
+                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                        else:
+                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                                  editVerbFrm.vars.newCodeDescr[0])
+
+                        # Insert new line into code desr
+                        # todo - it would simplify life to have an AST abstract syntax tree holding var, call, type, etc. info and
+                        #  linking relevant parts to relevant controls/data
+
+                        # Placeholder for "add line" so user has row to fill in with their code
+                        # newLn = ["WyeLib.noop", ["Const", "[0]"]]
+
+                        tuple = parentList.pop(ix)                      # codeDescr entry
+
+                        # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
+                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
+
+                        # delete as many rows as there are lists
+                        # find index to row to delete
+                        ix = -1
+                        # print("***** input list. Look for", editLnFrm.params.label, ", ", editLnFrm, " in dialog", parentFrm.params.title[0])
+                        for ii in range(len(parentFrm.params.inputs[0])):
+                            # print(" inp", ii, " ", parentFrm.params.inputs[0][ii][0].verb.__name__, " ", parentFrm.params.inputs[0][ii][0].params.label[0], " ", parentFrm.params.inputs[0][ii])
+                            if parentFrm.params.inputs[0][ii][0] == editLnFrm:
+                                # print("   match at", ii)
+                                ix = ii
+                                break
+                        # Debug: if the unthinkable happens, give us a hint
+                        if ix < 0:
+                            print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
+
+                        count *= 2      # del both editLn and line inputs for each row
+                        parent = None
+                        for ii in range(count):
+                            frm = parentFrm.params.inputs[0].pop(ix)[0]     # line edit input
+                            frm.verb.close(frm)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
                     # add line after
                     case 4:
-                        pass
+                        # print("EditCodeLineCallback: Add down")
+                        # get location of this frame in dialog input list
+
+                        # insert new (noop) code before this one in verb's codeDescr
+                        # print("EditCodeLineCallback codeFrm", codeFrm.verb.__name__)
+                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
+                        if parentList:
+                            ix = parentList.index(tuple)
+                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                        else:
+                            print("EditCodeLineCallback: ERROR failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                                  editVerbFrm.vars.newCodeDescr[0])
+                            return
+
+                        # Insert new line into code desr
+                        # todo - it would simplify life to have an AST tree holding var, call info and
+                        #  linking relevant parts to relevant controls/data
+
+                        # Placeholder for "add line" so user has row to fill in with their code
+                        # newLn = ["WyeLib.noop", ["Const", "[0]"]]
+                        newLn = ["Code", "#< your code goes here>"]
+                        ix += 1     # put after the current line
+                        if ix < len(parentList):
+                            parentList.insert(ix, newLn)
+                        else:
+                            parentList.append(newLn)
+
+                        # create new dialog row for this code line
+
+                        # find index to row to insert before
+                        ix = -1
+                        # print("***** input list. Look for", editLnFrm.params.label, ", ", editLnFrm, " in dialog", parentFrm.params.title[0])
+                        for ii in range(len(parentFrm.params.inputs[0])):
+                            # print(" inp", ii, " ", parentFrm.params.inputs[0][ii][0].verb.__name__, " ", parentFrm.params.inputs[0][ii][0].params.label[0], " ", parentFrm.params.inputs[0][ii])
+                            if parentFrm.params.inputs[0][ii][0] == editLnFrm:
+                                # print("   match at", ii)
+                                ix = ii
+                                break
+                        # Debug: if the unthinkable happens, give us a hint
+                        if ix < 0:
+                            print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
+                        ix += 2     # put after the current code display input
+                                    # Note: there is an OK/Cancel after the last code input, so insert works even
+                                    # at the end of the current code listing
+
+                        # build dialog rows
+                        rowLst = []  # put dialog row(s) here
+                        WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(newLn, level, editVerbFrm, parentFrm, rowLst)
+
+                        # insert new dialog rows into dialog
+                        # display new dialog rows (don't sweat the position, the new inputs will be correctly
+                        # placed by dialog redisplay, below)
+                        pos = [0, 0, 0]
+                        for rowFrmLst in rowLst:
+                            parentFrm.params.inputs[0].insert(ix, rowFrmLst)
+                            ix += 1
+                            rowFrmLst[0].verb.display(rowFrmLst[0], parentFrm, pos)
+
+                        # update position of all fields
+                        parentFrm.verb.redisplay(parentFrm)
+
 
                     # move line down
                     case 5:
                         pass
-
-            # add/copy/del line
-            class EditModline:
-                mode = Wye.mode.SINGLE_CYCLE
-                dataType = Wye.dType.STRING
-                paramDescr = ()
-                varDescr = (("tuple", Wye.dType.OBJECT, None),
-                            ("dlgStat", Wye.dType.INTEGER, -1),
-                            )
-
-                def start(stack):
-                    return Wye.codeFrame(WyeUI.EditVerb.EditCodeLineCallback.EditModline, stack)
-
-                def run(frame):
-                    data = frame.eventData
-                    op = data[1][0]
-                    btnFrm = data[1][1]         # addUpBtn
-                    parentFrm = data[1][2]
-                    editVerbFrm = data[1][3]
-                    level = data[1][4]
-                    editLnFrm = data[1][5]
-                    codeFrm = data[1][6]
-
-                    #print("EditModLine btnFrm", btnFrm.params.label[0])
-                    #print("            parentFrm", parentFrm.params.title[0])
-                    #print("            editVerbFrm verb", editVerbFrm.params.verb[0].__name__)
-                    #print("            level", level)
-                    #print("            ediLnFrm", editLnFrm.params.label[0])
-                    #print("            codeFrm", codeFrm.params.label[0])
-
-                    # Placeholder for "add line" so user has row to fill in with their code
-                    #newLn = ["WyeLib.noop", ["Const", "[0]"]]
-                    newLn = ["Code", ["#< your code goes here>#"]]
-
-                    #indent = "".join(["    " for l in range(level)])  # indent by recursion depth
-                    #vStr = str(newLn[0])
-
-                    #print("EditModline run: data", data, " op", op)
-
-                    match (op):
-                        case WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback.ADD_UP:
-                            #print("EditModline: Add up")
-                            # get location of this frame in dialog input list
-
-                            # insert new (noop) code before this one in verb's codeDescr
-                            #print("EditModline codeFrm", codeFrm.verb.__name__)
-                            tuple = codeFrm.params.optData[0][3]
-                            parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
-                            if parentList:
-                                ix = parentList.index(tuple)
-                                #print("found tuple", tuple, " at", ix, " in", parentList)
-                            else:
-                                print("EditModLine: failed to find tuple '" + str(tuple) + "' in parent list:\n", editVerbFrm.vars.newCodeDescr[0])
-
-                            # Insert new line into code desr
-                            # todo would simplify life to have an AST holding var, call info and
-                            #  linking relevant parts to relevant controls/data
-                            parentList.insert(ix, newLn)
-
-                            # create new dialog row for this code line
-
-                            # find index to row to insert before
-                            ix = -1
-                            #print("***** input list. Look for", editLnFrm.params.label, ", ", editLnFrm, " in dialog", parentFrm.params.title[0])
-                            for ii in range(len(parentFrm.params.inputs[0])):
-                                #print(" inp", ii, " ", parentFrm.params.inputs[0][ii][0].verb.__name__, " ", parentFrm.params.inputs[0][ii][0].params.label[0], " ", parentFrm.params.inputs[0][ii])
-                                if parentFrm.params.inputs[0][ii][0] == editLnFrm:
-                                    #print("   match at", ii)
-                                    ix = ii
-                                    break
-                            # Debug: if the unthinkable happens, give us a hint
-                            if ix < 0:
-                                print("EditModLine ERROR: input", editLnFrm.verb.__name__, " not in input list")
-
-                            # build dialog rows
-                            rowLst = []     # put dialog row(s) here
-                            WyeCore.libs.WyeUI.EditVerb.bldEditCodeLine(newLn, level, editVerbFrm, parentFrm, rowLst)
-
-                            # insert new dialog rows into dialog
-                            # display new dialog rows (don't sweat the position, they will be correctly
-                            # placed by dialog redisplay, below)
-                            pos = [0,0,0]
-                            for rowFrmLst in rowLst:
-                                parentFrm.params.inputs[0].insert(ix, rowFrmLst)
-                                ix += 1
-                                rowFrmLst[0].verb.display(rowFrmLst[0], parentFrm, pos)
-
-                            # update position of all fields
-                            parentFrm.verb.redisplay(parentFrm)
-
-                        case WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback.COPY:
-                            print("EditModline: Copy")
-                            pass
-
-                        case WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback.DELETE:
-                            print("EditModline: Delete")
-                            pass
-
-                        case WyeCore.libs.WyeUI.EditVerb.EditCodeLineCallback.ADD_DOWN:
-                            print("EditModline: Add down")
-                            ix = parentFrm.params.inputs[0].index(btnFrm)
-                            parentFrm.params.inputs[0].insert(ix+1, newLn)
-
-                    return
-
-
 
 
         class EditCodeCallback:
@@ -4188,6 +4199,7 @@ class WyeUI(Wye.staticObj):
 
                         frame.status = dlgFrm.status
 
+        # todo - NOT CURRENTLY USED.  Do we need it?
         class EditSpecialCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING

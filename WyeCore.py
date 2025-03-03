@@ -15,6 +15,7 @@ import sys, os
 import math
 import pygame.midi
 import time
+import traceback
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -462,6 +463,7 @@ class WyeCore(Wye.staticObj):
                                 except Exception as e:
                                     print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                     WyeCore.World.stopActiveObject(frame)
+                                    traceback.print_exception(e)
                             # if frame.status != Wye.status.CONTINUE:
                             #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
                         # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.Utils.statusToString(frame.status),
@@ -481,6 +483,7 @@ class WyeCore(Wye.staticObj):
                                     except Exception as e:
                                         print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                         WyeCore.World.stopActiveObject(frame)
+                                        traceback.print_exception(e)
 
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
@@ -720,7 +723,12 @@ class WyeCore(Wye.staticObj):
                                 Wye.debug(frame, "RepeatEvent run:"+ frame.verb.__name__+ " evt data "+ str(frame.eventData))
                             else:
                                 #print("run", frame.verb.__name__)
-                                frame.verb.run(frame)
+                                try:
+                                    frame.verb.run(frame)
+                                except Exception as e:
+                                    print("WorldRunrepeatEventExecObj: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
+                                    WyeCore.World.stopActiveObject(frame)
+                                    traceback.print_exception(e)
                         # bottom of stack done, run next up on stack if any
                         elif len(evt[0]) > 1:
                             dbg = evt[0][-1]
@@ -732,7 +740,13 @@ class WyeCore(Wye.staticObj):
                             else:
                                 #print("run", frame.verb.__name__)
                                 #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
-                                frame.verb.run(frame)
+                                try:
+                                    frame.verb.run(frame)
+                                except Exception as e:
+                                    print("WorldRunrepeatEventExecObj: ERROR verb ", frame.verb.__name__,
+                                          " with error:\n", str(e))
+                                    WyeCore.World.stopActiveObject(frame)
+                                    traceback.print_exception(e)
                             # On parent error, bail out - TODO - consider letting its parent handle error
                             if frame.status == Wye.status.FAIL and len(evt[0]) > 1:
                                 #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
@@ -1025,6 +1039,17 @@ class WyeCore(Wye.staticObj):
                 else:
                     newElem = oldElem
                     newLst.append(newElem)
+
+        # count nested lists in list
+        def countNestedLists(tupleLst):
+            count = 0
+            if isinstance(tupleLst, list):
+                for elem in tupleLst:
+                    if isinstance(elem, list):
+                        count += 1
+                        count += WyeCore.Utils.countNestedLists(elem)
+            return count
+
 
         # Take a Wye code description tuple and return compilable Python code
         # Resulting code pushes all the params to the frame, then runs the function
