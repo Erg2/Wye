@@ -1470,12 +1470,14 @@ class WyeUI(Wye.staticObj):
                             frm.vars.currVal[0] = False
                             frm.vars.gWidget[0].setColor(Wye.color.FALSE_COLOR)
                     frame.vars.currVal[0] = True
+                    frame.params.value[0] = True
                     frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR)
                     ix = frame.vars.radioGroupList[0].index(frame)
                     for frm in frame.vars.radioGroupList[0]:
                         frm.params.selectedRadio[0] = ix
             else:
                 frame.vars.currVal[0] = isOn
+                frame.params.value[0] = isOn
                 frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
 
 
@@ -3140,6 +3142,7 @@ class WyeUI(Wye.staticObj):
                     ("libRadio", Wye.dType.OBJECT, None),     # existing lib name input
                     ("existingLibFrm", Wye.dType.OBJECT, None),     # existing lib name input
                     ("libNameFrm", Wye.dType.OBJECT, None),         # new lib name input, if user wants to create one
+                    ("listCodeFrm", Wye.dType.OBJECT, None),         # new lib name input, if user wants to create one
                     ("settingsFrms", Wye.dType.OBJECT_LIST, None),  # new verb settings
                     ("newVerbSettings", Wye.dType.OBJECT, None),    # verb used as a source
                     ("newParamDescr", Wye.dType.OBJECT_LIST, None), # Build new verb params here
@@ -3537,6 +3540,16 @@ class WyeUI(Wye.staticObj):
                     tstBtnFrm.params.optData = [(tstBtnFrm, dlgFrm, frame)]  # button row, dialog frame
                     WyeCore.libs.WyeUI.InputButton.run(tstBtnFrm)
 
+                    # if want to see code
+                    lstCodeFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([lstCodeFrm])
+                    lstCodeFrm.params.frame = [None]
+                    lstCodeFrm.params.parent = [None]
+                    lstCodeFrm.params.value = [False]
+                    lstCodeFrm.params.label = ["   Display Code"]
+                    lstCodeFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    lstCodeFrm.verb.run(lstCodeFrm)
+                    frame.vars.listCodeFrm[0] = lstCodeFrm
 
                     # mark this frame actively being edited
                     WyeUI.EditVerb.activeVerbs[verb] = dlgFrm
@@ -3581,7 +3594,7 @@ class WyeUI(Wye.staticObj):
                         if frame.vars.libRadio[0].params.selectedRadio[0] == 0:
                             libList = [lib for lib in WyeCore.World.libList]
                             lib = libList[frame.vars.existingLibFrm[0].params.selectionIx[0]]
-                            print("Put new verb in existing lib", lib.__name__)
+                            #print("Put new verb in existing lib", lib.__name__)
                         # else new library
                         else:
                             libName = frame.vars.libNameFrm[0].params.value[0]
@@ -3592,7 +3605,7 @@ class WyeUI(Wye.staticObj):
                                 libName = "TestLibrary"
 
                             lib = WyeCore.Utils.createLib(libName)
-                            print("put new verb in new library", lib.__name__)
+                            #print("put new verb in new library", lib.__name__)
 
                         # get verb name
                         name = frame.vars.nameFrm[0].params.value[0]
@@ -4741,14 +4754,40 @@ class WyeUI(Wye.staticObj):
                 # print("vars\n"+str(frame.vars.newVarDescr))
                 # print("code\n"+str(frame.vars.newCodeDescr))
 
+                # if existing library
+                print("selectedRadio", editFrm.vars.libRadio[0].params.selectedRadio[0])
+                if editFrm.vars.libRadio[0].params.selectedRadio[0] == 0:
+                    libList = [lib for lib in WyeCore.World.libList]
+                    lib = libList[editFrm.vars.existingLibFrm[0].params.selectionIx[0]]
+                    print("Put new verb in existing lib", lib.__name__)
+                # else new library
+                else:
+                    libName = editFrm.vars.libNameFrm[0].params.value[0]
+                    if libName:
+                        libName = libName.strip()
+                    # if user didn't supply a name, default
+                    if not libName:
+                        libName = "TestLibrary"
+
+                    lib = WyeCore.Utils.createLib(libName)
+                    print("put new verb in new library", lib.__name__)
+
+                # get verb name
+                name = editFrm.vars.nameFrm[0].params.value[0]
+                if name:
+                    name = name.strip()
+                if not name:
+                    name = "TestVerb"
+
                 lib = WyeCore.Utils.createLib("MyTestLibrary")
 
-                WyeCore.Utils.createVerb(lib, "MyTestVerb",
+                listFlag = editFrm.vars.listCodeFrm[0].params.value[0]
+                WyeCore.Utils.createVerb(lib, name,
                                          editFrm.vars.newVerbSettings[0],
                                          editFrm.vars.newParamDescr[0],
                                          editFrm.vars.newVarDescr[0],
                                          editFrm.vars.newCodeDescr[0],
-                                         True)
+                                         True, listFlag)
 
     # show active objects (currently running object stacks)
     # so user can debug them

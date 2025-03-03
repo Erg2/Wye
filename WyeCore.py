@@ -1519,7 +1519,7 @@ class WyeCore(Wye.staticObj):
         # create a new verb
         # If test, just compile the verb and its runtime code
         # Otherwise attach it to the given library and, if autoStart, start it
-        def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False):
+        def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False):
 
             # build verb
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
@@ -1576,12 +1576,13 @@ class WyeCore(Wye.staticObj):
             vrbStr += "cdStr, parStr = "+name + ".build()\n"
 
             # DEBUG - print out verb's runtime code with line numbers
-            #vrbStr += "print('cdStr')\n"
-            #vrbStr += "lnIx = 1\n"
-            #vrbStr += "for ln in cdStr.split('\\n'):\n"
-            #vrbStr += "    print('%2d ' % lnIx, ln)\n"
-            #vrbStr += "    lnIx += 1\n"
-            #vrbStr += "print('')\n"
+            if listCode:
+                vrbStr += "print('cdStr')\n"
+                vrbStr += "lnIx = 1\n"
+                vrbStr += "for ln in cdStr.split('\\n'):\n"
+                vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                vrbStr += "    lnIx += 1\n"
+                vrbStr += "print('')\n"
 
             # when the verb string is executed, the verb's build will be run.
             # The build will return the runtime string for the verb.
@@ -1647,12 +1648,13 @@ except Exception as e:
                 vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
             # DEBUG print verb code with line numbers
-            #print("createVerb: verb text:")
-            #lnIx = 1
-            #for ln in vrbStr.split('\n'):
-            #    print("%2d " % lnIx, ln)
-            #    lnIx += 1
-            #print("")
+            if listCode:
+                print("createVerb: verb text:")
+                lnIx = 1
+                for ln in vrbStr.split('\n'):
+                    print("%2d " % lnIx, ln)
+                    lnIx += 1
+                print("")
 
             # compile verb
             try:
@@ -1672,9 +1674,9 @@ except Exception as e:
                 try:
                     exec(code, libDict)
                     if doTest:
-                        print("executed successfully")
+                        print(vrbLib.__name__ + name, " executed successfully")
                 except Exception as e:
-                    print("exec verb failed\n", str(e))
+                    print("exec verb ", vrbLib.__name__ + "." + name, " failed\n", str(e))
                     print("verb text:")
                     lnIx = 1
                     for ln in vrbStr.split('\n'):
@@ -1684,7 +1686,7 @@ except Exception as e:
                     return
 
             except Exception as e:
-                print("compile verb failed\n", str(e))
+                print("compile verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
                 print("verb text:")
                 lnIx = 1
                 for ln in vrbStr.split('\n'):
@@ -1694,5 +1696,5 @@ except Exception as e:
                 return
 
             if doTest:
-                print(name, "compiled successfully")
+                print(name, vrbLib.__name__ + "." + name, " compiled successfully")
 
