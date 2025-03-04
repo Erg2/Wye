@@ -316,7 +316,6 @@ class WyeCore(Wye.staticObj):
                 text.setText("Welcome to\nWye " + Wye.version)
                 text.setTextColor(1, 1, 1, 1)
                 text.setAlign(TextNode.ACenter)
-                # text.setFrameColor(0, 0, 1, 1)
                 # text.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
 
                 text.setCardColor(0, 0, 0, 1)

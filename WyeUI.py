@@ -340,12 +340,14 @@ class WyeUI(Wye.staticObj):
     class _3dText:
         global render
 
-        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1), parent=None, tag=""):
+        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,0), parent=None, tag=""):
             if parent is None:
                 self.parent = render
             else:
                 self.parent = parent
             self.tag = tag          # if caller supplied, else will auto-gen unique tag
+            self.color = color
+            self.bg = bg
             self.marginL = .1
             self.marginR = .2
             self.marginB = .1
@@ -357,11 +359,11 @@ class WyeUI(Wye.staticObj):
             self.gFrame = None
             #
             self._genTextObj(text, color)
-            #self._genCardObj()
+            if self.bg[3] > 0:
+                self._genCardObj(bg)
             self._gen3dTextObj(pos, scale, bg)
 
             # txtNode.setAlign(TextNode.ACenter)
-            # txtNode.setFrameColor(0, 0, 1, 1)
             # txtNode.setFrameMargin(0.2, 0.2, 0.1, 0.1)
 
         ## setters
@@ -370,12 +372,13 @@ class WyeUI(Wye.staticObj):
             self.text.setAlign(ctr)
 
         def setColor(self, color):
+            self.color = color
             self.text.setTextColor(color)
             self._regen3d()
 
-        # update the frame color
-        def setFrameColor(self, color):
-            self._nodePath.setColor(color)
+        def setBackgroundColor(self, bg):
+            self.bg = bg
+            self._regen3d()
 
         # update the margin spacing
         def setFrameMargin(self, marginL, marginR, marginB, marginT):
@@ -453,12 +456,14 @@ class WyeUI(Wye.staticObj):
 
         # rebuild card and path for updated text object
         def _regen3d(self):
-            bg = self._nodePath.getColor()
+            bg = self.bg
+            color = self._nodePath.getColor()
             pos = self._nodePath.getPos()
             scale = self._nodePath.getScale()
-            #self._genCardObj()                     # generate new card obj for updated text object
+            if self.bg[3] > 0:
+                self._genCardObj(bg)                     # generate new card obj for updated text object
             self._nodePath.detachNode()            # detach 3d node path from old card
-            self._gen3dTextObj(pos, scale, bg)     # make new 3d node path to new card
+            self._gen3dTextObj(pos, scale, color)     # make new 3d node path to new card
 
         # internal rtn to gen text object with unique wyeTag name
         def _genTextObj(self, text, color=(1,1,1,1)):
@@ -471,28 +476,31 @@ class WyeUI(Wye.staticObj):
             self.text.setTextColor(color)
 
         ## internal rtn to gen 3d Card clickable background object
-        #def _genCardObj(self):
-        #    #print("initial txtNode frame ", self.text.getFrameActual())
-        #    self.card = CardMaker("Txt Card")
-        #    self.gFrame = self.text.getFrameActual()
-        #    if self.gFrame[1] == 0:      # if empty frame
-        #        self.gFrame[1] = 1
-        #        self.gFrame[3] = 1
-        #    #print("self.gFrame", self.gFrame)
-        #    self.gFrame[0] -= self.marginL
-        #    self.gFrame[1] += self.marginR
-        #    self.gFrame[2] -= self.marginB
-        #    self.gFrame[3] += self.marginT
-        #    #print("initial adjusted self.gFrame", self.gFrame)
-        #    self.card.setFrame(self.gFrame)
+        # only used when background color set
+        def _genCardObj(self, bg=(0,0,0,0)):
+            #print("initial txtNode frame ", self.text.getFrameActual())
+            self.card = CardMaker("Txt Card")
+            self.card.set_color(bg[0], bg[1], bg[2], bg[3])    # DEBUG color
+            self.gFrame = self.text.getFrameActual()
+            if self.gFrame[1] == 0:      # if empty frame
+                self.gFrame[1] = 1
+                self.gFrame[3] = 1
+            #print("self.gFrame", self.gFrame)
+            self.gFrame[0] -= self.marginL
+            self.gFrame[1] += self.marginR
+            self.gFrame[2] -= self.marginB
+            self.gFrame[3] += self.marginT
+            #print("initial adjusted self.gFrame", self.gFrame)
+            self.card.setFrame(self.gFrame)
 
         # internal rtn to generate 3d (path) object to position, etc. the text
-        def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,1)):
+        def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), color=(0,0,0,1)):
             self._nodePath = NodePath(self.text.generate())
+            if self.bg[3] > 0:
             # gen background card
-            #self._nodePath = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
-            #self._nodePath.attachNewNode(self.text)
-            #self._nodePath.setEffect(DecalEffect.make())        # glue text onto card
+                self._nodePath = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
+                self._nodePath.attachNewNode(self.text)
+                self._nodePath.setEffect(DecalEffect.make())        # glue text onto card
             # finished gen card
             self._nodePath.reparentTo(self.parent)
 
@@ -502,10 +510,11 @@ class WyeUI(Wye.staticObj):
             self._nodePath.setPos(pos[0], pos[1], pos[2])
             self._nodePath.setScale(scale)
 
-     #       self._nodePath.setBillboardPointWorld(0.)           # always face the camera
-     #       self._nodePath.setBillboardAxis()
+            #took billboard off 'cause it broke mouse intersection critical to UI.  Done elsewhere manually now
+            #self._nodePath.setBillboardPointWorld(0.)           # always face the camera
+            #self._nodePath.setBillboardAxis()
             self._nodePath.setLightOff()                        # unaffected by world lighting
-            self._nodePath.setColor(bg)
+            self._nodePath.setColor(color)
 
             if not self.gFrame:
                 self.gFrame = self.text.getFrameActual()
@@ -972,7 +981,9 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # 0 return own frame
                       ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # 1 user supplied label for field
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
-                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL)
+                      ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
+                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
+                      ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1032,6 +1043,8 @@ class WyeUI(Wye.staticObj):
         def setColor(frame, color):
             frame.vars.gWidgetStack[0][0].setColor(color)
 
+        def setBackgroundColor(frame, color):
+            pass
 
     # text input field
     class InputText:
