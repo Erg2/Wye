@@ -24,7 +24,7 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 (None, "frame.status = Wye.status.SUCCESS")
@@ -33,7 +33,7 @@ class TestLib:
                 ("Label", "ClickLoop"),
                 #(None, "print('doitbutton stream1: waitclick. status=', Wye.status.tostring(frame.status))"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                (None, "WyeCore.libs.WyeUI._displayLib(frame, (1,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
+                (None, "WyeUI._displayLib(frame, (1,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
                 ("Label", "Dummy"),         # display pushed a dialog frame.  label creates a case
                 (None, "frame.SP.pop()"),   # when return from stack, pop display's pushed frame
                 ("GoTo", "ClickLoop"),
@@ -166,7 +166,7 @@ class TestLib:
 
         codeDescr = (
 
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 ("Label", "ClickLoop"),

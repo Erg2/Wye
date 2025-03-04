@@ -64,7 +64,7 @@ class TestLib2:
                     f.params[1][0] = 3
 
                     # put up 3d text
-                    txt = WyeCore.libs.WyeUI._3dText("Text String 1", (1, 0, 0, 1), pos=(-.5, 10, 0), scale=(.2, .2, .2))
+                    txt = WyeUI._3dText("Text String 1", (1, 0, 0, 1), pos=(-.5, 10, 0), scale=(.2, .2, .2))
                     frame.vars[0][0] = txt
                     frame.PC += 1  # bump forward a step
 
@@ -154,7 +154,7 @@ class TestLib2:
             match frame.PC:
                 case 0:
                     # put up 3d text
-                    txt = WyeCore.libs.WyeUI._3dText("Stream 0", color=(0, 1, 0, 1), pos=(2, 10, 2), scale=(.2, .2, .2))
+                    txt = WyeUI._3dText("Stream 0", color=(0, 1, 0, 1), pos=(2, 10, 2), scale=(.2, .2, .2))
                     frame.vars[1][0] = txt
                     frame.PC += 1  # bump forward a step
 
@@ -177,7 +177,7 @@ class TestLib2:
             match frame.PC:
                 case 0:
                     # put up 3d text
-                    txt = WyeCore.libs.WyeUI._3dText("Stream 1", color=(0, 1, 0, 1), pos=(-2, 10, 2), scale=(.2, .2, .2))
+                    txt = WyeUI._3dText("Stream 1", color=(0, 1, 0, 1), pos=(-2, 10, 2), scale=(.2, .2, .2))
                     frame.vars[2][0] = txt
                     frame.PC += 1  # bump forward a step
 

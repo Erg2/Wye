@@ -26,7 +26,7 @@ class TestLib:
 #                case 0:
 #                    #print("libDialog, put up lib dropdown")
 #                    lib = WyeCore.libs.TestLib
-#                    dlgFrm = WyeCore.libs.WyeUI.DropDown.start([])
+#                    dlgFrm = WyeUI.DropDown.start([])
 #
 #                    dlgFrm.params.retVal = frame.params.retStat
 #                    dlgFrm.params.title = [lib.__name__]
@@ -43,16 +43,16 @@ class TestLib:
 #                            verb = getattr(lib, attr)
 #                            if inspect.isclass(verb):
 #                                # print("lib", lib.__name__, " verb", verb.__name__)
-#                                btnFrm = WyeCore.libs.WyeUI.InputButton.start(dlgFrm.SP)
+#                                btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
 #                                dlgFrm.params.inputs[0].append([btnFrm])
 #
 #                                txt = lib.__name__ + "." + verb.__name__
 #                                btnFrm.params.frame = [None]
 #                                btnFrm.params.parent = [None]
 #                                btnFrm.params.label = [txt]  # button label is verb name
-#                                btnFrm.params.callback = [WyeCore.libs.WyeUI.DropdownCallback]  # button callback
+#                                btnFrm.params.callback = [WyeUI.DropdownCallback]  # button callback
 #                                btnFrm.params.optData = [(attrIx, frame)]  # button data - offset to button
-#                                WyeCore.libs.WyeUI.InputButton.run(btnFrm)
+#                                WyeUI.InputButton.run(btnFrm)
 #
 #                                attrIx += 1
 #
@@ -83,7 +83,7 @@ class TestLib:
 #
 #        codeDescr = (
 #            (
-#                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._3dText(text='Display Library',color=(1,1,1,1), pos=(1.5,10,2), scale=(.2,.2,.2))"),
+#                (None, "frame.vars.libButton[0] = WyeUI._3dText(text='Display Library',color=(1,1,1,1), pos=(1.5,10,2), scale=(.2,.2,.2))"),
 #                (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
 #                #(None, "print('libButton frame0: loaded button & id vars')"),
 #                (None, "frame.status = Wye.status.SUCCESS")
@@ -428,7 +428,7 @@ class TestLib:
 #
 #        codeDescr = (
 #
-#                (None, "frame.vars.libButton[0] = WyeCore.libs.WyeUI._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
+#                (None, "frame.vars.libButton[0] = WyeUI._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
 #                (None, "frame.vars.doitId[0] = frame.vars.libButton[0].getTag()"),
 #                #(None, "print('libButton frame0: loaded button & id vars')"),
 #
@@ -477,9 +477,9 @@ class TestLib:
 #        codeDescr = (
 #
 #
-#            #(None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-1,5,-.5), scale=(.2,.2,.2))"),
+#            #(None, "frame.vars.dlgButton[0] = WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-1,5,-.5), scale=(.2,.2,.2))"),
 #            #(None, "print('TestLib ShowFishDialog')"),
-#            (None, "frame.vars.dlgButton[0] = WyeCore.libs.WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
+#            (None, "frame.vars.dlgButton[0] = WyeUI._3dText(text='Set Fish Angle',color=(1,1,1,1), pos=(-3,0,1), scale=(.2,.2,.2))"),
 #            (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 #
 #            ("Label", "PopDialog"),
@@ -1044,7 +1044,7 @@ for yy in range(floorX + 1):
         #    floorPos[yy].append(random()*5)  # + (1 - math.cos(angle)) * 50)
         floorPos[yy].append(random()*5)  # + (1 - math.cos(angle)) * 50)
         #print("floorPos", yy, ",", xx, "=", floorPos[yy][xx])
-floor = WyeCore.libs.WyeUI._surf(floorPos, (10,10,1), (-(int(floorX * 10/2)),-(int(floorY*10/2)),-18))
+floor = WyeUI._surf(floorPos, (10,10,1), (-(int(floorX * 10/2)),-(int(floorY*10/2)),-18))
 floor.path.setColor((.95,.84,.44,.1))
 
 tag = "wyeTag" + str(WyeCore.Utils.getId())
@@ -1075,7 +1075,7 @@ for xx in range(int(floorX * floorY * .08)):
     #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
     ht  = 2+3*random()
     color = (.25+random()*.75,.25+random()*.75,.25+random()*.75, .5)
-    weed = WyeCore.libs.WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
+    weed = WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
     frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
     weed._nodePath.setColor(color)
     frame.vars.weeds[0].append(weed)
@@ -1084,7 +1084,7 @@ for xx in range(int(floorX * floorY * .08)):
     #print("Set tag", tag, " on weed", weed._nodePath)
     
     # Create bubble, init color change amt and countdown to pop
-    bubble = WyeCore.libs.WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
+    bubble = WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
     bubble.path.setColor(color)
     bubble.path.setTag("wyeTag", tag)
     WyeCore.picker.makePickable(bubble.path)

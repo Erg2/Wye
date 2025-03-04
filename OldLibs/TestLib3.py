@@ -20,13 +20,13 @@ class TestLib3:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeCore.libs.WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 (None, "frame.status = Wye.status.SUCCESS")
             ),
             (
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitid")),
-                (None, "WyeCore.libs.WyeUI._displayLib(WyeCore.libs.TestLib3, (.1,10,.8))"),
+                (None, "WyeUI._displayLib(WyeCore.libs.TestLib3, (.1,10,.8))"),
                 ("Label", "Done")
             ),
             (
