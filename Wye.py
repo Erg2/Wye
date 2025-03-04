@@ -11,6 +11,7 @@
 class Wye:
 
     debugOn = 0             # > 0 if exec should check debug flags
+    breakAll = False        # true if stop everything but system objects
     soundOn = True
     trace = False           # true if tracing
     step = False            # true if single stepping

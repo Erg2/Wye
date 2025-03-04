@@ -659,6 +659,9 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,10,0)
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
 
+            elif self.m1Pressed and WyeCore.picker.objSelectEvent():
+                pass
+
             # if not dragging then moving
             # mouseY is fwd/back
             # mouseX is rotate left/right
@@ -2445,7 +2448,9 @@ class WyeUI(Wye.staticObj):
         activeFrames = {}
 
         def start(stack):
-            return Wye.codeFrame(WyeUI.MainMenuDialog, stack)
+            f = Wye.codeFrame(WyeUI.MainMenuDialog, stack)
+            f.systemObject = True         # not stopped by breakAll debugger flag
+            return f
 
         def run(frame):
             match(frame.PC):
@@ -4817,7 +4822,9 @@ class WyeUI(Wye.staticObj):
         activeFrames = {}
 
         def start(stack):
-            return Wye.codeFrame(WyeUI.DebugMainDialog, stack)
+            f = Wye.codeFrame(WyeUI.DebugMainDialog, stack)         # not stopped by breakAll debugger flag
+            f.systemObject = True
+            return f
 
 
         def run(frame):
@@ -4837,6 +4844,18 @@ class WyeUI(Wye.staticObj):
                     frame.vars.dlgFrm[0] = dlgFrm
 
                     # build dialog
+
+
+                    breakAllFrm = WyeCore.libs.WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([breakAllFrm])
+                    breakAllFrm.params.frame = [None]
+                    breakAllFrm.params.parent = [None]
+                    breakAllFrm.params.value = [False]
+                    breakAllFrm.params.label = ["  Pause World"]
+                    breakAllFrm.params.callback = [WyeCore.libs.WyeUI.DebugMainDialog.BreakAllCallback]  # button callback
+                    breakAllFrm.params.optData = ([breakAllFrm],)
+                    breakAllFrm.verb.run(breakAllFrm)
+
 
                     # running objects
                     lblFrm = WyeCore.libs.WyeUI.InputLabel.start(dlgFrm.SP)
@@ -4894,7 +4913,7 @@ class WyeUI(Wye.staticObj):
                             indent + "  stack " + str(attrIx[0]) + " depth " + str(offset) + ":" + objFrm.verb.__name__]
                     else:
                         btnFrm.params.label = [indent + "                depth " + str(offset) + ":" + objFrm.verb.__name__]
-                    btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugFrameCallback]  # button callback
+                    btnFrm.params.callback = [WyeCore.libs.WyeUI.DebugMainDialog.DebugFrameCallback]  # button callback
                     btnFrm.params.optData = [(rowIx[0], btnFrm, dlgFrm, objFrm, frame)]  # button row, row frame, dialog frame, obj frame
                     WyeCore.libs.WyeUI.InputButton.run(btnFrm)
                     offset += 1
@@ -4910,47 +4929,68 @@ class WyeUI(Wye.staticObj):
                         rowIx[0] += 1
 
 
-    # User selected an object, open its frame in the debugger
-    class DebugFrameCallback:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.STRING
-        paramDescr = ()
-        varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
-                    ("dlgStat", Wye.dType.INTEGER, -1),
+        # User selected an object, open its frame in the debugger
+        class DebugFrameCallback:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
+                        ("dlgStat", Wye.dType.INTEGER, -1),
 
-                    )
+                        )
 
-        def start(stack):
-            # print("DebugFrameCallback started")
-            return Wye.codeFrame(WyeUI.DebugFrameCallback, stack)
-
-
-        def run(frame):
-            match (frame.PC):
-                case 0:
-                    data = frame.eventData
-                    #print("DebugFrameCallback data='" + str(data) + "'")
-                    objRow = data[1][0]
-                    parentFrame = data[1][2]
-                    objFrm = data[1][3]
-                    mainDbgFrm = data[1][4]
-                    #print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
+            def start(stack):
+                # print("DebugFrameCallback started")
+                f = Wye.codeFrame(WyeUI.DebugMainDialog.DebugFrameCallback, stack)
+                f.systemObject = True  # not stopped by breakAll debugger flag
+                return f
 
 
-                    objOffset = (objRow + 2) * .3
-                    objPos = (2, -.5, -objOffset)
-                    dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
-                    dbgFrm.params.objFrm = [objFrm]
-                    dbgFrm.params.position = [[objPos[0], objPos[1], objPos[2]]]
-                    dbgFrm.params.parent = [parentFrame]
-                    frame.SP.append(dbgFrm)
-                    frame.PC += 1
-                case 1:
-                    dbgFrm = frame.SP.pop()
-                    # todo - if success then update object
-                    frame.status = Wye.status.SUCCESS
+            def run(frame):
+                #print("DebugFrameCallback")
+                match (frame.PC):
+                    case 0:
+                        data = frame.eventData
+                        #print("DebugFrameCallback data='" + str(data) + "'")
+                        objRow = data[1][0]
+                        parentFrame = data[1][2]
+                        objFrm = data[1][3]
+                        mainDbgFrm = data[1][4]
+                        #print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
 
+                        objOffset = (objRow + 2) * .3
+                        objPos = (2, -.5, -objOffset)
+                        dbgFrm = WyeCore.libs.WyeUI.ObjectDebugger.start(frame.SP)
+                        dbgFrm.params.objFrm = [objFrm]
+                        dbgFrm.params.position = [[objPos[0], objPos[1], objPos[2]]]
+                        dbgFrm.params.parent = [parentFrame]
+                        frame.SP.append(dbgFrm)
+                        frame.PC += 1
+                    case 1:
+                        dbgFrm = frame.SP.pop()
+                        # todo - if success then update object
+                        frame.status = Wye.status.SUCCESS
+
+        # Toggle world pause flag Wye.breakAll
+        class BreakAllCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
+                        ("dlgStat", Wye.dType.INTEGER, -1),
+
+                        )
+
+            def start(stack):
+                # print("BreakAllCallback started")
+                return Wye.codeFrame(WyeUI.DebugMainDialog.BreakAllCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                #print("BreakAllCallback data='" + str(data) + "'")
+                chkFrm = data[1][0]
+                Wye.breakAll = chkFrm.params.value[0]
 
     # Open up an object and debug it
     class ObjectDebugger:
@@ -4966,17 +5006,19 @@ class WyeUI(Wye.staticObj):
                     ("paramInpLst", Wye.dType.OBJECT_LIST, None),
                     ("varInpLst", Wye.dType.OBJECT_LIST, None),
                     ("breakLst", Wye.dType.OBJECT_LIST, None),
+                    ("isSysObj", Wye.dType.BOOL, False),
                     )
 
         # global list of frames being edited
         activeObjs = {}
 
         def start(stack):
-            # print("EditVarTypeCallback started")
+            # print("ObjectDebugger started")
             f = Wye.codeFrame(WyeUI.ObjectDebugger, stack)
             f.vars.paramInpLst[0] = []
             f.vars.varInpLst[0] = []
             f.vars.breakLst[0] = []
+            f.systemObject = True         # not stopped by breakAll debugger flag
             return f
 
         def run(frame):
@@ -4998,6 +5040,9 @@ class WyeUI(Wye.staticObj):
                         frame.status = Wye.status.FAIL
                         return
 
+                    # if it's a systemObject (immune from Wye.breakAll) make a note of it
+                    if hasattr(objFrm.SP[0], "systemObject"):
+                        frame.vars.isSysObj[0] = True
 
                     # print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
@@ -5019,10 +5064,10 @@ class WyeUI(Wye.staticObj):
                         name = objFrm.verb.__name__
                         objFrm.breakpt = True
                         Wye.debugOn += 1  # make sure debugging is happening
-                        print("ObjectDebugger: set breakpt on", objFrm.verb.__name__," debugOn to", Wye.debugOn)
-                        #print(">>>>>>2 Set breakpt true for ", objFrm.verb.__name__)
+                        #print("ObjectDebugger: set breakpt on", objFrm.verb.__name__," debugOn to", Wye.debugOn)
 
                     dlgFrm = WyeCore.libs.WyeUI.Dialog.start([])
+                    dlgFrm.systemObject = True      # keep this dialog running if Wye.breakAll set
 
                     dlgFrm.params.retVal = frame.vars.dlgStat
                     dlgFrm.params.title = ["Debug " + name]
@@ -5241,8 +5286,8 @@ class WyeUI(Wye.staticObj):
                     frame.PC += 1  # on return from dialog, run next case
 
                 case 1:
-                    frame.SP.pop()  # remove dialog frame from stack
-                    # print("ObjDebugger: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
+                    dlgFrm = frame.SP.pop()  # remove dialog frame from stack
+                    print("ObjDebugger:", dlgFrm.params.title[0], " returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
                     frame.status = Wye.status.SUCCESS  # done
                     WyeUI.ObjectDebugger.activeObjs.pop(objFrm)
 
@@ -5260,6 +5305,11 @@ class WyeUI(Wye.staticObj):
                         #print("ObjectDebugger remove breakpt on", objFrm.verb.__name__," reduce debugOn to", Wye.debugOn)
                         if hasattr(objFrm, "prevStatus"):
                             objFrm.status = objFrm.prevStatus
+
+                    # if we temp made obj into  Wye.breakAll so could run just it when all else stopped, turn that off
+                    if not frame.vars.isSysObj[0] and hasattr(objFrm.SP[0], "systemObject"):
+                        delattr(objFrm.SP[0], "systemObject")
+
 
         def refresh(frame):
             objFrm = frame.params.objFrm[0]
@@ -5291,7 +5341,9 @@ class WyeUI(Wye.staticObj):
 
             def start(stack):
                 # print("DebugParamCallback started")
-                return Wye.codeFrame(WyeUI.ObjectDebugger.DebugParamCallback, stack)
+                f = Wye.codeFrame(WyeUI.ObjectDebugger.DebugParamCallback, stack)
+                f.systemObject = True  # not stopped by breakAll debugger flag
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -5385,7 +5437,9 @@ class WyeUI(Wye.staticObj):
 
             def start(stack):
                 # print("DebugVarCallback started")
-                return Wye.codeFrame(WyeUI.ObjectDebugger.DebugVarCallback, stack)
+                f = Wye.codeFrame(WyeUI.ObjectDebugger.DebugVarCallback, stack)
+                f.systemObject = True  # not stopped by breakAll debugger flag
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -5482,7 +5536,9 @@ class WyeUI(Wye.staticObj):
 
             def start(stack):
                 # print("DebugVerbCallback started")
-                return Wye.codeFrame(WyeUI.ObjectDebugger.DebugVerbCallback, stack)
+                f = Wye.codeFrame(WyeUI.ObjectDebugger.DebugVerbCallback, stack)
+                f.systemObject = True  # not stopped by breakAll debugger flag
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -5516,7 +5572,9 @@ class WyeUI(Wye.staticObj):
 
             def start(stack):
                 # print("DebugCodeCallback started")
-                return Wye.codeFrame(WyeUI.ObjectDebugger.DebugCodeCallback, stack)
+                f = Wye.codeFrame(WyeUI.ObjectDebugger.DebugCodeCallback, stack)
+                f.systemObject = True  # not stopped by breakAll debugger flag
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -5542,6 +5600,7 @@ class WyeUI(Wye.staticObj):
         class DebugSpecialCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
+            systemObject = True  # not stopped by breakAll debugger flag
             paramDescr = ()
             varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
                         ("paramName", Wye.dType.STRING, "<name>"),
@@ -5589,6 +5648,8 @@ class WyeUI(Wye.staticObj):
 
                 WyeCore.libs.WyeUI.ObjectDebugger.refresh(dbgFrm)
 
+        # Step object that is at breakpoint
+        # note: two cycles so can update displayed vars after exec cycle
         class DebugStepCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
@@ -5597,9 +5658,12 @@ class WyeUI(Wye.staticObj):
 
             def start(stack):
                 # print("DebugStepCallback started")
-                return Wye.codeFrame(WyeUI.ObjectDebugger.DebugStepCallback, stack)
+                f = Wye.codeFrame(WyeUI.ObjectDebugger.DebugStepCallback, stack)
+                f.systemObject = True  # not stopped by breakAll debugger flag
+                return f
 
             def run(frame):
+                print("DebugStepCallback")
                 data = frame.eventData
 
                 objFrm = data[1][3]
@@ -5622,8 +5686,18 @@ class WyeUI(Wye.staticObj):
                         # print("DebugStepCallback increment breakCt to", objFrm.breakCt," on objFrm", objFrm.verb.__name__)
                         frame.PC += 1
 
+
+                        if Wye.breakAll:  # temporarily allow this to run in spite of general break
+                            #print("DebugStepCallback: turn base of stack obj", objFrm.SP[0].verb.__name__, " into sys obj so can step it")
+                            setattr(objFrm.SP[0], "systemObject", True)
+
                     case 1:
-                        # note - do after the objFrm has cycled once
+                        # note - allow the objFrm to cycled once
+                        # todo depends on this obj being later in exec order... questionable
+                        if Wye.breakAll:  # don't run any more
+                            if hasattr(objFrm.SP[0], "systemObject"):
+                                #print("DebugStepCallback: clear base of stack obj", objFrm.SP[0].verb.__name__, " from being sys obj")
+                                delattr(objFrm.SP[0], "systemObject")
                         WyeCore.libs.WyeUI.ObjectDebugger.refresh(dbgFrm)
                         frame.status = Wye.status.SUCCESS
 
@@ -5632,13 +5706,15 @@ class WyeUI(Wye.staticObj):
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
             paramDescr = ()
-            varDescr = ()
 
             def start(stack):
                 # print("RunCallback started")
-                return Wye.codeFrame(WyeUI.ObjectDebugger.RunCallback, stack)
+                f = Wye.codeFrame(WyeUI.ObjectDebugger.RunCallback, stack)
+                f.systemObject = True  # not stopped by breakAll debugger flag
+                return f
 
             def run(frame):
+                #print("RunCallback")
                 data = frame.eventData
                 rowFrm = data[1][0]
                 objFrm = data[1][1]
@@ -5653,7 +5729,18 @@ class WyeUI(Wye.staticObj):
                     # print("Breakpoint on", objFrm.verb.__name__, " is", debugOn)
 
                 if debugOn:
+                    if Wye.breakAll:  # don't run any more
+                        if not dbgFrm.vars.isSysObj[0]:
+                            if hasattr(objFrm.SP[0], "systemObject"):
+                                print("DebugStepCallback: turn base of stack obj", objFrm.SP[0].verb.__name__," back to normal object")
+                                delattr(objFrm.SP[0], "systemObject")
                     WyeUI.ObjectDebugger.refresh(dbgFrm)
+                # if world paused, enable running this object
+                else:
+                    if Wye.breakAll:  # temporarily allow this to run in spite of general break                            print("DebugStepCallback: turn base of stack obj", objFrm.SP[0].verb.__name__, " into sys obj so can step it")
+                        if not dbgFrm.vars.isSysObj[0]:
+                            print("DebugStepCallback: turn base of stack obj", objFrm.SP[0].verb.__name__," into sys obj so can step it")
+                            setattr(objFrm.SP[0], "systemObject", True)
 
 
 

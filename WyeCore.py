@@ -440,9 +440,21 @@ class WyeCore(Wye.staticObj):
                 for stack in WyeCore.World.objStacks:
                     sLen = len(stack)
                     if sLen > 0:  # if there's something on the stack
-                        ranNothing = False
+                        ranNothing = False  # found something to execute
+
                         # run the frame furthest down the stack
                         frame = stack[-1]
+
+                        # if world paused, only run critical code
+                        if Wye.breakAll:
+                            if not hasattr(stack[0], "systemObject"):
+                                #print("breakAll don't exec", stack[0].verb.__name__)
+                                #if stack[0].verb.__name__ == "Dialog":
+                                #    print("  ", stack[0].params.title[0])
+                                continue
+                            #else:
+                            #   print("breakAll exec sysObj stack", stack[0].verb.__name__, " run obj", frame.verb.__name__)
+
                         #if frame:
                             #print("worldRunner stack # ", stackNum, " verb", frame.verb.__name__) #,
 
@@ -684,12 +696,13 @@ class WyeCore(Wye.staticObj):
         # list of independent frames running until they succeed/fail
         class repeatEventExecObj:
             mode = Wye.mode.MULTI_CYCLE
-            dataType = Wye.dType.NONE
             paramDescr = ()
             varDescr = ()
 
             def start(stack):
-                return Wye.codeFrame(WyeCore.World.repeatEventExecObj, stack)
+                f = Wye.codeFrame(WyeCore.World.repeatEventExecObj, stack)
+                f.systemObject = True         # not stopped by breakAll debugger flag
+                return f
 
             # run event frames every display frame
             # it is up to the event frames to wait on whatever event they have in mind
@@ -713,45 +726,55 @@ class WyeCore(Wye.staticObj):
                     evt = WyeCore.World.repeatEventCallbackDict[evtID]
                     if len(evt[0]) > 0:
                         #print("repeatEventExecObj run: process evt", evt)
-                        frame = evt[0][-1]
-                        #print("repEventObj run: frame=", frame)
+                        evtFrame = evt[0][-1]
+                        # if world paused, only run critical code
+                        if Wye.breakAll:
+                            if not hasattr(evt[0][0], "systemObject"):
+                                #print("repEvt breakAll don't exec", evt[0][0].verb.__name__)
+                                #if evt[0][0].verb.__name__ == "Dialog":
+                                #    print("  ", evt[0][0].params.title[0])
+                                continue
+                            #else:
+                            #    print("repEvt breakAll exec sysObj stack", evt[0][0].verb.__name__, " run obj", evtFrame.verb.__name__)
+
+                        #print("repEventObj run: evtFrame=", evtFrame)
                         # run bottom of stack unless done
-                        if frame.status == Wye.status.CONTINUE:
-                            #print("repEventObj run bot of stack evt: ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
-                            frame.eventData = (evtID, evt[2])        # user data
+                        if evtFrame.status == Wye.status.CONTINUE:
+                            #print("repEventObj run bot of stack evt: ", evtIx, " verb ", evtFrame.verb.__name__, " PC ", evtFrame.PC)
+                            evtFrame.eventData = (evtID, evt[2])        # user data
                             if Wye.debugOn:
-                                Wye.debug(frame, "RepeatEvent run:"+ frame.verb.__name__+ " evt data "+ str(frame.eventData))
+                                Wye.debug(evtFrame, "RepeatEvent run:"+ evtFrame.verb.__name__+ " evt data "+ str(evtFrame.eventData))
                             else:
-                                #print("run", frame.verb.__name__)
+                                #print("run", evtFrame.verb.__name__)
                                 try:
-                                    frame.verb.run(frame)
+                                    evtFrame.verb.run(evtFrame)
                                 except Exception as e:
-                                    print("WorldRunrepeatEventExecObj: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
-                                    WyeCore.World.stopActiveObject(frame)
+                                    print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
+                                    WyeCore.World.stopActiveObject(evtFrame)
                                     traceback.print_exception(e)
                         # bottom of stack done, run next up on stack if any
                         elif len(evt[0]) > 1:
                             dbg = evt[0][-1]
                             #print("Bot of stack", dbg.verb.__name__, " status", Wye.status.tostring(dbg.status))
-                            frame = evt[0][-2]
-                            frame.eventData = (evtID, evt[2])        # user data
+                            evtFrame = evt[0][-2]
+                            evtFrame.eventData = (evtID, evt[2])        # user data
                             if Wye.debugOn:
-                                Wye.debug(frame, "RepeatEvent done, run parent:"+ frame.verb.__name__+ " evt data"+ str(frame.eventData))
+                                Wye.debug(evtFrame, "RepeatEvent done, run parent:"+ evtFrame.verb.__name__+ " evt data"+ str(evtFrame.eventData))
                             else:
-                                #print("run", frame.verb.__name__)
-                                #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", frame.verb.__name__, " PC ", frame.PC)
+                                #print("run", evtFrame.verb.__name__)
+                                #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", evtFrame.verb.__name__, " PC ", evtFrame.PC)
                                 try:
-                                    frame.verb.run(frame)
+                                    evtFrame.verb.run(evtFrame)
                                 except Exception as e:
-                                    print("WorldRunrepeatEventExecObj: ERROR verb ", frame.verb.__name__,
+                                    print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__,
                                           " with error:\n", str(e))
-                                    WyeCore.World.stopActiveObject(frame)
+                                    WyeCore.World.stopActiveObject(evtFrame)
                                     traceback.print_exception(e)
                             # On parent error, bail out - TODO - consider letting its parent handle error
-                            if frame.status == Wye.status.FAIL and len(evt[0]) > 1:
+                            if evtFrame.status == Wye.status.FAIL and len(evt[0]) > 1:
                                 #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
                                 delList.append(evt[3])  # save this entry's tag to delete when done
-                        # if only one frame on stack and it's done, remove event entry
+                        # if only one evtFrame on stack and it's done, remove event entry
                         if len(evt[0]) == 1 and evt[0][0].status != Wye.status.CONTINUE:
                             #print("repEventObj run: done with evt ", evtIx, ".  Remove from dict")
                             delList.append(evt[3])      # save this entry's tag to delete when done
@@ -788,7 +811,7 @@ class WyeCore(Wye.staticObj):
             # this holds the object that has been picked
             self.pickedObj = None
 
-            WyeCore.World.registerMouseCallback(self.objSelectEvent)
+            #WyeCore.World.registerMouseCallback(self.objSelectEvent)
             #self.accept('mouse1', self.objSelectEvent)
             #self.accept('control-mouse1', self.objSelectEvent)
             #self.accept('alt-mouse1', self.objSelectEvent)
@@ -851,6 +874,7 @@ class WyeCore(Wye.staticObj):
         # (Panda3d mouse click callback)
         # Check for object hit - check hit obj has obj tag - check for event for given obj tag
         def objSelectEvent(self):
+            status = False
             if self.pickerEnable:
                 self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
                 if self.pickedObj:
@@ -859,7 +883,6 @@ class WyeCore(Wye.staticObj):
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                         # if there's a user input focus manager, call it
-                        status = False
                         if WyeCore.World.objEditor:
                             status = WyeCore.World.objEditor.tagClicked(wyeID)
                             #if status:
@@ -892,6 +915,7 @@ class WyeCore(Wye.staticObj):
                                     del tagDict[wyeID] # remove tag from dict of active callbacks
 
                                     #print("objSelectEvent: click callback used tag", wyeID)
+                                    #status = True
 
                                 # if there's a callback for 'any' click event, call it
                                 if "any" in tagDict:
@@ -909,6 +933,7 @@ class WyeCore(Wye.staticObj):
             #else:
             #    print("Object picking disabled")
 
+            return status
 
     # General utilities for world building
     class Utils(Wye.staticObj):
