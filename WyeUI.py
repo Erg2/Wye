@@ -669,6 +669,7 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
 
             elif self.m1Pressed and WyeCore.picker.objSelectEvent():
+                # if picker used event then everything already done in picker, nothing more to do here
                 pass
 
             # if not dragging then moving
@@ -737,6 +738,7 @@ class WyeUI(Wye.staticObj):
                     base.camera.setPos(base.camera, up * (y - self.m3DownPos[1]) * self.speed + right * (x - self.m3DownPos[0]) * self.speed)
 
             # dragging dialog
+            # todo - decide if there are parent dialogs, should drag whole clump?
             else:
                 if self.m1Pressed:
                     # calc drag plane once per downclick
@@ -747,20 +749,35 @@ class WyeUI(Wye.staticObj):
 
                     # make plane at same orientation and pos as dialog
                     frm = WyeCore.libs.WyeUI.dragFrame
-                    while frm.params.parent[0]:
-                        frm = frm.params.parent[0]  # find top dialog to get wld HPR
                     objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
                     fwd = render.getRelativeVector(objPath, (0, -1, 0))
                     pos = objPath.getPos(render)    # sub dialogs pos rel to parent.  Get pos rel to world
                     self.objPlane = LPlanef(fwd, pos)
+                    self.dragStartPos = pos
 
+                # do dragging
                 if self.m1Down:
                     objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
 
-                    # calc mouse position on drag plane
 
                     # get mouse pos
                     mpos = base.mouseWatcherNode.getMouse()
+
+                    # on shift, mouse up/down moves plane far/near
+                    if self.shift:
+                        zoom = (mpos[1] - self.m1DownPos[1]) * 10
+                        mpos = LVecBase2f(mpos[0], self.m1DownPos[1])
+
+                        frm = WyeCore.libs.WyeUI.dragFrame
+                        while frm.params.parent[0]:
+                            frm = frm.params.parent[0]  # find top dialog to get wld HPR
+                        objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
+                        fwd = render.getRelativeVector(objPath, (0, 1, 0))
+                        mov = fwd * zoom
+                        pos = self.dragStartPos + mov
+                        self.objPlane = LPlanef(fwd, pos)
+
+                    # calc mouse position on drag plane
                     newPos = Point3(0,0,0)
                     nearPoint = Point3()
                     farPoint = Point3()
@@ -2059,7 +2076,10 @@ class WyeUI(Wye.staticObj):
             if tag == frame.vars.topTag[0]:
                 if not Wye.dragging:
                     Wye.dragging = True
-                    WyeCore.libs.WyeUI.dragFrame = frame
+                    frm = frame
+                    while frm.params.parent[0]:
+                        frm = frm.params.parent[0]  # find top dialog to get wld HPR
+                    WyeCore.libs.WyeUI.dragFrame = frm
                     #frame.vars.dragObj[0]._nodePath.wrtReparentTo(base.camera)
 
                     # todo - clean this up!
