@@ -34,7 +34,6 @@ class WyeUI(Wye.staticObj):
     TEXT_SCALE = (.2,.2,.2)
 
     dragFrame = None    # not currently dragging anything
-    dragOffset = (0,0,0)   # mouse position at drag downclick
 
     # utilities
 
@@ -749,29 +748,56 @@ class WyeUI(Wye.staticObj):
 
                     # make plane at same orientation and pos as dialog
                     frm = WyeCore.libs.WyeUI.dragFrame
-                    objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
+                    while frm.params.parent[0]:
+                        frm = frm.params.parent[0]  # find top dialog to get wld HPR
+
+                    self.topDragFrame = frm
+                    if self.alt:        # hold control to drag only selected dialog
+                        dragFrame = WyeCore.libs.WyeUI.dragFrame
+                    else:               # otherwise, drag whole dialog stack
+                        dragFrame = self.topDragFrame
+
+                    objPath = dragFrame.vars.dragObj[0]._nodePath
                     fwd = render.getRelativeVector(objPath, (0, -1, 0))
                     pos = objPath.getPos(render)    # sub dialogs pos rel to parent.  Get pos rel to world
                     self.objPlane = LPlanef(fwd, pos)
                     self.dragStartPos = pos
 
+                    #frame.vars.dragObj[0]._nodePath.wrtReparentTo(base.camera)
+
+                    mpos = base.mouseWatcherNode.getMouse()
+                    newPos = Point3(0,0,0)
+                    nearPoint = Point3()
+                    farPoint = Point3()
+                    base.camLens.extrude(mpos, nearPoint, farPoint)
+                    if self.objPlane.intersectsLine(newPos,
+                                                 render.getRelativePoint(base.camera, nearPoint),
+                                                 render.getRelativePoint(base.camera, farPoint)):
+                        objPosInPlane = self.objPlane.project(objPath.getPos(render))
+                        self.dragOffset = newPos - objPosInPlane
+                    else:
+                        pass # todo - this can't happen?
+
                 # do dragging
                 if self.m1Down:
-                    objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
+                    if self.alt:        # hold control to drag only selected dialog
+                        dragFrame = WyeCore.libs.WyeUI.dragFrame
+                    else:               # otherwise, drag whole dialog stack
+                        dragFrame = self.topDragFrame
 
-
+                    objPath = dragFrame.vars.dragObj[0]._nodePath
                     # get mouse pos
                     mpos = base.mouseWatcherNode.getMouse()
 
                     # on shift, mouse up/down moves plane far/near
-                    if self.shift:
+                    # don't allow moving just the top dialog or can push behind others
+                    if self.shift and not self.alt:
                         zoom = (mpos[1] - self.m1DownPos[1]) * 10
                         mpos = LVecBase2f(mpos[0], self.m1DownPos[1])
 
-                        frm = WyeCore.libs.WyeUI.dragFrame
+                        frm = dragFrame
                         while frm.params.parent[0]:
                             frm = frm.params.parent[0]  # find top dialog to get wld HPR
-                        objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
                         fwd = render.getRelativeVector(objPath, (0, 1, 0))
                         mov = fwd * zoom
                         pos = self.dragStartPos + mov
@@ -795,14 +821,14 @@ class WyeUI(Wye.staticObj):
                         # (panda3d does all the recalc based on parent pos) I'm sure there's a better way, but this works
                         point = NodePath("point")
                         point.reparentTo(render)
-                        dlgPos = newPos - WyeCore.libs.WyeUI.dragOffset
+                        dlgPos = newPos - self.dragOffset
                         point.setPos(dlgPos)
                         objPath.setPos(point, LVector3f(0,0,0))
                         point.removeNode()
 
                         # update dialog's stored position
-                        if hasattr(WyeCore.libs.WyeUI.dragFrame.params, "position"):
-                            WyeCore.libs.WyeUI.dragFrame.params.position[0] = objPath.getPos()
+                        if hasattr(dragFrame.params, "position"):
+                            dragFrame.params.position[0] = objPath.getPos()
 
                 else:
                     Wye.dragging = False
@@ -2076,32 +2102,7 @@ class WyeUI(Wye.staticObj):
             if tag == frame.vars.topTag[0]:
                 if not Wye.dragging:
                     Wye.dragging = True
-                    frm = frame
-                    while frm.params.parent[0]:
-                        frm = frm.params.parent[0]  # find top dialog to get wld HPR
-                    WyeCore.libs.WyeUI.dragFrame = frm
-                    #frame.vars.dragObj[0]._nodePath.wrtReparentTo(base.camera)
-
-                    # todo - clean this up!
-                    # make plane at same orientation and pos as dialog
-                    frm = WyeCore.libs.WyeUI.dragFrame
-                    while frm.params.parent[0]:
-                        frm = frm.params.parent[0]  # find top dialog to get wld HPR
-                    objPath = WyeCore.libs.WyeUI.dragFrame.vars.dragObj[0]._nodePath
-                    fwd = render.getRelativeVector(objPath, (0, -1, 0))
-                    pos = objPath.getPos(render)
-                    objPlane = LPlanef(fwd, pos)
-
-                    mpos = base.mouseWatcherNode.getMouse()
-                    newPos = Point3(0,0,0)
-                    nearPoint = Point3()
-                    farPoint = Point3()
-                    base.camLens.extrude(mpos, nearPoint, farPoint)
-                    if objPlane.intersectsLine(newPos,
-                                                 render.getRelativePoint(base.camera, nearPoint),
-                                                 render.getRelativePoint(base.camera, farPoint)):
-                        objPosInPlane = objPlane.project(objPath.getPos(render))
-                        WyeCore.libs.WyeUI.dragOffset = newPos - objPosInPlane
+                    WyeCore.libs.WyeUI.dragFrame = frame
 
                     retStat = True  # used up the tag
 
