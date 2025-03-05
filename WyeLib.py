@@ -21,7 +21,7 @@ class WyeLib:
         WyeCore.Utils.buildLib(WyeLib)
 
 
-    # set model pos
+    # Empty object that does nothing
     class noop:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
@@ -33,15 +33,15 @@ class WyeLib:
 
 
         def build():
-            #print("Build testObj2")
+            #print("Build noop")
             return WyeCore.Utils.buildCodeText("noop", WyeLib.noop.codeDescr)
 
         def start(stack):
-            #print("testObj2 object start")
+            #print("noop start")
             return Wye.codeFrame(WyeLib.noop, stack)
 
         def run(frame):
-            #print("Run testObj2")
+            #print("Run noop")
             WyeLib.WyeLib_rt.noop_run_rt(frame)
 
 

@@ -175,7 +175,8 @@ class EditLib:
 ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.70]),
 ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
 ("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
-("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+#("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+("color", Wye.dType.FLOAT_LIST, [1,1,1, 1]),
         )
         codeDescr = (
             # (None, ("print('TestObject123 case 0: start - set up object')")),
