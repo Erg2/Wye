@@ -87,11 +87,12 @@ class WyeUI(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputText(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
+    # Note: valueRef is a list with the value in it.  It can the name of a param or var
+    def doInputText(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
         frm = WyeUI.InputText.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
-        frm.params.value = valueList
+        frm.params.value = valueRef
         frm.params.callback = [callback]
         frm.params.optData = [optData]
         frm.params.label = [label]
@@ -102,11 +103,11 @@ class WyeUI(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputInteger(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
+    def doInputInteger(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
         frm = WyeUI.InputInteger.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
-        frm.params.value = valueList
+        frm.params.value = valurRef
         frm.params.callback = [callback]
         frm.params.optData = [optData]
         frm.params.label = [label]
@@ -118,11 +119,11 @@ class WyeUI(Wye.staticObj):
         return frm
 
 
-    def doInputFloat(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
+    def doInputFloat(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
         frm = WyeUI.InputFloat.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
-        frm.params.value = valueList
+        frm.params.value = valurRef
         frm.params.callback = [callback]
         frm.params.optData = [optData]
         frm.params.label = [label]
@@ -147,13 +148,13 @@ class WyeUI(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputCheckbox(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputCheckbox(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, radioGroup=None,
                       selectedRadio=0):
         frm = WyeUI.InputCheckbox.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
-        frm.params.value = valueList
+        frm.params.value = valurRef
         frm.params.callback = [callback]
         frm.params.optData = [optData]
         frm.params.label = [label]
@@ -166,12 +167,13 @@ class WyeUI(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputDropdown(dlgFrm, label, dropdownListList, selectionIxList, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    # note: dropdownListRef is a list of strings
+    def doInputDropdown(dlgFrm, label, dropdownListRef, selectionIxList, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, showText=True):
         frm = WyeUI.InputDropdown.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
-        frm.params.list = dropdownListList
+        frm.params.list = dropdownListRef
         frm.params.selectionIx = selectionIxList
         frm.params.callback = [callback]
         frm.params.optData = [optData]
@@ -3474,6 +3476,7 @@ class WyeUI(Wye.staticObj):
                     ("newParamDescr", Wye.dType.OBJECT_LIST, None), # Build new verb params here
                     ("newVarDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb vars here
                     ("newCodeDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb code here
+                    ("fileName", Wye.dType.STRING, "TestLib.py"),             # file name to save to
                     )
 
         # global list of frames being edited
@@ -3584,12 +3587,7 @@ class WyeUI(Wye.staticObj):
 
                     # object name
 
-                    verbNameFrm = WyeUI.InputText.start(dlgFrm.SP)
-                    verbNameFrm.params.frame = [None]        # placeholder
-                    verbNameFrm.params.label = ["  Name:"]
-                    verbNameFrm.params.value = [verb.__name__]
-                    WyeUI.InputText.run(verbNameFrm)
-                    dlgFrm.params.inputs[0].append([verbNameFrm])
+                    verbNameFrm = WyeUI.doInputText(dlgFrm, "  Name:", [verb.__name__])
                     frame.vars.nameFrm[0] = verbNameFrm
 
                     # Library
@@ -3603,122 +3601,43 @@ class WyeUI(Wye.staticObj):
 
                     #   new lib
                     WyeUI.doInputCheckbox(dlgFrm, "  New Library      :", [False], radioGroup="libRadGrp")
-                    #newLibRad = WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    #dlgFrm.params.inputs[0].append([newLibRad])
-                    #newLibRad.params.frame = [None]
-                    #newLibRad.params.parent = [None]
-                    #newLibRad.params.value = [False]
-                    #newLibRad.params.label = ["  New Library      :"]
-                    #newLibRad.params.radioGroup = ["libRadGrp"]
-                    #newLibRad.verb.run(newLibRad)
 
                     libNameFrm = WyeUI.doInputText(dlgFrm, "Name:", ["TestLibrary"], layout=Wye.layout.ADD_RIGHT)
-                    #libNameFrm = WyeUI.InputText.start(dlgFrm.SP)
-                    #libNameFrm.params.frame = [None]        # placeholder
-                    #libNameFrm.params.label = ["Name:"]
-                    #libNameFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    #libNameFrm.params.value = ["TestLibrary"]
-                    #WyeUI.InputText.run(libNameFrm)
-                    #dlgFrm.params.inputs[0].append([libNameFrm])
                     frame.vars.libNameFrm[0] = libNameFrm
 
 
                     # settings
                     WyeUI.doInputLabel(dlgFrm, "Settings:", color=Wye.color.SUBHD_COLOR)
-                    #lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                    #lblFrm.params.frame = [None]
-                    #lblFrm.params.parent = [None]
-                    #lblFrm.params.label = ["Settings:"]
-                    #lblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    #WyeUI.InputLabel.run(lblFrm)
-                    #dlgFrm.params.inputs[0].append([lblFrm])
 
                     modeNames = [Wye.mode.stringLookup[val] for val in Wye.mode.valList]
                     modeFrm = WyeUI.doInputDropdown(dlgFrm, "  Mode", [modeNames], [Wye.mode.valList.index(frame.vars.newVerbSettings[0]['mode'])])
-                    #modeFrm = WyeUI.InputDropdown.start(dlgFrm.SP)
-                    #modeFrm.params.frame = [None]
-                    #modeFrm.params.parent = [None]
-                    #modeFrm.params.label = ["  Mode"]
-                    #modeFrm.params.list = [modeNames]
-                    #modeFrm.params.selectionIx = [Wye.mode.valList.index(frame.vars.newVerbSettings[0]['mode'])]
-                    ##modeFrm.params.callback = [WyeUI.EditVerb.EditVerbSettingsCallback]
-                    ##modeFrm.params.optData = ((modeFrm, dlgFrm, frame, Wye.mode),)
-                    #modeFrm.verb.run(modeFrm)
-                    #dlgFrm.params.inputs[0].append([modeFrm])
                     frame.vars.settingsFrms[0]['mode'] = modeFrm
 
                     autoFrm = WyeUI.doInputCheckbox(dlgFrm, "  Auto Start", [frame.vars.newVerbSettings[0]['autoStart']])
-                    #autoFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    #autoFrm.params.frame = [None]
-                    #autoFrm.params.parent = [None]
-                    #autoFrm.params.value = [frame.vars.newVerbSettings[0]['autoStart']]
-                    #autoFrm.params.label = ["  Auto Start"]
-                    ##autoFrm.params.callback = [WyeUI.ObjectDebugger.RunCallback]  # button callback
-                    ##autoFrm.params.optData = [(autoFrm, objFrm, frame)]
-                    #autoFrm.verb.run(autoFrm)
-                    #dlgFrm.params.inputs[0].append([autoFrm])
                     frame.vars.settingsFrms[0]['autoStart'] = autoFrm
 
                     disaAutoFrm = WyeUI.doInputCheckbox(dlgFrm, "  disable for testing", [False], layout=Wye.layout.ADD_RIGHT)
-                    #disaAutoFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    #disaAutoFrm.params.frame = [None]
-                    #disaAutoFrm.params.parent = [None]
-                    #disaAutoFrm.params.value = [False]
-                    #disaAutoFrm.params.label = ["  disable for testing"]
-                    #disaAutoFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    #disaAutoFrm.verb.run(disaAutoFrm)
-                    #dlgFrm.params.inputs[0].append([disaAutoFrm])
                     frame.vars.disaAutoFrm[0] = disaAutoFrm
 
                     dTypeNames = [Wye.dType.stringLookup[val] for val in Wye.dType.valList]
                     selectionIx = Wye.dType.valList.index(frame.vars.newVerbSettings[0]['dataType'])
                     dTypeFrm = WyeUI.doInputDropdown(dlgFrm, "  Data Type", [dTypeNames], [selectionIx])
-                    #dTypeFrm = WyeUI.InputDropdown.start(dlgFrm.SP)
-                    #dTypeFrm.params.frame = [None]
-                    #dTypeFrm.params.parent = [None]
-                    #dTypeFrm.params.label = ["  Data Type"]
-                    #dTypeFrm.params.list = [dTypeNames]
-                    #dTypeFrm.params.selectionIx = [Wye.dType.valList.index(frame.vars.newVerbSettings[0]['dataType'])]
-                    ##dTypeFrm.params.callback = [WyeUI.EditVerb.EditVerbSettingsCallback]
-                    ##dTypeFrm.params.optData = ((dTypeFrm, dlgFrm, frame, Wye.dType),)
-                    #dTypeFrm.verb.run(dTypeFrm)
-                    #dlgFrm.params.inputs[0].append([dTypeFrm])
                     frame.vars.settingsFrms[0]['dataType'] = dTypeFrm
 
-                #    cTypeFrm = WyeUI.InputDropdown.start(dlgFrm.SP)
-                #    cTypeFrm.params.frame = [None]
-                #    cTypeFrm.params.parent = [None]
-                #    cTypeFrm.params.label = ["Object Type"]
-                #    cTypeNames = [Wye.cType.stringLookup[val] for val in Wye.cType.valList]
-                #    cTypeFrm.params.list = [cTypeNames]
-                #    cTypeFrm.params.selectionIx = [Wye.cType.valList.index(frame.vars.newVerbSettings[0]['dataType'])]
-                #    #cTypeFrm.params.callback = [WyeUI.EditVerb.EditVerbSettingsCallback]
-                #    #cTypeFrm.params.optData = ((cTypeFrm, dlgFrm, frame, Wye.cType),)
-                #    cTypeFrm.verb.run(cTypeFrm)
-                #    dlgFrm.params.inputs[0].append([cTypeFrm])
+                    cTypeNames = [Wye.cType.stringLookup[val] for val in Wye.cType.valList]
+                    cTypeFrm = WyeUI.doInputDropdown(dlgFrm, "  Object Type", [cTypeNames],
+                                                     [Wye.cType.valList.index(frame.vars.newVerbSettings[0]['cType'])])
+                    frame.vars.settingsFrms[0]['cType'] = cTypeFrm
 
-                #    parTermTypeFrm = WyeUI.InputDropdown.start(dlgFrm.SP)
-                #    parTermTypeFrm.params.frame = [None]
-                #    parTermTypeFrm.params.parent = [None]
-                #    parTermTypeFrm.params.label = ["Parallel Exec Termination"]
-                #    parTermTypeNames = [Wye.parTermType.stringLookup[val] for val in Wye.parTermType.valList]
-                #    parTermTypeFrm.params.list = [parTermTypeNames]
-                #    parTermTypeFrm.params.selectionIx = [Wye.parTermType.valList.index(frame.vars.newVerbSettings[0]['dataType'])]
-                #    #parTermTypeFrm.params.callback = [WyeUI.EditVerb.EditVerbSettingsCallback]
-                #    #parTermTypeFrm.params.optData = ((parTermTypeFrm, dlgFrm, frame, Wye.parTermType),)
-                #    parTermTypeFrm.verb.run(parTermTypeFrm)
-                #    dlgFrm.params.inputs[0].append([parTermTypeFrm])
+                    # Todo - add this when have parallel exec editing
+                    #pTypeNames = [Wye.parTermType.stringLookup[val] for val in Wye.parTermType.valList]
+                    #parTermTypeFrm = WyeUI.doInputDropdown(dlgFrm, "  Parallel Exec Termination", [pTypeNames],
+                    #                                [Wye.parTermType.valList.index(frame.vars.newVerbSettings[0]['dataType'])])
+                    #frame.vars.settingsFrms[0]['parTermType'] = parTermTypeFrm
 
 
                     # params
                     WyeUI.doInputLabel(dlgFrm, "Parameters:", color=Wye.color.SUBHD_COLOR)
-                    #lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                    #lblFrm.params.frame = [None]
-                    #lblFrm.params.parent = [None]
-                    #lblFrm.params.label = ["Parameters:"]
-                    #lblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    #WyeUI.InputLabel.run(lblFrm)
-                    #dlgFrm.params.inputs[0].append([lblFrm])
 
                     if len(verb.paramDescr) > 0:     # if we have params, list them
 
@@ -3743,12 +3662,7 @@ class WyeUI(Wye.staticObj):
                                                           WyeUI.EditVerb.EditParamLineCallback, showText=False)
 
                         lblFrm = WyeUI.doInputLabel(dlgFrm, "  <no parameters>")
-                        #lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                        #lblFrm.params.frame = [None]  # return value
-                        #lblFrm.params.parent = [None]
-                        #lblFrm.params.label = ["  <no parameters>"]
-                        #WyeUI.InputLabel.run(lblFrm)
-                        #dlgFrm.params.inputs[0].append([lblFrm])
+
 
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 
@@ -3773,50 +3687,25 @@ class WyeUI(Wye.staticObj):
                             btnFrm = WyeUI.doInputButton(dlgFrm, label, WyeUI.EditVerb.EditVarCallback, layout=Wye.layout.ADD_RIGHT)
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, frame, editLnFrm)]  # button row, dialog frame
 
-                            editLnFrm.params.optData = [(editLnFrm, dlgFrm, btnFrm, param)]
-
-                            #btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-                            #dlgFrm.params.inputs[0].append([btnFrm])
-                            #btnFrm.params.frame = [None]
-                            #btnFrm.params.parent = [None]
-                            #btnFrm.params.label = ["  '"+var[0] + "' "+Wye.dType.tostring(var[1]) + " = "+str(var[2])]
-                            #btnFrm.params.callback = [WyeUI.EditVerb.EditVarCallback]  # button callback
-                            #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, frame)]  # button row, dialog frame
-                            #WyeUI.InputButton.run(btnFrm)
+                            editLnFrm.params.optData = [(editLnFrm, dlgFrm, btnFrm, var)]
 
                             attrIx += 1
 
 
                     # else no vars to edit
                     else:
-                        lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                        lblFrm.params.frame = [None]  # return value
-                        lblFrm.params.parent = [None]
-                        lblFrm.params.label = ["  <no variables>"]
-                        WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append([lblFrm])
+                        WyeUI.doInputLabel(dlgFrm, "  <no variables>")
 
 
                     # code
-                    lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                    lblFrm.params.frame = [None]
-                    lblFrm.params.parent = [None]
-                    lblFrm.params.label = ["Wye Code:"]
-                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append([lblFrm])
+                    WyeUI.doInputLabel(dlgFrm, "Wye Code:", color=Wye.color.SUBHD_COLOR)
 
                     if hasattr(verb, "codeDescr"):
                         if len(verb.codeDescr) > 0:
                             # If it's parallel code blocks
                             if verb.mode == Wye.mode.PARALLEL:
                                 WyeUI.doInputLabel(dlgFrm, "  <TODO - Parallel Code>")
-                                #lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                                #lblFrm.params.frame = [None]  # return value
-                                #lblFrm.params.parent = [None]
-                                #lblFrm.params.label = ["  <TODO - Parallel Code>"]
-                                #WyeUI.InputLabel.run(lblFrm)
-                                #dlgFrm.params.inputs[0].append([lblFrm])
+
                             # regular boring normal single stream code
                             else:
                                 level = 2       # starting indent for nesting tuple data
@@ -3832,63 +3721,30 @@ class WyeUI(Wye.staticObj):
                         else:
                             # line edit button
                             editLnFrm = WyeUI.doInputButton(dlgFrm, "  +/-", WyeUI.EditVerb.EditCodeLineCallback)
-                            #editLnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-                            #dlgFrm.params.inputs[0].append([editLnFrm])
-                            #editLnFrm.params.label = ["+/-"]
-                            #editLnFrm.params.callback = [WyeUI.EditVerb.EditCodeLineCallback]  # button callback
-                            ## note: optData further down so can pass btnFrm
-                            #editLnFrm.params.frame = [None]
-                            #editLnFrm.params.parent = [None]
 
                             lblFrm = WyeUI.doInputLabel(dlgFrm, "  <add code here>", layout=Wye.layout.ADD_RIGHT)
-                            #lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                            #lblFrm.params.layout = [Wye.layout.ADD_RIGHT]  # put after the line edit button
-                            #lblFrm.params.frame = [None]  # return value
-                            #lblFrm.params.parent = [None]
-                            #lblFrm.params.label = ["  <add code here>"]
-                            #WyeUI.InputLabel.run(lblFrm)
-                            #dlgFrm.params.inputs[0].append([lblFrm])
 
                             editLnFrm.params.optData = [(editLnFrm, dlgFrm, frame, None, lblFrm, 0)]  # button row, dialog frame
                             editLnFrm.verb.run(editLnFrm)
 
                     # no code to edit
                     else:
-                        lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                        lblFrm.params.frame = [None]  # return value
-                        lblFrm.params.parent = [None]
-                        lblFrm.params.label = ["  <no editable code>"]
-                        WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append([lblFrm])
+                        WyeUI.doInputLabel(dlgFrm, "  <no editable code>")
 
                     # Test edited code
-                    tstLblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                    tstLblFrm.params.frame = [None]
-                    tstLblFrm.params.parent = [None]
-                    tstLblFrm.params.label = ["Test:"]
-                    tstLblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    WyeUI.InputLabel.run(tstLblFrm)
-                    dlgFrm.params.inputs[0].append([tstLblFrm])
+                    WyeUI.doInputLabel(dlgFrm, "Test:", color=Wye.color.SUBHD_COLOR)
 
-                    tstBtnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([tstBtnFrm])
-                    tstBtnFrm.params.frame = [None]
-                    tstBtnFrm.params.parent = [None]
-                    tstBtnFrm.params.label = ["  Check Code"]
-                    tstBtnFrm.params.callback = [WyeUI.EditVerb.TestCodeCallback]  # button callback
+                    tstBtnFrm = WyeUI.doInputButton(dlgFrm, "  Check Code", WyeUI.EditVerb.TestCodeCallback)
                     tstBtnFrm.params.optData = [(tstBtnFrm, dlgFrm, frame)]  # button row, dialog frame
-                    WyeUI.InputButton.run(tstBtnFrm)
 
                     # if want to see code
-                    lstCodeFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([lstCodeFrm])
-                    lstCodeFrm.params.frame = [None]
-                    lstCodeFrm.params.parent = [None]
-                    lstCodeFrm.params.value = [False]
-                    lstCodeFrm.params.label = ["   Display Code"]
-                    lstCodeFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    lstCodeFrm.verb.run(lstCodeFrm)
+                    lstCodeFrm = WyeUI.doInputCheckbox(dlgFrm, "   Display Code", [False], layout=Wye.layout.ADD_RIGHT)
                     frame.vars.listCodeFrm[0] = lstCodeFrm
+
+                    saveCodeFrm = WyeUI.doInputButton(dlgFrm, "  Save to Library", WyeUI.EditVerb.EditCodeSaveLibCallback)
+                    saveCodeFrm.params.optData = [(saveCodeFrm, dlgFrm, frame)]
+
+                    WyeUI.doInputText(dlgFrm, "  Library File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
 
                     # mark this frame actively being edited
                     WyeUI.EditVerb.activeVerbs[verb] = dlgFrm
@@ -3922,8 +3778,8 @@ class WyeUI(Wye.staticObj):
                         dataType = Wye.dType.valList[dTypeIx]
                         frame.vars.newVerbSettings[0]['dataType'] = dataType
 
+                        # DEBUG
                         #print("New class settings\n mode", Wye.mode.tostring(mode), "\n autoStart", autoStart, "\n dataType", Wye.dType.tostring(dataType))
-
                         #print("params\n"+str(frame.vars.newParamDescr))
                         #print("vars\n"+str(frame.vars.newVarDescr))
                         #print("code\n"+str(frame.vars.newCodeDescr))
@@ -4309,7 +4165,7 @@ class WyeUI(Wye.staticObj):
                 # get selectionIx
                 opIx = editLnFrm.params.selectionIx[0]
 
-                print("EditParamLineCallback: operator ix", opIx, " param", param)
+                print("EditParamLineCallback: operator ix", opIx, " paramDescr", param)
                 return
 
                 # "0 Move line up",
@@ -4518,12 +4374,12 @@ class WyeUI(Wye.staticObj):
                 editLnFrm = data[1][0]  # add/del/copy button frame
                 parentFrm = data[1][1]  # parent dialog
                 editVerbFrm = data[1][2]
-                param = data[1][3]
+                var = data[1][3]
 
                 # get selectionIx
                 opIx = editLnFrm.params.selectionIx[0]
 
-                print("EditVarLineCallback: operator ix", opIx, " param", param)
+                print("EditVarLineCallback: operator ix", opIx, " varDescr", var)
                 return
 
                 # "0 Move line up",
@@ -5541,6 +5397,28 @@ class WyeUI(Wye.staticObj):
                                          editFrm.vars.newVarDescr[0],
                                          editFrm.vars.newCodeDescr[0],
                                          True, listFlag)
+
+        # check code for compile errors and highlight anything that needs fixing
+        class EditCodeSaveLibCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                #print("EditCodeSaveLibCallback started")
+                return Wye.codeFrame(WyeUI.EditVerb.EditCodeSaveLibCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                #print("EditCodeSaveLibCallback data=", data)
+                btnFrm = data[1][0]
+                parentFrm = data[1][1]
+                editFrm = data[1][2]
+
+                # Save verb to library file
+                fileName = editFrm.vars.fileName[0]
+                print("EditCodeSaveLibCallback: todo save to file", fileName)
 
     # show active objects (currently running object stacks)
     # so user can debug them

@@ -1504,13 +1504,66 @@ class WyeCore(Wye.staticObj):
                         retLst.append(verb)
             return retLst
 
-        # Create a new in-memory library
-        def createLib(name):
+        # write Python string for lib with this name
+        def createLibString(name):
 
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
             libTpl += "    class "+name+"_rt:\n        pass\n"
             libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
+            return libTpl
+
+        def createVerbString(libName, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False, doAutoStart=True):
+            vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
+            vrbStr += "\nclass " + name + ":\n"
+            if 'mode' in verbSettings:
+                vrbStr += "    mode = Wye.mode." + Wye.mode.tostring(verbSettings['mode']) + "\n"
+            if 'autoStart' in verbSettings:
+                vrbStr += "    autoStart = True\n" if verbSettings['autoStart'] else "    autoStart = False\n"
+            if 'dataType' in verbSettings:
+                vrbStr += "    dataType = Wye.dType." + Wye.dType.tostring(verbSettings['dataType']) + "\n"
+            if 'cType' in verbSettings:
+                vrbStr += "    cType = Wye.cType." + Wye.cType.tostring(verbSettings['cType']) + "\n"
+            if 'parTermType' in verbSettings:
+                vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(
+                    verbSettings['parTermType']) + "\n"
+
+            vrbStr += "    paramDescr = (" + str(paramDescr) + ")\n"
+            vrbStr += "    varDescr = (" + str(varDescr) + ")\n"
+            vrbStr += "    codeDescr = (" + str(codeDescr) + ")\n"
+            vrbStr += '''
+    def build():
+        # print("Build ",'''
+            vrbStr += name + ")"
+            vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
+            if doTest:
+                vrbStr += name + "', " + name + ".codeDescr)\n"
+            else:
+                vrbStr += name + "', " + libName + "." + name + ".codeDescr)\n"
+            vrbStr += '''
+    def start(stack):
+'''
+            vrbStr += "        # print('" + name + " object start')"
+            vrbStr += '''
+                    return Wye.codeFrame('''
+            vrbStr += libName + "." + name + ", stack)\n"
+            vrbStr += '''
+    def run(frame):
+'''
+            vrbStr += "        # print('Run '" + name + ")\n"
+            vrbStr += "        try:\n"
+            vrbStr += "          " + libName + "." + libName + "_rt." + name + "_run_rt(frame)\n"
+            vrbStr += "        except Exception as e:\n"
+            vrbStr += "          if not hasattr(" + libName + "." + libName + "_rt." + name + "._run_rt, 'errOnce'):\n"
+            vrbStr += "            print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
+            vrbStr += "            setattr(" + libName + "." + libName + "_rt." + name + "_run_rt, 'errOnce', True)\n\n"
+            return vrbStr
+
+
+        # Create a new in-memory library
+        def createLib(name):
+
+            libTpl = WyeCore.Utils.createLibString(name)
 
         #    print("createLib: Library text:")
         #    lnIx = 1
@@ -1542,55 +1595,16 @@ class WyeCore(Wye.staticObj):
             return lib
 
 
+
+
         # create a new verb
         # If test, just compile the verb and its runtime code
         # Otherwise attach it to the given library and, if autoStart, start it
         def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False, doAutoStart=True):
 
             # build verb
-            vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
-            vrbStr += "\nclass "+name+":\n"
-            if 'mode' in verbSettings:
-                vrbStr += "    mode = Wye.mode."+Wye.mode.tostring(verbSettings['mode'])+"\n"
-            if 'autoStart' in verbSettings:
-                vrbStr += "    autoStart = True\n" if verbSettings['autoStart'] else "    autoStart = False\n"
-            if 'dataType' in verbSettings:
-                vrbStr += "    dataType = Wye.dType." + Wye.dType.tostring(verbSettings['dataType'])+"\n"
-            if 'cType' in verbSettings:
-                vrbStr += "    cType = Wye.cType." + Wye.cType.tostring(verbSettings['cType'])+"\n"
-            if 'parTermType' in verbSettings:
-                vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(verbSettings['parTermType'])+"\n"
-            vrbStr += '''
-'''
-            vrbStr += "    paramDescr = ("+str(paramDescr)+")\n"
-            vrbStr += "    varDescr = ("+str(varDescr)+")\n"
-            vrbStr += "    codeDescr = ("+str(codeDescr)+")\n"
-            vrbStr += '''
-    def build():
-        # print("Build ",'''
-            vrbStr += name + ")"
-            vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
-            if doTest:
-                vrbStr += name + "', " + name + ".codeDescr)\n"
-            else:
-                vrbStr += name +"', " + vrbLib.__name__ + "." + name + ".codeDescr)\n"
-            vrbStr += '''
-    def start(stack):
-'''
-            vrbStr += "        # print('"+name+" object start')"
-            vrbStr += '''
-        return Wye.codeFrame('''
-            vrbStr += vrbLib.__name__ + "." + name + ", stack)\n"
-            vrbStr += '''
-    def run(frame):
-'''
-            vrbStr += "        # print('Run '"+name+")\n"
-            vrbStr += "        try:\n"
-            vrbStr += "          " + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt(frame)\n"
-            vrbStr += "        except Exception as e:\n"
-            vrbStr += "          if not hasattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "._run_rt, 'errOnce'):\n"
-            vrbStr += "            print('" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt failed\\n', str(e))\n"
-            vrbStr += "            setattr(" + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt." + name + "_run_rt, 'errOnce', True)\n\n"
+            vrbStr = WyeCore.Utils.createVerbString(vrbLib.__name__, name, verbSettings, paramDescr, varDescr, codeDescr, doTest, listCode, doAutoStart)
+
             # put library in verb
             vrbStr += "setattr(" + name + ", 'library', WyeCore.libs." + vrbLib.__name__ + ")\n"
 
