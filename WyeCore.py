@@ -648,6 +648,8 @@ class WyeCore(Wye.staticObj):
                 self.accept('keystroke', self.keyFunc)
                 self.accept('arrow_right', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
                 self.accept('arrow_left', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
+                self.accept('control-arrow_right', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
+                self.accept('control-arrow_left', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
                 self.accept('arrow_up', self.controlKeyFunc, [Wye.ctlKeys.UP])
                 self.accept('arrow_down', self.controlKeyFunc, [Wye.ctlKeys.DOWN])
                 self.accept('shift_down', self.controlKeyFunc, [Wye.ctlKeys.SHIFT_DOWN])
@@ -662,7 +664,7 @@ class WyeCore(Wye.staticObj):
                     WyeCore.focusManager.doKey(keyID)
 
             def keyFunc(self, keyname):
-                #print("KeyHandler: key=", keyname, "=", ord(keyname))
+                print("KeyHandler: key=", keyname, "=", ord(keyname))
                 # if there's a dialog focus manager running
                 focusStatus = False
                 if WyeCore.focusManager:

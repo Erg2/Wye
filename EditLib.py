@@ -33,13 +33,13 @@ class EditLib:
             # so have to pull out the temp values from the input controls
             # Do some hackery to get to the pop up dialog's inputs' local variables
             #print("dlgFrm", dlgFrm.params.title)
-            x = dlgFrm.params.inputs[0][0][0].vars.currVal[0]
-            y = dlgFrm.params.inputs[0][1][0].vars.currVal[0]
-            z = dlgFrm.params.inputs[0][2][0].vars.currVal[0]
+            x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])
+            y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])
+            z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])
 
-            frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
+            frm.vars.target[0].vars.gObj[0].setHpr(x, y, z)
 
-            WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))
+            WyeCore.World.dlightPath.setHpr(x, y, z)
 
 
     class ResetCallback:
@@ -107,27 +107,27 @@ class EditLib:
 #            (None, "frame.vars.XAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[0])"),
 #            (None, "frame.vars.YAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[1])"),
 #            (None, "frame.vars.ZAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[2])"),
-            (None, "frame.vars.XAngle[0] = int(WyeCore.World.dlightPath.getHpr()[0])"),
-            (None, "frame.vars.YAngle[0] = int(WyeCore.World.dlightPath.getHpr()[1])"),
-            (None, "frame.vars.ZAngle[0] = int(WyeCore.World.dlightPath.getHpr()[2])"),
+            (None, "frame.vars.XAngle[0] = WyeCore.World.dlightPath.getHpr()[0]"),
+            (None, "frame.vars.YAngle[0] = WyeCore.World.dlightPath.getHpr()[1]"),
+            (None, "frame.vars.ZAngle[0] = WyeCore.World.dlightPath.getHpr()[2]"),
 
             ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
                 (None, "['Fish Angle Dialog']"),                   # title
                 (None, "[(-3,2,1.5),]"),                                # position
                 (None, "[None]"),                                  # parent
-                ("WyeUI.InputInteger", (None, "frame.vars.XAngleID"),   # inputs (variable length)
+                ("WyeUI.InputFloat", (None, "frame.vars.XAngleID"),   # inputs (variable length)
                     (None, "['XAngle']"),
                     (None, "frame.vars.XAngle"),
                     (None, "[EditLib.UpdateCallback]"),
                     (None, "[frame]")
                 ),
-                ("WyeUI.InputInteger", (None, "frame.vars.YAngleID"),
+                ("WyeUI.InputFloat", (None, "frame.vars.YAngleID"),
                     (None, "['YAngle']"),
                     (None, "frame.vars.YAngle"),
                     (None, "[EditLib.UpdateCallback]"),
                     (None, "[frame]")
                  ),
-                ("WyeUI.InputInteger", (None, "frame.vars.ZAngleID"),
+                ("WyeUI.InputFloat", (None, "frame.vars.ZAngleID"),
                     (None, "['ZAngle']"),
                     (None, "frame.vars.ZAngle"),
                     (None, "[EditLib.UpdateCallback]"),

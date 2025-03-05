@@ -37,36 +37,43 @@ class WyeUI(Wye.staticObj):
 
     # utilities
 
+    # Helper functions for building dialogs
+
     # put up popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
     dummy = [0]
     def doPopUpDialog(titleText, mainText, color=Wye.color.NORMAL_COLOR):
         #print("doPopUpDialog title", titleText, " text", mainText, " color", color)
-        stk = []
-        dlgFrm = WyeUI.Dialog.start(stk)
-        stk.append(dlgFrm)
-        dlgFrm.params.retVal = WyeUI.dummy
-        dlgFrm.params.title = [titleText]
-        dlgFrm.params.format[0] = "NO_CANCEL"
+
         point = NodePath("point")
         point.reparentTo(render)
-        point.setPos(base.camera, (-1.5, 7, 1))
+        point.setPos(base.camera, (0, 7, 0))
         pos = point.getPos()
         point.removeNode()
-        dlgFrm.params.position = [(pos[0], pos[1], pos[2]), ]
-        dlgFrm.params.parent = [None]
 
+        dlgFrm = WyeUI.doDialog(titleText, parent=None, position=pos, formatLst=["NO_CANCEL"])
         WyeUI.doInputLabel(dlgFrm, mainText, color)
-        #txtFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-        #txtFrm.params.frame = [None]  # return value
-        #txtFrm.params.parent = [None]
-        #txtFrm.params.label = [mainText]
-        #txtFrm.params.color = [color]
-        #WyeUI.InputLabel.run(txtFrm)
-        #dlgFrm.params.inputs[0].append([txtFrm])
-
         dlgFrm.verb.run(dlgFrm)
         WyeCore.World.startActiveFrame(dlgFrm)
 
+    # dialog.  If no position supplied, puts in front of viewpoint
+    def doDialog(title, parent=None, position=None, formatLst=[""]):
+        if parent:
+            stack = parent.SP
+        else:
+            stack = []
+        dlgFrm = WyeUI.Dialog.start(stack)
+        dlgFrm.params.retVal = [None]           # used in Wye code, not important for inline code
+        dlgFrm.params.title = [title]
+        if not position:
+            point = NodePath("point")
+            point.reparentTo(render)
+            point.setPos(base.camera, (0, 10, 0))
+            pos = point.getPos()
+            point.removeNode()
+        dlgFrm.params.position = [(position[0], position[1], position[2]), ]
+        dlgFrm.params.parent = [parent]
+        dlgFrm.params.format = formatLst
+        return dlgFrm
 
     def doInputLabel(dlgFrm, label, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
         frm = WyeUI.InputLabel.start(dlgFrm.SP)
@@ -80,7 +87,107 @@ class WyeUI(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
+    def doInputText(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
+        frm = WyeUI.InputText.start(dlgFrm.SP)
+        frm.params.frame = [None]  # return value
+        frm.params.parent = [None]
+        frm.params.value = valueList
+        frm.params.callback = [callback]
+        frm.params.optData = [optData]
+        frm.params.label = [label]
+        frm.params.layout = [layout]
+        frm.params.color = [color]
+        frm.params.backgroundColor = [backgroundColor]
+        frm.verb.run(frm)
+        dlgFrm.params.inputs[0].append([frm])
+        return frm
+
+    def doInputInteger(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
+        frm = WyeUI.InputInteger.start(dlgFrm.SP)
+        frm.params.frame = [None]  # return value
+        frm.params.parent = [None]
+        frm.params.value = valueList
+        frm.params.callback = [callback]
+        frm.params.optData = [optData]
+        frm.params.label = [label]
+        frm.params.layout = [layout]
+        frm.params.color = [color]
+        frm.params.backgroundColor = [backgroundColor]
+        frm.verb.run(frm)
+        dlgFrm.params.inputs[0].append([frm])
+        return frm
+
+
+    def doInputFloat(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
+        frm = WyeUI.InputFloat.start(dlgFrm.SP)
+        frm.params.frame = [None]  # return value
+        frm.params.parent = [None]
+        frm.params.value = valueList
+        frm.params.callback = [callback]
+        frm.params.optData = [optData]
+        frm.params.label = [label]
+        frm.params.layout = [layout]
+        frm.params.color = [color]
+        frm.params.backgroundColor = [backgroundColor]
+        frm.verb.run(frm)
+        dlgFrm.params.inputs[0].append([frm])
+        return frm
+
+    def doInputButton(dlgFrm, label, callback=None, optData=None, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):
+        frm = WyeUI.InputButton.start(dlgFrm.SP)
+        frm.params.frame = [None]  # return value
+        frm.params.parent = [None]
+        frm.params.callback = [callback]
+        frm.params.optData = [optData]
+        frm.params.label = [label]
+        frm.params.layout = [layout]
+        frm.params.color = [color]
+        frm.params.backgroundColor = [backgroundColor]
+        frm.verb.run(frm)
+        dlgFrm.params.inputs[0].append([frm])
+        return frm
+
+    def doInputCheckbox(dlgFrm, label, valueList, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+                      backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, radioGroup=None,
+                      selectedRadio=0):
+        frm = WyeUI.InputCheckbox.start(dlgFrm.SP)
+        frm.params.frame = [None]  # return value
+        frm.params.parent = [None]
+        frm.params.value = valueList
+        frm.params.callback = [callback]
+        frm.params.optData = [optData]
+        frm.params.label = [label]
+        frm.params.layout = [layout]
+        frm.params.color = [color]
+        frm.params.radioGroup = [radioGroup]
+        frm.params.selectedRadio = [selectedRadio]
+        frm.params.backgroundColor = [backgroundColor]
+        frm.verb.run(frm)
+        dlgFrm.params.inputs[0].append([frm])
+        return frm
+
+    def doInputDropdown(dlgFrm, label, dropdownListList, selectionIxList, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+                      backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, showText=True):
+        frm = WyeUI.InputDropdown.start(dlgFrm.SP)
+        frm.params.frame = [None]  # return value
+        frm.params.parent = [None]
+        frm.params.list = dropdownListList
+        frm.params.selectionIx = selectionIxList
+        frm.params.callback = [callback]
+        frm.params.optData = [optData]
+        frm.params.label = [label]
+        frm.params.layout = [layout]
+        frm.params.color = [color]
+        frm.params.showText = [showText]
+        frm.params.backgroundColor = [backgroundColor]
+        frm.verb.run(frm)
+        dlgFrm.params.inputs[0].append([frm])
+        return frm
+
+    #
     # 3D object classes
+    #
+
     class _ball:
         def __init__(self, radius, pos=[0,0,0]):
             # see https: // github.com / Epihaius / procedural_panda3d_model_primitives
@@ -1314,6 +1421,107 @@ class WyeUI(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setColor(color)
             frame.vars.gWidget[0].setColor(color)
 
+
+    class InputFloat(InputText):
+
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
+                      ("label", Wye.dType.STRING, Wye.access.REFERENCE),  # user supplied label for field
+                      ("value", Wye.dType.INTEGER, Wye.access.REFERENCE),  # user supplied var to return value in
+                      ("callback", Wye.dType.STRING, Wye.access.REFERENCE, None),  # 2 verb to call when number changes
+                      ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
+                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL)
+                      )
+        varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
+                    ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
+                    ("parent", Wye.dType.OBJECT, None),
+                    ("gWidgetStack", Wye.dType.OBJECT_LIST, None),           # list of objects to delete on exit
+                    ("tags", Wye.dType.STRING_LIST, None),                  # assigned tags
+                    ("currPos", Wye.dType.INTEGER, 0),                    # 3d pos
+                    ("currVal", Wye.dType.STRING, ""),                    # current string value
+                    ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
+                    ("gWidget", Wye.dType.OBJECT, None),                  # stashed graphic widget
+                    ("Cursor", Wye.dType.OBJECT, None),                    # input cursor graphic widget
+                    ("callback", Wye.dType.OBJECT, None),               # verb to call
+                    ("optData", Wye.dType.ANY, None),
+                    )
+
+        def start(stack):
+            frame = Wye.codeFrame(WyeUI.InputFloat, stack)
+            frame.vars.gWidgetStack[0] = []
+            return frame
+
+        def display(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
+
+            dlgHeader = dlgFrm.vars.dragObj[0]
+
+
+            gTags = []      # clickable graphic object tags assoc with this input
+            lbl = WyeUI._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath())
+
+            frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
+
+            # add tag, input index to dictionary
+            gTags.append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
+
+            width = lbl.getWidth() + .5
+            txt = WyeUI._3dText(str(frame.vars.currVal[0]), Wye.color.LABEL_COLOR,
+                                pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath())
+            txt.setColor(Wye.color.TEXT_COLOR)
+            # print("    Dialog inWdg", txt)
+            gTags.append(txt.getTag())  # save graphic widget for deleting on dialog close
+            frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
+            frame.vars.gWidget[0] = txt
+
+            frame.vars.tags[0] = gTags
+
+            # update dialog pos to next free space downward
+            pos[2] -= txt.getHeight()  # update to next position
+            frame.vars.size[0] = (width + txt.getWidth(), 0, max(lbl.getHeight(), txt.getHeight()))
+
+        # reposition in dialog
+        def redisplay(frame, dlgFrm, pos):
+            frame.vars.position[0] = (pos[0], pos[1], pos[2])
+            lbl = frame.vars.gWidgetStack[0][0]
+            lbl.setPos(pos)
+            pos[2] -= lbl.getHeight()
+            lbl = frame.vars.gWidgetStack[0][1]
+            lbl.setPos(pos)
+            pos[2] -= lbl.getHeight()
+
+        # update value
+        def update(inFrm):
+            inWidg = inFrm.vars.gWidget[0]
+            # print("  set text", txt," ix", ix, " txtWidget", inWidg)
+            inWidg.setText(str(inFrm.vars.currVal[0]))
+
+        # return true if this is one of our tags (got clicked by user)
+        def doSelect(frame, dlgFrame, tag):
+            if tag in frame.vars.tags[0]:
+                inWidg = frame.vars.gWidget[0]
+                # print("  found ix", ix, " inWdg", inWidg, " Set selected color")
+                inWidg.setColor(Wye.color.SELECTED_COLOR)  # set input background to "has focus" color
+                WyeUI.Dialog.drawCursor(frame)
+                WyeUI.Dialog._activeInputFloat = frame
+                return True
+            else:
+                return False
+
+        def setLabel(frame, text):
+            frame.vars.gWidgetStack[0][0].setText(text)
+
+        def setValue(frame, val):
+            frame.vars.gWidget[1].setText(str(val))
+            frame.vars.currVal[0] = str(val)
+
+        def setColor(frame, color):
+            frame.vars.gWidgetStack[0][0].setColor(color)
+            frame.vars.gWidget[0].setColor(color)
+
     # text input field
     class InputButton:
         mode = Wye.mode.SINGLE_CYCLE
@@ -1484,9 +1692,11 @@ class WyeUI(Wye.staticObj):
             radNm = frame.params.radioGroup[0]
             if radNm:
                 if radNm in frame.parentFrame.vars.radBtnDict[0]:
+                    #print("InputCheckbox: found rad grp", radNm)
                     frame.vars.radioGroupList[0] = frame.parentFrame.vars.radBtnDict[0][radNm]
                     frame.vars.radioGroupList[0].append(frame)
                 else:
+                    #print("InputCheckbox: new rad grp", radNm)
                     radGrp = [frame]
                     frame.parentFrame.vars.radBtnDict[0][radNm] = radGrp
                     frame.vars.radioGroupList[0] = radGrp
@@ -1832,6 +2042,7 @@ class WyeUI(Wye.staticObj):
 
         _cursor = None      # 3d TextInput cursor
         _activeInputInteger = None  # used for wheel up/down events
+        _activeInputFloat = None  # used for wheel up/down events
 
         def start(stack):
             frame = Wye.codeFrame(WyeUI.Dialog, stack)
@@ -2115,6 +2326,7 @@ class WyeUI(Wye.staticObj):
             prevSel = frame.vars.currInp[0]      # get current selection
             # if tag is input field in this dialog, select it
             closing = False
+            WyeUI.Dialog._activeInputFloat = None
             WyeUI.Dialog._activeInputInteger = None
             retStat = False     # haven't used the tag (yet)
 
@@ -2158,6 +2370,8 @@ class WyeUI(Wye.staticObj):
                             inFrm.params.value[0] = inFrm.vars.currVal[0]
                         elif inFrm.verb is WyeUI.InputInteger:
                             inFrm.params.value[0] = int(inFrm.vars.currVal[0])
+                        elif inFrm.verb is WyeUI.InputFloat:
+                            inFrm.params.value[0] = float(inFrm.vars.currVal[0])
 
                     frame.params.retVal[0] = Wye.status.SUCCESS
                     #print("doSelect OK button, return status", frame.params.retVal)
@@ -2178,7 +2392,7 @@ class WyeUI(Wye.staticObj):
             # (if closing dialog, nevermind)
             if not prevSel is None and prevSel != frame.vars.currInp[0] and not closing:
                 inFrm =prevSel
-                if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger]:
+                if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputFloat]:
                     inWidg = inFrm.vars.gWidget[0]
                     inWidg.setColor(Wye.color.TEXT_COLOR)
 
@@ -2249,13 +2463,30 @@ class WyeUI(Wye.staticObj):
                 if inFrm.vars.callback[0]:
                     WyeUI.Dialog.doCallback(inFrm.parentFrame, inFrm, "none")
 
+            elif WyeUI.Dialog._activeInputFloat:
+                #print("doWheel update input")
+                inFrm = WyeUI.Dialog._activeInputFloat
+                if isinstance(inFrm.vars.currVal[0], str):
+                    inFrm.vars.currVal[0] = str(float(inFrm.vars.currVal[0]) + dir)
+                else:
+                    inFrm.vars.currVal[0] += dir
+
+                txt = str(inFrm.vars.currVal[0])
+                inWidg = inFrm.vars.gWidget[0]
+                inWidg.setText(txt)
+                WyeUI.Dialog.drawCursor(inFrm)
+
+                # if the user supplied a callback
+                if inFrm.vars.callback[0]:
+                    WyeUI.Dialog.doCallback(inFrm.parentFrame, inFrm, "none")
+
         # update InputText/InputInteger on key event
         def doKey(frame, key):
-            #print("Dialog doKey: key", key)
+            print("Dialog doKey: key", key)
             # if we have an input with focus
             inFrm = frame.vars.currInp[0]
             if not inFrm is None:
-                if inFrm.verb is WyeUI.InputText or inFrm.verb is WyeUI.InputInteger:
+                if inFrm.verb in [WyeUI.InputText, WyeUI.InputInteger, WyeUI.InputFloat]:
 
                     txt = str(inFrm.vars.currVal[0])    # handle either text or integer
                     insPt = inFrm.vars.currInsPt[0]
@@ -2274,17 +2505,39 @@ class WyeUI(Wye.staticObj):
                         txt = preTxt + postTxt
                     # arrow keys
                     elif key == Wye.ctlKeys.LEFT:   # arrow keys
-                        if insPt > 0:
+                        # if ctl down, skip whole alphanum word, or at least 1 ch
+                        if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
+                            startPt = insPt
+                            txtLen = len(txt)
+                            while insPt > 0 and txt[insPt-1].isalnum():
+                                print("Move left")
+                                insPt -= 1
+                            # if not alphanum so didn't move, move 1
+                            if insPt == startPt and insPt > 0:
+                                print("one more")
+                                insPt -= 1
+                        # else move 1 ch
+                        elif insPt > 0:
                             insPt -= 1
-                            inFrm.vars.currInsPt[0] = insPt
                         # place insert cursor
+                        inFrm.vars.currInsPt[0] = insPt
                         WyeUI.Dialog.drawCursor(inFrm)
                         return
                     elif key == Wye.ctlKeys.RIGHT:
-                        if insPt < len(txt):
+                        # if ctl down, skip whole alphanum word, or at least 1 ch
+                        txtLen = len(txt)
+                        if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
+                            startPt = insPt
+                            while insPt < txtLen and (txt[insPt].isalnum() if insPt < txtLen else True):
+                                insPt += 1
+                            # if not alphanum so didn't move, move 1
+                            if startPt == insPt and insPt < txtLen:
+                                insPt += 1
+                        # else move 1 ch
+                        elif insPt < txtLen:
                             insPt += 1
-                            inFrm.vars.currInsPt[0] = insPt
                         # place insert cursor
+                        inFrm.vars.currInsPt[0] = insPt
                         WyeUI.Dialog.drawCursor(inFrm)
                         return
                     # not special control, if printable char, insert it in the string
@@ -2298,6 +2551,17 @@ class WyeUI(Wye.staticObj):
                                         txt = preTxt + key + postTxt
                                         insPt += 1
                                         inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
+
+                            # For float input, only allow floats
+                            if inFrm.verb is WyeUI.InputFloat:
+                                if key in "-0123456789.":
+                                    # only allow "-" as first char
+                                    # #only allow "." if don't have one
+                                    if (key != '-' or insPt == 0) and (key != '.' or txt.find('.') == -1):
+                                        txt = preTxt + key + postTxt
+                                        insPt += 1
+                                        inFrm.vars.currInsPt[0] = insPt  # set text insert point after new char
+
 
                             # else general text
                             elif key.isprintable():
@@ -2344,6 +2608,9 @@ class WyeUI(Wye.staticObj):
 
         def hideCursor():
             WyeUI.Dialog._cursor.hide()
+
+        def setPos(frame, pos):
+            frame.vars.dragObj[0]._nodePath.setPos(pos[0], pos[1], pos[2])
 
     # dropdown menu
     # subclass of Dialog so FocusManager can handle focus properly
@@ -2564,6 +2831,21 @@ class WyeUI(Wye.staticObj):
                     verChkFrm.verb.run(verChkFrm)
 
                     #
+                    # system debug
+                    #
+                    WyeUI.doInputLabel(dlgFrm, "Diagnostics")
+
+                    verboseChkFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
+                    dlgFrm.params.inputs[0].append([verboseChkFrm])
+                    verboseChkFrm.params.frame = [None]
+                    verboseChkFrm.params.parent = [None]
+                    verboseChkFrm.params.value = [False]
+                    verboseChkFrm.params.label = ["  Toggle verbose message display"]
+                    verboseChkFrm.params.callback = [WyeUI.MainMenuDialog.VerboseCheckCallback]  # button callback
+                    verboseChkFrm.params.optData = [verboseChkFrm]
+                    verboseChkFrm.verb.run(verboseChkFrm)
+
+                    #
                     # Test
                     #
 
@@ -2613,37 +2895,41 @@ class WyeUI(Wye.staticObj):
 
                     dlgFrm.params.inputs[0].append([midFrm])
 
-                    midInsFrm = WyeUI.InputInteger.start(dlgFrm.SP)
-                    midInsFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    midInsFrm.params.frame = [None]  # placeholder
-                    midInsFrm.params.label = ["Instrument"]
-                    midInsFrm.params.value = [64]
-                    midInsFrm.verb.run(midInsFrm)
-                    dlgFrm.params.inputs[0].append([midInsFrm])
+                    midInsFrm = WyeUI.doInputInteger(dlgFrm, "Instrument:", [64], layout=Wye.layout.ADD_RIGHT)
+                    midNoteFrm = WyeUI.doInputInteger(dlgFrm, "Note:", [64], layout=Wye.layout.ADD_RIGHT)
+                    midVolFrm = WyeUI.doInputInteger(dlgFrm, "Vol:", [64], layout=Wye.layout.ADD_RIGHT)
+                    midLenFrm = WyeUI.doInputFloat(dlgFrm, "Len(s)", [1.0], layout=Wye.layout.ADD_RIGHT)
+                    #midInsFrm = WyeUI.InputInteger.start(dlgFrm.SP)
+                    #midInsFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    #midInsFrm.params.frame = [None]  # placeholder
+                    #midInsFrm.params.label = ["Instrument"]
+                    #midInsFrm.params.value = [64]
+                    #midInsFrm.verb.run(midInsFrm)
+                    #dlgFrm.params.inputs[0].append([midInsFrm])
 
-                    midNoteFrm = WyeUI.InputInteger.start(dlgFrm.SP)
-                    midNoteFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    midNoteFrm.params.frame = [None]  # placeholder
-                    midNoteFrm.params.label = ["Note"]
-                    midNoteFrm.params.value = [64]
-                    midNoteFrm.verb.run(midNoteFrm)
-                    dlgFrm.params.inputs[0].append([midNoteFrm])
+                    #midNoteFrm = WyeUI.InputInteger.start(dlgFrm.SP)
+                    #midNoteFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    #midNoteFrm.params.frame = [None]  # placeholder
+                    #midNoteFrm.params.label = ["Note"]
+                    #midNoteFrm.params.value = [64]
+                    #midNoteFrm.verb.run(midNoteFrm)
+                    #dlgFrm.params.inputs[0].append([midNoteFrm])
 
-                    midVolFrm = WyeUI.InputInteger.start(dlgFrm.SP)
-                    midVolFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    midVolFrm.params.frame = [None]  # placeholder
-                    midVolFrm.params.label = ["Vol"]
-                    midVolFrm.params.value = [64]
-                    midVolFrm.verb.run(midVolFrm)
-                    dlgFrm.params.inputs[0].append([midVolFrm])
+                    #midVolFrm = WyeUI.InputInteger.start(dlgFrm.SP)
+                    #midVolFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    #midVolFrm.params.frame = [None]  # placeholder
+                    #midVolFrm.params.label = ["Vol"]
+                    #midVolFrm.params.value = [64]
+                    #midVolFrm.verb.run(midVolFrm)
+                    #dlgFrm.params.inputs[0].append([midVolFrm])
 
-                    midLenFrm = WyeUI.InputText.start(dlgFrm.SP)
-                    midLenFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    midLenFrm.params.frame = [None]  # placeholder
-                    midLenFrm.params.label = ["Len (s)"]
-                    midLenFrm.params.value = ["1.0"]
-                    midLenFrm.verb.run(midLenFrm)
-                    dlgFrm.params.inputs[0].append([midLenFrm])
+                    #midLenFrm = WyeUI.InputText.start(dlgFrm.SP)
+                    #midLenFrm.params.layout = [Wye.layout.ADD_RIGHT]
+                    #midLenFrm.params.frame = [None]  # placeholder
+                    #midLenFrm.params.label = ["Len (s)"]
+                    #midLenFrm.params.value = ["1.0"]
+                    #midLenFrm.verb.run(midLenFrm)
+                    #dlgFrm.params.inputs[0].append([midLenFrm])
 
                     # fill in midFrm callback data now that ins, note frames created
                     midFrm.params.optData = [(midInsFrm, midNoteFrm, midVolFrm, midLenFrm)]  # button row, dialog frame
@@ -2718,6 +3004,33 @@ class WyeUI(Wye.staticObj):
                     WyeCore.World.versionText.show()
                 else:
                     WyeCore.World.versionText.hide()
+
+        #
+        # diagnostic callbacks
+        #
+
+
+        class VerboseCheckCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("VerboseCheckCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.VerboseCheckCallback, stack)
+
+
+            def run(frame):
+                data = frame.eventData
+                rowFrm = data[1]
+                verbose = rowFrm.vars.currVal[0]
+                testObj2 = WyeCore.World.findActiveObj('testObj2')
+                testText = WyeCore.World.findActiveObj('showFishDialog')
+
+                from direct.showbase.MessengerGlobal import messenger
+                messenger.toggleVerbose()      # Show all events
+
 
 
         #
@@ -2886,12 +3199,8 @@ class WyeUI(Wye.staticObj):
                 ins = int(insFrm.vars.currVal[0])
                 note = int(noteFrm.vars.currVal[0])
                 vol = int(volFrm.vars.currVal[0])
-                try:
-                    len = float(lenFrm.vars.currVal[0])
-                except:
-                    len = 1.0
-                    lenFrm.vars.currVal[0] = len
-                    lenFrm.verb.update(lenFrm)
+                len = float(lenFrm.vars.currVal[0])
+
                 if ins > 127:
                     ins = 127
                     insFrm.vars.currVal[0] = ins
@@ -2912,10 +3221,10 @@ class WyeUI(Wye.staticObj):
                     vol = 127
                     volFrm.vars.currVal[0] = vol
                     volFrm.verb.update(volFrm)
-                if vol < 0:
-                    vol = 0
-                    volFrm.vars.currVal[0] = vol
-                    volFrm.verb.update(volFrm)
+                if len < .1:
+                    len = .1
+                    lenFrm.vars.currVal[0] = len
+                    lenFrm.verb.update(lenFrm)
                 Wye.midi.playNote(ins, note, vol, len)
 
 
@@ -3194,8 +3503,7 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("verb", Wye.dType.OBJECT, Wye.access.REFERENCE),     # library verb to edit
                       ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE),   # parent dialog, if any
                       ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))  # object frame to edit
-        varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
-                    ("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
+        varDescr = (("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
                     ("varInpLst", Wye.dType.OBJECT_LIST, None),     # Inputs showing vars
                     ("oldVerb", Wye.dType.OBJECT, None),            # verb used as a source
                     ("nameFrm", Wye.dType.OBJECT, None),            # new verb name
@@ -3312,41 +3620,18 @@ class WyeUI(Wye.staticObj):
                     WyeCore.Utils.listCopy(frame.vars.newCodeDescr[0], verb.codeDescr)
 
                     # create object dialog
-                    #dlgFrm = WyeUI.DropDown.start([])
-                    dlgFrm = WyeUI.Dialog.start([])
-
-                    dlgFrm.params.retVal = frame.vars.dlgStat
-                    dlgFrm.params.title = ["Edit Object " + verb.__name__]
-                    #print("Edit object", verb.__name__)
-                    dlgFrm.params.position = [[frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2]],]
-                    dlgFrm.params.parent = frame.params.parent
-
+                    # print("Edit object", verb.__name__)
 
                     # build dialog
+                    dlgFrm = WyeUI.doDialog("Edit Object" + verb.__name__, frame.params.parent[0], (frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2]))
+
 
                     # existing lib
-                    libRad = WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([libRad])
-                    libRad.params.frame = [None]
-                    libRad.params.parent = [None]
-                    libRad.params.value = [True]
-                    libRad.params.label = ["Existing Library"]
-                    libRad.params.radioGroup = ["libRadGrp"]
-                    libRad.verb.run(libRad)
+                    libRad = WyeUI.doInputCheckbox(dlgFrm, "Existing Library", [True], radioGroup="libRadGrp")
                     frame.vars.libRadio[0] = libRad
 
                     libList = [lib.__name__ for lib in WyeCore.World.libList]
-                    libFrm = WyeUI.InputDropdown.start(dlgFrm.SP)
-                    libFrm.params.frame = [None]
-                    libFrm.params.parent = [None]
-                    libFrm.params.label = ["Library"]
-                    libFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    libFrm.params.list = [libList]
-                    libFrm.params.selectionIx = [libList.index(verb.library.__name__)]
-                    # libFrm.params.callback = [WyeUI.EditVerb.EditVerbSettingsCallback]
-                    # libFrm.params.optData = ((libFrm, dlgFrm, frame, Wye.mode),)
-                    libFrm.verb.run(libFrm)
-                    dlgFrm.params.inputs[0].append([libFrm])
+                    libFrm = WyeUI.doInputDropdown(dlgFrm, "Library", [libList], [libList.index(verb.library.__name__)], layout=Wye.layout.ADD_RIGHT)
                     frame.vars.existingLibFrm[0] = libFrm
 
                     # new lib
@@ -4689,23 +4974,13 @@ class WyeUI(Wye.staticObj):
                 match (frame.PC):
                     case 0:
                         # build var dialog
-                        dlgFrm = WyeUI.Dialog.start([])
+                        dlgFrm = WyeUI.doDialog("Edit Variable", parentFrm, (.5,-.3, -.5 + btnFrm.vars.position[0][2]))
 
-                        dlgFrm.params.retVal = frame.vars.dlgStat
-                        dlgFrm.params.title = ["Edit Variable"]
-                        dlgFrm.params.parent = [parentFrm]
-                        #print("EditVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                        dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2]),]
 
                         # Var name
-                        #print("EditVarCallback varIx", varIx, " newVarDescr", editVerbFrm.vars.newVarDescr[0])
                         frame.vars.varName[0] = editVerbFrm.vars.newVarDescr[0][varIx][0]
-                        varNameFrm = WyeUI.InputText.start(dlgFrm.SP)
-                        varNameFrm.params.frame = [None]        # placeholder
-                        varNameFrm.params.label = ["Name: "]
-                        varNameFrm.params.value = frame.vars.varName
-                        WyeUI.InputText.run(varNameFrm)
-                        dlgFrm.params.inputs[0].append([varNameFrm])
+                        WyeUI.doInputText(dlgFrm, "Name: ", frame.vars.varName)
+
 
                         # Var type
                         frame.vars.varType[0] = editVerbFrm.vars.newVarDescr[0][varIx][1]
