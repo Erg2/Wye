@@ -12,9 +12,10 @@ import traceback
 import sys
 #from sys import exit
 import math
-
+import sys, os
 #for 3d geometry (input cursor)
 #from direct.showbase.ShowBase import ShowBase
+from importlib.machinery import SourceFileLoader    # to load library from file
 
 from functools import partial
 
@@ -148,13 +149,13 @@ class WyeUI(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputCheckbox(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputCheckbox(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, radioGroup=None,
                       selectedRadio=0):
         frm = WyeUI.InputCheckbox.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
-        frm.params.value = valurRef
+        frm.params.value = valueRef
         frm.params.callback = [callback]
         frm.params.optData = [optData]
         frm.params.label = [label]
@@ -2724,6 +2725,7 @@ class WyeUI(Wye.staticObj):
         paramDescr = ()
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
                     ("dlgFrm", Wye.dType.OBJECT, None),
+                    ("fileName", Wye.dType.STRING, "MyTestLib.py"),  # file name to save to
                     )
 
         # global list of libs being edited
@@ -2753,23 +2755,9 @@ class WyeUI(Wye.staticObj):
 
                     # Settings
                     WyeUI.doInputLabel(dlgFrm, "Settings", Wye.color.SUBHD_COLOR)
-                    #settingsLblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                    #settingsLblFrm.params.frame = [None]  # return value
-                    #settingsLblFrm.params.parent = [None]
-                    #settingsLblFrm.params.label = ["Settings"]
-                    #settingsLblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    #WyeUI.InputLabel.run(settingsLblFrm)
-                    #dlgFrm.params.inputs[0].append([settingsLblFrm])
 
-                    sndChkFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([sndChkFrm])
-                    sndChkFrm.params.frame = [None]
-                    sndChkFrm.params.parent = [None]
-                    sndChkFrm.params.value = [True]
-                    sndChkFrm.params.label = ["  3D Sound On"]
-                    sndChkFrm.params.callback = [WyeUI.MainMenuDialog.SoundCheckCallback]  # button callback
+                    sndChkFrm = WyeUI.doInputCheckbox(dlgFrm, "  3D Sound On", [Wye.soundOn], WyeUI.MainMenuDialog.SoundCheckCallback)
                     sndChkFrm.params.optData = [sndChkFrm]
-                    sndChkFrm.verb.run(sndChkFrm)
 
                     codeChkFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
                     dlgFrm.params.inputs[0].append([codeChkFrm])
@@ -2790,6 +2778,12 @@ class WyeUI(Wye.staticObj):
                     verChkFrm.params.callback = [WyeUI.MainMenuDialog.VerCheckCallback]  # button callback
                     verChkFrm.params.optData = [verChkFrm]
                     verChkFrm.verb.run(verChkFrm)
+
+                    loadLibFrm = WyeUI.doInputButton(dlgFrm, " Load Library", WyeUI.MainMenuDialog.LoadLibCallback)
+                    loadLibFrm.params.optData = [(loadLibFrm, dlgFrm, frame)]
+
+                    WyeUI.doInputText(dlgFrm, "  Library File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
+
 
                     #
                     # system debug
@@ -2842,7 +2836,7 @@ class WyeUI(Wye.staticObj):
                     btnFrm.params.frame = [None]
                     btnFrm.params.parent = [None]
                     btnFrm.params.label = ["  Test Create Lib"]
-                    btnFrm.params.callback = [WyeUI.MainMenuDialog.TestCreatLibCallback]  # button callback
+                    btnFrm.params.callback = [WyeUI.MainMenuDialog.TestCreateLibCallback]  # button callback
                     #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
                     WyeUI.InputButton.run(btnFrm)
 
@@ -2853,44 +2847,12 @@ class WyeUI(Wye.staticObj):
                     midFrm.params.label = ["  Test Midi: "]
                     midFrm.params.callback = [WyeUI.MainMenuDialog.TestMidiCallback]  # button callback
                     # opt data and run below, after ins and note frames created
-
                     dlgFrm.params.inputs[0].append([midFrm])
 
                     midInsFrm = WyeUI.doInputInteger(dlgFrm, "Instrument:", [64], layout=Wye.layout.ADD_RIGHT)
                     midNoteFrm = WyeUI.doInputInteger(dlgFrm, "Note:", [64], layout=Wye.layout.ADD_RIGHT)
                     midVolFrm = WyeUI.doInputInteger(dlgFrm, "Vol:", [64], layout=Wye.layout.ADD_RIGHT)
                     midLenFrm = WyeUI.doInputFloat(dlgFrm, "Len(s)", [1.0], layout=Wye.layout.ADD_RIGHT)
-                    #midInsFrm = WyeUI.InputInteger.start(dlgFrm.SP)
-                    #midInsFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    #midInsFrm.params.frame = [None]  # placeholder
-                    #midInsFrm.params.label = ["Instrument"]
-                    #midInsFrm.params.value = [64]
-                    #midInsFrm.verb.run(midInsFrm)
-                    #dlgFrm.params.inputs[0].append([midInsFrm])
-
-                    #midNoteFrm = WyeUI.InputInteger.start(dlgFrm.SP)
-                    #midNoteFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    #midNoteFrm.params.frame = [None]  # placeholder
-                    #midNoteFrm.params.label = ["Note"]
-                    #midNoteFrm.params.value = [64]
-                    #midNoteFrm.verb.run(midNoteFrm)
-                    #dlgFrm.params.inputs[0].append([midNoteFrm])
-
-                    #midVolFrm = WyeUI.InputInteger.start(dlgFrm.SP)
-                    #midVolFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    #midVolFrm.params.frame = [None]  # placeholder
-                    #midVolFrm.params.label = ["Vol"]
-                    #midVolFrm.params.value = [64]
-                    #midVolFrm.verb.run(midVolFrm)
-                    #dlgFrm.params.inputs[0].append([midVolFrm])
-
-                    #midLenFrm = WyeUI.InputText.start(dlgFrm.SP)
-                    #midLenFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                    #midLenFrm.params.frame = [None]  # placeholder
-                    #midLenFrm.params.label = ["Len (s)"]
-                    #midLenFrm.params.value = ["1.0"]
-                    #midLenFrm.verb.run(midLenFrm)
-                    #dlgFrm.params.inputs[0].append([midLenFrm])
 
                     # fill in midFrm callback data now that ins, note frames created
                     midFrm.params.optData = [(midInsFrm, midNoteFrm, midVolFrm, midLenFrm)]  # button row, dialog frame
@@ -2907,6 +2869,7 @@ class WyeUI(Wye.staticObj):
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.mainMenu)
                     WyeCore.World.mainMenu = None
+
 
 
         # turn sound on/off
@@ -2928,7 +2891,7 @@ class WyeUI(Wye.staticObj):
                 print("3D Sound On", Wye.soundOn)
 
 
-        # turn sound on/off
+        # turn compile code listing
         class ListCodeCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -2946,6 +2909,7 @@ class WyeUI(Wye.staticObj):
                 WyeCore.debugListCode = rowFrm.vars.currVal[0]
                 print("List Code On", WyeCore.debugListCode)
 
+        # show/hide version in world
         class VerCheckCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -2970,7 +2934,7 @@ class WyeUI(Wye.staticObj):
         # diagnostic callbacks
         #
 
-
+        # turn on/off display of every event Panda3d processes
         class VerboseCheckCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -2998,6 +2962,7 @@ class WyeUI(Wye.staticObj):
         # test callbacks
         #
 
+        # show/hide obj2 (sun angle fish & button)
         class Obj2CheckCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -3022,7 +2987,7 @@ class WyeUI(Wye.staticObj):
                     testObj2.vars.gObj[0].hide()
                     testText.vars.dlgButton[0].hide()
 
-
+        # test whatever needs testing now
         class TestButtonCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -3041,8 +3006,8 @@ class WyeUI(Wye.staticObj):
                 WyeUI.doPopUpDialog("Test Callback", "Pop Up Dialog Test error", Wye.color.ERROR_COLOR)
 
 
-
-        class TestCreatLibCallback:
+        # test create lib and verb from data
+        class TestCreateLibCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
             paramDescr = ()
@@ -3050,21 +3015,12 @@ class WyeUI(Wye.staticObj):
 
             def start(stack):
                 # print("TestCreatLibCallback started")
-                return Wye.codeFrame(WyeUI.MainMenuDialog.TestCreatLibCallback, stack)
+                return Wye.codeFrame(WyeUI.MainMenuDialog.TestCreateLibCallback, stack)
 
             def run(frame):
                 #print("createLibrary test")
                 lib = WyeCore.Utils.createLib("MyTestLibrary")
 
-                #print("created lib", lib.__name__)
-
-                #WyeCore.libs.TemplateTestLib.test()
-           #     print("Known libs")
-           #     for libName in dir(WyeCore.libs):
-           #         if not libName.startswith("__"):
-           #             print("  ", libName)
-
-           #     print("createVerb test")
 
                 # libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
                 vertSettings = {
@@ -3073,10 +3029,9 @@ class WyeUI(Wye.staticObj):
                     'dataType': Wye.dType.NONE
                 }
 
-                paramDescr = '''
-("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),
-'''
-                varDescr = '''
+                paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)
+
+                varDescr = (
 ("gObj", Wye.dType.OBJECT, None),
 ("objTag", Wye.dType.STRING, "objTag"),
 ("sound", Wye.dType.OBJECT, None),
@@ -3086,9 +3041,9 @@ class WyeUI(Wye.staticObj):
 ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
 ("colorInc", Wye.dType.FLOAT_LIST, [0, 0, 5]),
 ("color", Wye.dType.FLOAT_LIST, [.5, .5, .5, 1]),
-'''
+)
 
-                codeDescr = '''
+                codeDescr = (
 # (None, ("print('MyTestVerb case 0: start - set up object')")),
 ("WyeCore.libs.WyeLib.loadObject",
  (None, "[frame]"),
@@ -3128,10 +3083,10 @@ class WyeUI(Wye.staticObj):
 "WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
 
 ("GoTo", "Repeat")
-'''
-                WyeCore.Utils.createVerb(lib, "MyTestFish", vertSettings, paramDescr, varDescr, codeDescr)
+)
+                WyeCore.Utils.createVerb(lib, "MyTestFish", vertSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=True)
 
-
+        # test midi player
         class TestMidiCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -3180,6 +3135,83 @@ class WyeUI(Wye.staticObj):
                     lenFrm.verb.update(lenFrm)
                 Wye.midi.playNote(ins, note, vol, len)
 
+        # load library from file and start any autoStart verbs in it
+        class LoadLibCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                #print("LoadLibCallback started")
+                return Wye.codeFrame(WyeUI.MainMenuDialog.LoadLibCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                #print("LoadLibCallback data=", data)
+                btnFrm = data[1][0]
+                parentFrm = data[1][1]
+                editFrm = data[1][2]
+
+                # Save verb to library file
+
+                # get lib name
+                libFilePath = editFrm.vars.fileName[0].strip()
+                if libFilePath:
+                    # make sure there's an extension
+                    libFileName = os.path.basename(libFilePath)
+                    libName, ext = os.path.splitext(libFileName)
+                    if not ext:
+                        # sadly, can't tell what file type filter the user selected, so default to jpg
+                        libFileName += ".py"
+
+                    # see if file exists
+                    if not os.path.exists(libFileName):
+                        WyeUI.doPopUpDialog("File Not Found", "File not found "+libFileName, Wye.color.ERROR_COLOR)
+                        return
+
+                    # path = libFile
+                    path = WyeCore.Utils.resourcePath(libFilePath)[2:]
+                    print("Load library '" + path + "'")
+                    try:
+                        libModule = SourceFileLoader(libName, path).load_module()
+                        # print("libModule ", libModule)
+                        lib = getattr(libModule, libName)
+                        # print("add libClass", libClass, " to libList")
+                        WyeCore.World.libList.append(lib)
+                        # print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
+
+                        # add to known libraries
+                        WyeCore.World.libDict[lib.__name__] = lib  # build lib name -> lib lookup dictionary
+                        setattr(WyeCore.libs, lib.__name__, lib)  # put lib on lib dict
+
+                        lib.build()  # build all Wye code segments in code words.
+                                     # Any verbs with autoStart are added to startObjs
+
+                        # parse starting object names and find the objects in the known libraries
+                        # print("worldRunner:  start ", len(world.startObjs), " objs")
+                        for objStr in WyeCore.World.startObjs:
+                            # print("WorldRun start: obj ", objStr," in startObjs")
+                            namStrs = objStr.split(".")  # parse name of object
+                            if namStrs[1] in WyeCore.World.libDict:
+                                obj = getattr(WyeCore.World.libDict[namStrs[1]], namStrs[2])  # get object from library
+                                WyeCore.World.startActiveObject(obj)
+                            else:
+                                err = "Lib '" + namStrs[1] + "' not found for start object "+ objStr
+                                WyeUI.doPopUpDialog("Failed to start object", err, Wye.color.WARNING_COLOR)
+                        # started them, clear list
+                        WyeCore.World.startObjs.clear()
+
+                    except Exception as e:
+                        err = "Failed to read file " + libFileName +"\n"+str(e)
+                        WyeUI.doPopUpDialog("File Read Failed", err, Wye.color.ERROR_COLOR)
+                        return
+
+
+                else:
+                    err = "Invalid library file name '"+ libFilePath +"'.  Library not saved"
+                    WyeUI.doPopUpDialog("File Read Failed", err, Wye.color.ERROR_COLOR)
+                    return
 
 
     # Create dialog showing loaded libraries so user can edit them
@@ -3470,7 +3502,7 @@ class WyeUI(Wye.staticObj):
                     ("newParamDescr", Wye.dType.OBJECT_LIST, None), # Build new verb params here
                     ("newVarDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb vars here
                     ("newCodeDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb code here
-                    ("fileName", Wye.dType.STRING, "TestLib.py"),             # file name to save to
+                    ("fileName", Wye.dType.STRING, "MyTestLib.py"),             # file name to save to
                     )
 
         # global list of frames being edited
@@ -3569,7 +3601,7 @@ class WyeUI(Wye.staticObj):
                         for v in var:
                             newV.append(v)
 
-                    WyeCore.Utils.listCopy(frame.vars.newCodeDescr[0], verb.codeDescr)
+                    frame.vars.newCodeDescr[0] = Wye.listCopy(verb.codeDescr)
 
                     # create object dialog
                     # print("Edit ", verb.__name__)
@@ -5400,8 +5432,6 @@ class WyeUI(Wye.staticObj):
                     lib = WyeCore.Utils.createLib(libName)
                     print(" in new library", lib.__name__)
 
-                lib = WyeCore.Utils.createLib("MyTestLibrary")
-
                 listFlag = editFrm.vars.listCodeFrm[0].params.value[0]
                 WyeCore.Utils.createVerb(lib, name,
                                          editFrm.vars.newVerbSettings[0],
@@ -5410,7 +5440,7 @@ class WyeUI(Wye.staticObj):
                                          editFrm.vars.newCodeDescr[0],
                                          True, listFlag)
 
-        # check code for compile errors and highlight anything that needs fixing
+        # Save edited code to a library file
         class EditCodeSaveLibCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -5429,8 +5459,46 @@ class WyeUI(Wye.staticObj):
                 editFrm = data[1][2]
 
                 # Save verb to library file
-                fileName = editFrm.vars.fileName[0]
-                print("EditCodeSaveLibCallback: todo save to file", fileName)
+
+                # get lib name
+                libFilePath = editFrm.vars.fileName[0].strip()
+                if libFilePath:
+                    # make sure there's an extension
+                    libFileName = os.path.basename(libFilePath)
+                    libName, ext = os.path.splitext(libFileName)
+                    if not ext:
+                        # sadly, can't tell what file type filter the user selected, so default to jpg
+                        libFileName += ".py"
+
+                    # get verb name
+                    verbName = editFrm.vars.nameFrm[0].params.value[0]
+                    if verbName:
+                        verbName = verbName.strip()
+                    if not verbName:
+                        verbName = "TestVerb"
+
+                    # gen lib code
+                    outStr = WyeCore.Utils.createLibString(libName)
+
+                    # gen verb code
+                    vrbStr = WyeCore.Utils.createVerbString(libName, verbName, editFrm.vars.newVerbSettings[0],
+                                editFrm.vars.newParamDescr[0], editFrm.vars.newVarDescr[0], editFrm.vars.newCodeDescr[0],
+                                doTest=False)
+                    vrbStr = vrbStr.replace("\n", "\n    ")
+
+                    outStr += vrbStr
+
+                    # write the file
+                    f = open(libFileName, "w")
+                    f.write(outStr)
+                    f.close()
+
+                    print("EditCodeSaveLibCallback: Wrote verb ", verbName, " to library file", libFileName)
+
+                else:
+                    print("ERROR: Invalid library file name '"+ libFilePath +"'.  Library not saved")
+                    return
+
 
     # show active objects (currently running object stacks)
     # so user can debug them

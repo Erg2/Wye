@@ -436,7 +436,7 @@ class TestLib:
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj1"),(None, "[0,5,-.5]")),
             #(None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
-            ("TestLib.clickWiggle", (None, "frame.vars.fish"), (None, "frame.vars.fishTag"), (None, "[1]")),
+            ("WyeCore.libs.TestLib.clickWiggle", (None, "frame.vars.fish"), (None, "frame.vars.fishTag"), (None, "[1]")),
             #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.fishTag")),
             ("GoTo", "Repeat")
         )
@@ -568,7 +568,7 @@ class TestLib:
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.obj"),(None, "[0,5,-.5]")),
             (None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
-            ("TestLib.clickWiggle", (None, "frame.vars.obj"), (None, "frame.vars.objTag"), (None, "[1]")),
+            ("WyeCore.libs.TestLib.clickWiggle", (None, "frame.vars.obj"), (None, "frame.vars.objTag"), (None, "[1]")),
             #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.objTag")),
             ("GoTo", "Repeat")
         )

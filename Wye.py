@@ -56,6 +56,19 @@ class Wye:
             #print("run", frame.verb.__name__)
             Wye.breakStep(frame, msg)
 
+    # deep copy list
+    # recursively copy oldLst to newLst
+    # Can't use WyeCore version
+    def listCopy(oldLst):
+        newLst = []
+        for oldElem in oldLst:
+            if isinstance(oldElem, list) or isinstance(oldElem, tuple):
+                newLst.append(Wye.listCopy(oldElem))
+            else:
+                newElem = oldElem
+                newLst.append(newElem)
+        return newLst
+
     def breakStep(frame, msg):
         if hasattr(frame, "parallelStreamFlag"):    # note: can't ref WyeCore class here, can't put ParallelStream here
             #print("breakStep parallel run", frame.verb.__name__, ", parent ",frame.parent.verb.__name__, " at", msg)
@@ -626,8 +639,10 @@ class Wye:
                             varVal = [""]   # prevent empty string from being optimized away
                         else:
                             varVal = varDef[2]
-                        if isinstance(varVal, list):        # prevent multiple copies of object from sharing data structures
-                            varVal = copy.deepcopy(varVal)
+                        # deep copy to give each frame its own data
+                        # convert tuples to lists so are writeable
+                        if isinstance(varVal, tuple) or isinstance(varVal, list):
+                            varVal = Wye.listCopy(varVal)
                         setattr(self.vars, varDef[0], [varVal])
                     #    print("  set vars '", varDef[0], "' to", str(getattr(self.vars, varDef[0])))
                     #else:
@@ -639,7 +654,7 @@ class Wye:
             if hasattr(verb, "paramDescr") and len(self.verb.paramDescr) > 0:
                 for paramDef in verb.paramDescr:
                     # create parameter
-                    if len(paramDef) > 1:
+                    if paramDef and len(paramDef) > 1:
                         #print("  params attr ", paramDef[0])
                         if paramDef[1] != Wye.dType.VARIABLE:
                             setattr(self.params, paramDef[0], [])

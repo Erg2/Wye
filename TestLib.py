@@ -1196,7 +1196,7 @@ for ii in range(len(frame.vars.bubbles[0])):
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
             (None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
-            ("TestLib.clickWiggle", (None, "frame.vars.gObj"), (None, "frame.vars.objTag"), (None, "[1]")),
+            ("WyeCore.libs.TestLib.clickWiggle", (None, "frame.vars.gObj"), (None, "frame.vars.objTag"), (None, "[1]")),
             #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.objTag")),
             ("GoTo", "Repeat")
         )

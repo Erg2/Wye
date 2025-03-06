@@ -965,6 +965,7 @@ class WyeCore(Wye.staticObj):
             #print("  return path '"+ path+"'")
             return path
 
+        # slerp between quats. Return q at time t
         def slerp(q1, q2, t):
             costheta = q1.dot(q2)
             if costheta < 0.0:
@@ -985,7 +986,9 @@ class WyeCore(Wye.staticObj):
             r2 = math.sin(t * theta) / sintheta
             return (q1 * r1) + (q2 * r2)
 
-
+        # nlerp between quats at blend
+        #
+        # taken from:
         #https://physicsforgames.blogspot.com/2010/02/quaternions.html
         #Quat nlerp(const Quat& i, const Quat& f, float blend)
         #{
@@ -1054,17 +1057,33 @@ class WyeCore(Wye.staticObj):
             #print("tuple not found")
             return None
 
-        # deep copy list
-        # recursively copy oldLst to newLst
-        def listCopy(newLst, oldLst):
-            for oldElem in oldLst:
-                if isinstance(oldElem, list) or isinstance(oldElem, tuple):
-                    subLst = []
-                    newLst.append(subLst)
-                    WyeCore.Utils.listCopy(subLst, oldElem)
+        # convert hierarchical tree of lists to nicely formatted tuple string
+        def listToTupleString(hierList, level):
+            tupleStr = ""
+            indent = "      " + "".join(["  " for l in range(level)])      # indent by recursion depth
+            # recurse for list
+            if isinstance(hierList, list) or isinstance(hierList, tuple):
+                tupleStr += "\n"+indent+"("
+                first = True
+                for elem in hierList:
+                    if first:
+                        tupleStr += WyeCore.Utils.listToTupleString(elem, level+1)
+                        first = False
+                    else:
+                        tupleStr += ","+WyeCore.Utils.listToTupleString(elem, level+1)
+                if len(hierList) ==1:
+                    tupleStr += ","     # deal with stupid Python "feature" that single element tuples aren't tuples
+                tupleStr += ")"
+            # output element
+            else:
+                if hierList is None:
+                    tupleStr += "None"
+                elif isinstance(hierList, str):
+                    if not hierList.isspace():
+                        tupleStr += "\""+hierList+"\""
                 else:
-                    newElem = oldElem
-                    newLst.append(newElem)
+                    tupleStr += str(hierList)
+            return tupleStr
 
         # count nested lists in list
         def countNestedLists(tupleLst):
@@ -1470,16 +1489,26 @@ class WyeCore(Wye.staticObj):
                         lnIx += 1
 
                 # compile the runtime class containing methods for all the verb runtimes
-                code = compile(codeStr, "<string>", "exec")
-                # exec the lib method - contains one line to setattr the lib_rt class to the library
-                # so all the verb functions are available at runtime
-                libDict = {
-                    libName:libClass,
-                    "Wye":Wye,
-                    "WyeCore":WyeCore,
-                    "WyeUI":WyeCore.libs.WyeUI
-                }
-                exec(code, libDict)
+                try:
+                    code = compile(codeStr, "<string>", "exec")
+                    # exec the lib method - contains one line to setattr the lib_rt class to the library
+                    # so all the verb functions are available at runtime
+                    libDict = {
+                        libName:libClass,
+                        "Wye":Wye,
+                        "WyeCore":WyeCore,
+                        "WyeUI":WyeCore.libs.WyeUI
+                    }
+                    exec(code, libDict)
+                except Exception as e:
+                    print("Failed to build library:", libClass.__name__, " runtime code\n", str(e))
+                    traceback.print_exception(e)
+                    print(libClass.__name__, 'code:')
+                    lnIx = 1
+                    for ln in codeStr.split('\n'):
+                        print('%2d ' % lnIx, ln)
+                        lnIx += 1
+                    print('')
 
         # do we already have a UI input focus manager?
         def haveFocusManager():
@@ -1510,12 +1539,11 @@ class WyeCore(Wye.staticObj):
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
             libTpl += "    class "+name+"_rt:\n        pass\n"
-            libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
             return libTpl
 
-        def createVerbString(libName, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False, doAutoStart=True):
-            vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
-            vrbStr += "\nclass " + name + ":\n"
+        def createVerbString(libName, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False):
+
+            vrbStr = "\nclass " + name + ":\n"
             if 'mode' in verbSettings:
                 vrbStr += "    mode = Wye.mode." + Wye.mode.tostring(verbSettings['mode']) + "\n"
             if 'autoStart' in verbSettings:
@@ -1528,9 +1556,14 @@ class WyeCore(Wye.staticObj):
                 vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(
                     verbSettings['parTermType']) + "\n"
 
-            vrbStr += "    paramDescr = (" + str(paramDescr) + ")\n"
-            vrbStr += "    varDescr = (" + str(varDescr) + ")\n"
-            vrbStr += "    codeDescr = (" + str(codeDescr) + ")\n"
+            # nicely format descrs so won't create over-long lines and cause trouble.  Also looks nice
+            paramStr = WyeCore.Utils.listToTupleString(paramDescr, 0)
+            varStr = WyeCore.Utils.listToTupleString(varDescr, 0)
+            codeStr = WyeCore.Utils.listToTupleString(codeDescr, 0)
+
+            vrbStr += "    paramDescr =  " + paramStr[1:] + "\n"
+            vrbStr += "    varDescr =  " + varStr[1:] + "\n"
+            vrbStr += "    codeDescr =  " + codeStr[1:] + "\n"
             vrbStr += '''
     def build():
         # print("Build ",'''
@@ -1566,6 +1599,7 @@ class WyeCore(Wye.staticObj):
         def createLib(name):
 
             libTpl = WyeCore.Utils.createLibString(name)
+            libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
 
         #    print("createLib: Library text:")
         #    lnIx = 1
@@ -1605,7 +1639,8 @@ class WyeCore(Wye.staticObj):
         def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False, doAutoStart=True):
 
             # build verb
-            vrbStr = WyeCore.Utils.createVerbString(vrbLib.__name__, name, verbSettings, paramDescr, varDescr, codeDescr, doTest, listCode, doAutoStart)
+            vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
+            vrbStr += WyeCore.Utils.createVerbString(vrbLib.__name__, name, verbSettings, paramDescr, varDescr, codeDescr, doTest)
 
             # put library in verb
             vrbStr += "setattr(" + name + ", 'library', WyeCore.libs." + vrbLib.__name__ + ")\n"
@@ -1722,7 +1757,8 @@ except Exception as e:
                     if doTest:
                         print(vrbLib.__name__ + name, " executed successfully")
                 except Exception as e:
-                    print("exec verb ", vrbLib.__name__ + "." + name, " failed\n", str(e))
+                    print("exec verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
+                    traceback.print_exception(e)
                     print("verb text:")
                     lnIx = 1
                     for ln in vrbStr.split('\n'):
@@ -1733,6 +1769,7 @@ except Exception as e:
 
             except Exception as e:
                 print("compile verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
+                traceback.print_exception(e)
                 print("verb text:")
                 lnIx = 1
                 for ln in vrbStr.split('\n'):
