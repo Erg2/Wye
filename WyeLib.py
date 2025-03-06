@@ -213,7 +213,7 @@ class WyeLib:
                 #print("Load graphic model ", path)
                 model = base.loader.loadModel(path)
                 if model:
-                    getattr(frame.params, frame.firstParamName())[0] = model
+                    frame.params.obj[0] = model
                 else:
                     frame.status = Wye.status.FAIL
             except:

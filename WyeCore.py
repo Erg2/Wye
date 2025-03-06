@@ -664,7 +664,7 @@ class WyeCore(Wye.staticObj):
                     WyeCore.focusManager.doKey(keyID)
 
             def keyFunc(self, keyname):
-                print("KeyHandler: key=", keyname, "=", ord(keyname))
+                #print("KeyHandler: key=", keyname, "=", ord(keyname))
                 # if there's a dialog focus manager running
                 focusStatus = False
                 if WyeCore.focusManager:
@@ -1554,7 +1554,7 @@ class WyeCore(Wye.staticObj):
             vrbStr += "        try:\n"
             vrbStr += "          " + libName + "." + libName + "_rt." + name + "_run_rt(frame)\n"
             vrbStr += "        except Exception as e:\n"
-            vrbStr += "          if not hasattr(" + libName + "." + libName + "_rt." + name + "._run_rt, 'errOnce'):\n"
+            vrbStr += "          if not hasattr(" + libName + "." + libName + "_rt." + name + "_run_rt, 'errOnce'):\n"
             vrbStr += "            print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
             vrbStr += "            setattr(" + libName + "." + libName + "_rt." + name + "_run_rt, 'errOnce', True)\n\n"
             return vrbStr
@@ -1591,7 +1591,7 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.libList.remove(WyeCore.World.libDict[name])
             WyeCore.World.libDict[name] = lib
             WyeCore.World.libList.append(lib)
-            print("createLib: Built and installed new library successfully", lib.__name__)
+            #print("createLib: Built and installed new library successfully", lib.__name__)
             return lib
 
 
@@ -1646,7 +1646,7 @@ cdStr = "class tmp:\\n" + cdStr
 try:
     # compile the verb's runtime code
     code = compile(cdStr, "<string>", "exec")
-    print("createVerb: Compiled verb runtime successfully")
+    #print("createVerb: Compiled verb runtime successfully")
     
     libDict = {
 '''
@@ -1662,6 +1662,9 @@ try:
     # run the compiled code.  This will add the verb's runtime function to the library's runtime class
     try:
         exec(code, libDict)
+'''
+            vrbStr += "        print('Created verb "+vrbLib.__name__ + "." + name + "')\n"
+            vrbStr += '''
     except Exception as e:
         print("exec verb runtime failed\\n", str(e))
         print('cdStr')
