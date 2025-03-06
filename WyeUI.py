@@ -1271,18 +1271,20 @@ class WyeUI(Wye.staticObj):
             frame.vars.tags[0] = gTags
 
             # update dialog pos to next free space downward
-            pos[2] -= txt.getHeight()           # update to next position
+            pos[2] -= max(lbl.getHeight(), txt.getHeight())           # update to next position
             frame.vars.size[0] = (width + txt.getWidth(), 0, max(lbl.getHeight(), txt.getHeight()))
 
         # reposition in dialog
         def redisplay(frame, dlgFrm, pos):
             frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
-            lbl.setPos(pos)
-            pos[2] -= lbl.getHeight()
-            lbl = frame.vars.gWidgetStack[0][1]
-            lbl.setPos(pos)
-            pos[2] -= lbl.getHeight()
+            lbl.setPos(pos[0], pos[1], pos[2])
+            width = lbl.getWidth() + .5
+            pos[0] += width
+            txt = frame.vars.gWidgetStack[0][1]
+            txt.setPos(width, 0, 0)
+            pos[2] -= max(lbl.getHeight(), txt.getHeight())
+            frame.vars.size[0] = (width + txt.getWidth(), 0, max(lbl.getHeight(), txt.getHeight()))
 
         # update value
         def update(inFrm):
@@ -2220,7 +2222,6 @@ class WyeUI(Wye.staticObj):
                     if inFrm.params.layout[0] == Wye.layout.ADD_RIGHT:
                         pos[0] = newX
                         pos[2] = prevZ
-                        print("place", inFrm.verb.__name__, " ", inFrm.params.label[0], " at", pos)
                         inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
                     else:
                         prevZ = pos[2]
@@ -3128,16 +3129,8 @@ class WyeUI(Wye.staticObj):
 
 ("GoTo", "Repeat")
 '''
-                WyeCore.Utils.createVerb(lib, "MyTestVerb", vertSettings, paramDescr, varDescr, codeDescr)
+                WyeCore.Utils.createVerb(lib, "MyTestFish", vertSettings, paramDescr, varDescr, codeDescr)
 
-
-                # - don't need to run it, it's got autoStart set True
-                #print("Run MyTestVerb")
-
-                #frm = WyeCore.libs.MyTestLibrary.MyTestVerb.start(frame.SP)
-                #frm.params.ret = [0]
-                #frm.verb.run(frm)
-                #print("Started MyTestVerb")
 
         class TestMidiCallback:
             mode = Wye.mode.SINGLE_CYCLE
@@ -3575,8 +3568,6 @@ class WyeUI(Wye.staticObj):
                         frame.vars.newVarDescr[0].append(newV)
                         for v in var:
                             newV.append(v)
-                        #if len(newV) > 0:
-                        #    print("editVerb run copy var", var, " value", var[2],": value for", newV, " is", newV[2])
 
                     WyeCore.Utils.listCopy(frame.vars.newCodeDescr[0], verb.codeDescr)
 
@@ -3644,16 +3635,17 @@ class WyeUI(Wye.staticObj):
 
                         attrIx = 0
 
-                        for param in verb.paramDescr:
+                        for param in frame.vars.newParamDescr[0]:
                             # make the dialog row
                             editLnFrm = WyeUI.doInputDropdown(dlgFrm, "  +/-", [WyeUI.EditVerb.modOpLst], [0],
                                                               WyeUI.EditVerb.EditParamLineCallback, showText=False)
-
                             label = "  '"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])
+                            if len(param) > 3:
+                                label += " default:"+param[3]
                             btnFrm = WyeUI.doInputButton(dlgFrm, label, WyeUI.EditVerb.EditParamCallback, layout=Wye.layout.ADD_RIGHT)
-                            btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, frame, editLnFrm)]  # button row, dialog frame
+                            btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, frame, editLnFrm, param)]  # button row, dialog frame
 
-                            editLnFrm.params.optData = [(editLnFrm, dlgFrm, btnFrm, param)]
+                            editLnFrm.params.optData = [(editLnFrm, dlgFrm, btnFrm)]
 
                             attrIx += 1
 
@@ -3676,17 +3668,17 @@ class WyeUI(Wye.staticObj):
                     WyeUI.InputLabel.run(lblFrm)
                     dlgFrm.params.inputs[0].append([lblFrm])
 
-                    if len(verb.varDescr[0]) > 0:
+                    if len(frame.vars.newVarDescr[0]) > 0:
                         attrIx = 0
 
-                        for var in verb.varDescr:
+                        for var in frame.vars.newVarDescr[0]:
                             # make the dialog row
                             editLnFrm = WyeUI.doInputDropdown(dlgFrm, "  +/-", [WyeUI.EditVerb.modOpLst], [0],
                                                               WyeUI.EditVerb.EditVarLineCallback, showText=False)
 
                             label = "  '"+var[0] + "' "+Wye.dType.tostring(var[1]) + " = "+str(var[2])
                             btnFrm = WyeUI.doInputButton(dlgFrm, label, WyeUI.EditVerb.EditVarCallback, layout=Wye.layout.ADD_RIGHT)
-                            btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, frame, editLnFrm)]  # button row, dialog frame
+                            btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, frame, editLnFrm, var)]  # button row, dialog frame
 
                             editLnFrm.params.optData = [(editLnFrm, dlgFrm, btnFrm, var)]
 
@@ -3786,7 +3778,6 @@ class WyeUI(Wye.staticObj):
                         #print("code\n"+str(frame.vars.newCodeDescr))
 
                         # if existing library
-                        print("selectedRadio", frame.vars.libRadio[0].params.selectedRadio[0])
                         if frame.vars.libRadio[0].params.selectedRadio[0] == 0:
                             libList = [lib for lib in WyeCore.World.libList]
                             lib = libList[frame.vars.existingLibFrm[0].params.selectionIx[0]]
@@ -4161,7 +4152,7 @@ class WyeUI(Wye.staticObj):
                 editLnFrm = data[1][0]  # add/del/copy button frame
                 parentFrm = data[1][1]  # parent dialog
                 editVerbFrm = data[1][2]
-                param = data[1][3]
+
 
                 # get selectionIx
                 opIx = editLnFrm.params.selectionIx[0]
@@ -5088,6 +5079,7 @@ class WyeUI(Wye.staticObj):
                         ("paramName", Wye.dType.STRING, "<name>"),
                         ("paramType", Wye.dType.STRING, "<type>"),
                         ("paramAccess", Wye.dType.STRING, "<access>"),
+                        ("paramDefault", Wye.dType.STRING, ""),
                         )
 
             def start(stack):
@@ -5101,6 +5093,8 @@ class WyeUI(Wye.staticObj):
                 btnFrm = data[1][1]
                 parentFrm = data[1][2]
                 editVerbFrm = data[1][3]
+                editLnFrm = data[1][4]
+                param = data[1][5]
                 #print("param ix", data[1][0], " parentFrm", parentFrm.verb.__name__, " verb", editVerbFrm.vars.oldVerb[0].__name__)
 
                 match (frame.PC):
@@ -5147,6 +5141,13 @@ class WyeUI(Wye.staticObj):
                         WyeUI.InputText.run(paramAccessFrm)
                         dlgFrm.params.inputs[0].append([paramAccessFrm])
 
+                        # param default value
+                        if len(editVerbFrm.vars.newParamDescr[0][paramIx]) > 3:
+                            frame.vars.paramDefault[0] = str(editVerbFrm.vars.newParamDescr[0][paramIx][3])
+                        else:
+                            frame.vars.paramDefault[0] = ""
+                        WyeUI.doInputText(dlgFrm, "Default Value:", frame.vars.paramDefault)
+
                         frame.SP.append(dlgFrm)
                         frame.PC += 1
                     case 1:
@@ -5160,8 +5161,7 @@ class WyeUI(Wye.staticObj):
                             else:
                                 wType = frame.vars.paramType[0]
                             accessVal = dlgFrm.params.inputs[0][2][0].params.value[0]
-                            accessCode = Wye.access.REFERENCE    # default
-                            accessStr = "REFERENCE"
+                            defaultVal = frame.vars.paramDefault[0]
                             match(accessVal.upper()):
                                 case "VALUE":
                                     accessStr = "VALUE"
@@ -5169,11 +5169,19 @@ class WyeUI(Wye.staticObj):
                                 case "REFERENCE":
                                     accessStr = "REFERENCE"
                                     accessCode = Wye.access.REFERENCE
-
-                            editVerbFrm.vars.newParamDescr[0][paramIx] = [label, wType, accessCode]
+                                case _:
+                                    print("EditParamCallback done: Unrecognized access method '"+accessVal+"'.  Default to REFERENCE")
+                                    accessStr = "REFERENCE"
+                                    accessCode = Wye.access.REFERENCE
+                            descr = [label, wType, accessCode]
+                            if defaultVal:
+                                descr.append(defaultVal)
+                            editVerbFrm.vars.newParamDescr[0][paramIx] = descr
                             #print("EditParamCallback done: inserted at ",paramIx," in newParamDescr\n", editVerbFrm.vars.newParamDescr[0])
 #
                             rowTxt = "  '" + label + "' " + Wye.dType.tostring(wType) + " call by:" + accessStr
+                            if defaultVal:
+                                rowTxt += " default:"+defaultVal
                             #print("new row", rowTxt)
                             btnFrm.verb.setLabel(btnFrm, rowTxt)
 
@@ -5262,10 +5270,9 @@ class WyeUI(Wye.staticObj):
                         varValFrm.params.frame = [None]
                         varValFrm.params.label = ["Value: "]
                         if frame.vars.varType[0] == Wye.dType.STRING and (frame.vars.varVal is None or len(frame.vars.varVal) == 0):
-                            varValFrm.params.value = ''
+                            varValFrm.params.value = ['']
                         else:
-                            frame.vars.varVal
-                        varValFrm.params.value = frame.vars.varVal
+                            varValFrm.params.value = frame.vars.varVal
                         WyeUI.InputText.run(varValFrm)
                         dlgFrm.params.inputs[0].append([varValFrm])
 
@@ -5364,11 +5371,23 @@ class WyeUI(Wye.staticObj):
                 # print("vars\n"+str(frame.vars.newVarDescr))
                 # print("code\n"+str(frame.vars.newCodeDescr))
 
+                # get verb name
+                name = editFrm.vars.nameFrm[0].params.value[0]
+                if name:
+                    name = name.strip()
+                if not name:
+                    name = "TestVerb"
+
+                if name != editFrm.params.verb[0].__name__:
+                    print("Put new verb", name, end="")
+                else:
+                    print("Replace verb", name, end="")
+
                 # if existing library
                 if editFrm.vars.libRadio[0].params.selectedRadio[0] == 0:
                     libList = [lib for lib in WyeCore.World.libList]
                     lib = libList[editFrm.vars.existingLibFrm[0].params.selectionIx[0]]
-                    print("Put new verb in existing lib", lib.__name__)
+                    print(" in existing lib", lib.__name__)
                 # else new library
                 else:
                     libName = editFrm.vars.libNameFrm[0].params.value[0]
@@ -5379,14 +5398,7 @@ class WyeUI(Wye.staticObj):
                         libName = "TestLibrary"
 
                     lib = WyeCore.Utils.createLib(libName)
-                    print("put new verb in new library", lib.__name__)
-
-                # get verb name
-                name = editFrm.vars.nameFrm[0].params.value[0]
-                if name:
-                    name = name.strip()
-                if not name:
-                    name = "TestVerb"
+                    print(" in new library", lib.__name__)
 
                 lib = WyeCore.Utils.createLib("MyTestLibrary")
 

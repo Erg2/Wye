@@ -6,6 +6,7 @@
 #    structures (regular classes)
 #    and factories (lib, obj)
 
+import copy
 
 # Wye container class that holds Wye classes
 class Wye:
@@ -625,10 +626,8 @@ class Wye:
                             varVal = [""]   # prevent empty string from being optimized away
                         else:
                             varVal = varDef[2]
-                        #if isinstance(varVal, list):
-                        #    print("deep copy", varVal, end="")
-                        #    varVal = copy.deepcopy(varVal)
-                        #    print(" id varDef[2]", id(varDef[2]), " id varVal", id(varVal))
+                        if isinstance(varVal, list):        # prevent multiple copies of object from sharing data structures
+                            varVal = copy.deepcopy(varVal)
                         setattr(self.vars, varDef[0], [varVal])
                     #    print("  set vars '", varDef[0], "' to", str(getattr(self.vars, varDef[0])))
                     #else:

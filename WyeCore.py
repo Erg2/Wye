@@ -1556,6 +1556,8 @@ class WyeCore(Wye.staticObj):
             vrbStr += "        except Exception as e:\n"
             vrbStr += "          if not hasattr(" + libName + "." + libName + "_rt." + name + "_run_rt, 'errOnce'):\n"
             vrbStr += "            print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
+            vrbStr += "            import traceback\n"
+            vrbStr += "            traceback.print_exception(e)\n"
             vrbStr += "            setattr(" + libName + "." + libName + "_rt." + name + "_run_rt, 'errOnce', True)\n\n"
             return vrbStr
 
