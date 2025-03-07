@@ -6,7 +6,7 @@ class MyTestLib:
     class MyTestLib_rt:
         pass
 
-    class testObj2:
+    class PlaceHolder:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
         dataType = Wye.dType.INTEGER
@@ -15,46 +15,28 @@ class MyTestLib:
         paramDescr =        (
             ("ret","I",1),)
         varDescr =        (
-            ("gObj","O",None),
-            ("objTag","S","objTag"),
-            ("sound","O",None),
-            ("position","FL",
-              (-1.0,2.0,2.5)))
+            ("myVar","I",0),)
         codeDescr =        (
-            ("WyeCore.libs.WyeLib.loadObject",
-              (None,"[frame]"),
-              (None,"frame.vars.gObj"),
-              (None,"['flyer_01.glb']"),
-              (None,"frame.vars.position"),
-              (None,"[[0, 90, 0]]"),
-              (None,"[[1,1,1]]"),
-              (None,"frame.vars.objTag"),
-              ("Code","[[1,1,0,1]]")),
-            (None,"frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePew.wav')"),
-            ("Label","Repeat"),
-            ("WyeCore.libs.TestLib.clickWiggle",
-              (None,"frame.vars.gObj"),
-              (None,"frame.vars.objTag"),
-              (None,"[1]")),
-            ("GoTo","Repeat"))
+            ("Code","print(len(WyeCore.World.objStacks), 'objects running!')"),
+            ("Label","DoNothing"))
     
         def build():
-            # print("Build ",testObj2)
-            return WyeCore.Utils.buildCodeText('testObj2', MyTestLib.testObj2.codeDescr)
+            # print("Build ",PlaceHolder)
+            return WyeCore.Utils.buildCodeText('PlaceHolder', MyTestLib.PlaceHolder.codeDescr)
     
         def start(stack):
-            # print('testObj2 object start')
-                        return Wye.codeFrame(MyTestLib.testObj2, stack)
+            # print('PlaceHolder object start')
+                        return Wye.codeFrame(MyTestLib.PlaceHolder, stack)
     
         def run(frame):
-            # print('Run 'testObj2)
+            # print('Run 'PlaceHolder)
             try:
-              MyTestLib.MyTestLib_rt.testObj2_run_rt(frame)
+              MyTestLib.MyTestLib_rt.PlaceHolder_run_rt(frame)
             except Exception as e:
-              if not hasattr(MyTestLib.MyTestLib_rt.testObj2_run_rt, 'errOnce'):
-                print('MyTestLib.MyTestLib_rt.testObj2_run_rt failed\n', str(e))
+              if not hasattr(MyTestLib.MyTestLib_rt.PlaceHolder_run_rt, 'errOnce'):
+                print('MyTestLib.MyTestLib_rt.PlaceHolder_run_rt failed\n', str(e))
                 import traceback
                 traceback.print_exception(e)
-                setattr(MyTestLib.MyTestLib_rt.testObj2_run_rt, 'errOnce', True)
+                setattr(MyTestLib.MyTestLib_rt.PlaceHolder_run_rt, 'errOnce', True)
     
     

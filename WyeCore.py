@@ -1541,6 +1541,8 @@ class WyeCore(Wye.staticObj):
             libTpl += "    class "+name+"_rt:\n        pass\n"
             return libTpl
 
+        # create the text description of a verb from lib, verb name, settings, param/var/code descrs.
+        # If doTest, builds a self-contained Python class that can build itself without having to be in a lib
         def createVerbString(libName, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False):
 
             vrbStr = "\nclass " + name + ":\n"
@@ -1556,11 +1558,19 @@ class WyeCore(Wye.staticObj):
                 vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(
                     verbSettings['parTermType']) + "\n"
 
-            # nicely format descrs so won't create over-long lines and cause trouble.  Also looks nice
+            # Convert nested descrs into nicely formated text so won't create over-long lines and cause trouble.
+            # Also looks nice
+            #
+            # Note: editing requires all tuples be replaced by lists.  This puts lists back to tuples.
+            # Note: side effect is that varDescr initial value lists get converted to tuples.
+            # That would screw up vars expecting mutable arrays and getting const tuples.  However, the codeFrame does
+            # a deep copy of any initial value list/tuple to ensure frames don't share values, and it turns all tuples
+            # into lists again.  This could be a surprise somewhere down the road.
             paramStr = WyeCore.Utils.listToTupleString(paramDescr, 0)
             varStr = WyeCore.Utils.listToTupleString(varDescr, 0)
             codeStr = WyeCore.Utils.listToTupleString(codeDescr, 0)
 
+            # note: trim off leading \n from formatted string or compiler fusses
             vrbStr += "    paramDescr =  " + paramStr[1:] + "\n"
             vrbStr += "    varDescr =  " + varStr[1:] + "\n"
             vrbStr += "    codeDescr =  " + codeStr[1:] + "\n"

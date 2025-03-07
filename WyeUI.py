@@ -2726,6 +2726,7 @@ class WyeUI(Wye.staticObj):
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
                     ("dlgFrm", Wye.dType.OBJECT, None),
                     ("fileName", Wye.dType.STRING, "MyTestLib.py"),  # file name to save to
+                    ("listCode", Wye.dType.BOOL, False)
                     )
 
         # global list of libs being edited
@@ -2837,8 +2838,10 @@ class WyeUI(Wye.staticObj):
                     btnFrm.params.parent = [None]
                     btnFrm.params.label = ["  Test Create Lib"]
                     btnFrm.params.callback = [WyeUI.MainMenuDialog.TestCreateLibCallback]  # button callback
-                    #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
+                    btnFrm.params.optData = [(frame,)]  # button row, dialog frame
                     WyeUI.InputButton.run(btnFrm)
+
+                    WyeUI.doInputCheckbox(dlgFrm, "   Display Code", frame.vars.listCode, layout=Wye.layout.ADD_RIGHT)
 
                     # midi test
                     midFrm = WyeUI.InputButton.start(dlgFrm.SP)
@@ -3018,6 +3021,8 @@ class WyeUI(Wye.staticObj):
                 return Wye.codeFrame(WyeUI.MainMenuDialog.TestCreateLibCallback, stack)
 
             def run(frame):
+                data = frame.eventData
+                editVerbFrm = data[1][0]
                 #print("createLibrary test")
                 lib = WyeCore.Utils.createLib("MyTestLibrary")
 
@@ -3037,10 +3042,12 @@ class WyeUI(Wye.staticObj):
 ("sound", Wye.dType.OBJECT, None),
 ("position", Wye.dType.FLOAT_LIST, [0, 15, 0]),
 ("dPos", Wye.dType.FLOAT_LIST, [0., 0., .1]),
-("dAngle", Wye.dType.FLOAT_LIST, [0., 0., .30]),
+("dAngle", Wye.dType.FLOAT_LIST, [0., 0., 0.]),
 ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
-("colorInc", Wye.dType.FLOAT_LIST, [0, 0, 5]),
+("colorInc", Wye.dType.FLOAT_LIST, [1, 5, 10]),
 ("color", Wye.dType.FLOAT_LIST, [.5, .5, .5, 1]),
+("skew", Wye.dType.FLOAT, 0),
+("delta", Wye.dType.FLOAT, 0),
 )
 
                 codeDescr = (
@@ -3061,16 +3068,22 @@ class WyeUI(Wye.staticObj):
 ("Label", "Repeat"),
 # set angle
 #("Code", "print('MyTestVerb run')"),
+("Code", "from random import random"),
+("Code", "frame.vars.skew[0] = .25 if abs(frame.vars.dAngle[0][2]) > .5 else .5"),
+("Code", "frame.vars.skew[0] = 1-frame.vars.skew[0] if frame.vars.dAngle[0][2] > .0 else frame.vars.skew[0]"),
+("Code", "frame.vars.delta[0] = (random()-frame.vars.skew[0])/10"),
+#("Code", "print('dAngle', frame.vars.dAngle[0][2], ' skew', frame.vars.skew[0], ' delta', frame.vars.delta[0])"),
+("Code", "frame.vars.dAngle[0][2] += frame.vars.delta[0]"),
 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngle")),
 # Step forward
+("Code", "frame.vars.dPos[0][2] += (random()-.5)/100"),
+("Code", "frame.vars.dPos[0][2] = max(min(frame.vars.dPos[0][2], .3), .05)"),
 ("WyeCore.libs.WyeLib.setObjRelPos", (None, "frame.vars.gObj"), (None, "frame.vars.dPos")),
 ("WyeCore.libs.WyeLib.getObjPos", (None, "frame.vars.position"), (None, "frame.vars.gObj")),
 # set color
 ("Var=", "frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
 ("Var=", "frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
 ("Var=", "frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
-# todo Next two lines are horrible - if followed by then expression indented - they have to be together
-# todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
 ("Code", "if frame.vars.colorWk[0][0] >= 255 or frame.vars.colorWk[0][0] <= 0:"),
 ("Code", " frame.vars.colorInc[0][0] = -1 * frame.vars.colorInc[0][0]"),
 ("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
@@ -3084,7 +3097,8 @@ class WyeUI(Wye.staticObj):
 
 ("GoTo", "Repeat")
 )
-                WyeCore.Utils.createVerb(lib, "MyTestFish", vertSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=True)
+                WyeCore.Utils.createVerb(lib, "MyTestFish", vertSettings, paramDescr, varDescr, codeDescr,
+                                         doTest=False, listCode=editVerbFrm.vars.listCode[0])
 
         # test midi player
         class TestMidiCallback:
@@ -3803,17 +3817,21 @@ class WyeUI(Wye.staticObj):
                         dataType = Wye.dType.valList[dTypeIx]
                         frame.vars.newVerbSettings[0]['dataType'] = dataType
 
-                        # DEBUG
-                        #print("New class settings\n mode", Wye.mode.tostring(mode), "\n autoStart", autoStart, "\n dataType", Wye.dType.tostring(dataType))
-                        #print("params\n"+str(frame.vars.newParamDescr))
-                        #print("vars\n"+str(frame.vars.newVarDescr))
-                        #print("code\n"+str(frame.vars.newCodeDescr))
+                        # get verb name
+                        name = frame.vars.nameFrm[0].params.value[0]
+                        if name:
+                            name = name.strip()
+                        if not name:
+                            name = "TestVerb"
 
                         # if existing library
                         if frame.vars.libRadio[0].params.selectedRadio[0] == 0:
                             libList = [lib for lib in WyeCore.World.libList]
                             lib = libList[frame.vars.existingLibFrm[0].params.selectionIx[0]]
-                            #print("Put new verb in existing lib", lib.__name__)
+                            if name != frame.params.verb[0].__name__:
+                                print("Put new verb", name, " in existing lib", lib.__name__)
+                            else:
+                                print("Replace verb", name, " in existing lib", lib.__name__)
                         # else new library
                         else:
                             libName = frame.vars.libNameFrm[0].params.value[0]
@@ -3824,14 +3842,7 @@ class WyeUI(Wye.staticObj):
                                 libName = "TestLibrary"
 
                             lib = WyeCore.Utils.createLib(libName)
-                            #print("put new verb in new library", lib.__name__)
-
-                        # get verb name
-                        name = frame.vars.nameFrm[0].params.value[0]
-                        if name:
-                            name = name.strip()
-                        if not name:
-                            name = "TestVerb"
+                            print("Put verb", name, " in new library", lib.__name__)
 
                         disableAuto = frame.vars.disaAutoFrm[0].params.value[0]
 
@@ -5410,16 +5421,10 @@ class WyeUI(Wye.staticObj):
                 if not name:
                     name = "TestVerb"
 
-                if name != editFrm.params.verb[0].__name__:
-                    print("Put new verb", name, end="")
-                else:
-                    print("Replace verb", name, end="")
-
                 # if existing library
                 if editFrm.vars.libRadio[0].params.selectedRadio[0] == 0:
                     libList = [lib for lib in WyeCore.World.libList]
                     lib = libList[editFrm.vars.existingLibFrm[0].params.selectionIx[0]]
-                    print(" in existing lib", lib.__name__)
                 # else new library
                 else:
                     libName = editFrm.vars.libNameFrm[0].params.value[0]
@@ -5430,9 +5435,10 @@ class WyeUI(Wye.staticObj):
                         libName = "TestLibrary"
 
                     lib = WyeCore.Utils.createLib(libName)
-                    print(" in new library", lib.__name__)
+
 
                 listFlag = editFrm.vars.listCodeFrm[0].params.value[0]
+                print("TestCodeCallback: List Code")
                 WyeCore.Utils.createVerb(lib, name,
                                          editFrm.vars.newVerbSettings[0],
                                          editFrm.vars.newParamDescr[0],
@@ -5540,7 +5546,6 @@ class WyeUI(Wye.staticObj):
 
                     # build dialog
 
-
                     breakAllFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
                     dlgFrm.params.inputs[0].append([breakAllFrm])
                     breakAllFrm.params.frame = [None]
@@ -5548,7 +5553,7 @@ class WyeUI(Wye.staticObj):
                     breakAllFrm.params.value = [Wye.breakAll]
                     breakAllFrm.params.label = ["  Pause World"]
                     breakAllFrm.params.callback = [WyeUI.DebugMainDialog.BreakAllCallback]  # button callback
-                    breakAllFrm.params.optData = ([breakAllFrm],)
+                    breakAllFrm.params.optData = [(breakAllFrm,)]
                     breakAllFrm.verb.run(breakAllFrm)
 
 
@@ -5707,7 +5712,6 @@ class WyeUI(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                #print("BreakAllCallback data='" + str(data) + "'")
                 chkFrm = data[1][0]
                 Wye.breakAll = chkFrm.params.value[0]
 

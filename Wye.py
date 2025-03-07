@@ -22,7 +22,7 @@ class Wye:
 
     dragging = False
 
-    version = "0.5"
+    version = "0.6"
 
     startPos = (0, -10, 0)      # initial camera position
 
@@ -405,7 +405,9 @@ class Wye:
                             if value[1] == '[':    # if individual element lists
                                 elemLst = True
                         elems = value.split(',')
+                        print("convertType INT_LIST: Split into", elems)
                         for elem in elems:
+                            num = 0  # debug
                             if elemLst:     # if each element wrapped in list
                                 elem = elem[1:-1]
                             try:
@@ -417,6 +419,7 @@ class Wye:
                                 else:
                                     num = float(elem)
                             except:
+                                print(" err", num, " replaced with 0")
                                 if dataType == Wye.dType.INTEGER_LIST:
                                     num = 0
                                 else:
@@ -424,6 +427,7 @@ class Wye:
                             if elemLst:
                                 num = [num]
                             retVal.append(num)
+                        print("  result", retVal)
                     # else make it numeric
                     else:
                         # if it's a list
@@ -640,7 +644,8 @@ class Wye:
                         else:
                             varVal = varDef[2]
                         # deep copy to give each frame its own data
-                        # convert tuples to lists so are writeable
+                        # Note: convert tuples to lists so are writeable
+                        # (side effect of editing can be user's lists got converted to tuples, this puts 'em back)
                         if isinstance(varVal, tuple) or isinstance(varVal, list):
                             varVal = Wye.listCopy(varVal)
                         setattr(self.vars, varDef[0], [varVal])
