@@ -376,9 +376,9 @@ class Wye:
                     if isinstance(value, str):
                         lst = True
                         value = "".join(value.split())  # remove all whitespace
-                        if value[0] == '[':
+                        if value[0] in ('[','('):
                             value = value[1:-1]
-                            if value[1] == '[':  # if individual element lists
+                            if value[1] in ('[','('):  # if individual element lists
                                 elemLst = True
                         elems = value.split(',')
                         for elem in elems:
@@ -400,9 +400,9 @@ class Wye:
                     if isinstance(value, str):
                         lst = True
                         value = "".join(value.split())   # remove all whitespace
-                        if value[0] == '[':
+                        if value[0] in ('[','('):
                             value = value[1:-1]
-                            if value[1] == '[':    # if individual element lists
+                            if value[1] in ('[','('):    # if individual element lists
                                 elemLst = True
                         elems = value.split(',')
                         print("convertType INT_LIST: Split into", elems)
@@ -603,6 +603,9 @@ class Wye:
         ERROR_COLOR = (1, 0, 0, 1)
         TRANSPARENT = (0,0,0,0)
         LIGHT_YELLOW = (.5,.5,0,1)
+        LIGHT_RED = (.5,0,0,1)
+        LIGHT_GREEN = (0,.5,0,1)
+        LIGHT_BLUE = (0,0,.5,1)
 
     ###########################################################################
     #

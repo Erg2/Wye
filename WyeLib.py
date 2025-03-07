@@ -175,7 +175,8 @@ class WyeLib:
             (None, "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.params.gObj"), (None, "frame.params.rotVec")),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.gObj"), (None, "frame.params.colorVec")),
-            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec"))
+            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec")),
+            ("Code", "frame.stopHack = [frame.params.gObj[0]] # hack for stopping verbs with graphic objs - todo - implement verb.stop()"),
         )
 
         def build():

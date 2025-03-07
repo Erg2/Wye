@@ -444,9 +444,9 @@ class WyeCore(Wye.staticObj):
                         # run the frame furthest down the stack
                         frame = stack[-1]
 
-                        # if world paused, only run critical code
+                        # if world paused, only run critical code and code being debugged
                         if Wye.breakAll:
-                            if not hasattr(stack[0], "systemObject"):
+                            if not hasattr(stack[0], "systemObject") and not hasattr(stack[0], "doBreakPt"):
                                 #print("breakAll don't exec", stack[0].verb.__name__)
                                 #if stack[0].verb.__name__ == "Dialog":
                                 #    print("  ", stack[0].params.title[0])
@@ -702,7 +702,7 @@ class WyeCore(Wye.staticObj):
 
             def start(stack):
                 f = Wye.codeFrame(WyeCore.World.repeatEventExecObj, stack)
-                f.systemObject = True         # not stopped by breakAll debugger flag
+                f.systemObject = True         # not stopped by debugger or breakAll
                 return f
 
             # run event frames every display frame
@@ -728,9 +728,9 @@ class WyeCore(Wye.staticObj):
                     if len(evt[0]) > 0:
                         #print("repeatEventExecObj run: process evt", evt)
                         evtFrame = evt[0][-1]
-                        # if world paused, only run critical code
+                        # if world paused, only run critical code or code being debugged
                         if Wye.breakAll:
-                            if not hasattr(evt[0][0], "systemObject"):
+                            if not hasattr(evt[0][0], "systemObject") and not hasattr(evt[0][0], "doBreakPt"):
                                 #print("repEvt breakAll don't exec", evt[0][0].verb.__name__)
                                 #if evt[0][0].verb.__name__ == "Dialog":
                                 #    print("  ", evt[0][0].params.title[0])
@@ -1538,6 +1538,7 @@ class WyeCore(Wye.staticObj):
 
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
+            libTpl += "    canSave = True  # all verbs can be saved with the library\n"
             libTpl += "    class "+name+"_rt:\n        pass\n"
             return libTpl
 

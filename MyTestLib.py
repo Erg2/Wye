@@ -6,37 +6,92 @@ class MyTestLib:
     class MyTestLib_rt:
         pass
 
-    class PlaceHolder:
+    class MyTestFish3:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
-        dataType = Wye.dType.INTEGER
+        dataType = Wye.dType.NONE
         cType = Wye.cType.VERB
         parTermType = Wye.parTermType.FIRST_FAIL
         paramDescr =        (
             ("ret","I",1),)
         varDescr =        (
-            ("myVar","I",0),)
+            ("gObj","O",None),
+            ("objTag","S","objTag"),
+            ("sound","O",None),
+            ("position","FL",
+              (0.0,15.0,1.0)),
+            ("dPos","FL",
+              (0.0,0.0,0.1)),
+            ("dAngle","FL",
+              (0.0,0.0,0.0)),
+            ("colorWk","FL",
+              (1,1,1)),
+            ("colorInc","FL",
+              (1,5,10)),
+            ("color","FL",
+              (0.5,0.5,0.5,1)),
+            ("skew","F",0),
+            ("delta","F",0))
         codeDescr =        (
-            ("Code","print(len(WyeCore.World.objStacks), 'objects running!')"),
-            ("Label","DoNothing"))
+            ("WyeCore.libs.WyeLib.loadObject",
+              (None,"[frame]"),
+              (None,"frame.vars.gObj"),
+              ("Code","['flyer_01.glb']"),
+              (None,"frame.vars.position"),
+              (None,"[[0, 90, 0]]"),
+              (None,"[[.25,.25,.25]]"),
+              (None,"frame.vars.objTag"),
+              (None,"frame.vars.color")),
+            (None,"frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
+            ("Label","Repeat"),
+            ("Code","from random import random"),
+            ("Code","frame.vars.skew[0] = .25 if abs(frame.vars.dAngle[0][2]) > .8 else .5"),
+            ("Code","frame.vars.skew[0] = 1-frame.vars.skew[0] if frame.vars.dAngle[0][2] > .0 else frame.vars.skew[0]"),
+            ("Code","frame.vars.delta[0] = (random()-frame.vars.skew[0])/10"),
+            ("Code","frame.vars.dAngle[0][2] += frame.vars.delta[0]"),
+            ("WyeCore.libs.WyeLib.setObjRelAngle",
+              (None,"frame.vars.gObj"),
+              (None,"frame.vars.dAngle")),
+            ("Code","frame.vars.dPos[0][2] += (random()-.5)/100"),
+            ("Code","frame.vars.dPos[0][2] = max(min(frame.vars.dPos[0][2], .3), .05)"),
+            ("WyeCore.libs.WyeLib.setObjRelPos",
+              (None,"frame.vars.gObj"),
+              (None,"frame.vars.dPos")),
+            ("WyeCore.libs.WyeLib.getObjPos",
+              (None,"frame.vars.position"),
+              (None,"frame.vars.gObj")),
+            ("Var=","frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
+            ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+            ("Var=","frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
+            ("Code","if frame.vars.colorWk[0][0] >= 255 or frame.vars.colorWk[0][0] <= 0:"),
+            ("Code"," frame.vars.colorInc[0][0] = -1 * frame.vars.colorInc[0][0]"),
+            ("Code","if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
+            ("Code"," frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+            ("Code","if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
+            ("Code"," frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
+            ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor",
+              ("Var","frame.vars.gObj"),
+              ("Var","frame.vars.color")),
+            ("GoTo","Repeat"))
     
         def build():
-            # print("Build ",PlaceHolder)
-            return WyeCore.Utils.buildCodeText('PlaceHolder', MyTestLib.PlaceHolder.codeDescr)
+            # print("Build ",MyTestFish3)
+            return WyeCore.Utils.buildCodeText('MyTestFish3', MyTestLib.MyTestFish3.codeDescr)
     
         def start(stack):
-            # print('PlaceHolder object start')
-                        return Wye.codeFrame(MyTestLib.PlaceHolder, stack)
+            # print('MyTestFish3 object start')
+                        return Wye.codeFrame(MyTestLib.MyTestFish3, stack)
     
         def run(frame):
-            # print('Run 'PlaceHolder)
+            # print('Run 'MyTestFish3)
             try:
-              MyTestLib.MyTestLib_rt.PlaceHolder_run_rt(frame)
+              MyTestLib.MyTestLib_rt.MyTestFish3_run_rt(frame)
             except Exception as e:
-              if not hasattr(MyTestLib.MyTestLib_rt.PlaceHolder_run_rt, 'errOnce'):
-                print('MyTestLib.MyTestLib_rt.PlaceHolder_run_rt failed\n', str(e))
+              if not hasattr(MyTestLib.MyTestLib_rt.MyTestFish3_run_rt, 'errOnce'):
+                print('MyTestLib.MyTestLib_rt.MyTestFish3_run_rt failed\n', str(e))
                 import traceback
                 traceback.print_exception(e)
-                setattr(MyTestLib.MyTestLib_rt.PlaceHolder_run_rt, 'errOnce', True)
+                setattr(MyTestLib.MyTestLib_rt.MyTestFish3_run_rt, 'errOnce', True)
     
     
