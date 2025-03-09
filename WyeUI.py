@@ -3349,10 +3349,10 @@ class WyeUI(Wye.staticObj):
                 case 0:
                     data = frame.eventData
                     #print("EditLibCallback data=", data)
-                    btnFrm = data[1][1]
-                    parentDlgFrm = data[1][2]
-                    lib = data[1][3]
-                    libLstDlgFrm = data[1][4]
+                    btnFrm = data[1][0]
+                    parentDlgFrm = data[1][1]
+                    lib = data[1][2]
+
                     #print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
                     #print("EditLibCallback called, library row", libRow, " name", lib.__name__)
@@ -3382,7 +3382,7 @@ class WyeUI(Wye.staticObj):
                                     btnFrm.params.parent = [dlgFrm]
                                     btnFrm.params.label = [txt]  # button label is verb name
                                     btnFrm.params.callback = [WyeUI.EditLibCallback.EditLibaryVerbCallback]  # button callback
-                                    btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button data - offset to button
+                                    btnFrm.params.optData = [(btnFrm, dlgFrm, verb)]  # button data - offset to button
                                     WyeUI.InputButton.run(btnFrm)
                                     dlgFrm.params.inputs[0].append([btnFrm])
                                 else:
@@ -3425,10 +3425,9 @@ class WyeUI(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                rowIx = data[1][0]
-                btnFrm = data[1][1]
-                dlgFrm = data[1][2]
-                verb = data[1][3]
+                btnFrm = data[1][0]
+                dlgFrm = data[1][1]
+                verb = data[1][2]
                 match(frame.PC):
                     case 0:
                         #print("EditLibaryVerbCallback run: event data", frame.eventData)
@@ -3970,20 +3969,18 @@ class WyeUI(Wye.staticObj):
             # print("insertParamOrVar: Add up")
 
             # find index to this row's param in EditVerb's newParamDescr
-            ix = descrList.index(currDesc)
-            if ix < 0:
+            dIx = descrList.index(currDesc)
+            if dIx < 0:
                 print("insertParamOrVar ERROR: Failed to find", currDesc, " in ", descrList)
                 return
 
             # create new dialog row for this param
 
             # find index to dialog row to insert before
-            ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+            rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
             # Debug: if the unthinkable happens, give us a hint
-            if ix < 0:
+            if rIx < 0:
                 print("insertParamOrVar ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ", editLnFrm.params.label[0], " not in input list")
-                for frmRef in parentFrm.params.inputs[0]:
-                    print("  ", frmRef[0], " ", frmRef[0].params.label[0])
                 return
 
             # build dialog row
@@ -4015,28 +4012,32 @@ class WyeUI(Wye.staticObj):
 
             # Insert planceholder param before the current param
             if insertBefore:
-                descrList.insert(ix, newData)
+                descrList.insert(dIx, newData)
             else:
-                descrList.insert(ix+1, newData)
+                descrList.insert(dIx+1, newData)
+
+
+            for desc in descrList:
+                print("  ", desc)
 
             # print("params after insert", WyeCore.Utils.listToTupleString(editVerbFrm.vars.newParamDescr, 0))
 
             # DEBUG
             # print("Before Insert")
-            # for ii in range(ix - 1, ix + 6):
+            # for ii in range(rIx - 1, rIx + 6):
             #    print("  ", ii, " ", parentFrm.params.inputs[0][ii][0].params.label[0])
 
             # insert new dialog rows into dialog
             if insertBefore:
-                parentFrm.params.inputs[0].insert(ix, [newEdLnFrm])
-                parentFrm.params.inputs[0].insert(ix + 1, [newBtnFrm])
+                parentFrm.params.inputs[0].insert(rIx, [newEdLnFrm])
+                parentFrm.params.inputs[0].insert(rIx + 1, [newBtnFrm])
             else:
-                parentFrm.params.inputs[0].insert(ix + 2, [newEdLnFrm])
-                parentFrm.params.inputs[0].insert(ix + 3, [newBtnFrm])
+                parentFrm.params.inputs[0].insert(rIx + 2, [newEdLnFrm])
+                parentFrm.params.inputs[0].insert(rIx + 3, [newBtnFrm])
 
             # DEBUG
             # print("After Insert")
-            # for ii in range(ix - 1, ix + 6):
+            # for ii in range(rIx - 1, rIx + 6):
             #    print("  ", ii, " ", parentFrm.params.inputs[0][ii][0].params.label[0])
 
             # display new dialog rows (don't sweat the position, they will be correctly
@@ -4329,7 +4330,7 @@ class WyeUI(Wye.staticObj):
                                                           WyeUI.EditVerb.EditParamCallback,
                                                           newData, insertBefore=True)
 
-                # copy line
+                    # copy line
                     case 2:
                         WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
                         pass
@@ -4337,41 +4338,19 @@ class WyeUI(Wye.staticObj):
                     # delete line
                     case 3:
                         print("EditParamLineCallback: Delete")
-                        return
-                        # get location of this frame in dialog input list
 
-                        # insert new (noop) code before this one in verb's codeDescr
-                        # print("EditParamLineCallback codeFrm", codeFrm.verb.__name__)
-                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
-                        if parentList:
-                            ix = parentList.index(tuple)
-                            # print("found tuple", tuple, " at", ix, " in", parentList)
-                        else:
-                            print("EditParamLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
-                                  editVerbFrm.vars.newCodeDescr[0])
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        if rIx < 0:
+                            print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.params.label[0], " not in input list")
                             return
 
-                        # Insert new line into code desr
-                        # todo - it would simplify life to have an AST abstract syntax tree holding var, call, type, etc. info and
-                        #  linking relevant parts to relevant controls/data
-
-                        tuple = parentList.pop(ix)  # codeDescr entry
-
-                        # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
-                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
-
-                        # delete as many rows as there are lists
-                        # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
-                        # Debug: if the unthinkable happens, give us a hint
-                        if ix < 0:
-                            print("EditParamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
-                            return
-
-                        count *= 2  # del both editLn and line inputs for each row
-                        parent = None
-                        for ii in range(count):
-                            frm = parentFrm.params.inputs[0].pop(ix)[0]  # line edit input
+                        # remove code descr
+                        editVerbFrm.vars.newParamDescr[0].remove(param)
+                        # remove dialog row (2 inputs
+                        for ii in range(2):
+                            frm = parentFrm.params.inputs[0].pop(rIx)[0]
                             frm.verb.close(frm)
 
                         # redisplay parent dialog
@@ -4457,41 +4436,18 @@ class WyeUI(Wye.staticObj):
                     # delete line
                     case 3:
                         # print("EditVarLineCallback: Delete")
-                        # get location of this frame in dialog input list
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        if rIx < 0:
+                            print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.params.label[0], " not in input list")
+                            return
 
-                        # insert new (noop) code before this one in verb's codeDescr
-                        # print("EditVarLineCallback codeFrm", codeFrm.verb.__name__)
-                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
-                        if parentList:
-                            ix = parentList.index(tuple)
-                            # print("found tuple", tuple, " at", ix, " in", parentList)
-                        else:
-                            print("EditVarLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
-                                  editVerbFrm.vars.newCodeDescr[0])
-
-                        # Insert new line into code desr
-                        # todo - it would simplify life to have an AST abstract syntax tree holding var, call, type, etc. info and
-                        #  linking relevant parts to relevant controls/data
-
-                        # Placeholder for "add line" so user has row to fill in with their code
-                        # newData = ["WyeLib.noop", ["Const", "[0]"]]
-
-                        tuple = parentList.pop(ix)  # codeDescr entry
-
-                        # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
-                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
-
-                        # delete as many rows as there are lists
-                        # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
-                        # Debug: if the unthinkable happens, give us a hint
-                        if ix < 0:
-                            print("EditVarLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
-
-                        count *= 2  # del both editLn and line inputs for each row
-                        parent = None
-                        for ii in range(count):
-                            frm = parentFrm.params.inputs[0].pop(ix)[0]  # line edit input
+                        # remove code descr
+                        editVerbFrm.vars.newVarDescr[0].remove(var)
+                        # remove dialog row (2 inputs
+                        for ii in range(2):
+                            frm = parentFrm.params.inputs[0].pop(rIx)[0]
                             frm.verb.close(frm)
 
                         # redisplay parent dialog
@@ -4643,7 +4599,7 @@ class WyeUI(Wye.staticObj):
                         count *= 2      # del both editLn and line inputs for each row
                         parent = None
                         for ii in range(count):
-                            frm = parentFrm.params.inputs[0].pop(ix)[0]     # line edit input
+                            frm = parentFrm.params.inputs[0].pop(ix)[0]
                             frm.verb.close(frm)
 
                         # redisplay parent dialog
