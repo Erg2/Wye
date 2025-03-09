@@ -24,7 +24,7 @@ class EditLib:
 
             frm = frame.eventData[1]
             ctlFrm = frame.eventData[2]
-            dlgFrm = ctlFrm.parentFrame
+            dlgFrm = ctlFrm.parentDlg
             #print("dlgFrame", dlgFrm)
             # print("UpdateCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
             #print("Update x", int(dlgFrm.vars.XAngle[0]), " y", int(dlgFrm.vars.YAngle[0]), " z", int(dlgFrm.vars.ZAngle[0]))
@@ -54,7 +54,7 @@ class EditLib:
         def run(frame):
             frm = frame.eventData[1]
             ctlFrm = frame.eventData[2]
-            dlgFrm = ctlFrm.parentFrame
+            dlgFrm = ctlFrm.parentDlg
 
             x = Wye.startLightAngle[0]
             y = Wye.startLightAngle[1]

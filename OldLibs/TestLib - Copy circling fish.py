@@ -76,7 +76,7 @@ class TestLib:
             inFrm = frame.eventData[1][0]
             var = frame.eventData[1][1]
             # print("data [1]", frame.eventData[1][1], " var", var)
-            dlgFrm = inFrm.parentFrame
+            dlgFrm = inFrm.parentDlg
             # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
 
             var[0] += 1

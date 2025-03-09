@@ -405,7 +405,7 @@ class Wye:
                             if value[1] in ('[','('):    # if individual element lists
                                 elemLst = True
                         elems = value.split(',')
-                        print("convertType INT_LIST: Split into", elems)
+                        #print("convertType INT_LIST: Split into", elems)
                         for elem in elems:
                             num = 0  # debug
                             if elemLst:     # if each element wrapped in list
@@ -427,7 +427,7 @@ class Wye:
                             if elemLst:
                                 num = [num]
                             retVal.append(num)
-                        print("  result", retVal)
+                        #print("  result", retVal)
                     # else make it numeric
                     else:
                         # if it's a list

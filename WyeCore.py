@@ -1095,6 +1095,16 @@ class WyeCore(Wye.staticObj):
                         count += WyeCore.Utils.countNestedLists(elem)
             return count
 
+        # search for match [b] in in list of form [[[a]], [[b]], ..]
+        def nestedIndexFind(lst, tgt):
+            # find index to this row's param in EditVerb's newParamDescr
+            ix = -1
+            for ii in range(len(lst)):
+                if lst[ii][0] == tgt:
+                    ix = ii
+                    break
+            return ix
+
 
         # Take a Wye code description tuple and return compilable Python code
         # Resulting code pushes all the params to the frame, then runs the function
@@ -1407,7 +1417,6 @@ class WyeCore(Wye.staticObj):
         # which includes the inline runtime runction and the separate
         # parallel runtime functions
         def buildParallelText(libName, verbName, streamDescr):
-
             # build the parallel stream functions
             parFnText = ""
             nStreams = len(streamDescr)

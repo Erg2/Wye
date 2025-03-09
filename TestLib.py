@@ -134,7 +134,7 @@ class TestLib:
 #            inFrm = frame.eventData[1][0]       #
 #            var = frame.eventData[1][1]         # caller's counter variable
 #            # print("data [1]", frame.eventData[1][1], " var", var)
-#            dlgFrm = inFrm.parentFrame
+#            dlgFrm = inFrm.parentDlg
 #            # print("BtnCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
 #
 #            var[0] += 1
@@ -548,7 +548,7 @@ class TestLib:
 #
 #            frm = frame.eventData[1]
 #            ctlFrm = frame.eventData[2]
-#            dlgFrm = ctlFrm.parentFrame
+#            dlgFrm = ctlFrm.parentDlg
 #            print("dlgFrame", dlgFrm)
 #            # print("UpdateCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
 #            #print("Update x", int(dlgFrm.vars.XAngle[0]), " y", int(dlgFrm.vars.YAngle[0]), " z", int(dlgFrm.vars.ZAngle[0]))
@@ -722,7 +722,7 @@ class TestLib:
         dataType = Wye.dType.NONE
         paramDescr = ()
         varDescr = (("fishes", Wye.dType.OBJECT_LIST, None),        # fish graphic objs
-                    ("fishTags", Wye.dType.STRING_LIST, []),
+                    ("fishTags", Wye.dType.STRING_LIST, None),
                     ("position", Wye.dType.FLOAT_LIST, [0,0,0]),
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -0.02]),
                     ("angle", Wye.dType.FLOAT_LIST, [0., 90., 0.]),
