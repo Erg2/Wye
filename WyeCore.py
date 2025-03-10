@@ -1080,7 +1080,10 @@ class WyeCore(Wye.staticObj):
                     tupleStr += "None"
                 elif isinstance(hierList, str):
                     if not hierList.isspace():
-                        tupleStr += "\""+hierList+"\""
+                        if "\n" in hierList:        # handle multi-line strings
+                            tupleStr += "'''"+hierList+"'''"
+                        else:
+                            tupleStr += "\""+hierList+"\""
                 else:
                     tupleStr += str(hierList)
             return tupleStr
@@ -1417,14 +1420,14 @@ class WyeCore(Wye.staticObj):
         # which includes the inline runtime runction and the separate
         # parallel runtime functions
         def buildParallelText(libName, verbName, streamDescr):
+            #print("buildParallelText for", verbName)
             # build the parallel stream functions
             parFnText = ""
             nStreams = len(streamDescr)
             # create run function for each stream
             for ix in range(nStreams):
-                #print("Create ",verbName," stream ", ix)
-                codeDescr = streamDescr[ix]
-                cd, fn = WyeCore.Utils.buildCodeText(verbName+"_stream" + str(ix), codeDescr)
+                #print("  Create ",verbName," stream ", ix)
+                cd, fn = WyeCore.Utils.buildCodeText(verbName+"_" + streamDescr[ix][0] + "_" + str(ix), streamDescr[ix][1])
                 parFnText += cd + fn
 
             # create start routine for this parallel verb
@@ -1440,7 +1443,7 @@ class WyeCore(Wye.staticObj):
                 parFnText += "  fs.vars = f.vars\n"
                 parFnText += "  fs.params = f.params\n"
                 parFnText += "  fs.parentFrame = f\n"
-                parFnText += "  fs.run = " + libName + "."  + libName + "_rt." + verbName + "_stream"+str(ix)+"_run_rt\n"
+                parFnText += "  fs.run = " + libName + "."  + libName + "_rt." + verbName+"_" + streamDescr[ix][0] + "_" + str(ix)+"_run_rt\n"
                 parFnText += "  stk.append(fs)\n"           # put stream frame at top of stream's stack
                 parFnText += "  f.stacks.append(stk)\n"     # put stack on our frame's list of stream stacks
 
@@ -1449,7 +1452,7 @@ class WyeCore(Wye.staticObj):
             parFnText +=     "  return f\n"
 
             # print("buildParallelText complete.  parFnText=\n"+parFnText[0])
-            return ("", parFnText)
+            return ("    pass\n", parFnText)
 
         # build a runtime library function for this library
         def buildLib(libClass):
@@ -1588,30 +1591,41 @@ class WyeCore(Wye.staticObj):
     def build():
         # print("Build ",'''
             vrbStr += name + ")"
-            vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += "\n        return WyeCore.Utils.buildParallelText('"
+                vrbStr += libName + "','"
+            else:
+                vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
             if doTest:
                 vrbStr += name + "', " + name + ".codeDescr)\n"
             else:
-                vrbStr += name + "', " + libName + "." + name + ".codeDescr)\n"
-            vrbStr += '''
-    def start(stack):
-'''
-            vrbStr += "        # print('" + name + " object start')"
-            vrbStr += '''
-                    return Wye.codeFrame('''
-            vrbStr += libName + "." + name + ", stack)\n"
+                vrbStr += name + "', " + libName + "." + name + ".codeDescr)\n\n"
+            vrbStr += "    def start(stack):\n"
+            #vrbStr += "        print('" + name + " object start')\n"
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += "                        return " + libName + "." + libName + "_rt." + name + "_start_rt(stack)\n"
+            else:
+                vrbStr += "                        return Wye.codeFrame("
+                vrbStr += libName + "." + name + ", stack)\n"
+
             vrbStr += '''
     def run(frame):
 '''
             vrbStr += "        # print('Run '" + name + ")\n"
             vrbStr += "        try:\n"
-            vrbStr += "          " + libName + "." + libName + "_rt." + name + "_run_rt(frame)\n"
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += "          frame.runParallel()\n"
+            else:
+                vrbStr += "          " + libName + "." + libName + "_rt." + name + "_run_rt(frame)\n"
             vrbStr += "        except Exception as e:\n"
-            vrbStr += "          if not hasattr(" + libName + "." + libName + "_rt." + name + "_run_rt, 'errOnce'):\n"
-            vrbStr += "            print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
+            vrbStr += "          if not hasattr(frame, 'errOnce'):\n"
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += "            print('" + libName + " " + name + " runParallel failed\\n', str(e))\n"
+            else:
+                vrbStr += "            print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
             vrbStr += "            import traceback\n"
             vrbStr += "            traceback.print_exception(e)\n"
-            vrbStr += "            setattr(" + libName + "." + libName + "_rt." + name + "_run_rt, 'errOnce', True)\n\n"
+            vrbStr += "            frame.errOnce = True\n\n"
             return vrbStr
 
 
@@ -1674,7 +1688,7 @@ class WyeCore(Wye.staticObj):
 
             # DEBUG - print out verb's runtime code with line numbers
             if listCode:
-                vrbStr += "print('cdStr')\n"
+                vrbStr += "print('createVerb: runtime text')\n"
                 vrbStr += "lnIx = 1\n"
                 vrbStr += "for ln in cdStr.split('\\n'):\n"
                 vrbStr += "    print('%2d ' % lnIx, ln)\n"
@@ -1689,10 +1703,10 @@ class WyeCore(Wye.staticObj):
             vrbStr += '''
 
 # compile verb runtime
-cdStr = "class tmp:\\n" + cdStr
+cdStr = "class tmp:\\n" + cdStr + "\\n"
 '''
             # put verb runtime code function in lib runtime code class
-            if not doTest:
+            if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
                 vrbStr += "cdStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + name + "_run_rt\", tmp." + name + "_run_rt)\\n'\n"
 
             # vrbStr += "print('parStr', parStr)\n"
@@ -1770,8 +1784,8 @@ except Exception as e:
                     "WyeUI": WyeCore.libs.WyeUI
                 }
 
-                if doTest:
-                    print("createVerb: exec verb", vrbLib.__name__ + "." + name)
+                #if doTest:
+                #    print("createVerb: exec verb", vrbLib.__name__ + "." + name)
                 try:
                     exec(code, libDict)
                     if doTest:

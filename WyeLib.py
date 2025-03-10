@@ -228,7 +228,7 @@ class WyeLib:
     class makePickable:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.INTEGER
-        paramDescr = (("id", Wye.dType.STRING, 0),     # return object id string
+        paramDescr = (("id", Wye.dType.STRING, Wye.access.REFERENCE),     # return object id string
                       ("loadedObject", Wye.dType.OBJECT, Wye.access.REFERENCE))
         varDescr = ()
 
@@ -344,7 +344,7 @@ class WyeLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
-                      ("angle", Wye.dType.FLOAT_LIST, [0,0,0]))
+                      ("angle", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -372,7 +372,7 @@ class WyeLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
-                      ("angle", Wye.dType.FLOAT_LIST, [0, 0, 0]))
+                      ("angle", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -403,7 +403,7 @@ class WyeLib:
     class getObjAngle:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
-        paramDescr = (("angle", Wye.dType.FLOAT_LIST, [0,0,0]),
+        paramDescr = (("angle", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE),
                       ("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
                       )
         varDescr = ()
@@ -429,7 +429,7 @@ class WyeLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
-                      ("color", Wye.dType.FLOAT_LIST, [0,0,0,0]))
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -450,7 +450,7 @@ class WyeLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
         paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
-                      ("color", Wye.dType.FLOAT_LIST, [0,0,0,0]))
+                      ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = ()
         code = None
@@ -500,7 +500,7 @@ class WyeLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.ANY
         paramDescr = (("var", Wye.dType.ANY, Wye.access.REFERENCE),
-                      ("value", Wye.dType.ANY, None))
+                      ("value", Wye.dType.ANY, Wye.access.REFERENCE))
         varDescr = ()
 
         def start(stack):

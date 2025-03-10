@@ -3693,11 +3693,10 @@ class WyeUI(Wye.staticObj):
                                                      [Wye.cType.valList.index(frame.vars.newVerbSettings[0]['cType'])])
                     frame.vars.settingsFrms[0]['cType'] = cTypeFrm
 
-                    # Todo - add this when have parallel exec editing
-                    #pTypeNames = [Wye.parTermType.stringLookup[val] for val in Wye.parTermType.valList]
-                    #parTermTypeFrm = WyeUI.doInputDropdown(dlgFrm, "  Parallel Exec Termination", [pTypeNames],
-                    #                                [Wye.parTermType.valList.index(frame.vars.newVerbSettings[0]['dataType'])])
-                    #frame.vars.settingsFrms[0]['parTermType'] = parTermTypeFrm
+                    pTypeNames = [Wye.parTermType.stringLookup[val] for val in Wye.parTermType.valList]
+                    parTermTypeFrm = WyeUI.doInputDropdown(dlgFrm, "  Parallel Exec Termination", [pTypeNames],
+                                                    [Wye.parTermType.valList.index(frame.vars.newVerbSettings[0]['parTermType'])])
+                    frame.vars.settingsFrms[0]['parTermType'] = parTermTypeFrm
 
 
                     # params
@@ -3766,17 +3765,25 @@ class WyeUI(Wye.staticObj):
                     if hasattr(verb, "codeDescr"):
                         if len(verb.codeDescr) > 0:
                             # If it's parallel code blocks
+                            # todo - allow add/del parallel streams
                             if verb.mode == Wye.mode.PARALLEL:
-                                WyeUI.doInputLabel(dlgFrm, "  <TODO - Parallel Code>")
+
+                                for streamTuple in frame.vars.newCodeDescr[0]:
+                                    WyeUI.doInputLabel(dlgFrm, "    "+streamTuple[0])
+                                    rowLst = []  # build rows here
+                                    for tuple in streamTuple[1]:
+                                        level = 3  # starting indent for nesting tuple data
+                                        WyeUI.EditVerb.bldEditCodeLine(tuple, level, frame, dlgFrm, rowLst)
+                                    dlgFrm.params.inputs[0].extend(rowLst)
+
+
 
                             # regular boring normal single stream code
                             else:
                                 level = 2       # starting indent for nesting tuple data
-                                attrIx = 0      # This level code row
                                 rowLst = []     # build rows here
                                 for tuple in frame.vars.newCodeDescr[0]:
                                     WyeUI.EditVerb.bldEditCodeLine(tuple, level, frame, dlgFrm, rowLst)
-                                    attrIx += 1
                                 dlgFrm.params.inputs[0].extend(rowLst)
 
                         # no code, put <add code here>
@@ -3852,10 +3859,10 @@ class WyeUI(Wye.staticObj):
                         if frame.vars.libRadio[0].params.selectedRadio[0] == 0:
                             libList = [lib for lib in WyeCore.World.libList]
                             lib = libList[frame.vars.existingLibFrm[0].params.selectionIx[0]]
-                            if name != frame.params.verb[0].__name__:
-                                print("Put new verb", name, " in existing lib", lib.__name__)
-                            else:
-                                print("Replace verb", name, " in existing lib", lib.__name__)
+                            #if name != frame.params.verb[0].__name__:
+                            #    print("Put new verb", name, " in existing lib", lib.__name__)
+                            #else:
+                            #    print("Replace verb", name, " in existing lib", lib.__name__)
                         # else new library
                         else:
                             libName = frame.vars.libNameFrm[0].params.value[0]
@@ -3866,7 +3873,7 @@ class WyeUI(Wye.staticObj):
                                 libName = "TestLibrary"
 
                             lib = WyeCore.Utils.createLib(libName)
-                            print("Put verb", name, " in new library", lib.__name__)
+                            #print("Put verb", name, " in new library", lib.__name__)
 
                         disableAuto = frame.vars.disaAutoFrm[0].params.value[0]
 
@@ -3960,6 +3967,8 @@ class WyeUI(Wye.staticObj):
                     case "IfGoTo":
                         btnFrm.params.label = [indent + "If: " + str(tuple[1]) + " GoTo: " + str(tuple[2])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
+
+            #print("bldEditCodeLine btnFrm", btnFrm.params.label[0])
 
             btnFrm.params.optData = [(btnFrm, dlgFrm, editVerbFrm, tuple, level, editLnFrm)]  # button frame, dialog frame
             #print("bldEditCodeLine create code button", btnFrm.params.label)
@@ -4177,7 +4186,6 @@ class WyeUI(Wye.staticObj):
                         dlgFrm = frame.SP.pop()
                         if frame.vars.dlgStat[0] == Wye.status.SUCCESS:
                             # print("EditVerbCallback done, success, set row label to", dlgFrm.vars.currInp[0])
-                            print("EditVerbCallback Success: lib", frame.vars.libName[0], " verb", frame.vars.verbName[0])
                             if frame.vars.verbName[0] == WyeUI.EditVerb.EditVerbCallback.noneSelected:
                                 print("no valid verb")
 
@@ -4689,6 +4697,8 @@ class WyeUI(Wye.staticObj):
                 tuple = data[1][3]
                 level = data[1][4]
 
+                print("EditCodeCallback btnFrm", btnFrm.params.label[0], " parentFrm", parentFrm.verb.__name__)
+
                 match (frame.PC):
                     case 0:
                         #print("EditCodeCallback data='" + str(frame.eventData) + "'")
@@ -4700,64 +4710,64 @@ class WyeUI(Wye.staticObj):
                         frame.vars.tuple[0] = tuple
 
                         # parallel verb
-                        if editVerbFrm.vars.oldVerb[0].mode == Wye.mode.PARALLEL:
-                            print("Don't know how to edit parallel code yet")
-                            dlgFrm.params.retVal = frame.vars.dlgStat
-                            dlgFrm.params.title = ["Editing parallel code not supported yet"]
-                            dlgFrm.params.parent = [dlgFrm]
-                            dlgFrm.params.position = [(.5, -.3, -.5 + btnFrm.vars.position[0][2]), ]
+                        #if editVerbFrm.vars.oldVerb[0].mode == Wye.mode.PARALLEL:
+                        #    print("Don't know how to edit parallel code yet")
+                        #    dlgFrm.params.retVal = frame.vars.dlgStat
+                        #    dlgFrm.params.title = ["Editing parallel code not supported yet"]
+                        #    dlgFrm.params.parent = [dlgFrm]
+                        #    dlgFrm.params.position = [(.5, -.3, -.5 + btnFrm.vars.position[0][2]), ]
 
                         # sequential verb
+                        #else:
+                        dlgFrm.params.retVal = frame.vars.dlgStat
+                        dlgFrm.params.title = ["Edit Code"]
+                        dlgFrm.params.parent = [parentFrm]
+                        dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2]),]
+
+                        # Code type
+
+                        verbType = tuple[0]
+                        if verbType is None:
+                            verbType = "Code"
+
+                        # verb type/name
+                        opFrm = WyeUI.InputDropdown.start(dlgFrm.SP)
+                        opFrm.params.frame = [None]
+                        opFrm.params.parent = [None]
+                        opFrm.params.showText = [True]
+                        opFrm.params.label = ["Op:"]
+                        opFrm.params.list = [WyeUI.EditVerb.opList]
+                        #opFrm.params.callback = [WyeUI.EditVerb.EditCodeLineCallback]  # button callback
+                        opFrm.params.selectionIx = [WyeUI.EditVerb.opList.index(verbType)]
+                        opFrm.verb.run(opFrm)
+                        dlgFrm.params.inputs[0].append([opFrm])
+
+
+                        #verbNameFrm = WyeUI.InputText.start(dlgFrm.SP)
+                        #verbNameFrm.params.frame = [None]        # placeholder
+                        #verbNameFrm.params.label = ["Op:"]
+                        #verbNameFrm.params.value = [verbType]
+                        #WyeUI.InputText.run(verbNameFrm)
+                        #dlgFrm.params.inputs[0].append([verbNameFrm])
+
+                        # Code
+                        codeFrm = WyeUI.InputText.start(dlgFrm.SP)
+                        codeFrm.params.frame = [None]        # placeholder
+                        codeFrm.params.label = ["Expr:"]
+                        codeFrm.params.value = [str(tuple[1])]
+                        WyeUI.InputText.run(codeFrm)
+                        dlgFrm.params.inputs[0].append([codeFrm])
+
+                        # optional Code
+                        tgtFrm = WyeUI.InputText.start(dlgFrm.SP)
+                        tgtFrm.params.frame = [None]  # placeholder
+                        tgtFrm.params.label = ["Tgt:"]
+                        if tuple[0] == "IfGoTo":
+                            tgtFrm.params.value = [str(tuple[2])]
                         else:
-                            dlgFrm.params.retVal = frame.vars.dlgStat
-                            dlgFrm.params.title = ["Edit Code"]
-                            dlgFrm.params.parent = [parentFrm]
-                            dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2]),]
-
-                            # Code type
-
-                            verbType = tuple[0]
-                            if verbType is None:
-                                verbType = "Code"
-
-                            # verb type/name
-                            opFrm = WyeUI.InputDropdown.start(dlgFrm.SP)
-                            opFrm.params.frame = [None]
-                            opFrm.params.parent = [None]
-                            opFrm.params.showText = [True]
-                            opFrm.params.label = ["Op:"]
-                            opFrm.params.list = [WyeUI.EditVerb.opList]
-                            #opFrm.params.callback = [WyeUI.EditVerb.EditCodeLineCallback]  # button callback
-                            opFrm.params.selectionIx = [WyeUI.EditVerb.opList.index(verbType)]
-                            opFrm.verb.run(opFrm)
-                            dlgFrm.params.inputs[0].append([opFrm])
-
-
-                            #verbNameFrm = WyeUI.InputText.start(dlgFrm.SP)
-                            #verbNameFrm.params.frame = [None]        # placeholder
-                            #verbNameFrm.params.label = ["Op:"]
-                            #verbNameFrm.params.value = [verbType]
-                            #WyeUI.InputText.run(verbNameFrm)
-                            #dlgFrm.params.inputs[0].append([verbNameFrm])
-
-                            # Code
-                            codeFrm = WyeUI.InputText.start(dlgFrm.SP)
-                            codeFrm.params.frame = [None]        # placeholder
-                            codeFrm.params.label = ["Expr:"]
-                            codeFrm.params.value = [str(tuple[1])]
-                            WyeUI.InputText.run(codeFrm)
-                            dlgFrm.params.inputs[0].append([codeFrm])
-
-                            # optional Code
-                            tgtFrm = WyeUI.InputText.start(dlgFrm.SP)
-                            tgtFrm.params.frame = [None]  # placeholder
-                            tgtFrm.params.label = ["Tgt:"]
-                            if tuple[0] == "IfGoTo":
-                                tgtFrm.params.value = [str(tuple[2])]
-                            else:
-                                tgtFrm.params.value = ["<none>"]
-                            WyeUI.InputText.run(tgtFrm)
-                            dlgFrm.params.inputs[0].append([tgtFrm])
+                            tgtFrm.params.value = ["<none>"]
+                        WyeUI.InputText.run(tgtFrm)
+                        dlgFrm.params.inputs[0].append([tgtFrm])
 
                         frame.SP.append(dlgFrm)
                         frame.PC += 1
@@ -5241,7 +5251,7 @@ class WyeUI(Wye.staticObj):
                 WyeUI.Dialog.doCallback(parentFrm, frm, "none")
                 #print("param ix", data[1][0], " data frame", frm.verb.__name__)
 
-        # check code for compile errors and highlight anything that needs fixing
+        # check code for compile errors and TODO - highlight anything that needs fixing
         class TestCodeCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -5310,7 +5320,7 @@ class WyeUI(Wye.staticObj):
 
 
                 listFlag = editFrm.vars.listCodeFrm[0].params.value[0]
-                print("TestCodeCallback: List Code")
+                #print("TestCodeCallback: List Code")
                 WyeCore.Utils.createVerb(lib, name,
                                          editFrm.vars.newVerbSettings[0],
                                          editFrm.vars.newParamDescr[0],
