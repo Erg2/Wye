@@ -33,6 +33,8 @@ import inspect
 
 # 3d UI element library
 class WyeUI(Wye.staticObj):
+    systemLib = True        # prevent overwriting
+
     LINE_HEIGHT = 1.25
     TEXT_SCALE = (.2,.2,.2)
 
@@ -3066,7 +3068,7 @@ class WyeUI(Wye.staticObj):
                     'dataType': Wye.dType.NONE
                 }
 
-                paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)
+                paramDescr = ()
 
                 varDescr = (
 ("gObj", Wye.dType.OBJECT, None),
@@ -3225,9 +3227,6 @@ class WyeUI(Wye.staticObj):
                     loadLibFrm.params.optData = [(loadLibFrm, dlgFrm, frame)]
 
                     WyeUI.doInputText(dlgFrm, "  Library File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
-
-
-
                     WyeUI.doInputLabel(dlgFrm, "Select Library to Edit", color=Wye.color.SUBHD_COLOR)
 
                     for lib in WyeCore.World.libList:
@@ -3238,7 +3237,8 @@ class WyeUI(Wye.staticObj):
                         btnFrm.params.parent = [None]
                         btnFrm.params.label = [" " + lib.__name__]
                         btnFrm.params.callback = [WyeUI.EditLibCallback]  # button callback
-                        btnFrm.params.optData = [(btnFrm, dlgFrm, lib, frame)]  # button row, row frame, dialog frame, obj frame
+                        # note: optData is list so can hack into it if reload lib
+                        btnFrm.params.optData = [[btnFrm, dlgFrm, lib, frame]]  # button row, row frame, dialog frame, obj frame
                         WyeUI.InputButton.run(btnFrm)
                         rowIx[0] += 1
                         attrIx[0] += 1
@@ -3295,7 +3295,7 @@ class WyeUI(Wye.staticObj):
                     libFileName = os.path.basename(libFilePath)
                     libName, ext = os.path.splitext(libFileName)
                     if not ext:
-                        # sadly, can't tell what file type filter the user selected, so default to jpg
+                        # if doesn't have an extension, fix that
                         libFileName += ".py"
 
                     # see if file exists
@@ -3305,18 +3305,34 @@ class WyeUI(Wye.staticObj):
 
                     # path = libFile
                     path = WyeCore.Utils.resourcePath(libFilePath)[2:]
-                    print("Load library '" + path + "'")
+                    #print("Load library '" + path + "'")
                     try:
                         libModule = SourceFileLoader(libName, path).load_module()
                         # print("libModule ", libModule)
                         lib = getattr(libModule, libName)
                         # print("add libClass", libClass, " to libList")
+                        newLib = True   # assume this is a new lib
+                        oldLibIx = -1
+                        if libName in WyeCore.World.libDict:
+                            #print("Lib", libName, " already loaded.  Delete old and add new")
+                            oldLib = WyeCore.World.libDict[libName]
+                            if not hasattr(oldLib, "systemLib"):
+                                oldLibIx = WyeCore.World.libList.index(oldLib)
+                                WyeCore.World.libList.remove(oldLib)
+                                newLib = False
+                            # don't allow overwrite of system lib
+                            # todo - read text file, if invalid name give user option to have us generate a versioned one and load that
+                            else:
+                                WyeUI.doPopUpDialog("System Library", libName + " is a system library.  Overwriting not allowed",
+                                                    Wye.color.ERROR_COLOR)
+                                return
+
                         WyeCore.World.libList.append(lib)
                         # print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
 
                         # add to known libraries
                         WyeCore.World.libDict[lib.__name__] = lib  # build lib name -> lib lookup dictionary
-                        setattr(WyeCore.libs, lib.__name__, lib)  # put lib on lib dict
+                        setattr(WyeCore.libs, libName, lib)  # put lib on lib dict
 
                         lib.build()  # build all Wye code segments in code words.
                                      # Any verbs with autoStart are added to startObjs
@@ -3336,18 +3352,23 @@ class WyeUI(Wye.staticObj):
                         WyeCore.World.startObjs.clear()
 
                         # show new library
-                        btnFrm = WyeUI.doInputButton(parentFrm, " " + lib.__name__, WyeUI.EditLibCallback)
-                        btnFrm.params.optData = [(btnFrm, parentFrm, lib, editFrm)]
-
-                        # create dialog line
-                        parentFrm.vars.inputs[0].append(btnFrm)
-                        pos = [0, 0, 0]
-                        btnFrm.display(btnFrm, parentFrm, pos)
-                        # redisplay dialog
-                        parentFrm.verb.redisplay(parentFrm)
+                        if newLib:
+                            btnFrm = WyeUI.doInputButton(parentFrm, " " + lib.__name__, WyeUI.EditLibCallback)
+                            btnFrm.params.optData = [[btnFrm, parentFrm, lib, editFrm]]
+                            # create dialog line
+                            pos = [0, 0, 0]
+                            btnFrm.verb.display(btnFrm, parentFrm, pos)
+                            # redisplay dialog
+                            parentFrm.verb.redisplay(parentFrm)
+                        else:
+                            # ugh, hacky, find index of lib button to update with updated lib
+                            backIx = 0 - (len(WyeCore.World.libList) - oldLibIx)
+                            oldBtn = parentFrm.params.inputs[0][backIx][0]
+                            oldBtn.params.optData[0][2] = lib
 
                     except Exception as e:
                         err = "Failed to read file " + libFileName +"\n"+str(e)
+                        traceback.print_exception(e)
                         WyeUI.doPopUpDialog("File Read Failed", err, Wye.color.ERROR_COLOR)
                         return
 
@@ -5509,29 +5530,19 @@ class WyeUI(Wye.staticObj):
 
                     # build dialog
 
-                    breakAllFrm = WyeUI.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([breakAllFrm])
-                    breakAllFrm.params.frame = [None]
-                    breakAllFrm.params.parent = [None]
-                    breakAllFrm.params.value = [Wye.breakAll]
-                    breakAllFrm.params.label = ["  Pause World"]
-                    breakAllFrm.params.callback = [WyeUI.DebugMain.BreakAllCallback]  # button callback
+                    breakAllFrm = WyeUI.doInputCheckbox(dlgFrm, "  Pause World", [Wye.breakAll], WyeUI.DebugMain.BreakAllCallback)
                     breakAllFrm.params.optData = [(breakAllFrm,)]
-                    breakAllFrm.verb.run(breakAllFrm)
+
+                    # refresh list of running objects
+                    refreshFrm = WyeUI.doInputButton(dlgFrm, "  Refresh List", WyeUI.DebugMain.RefreshCallback)
+                    refreshFrm.params.optData = [(frame, dlgFrm)]
 
                     # running objects
-                    nRunningFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                    nRunningFrm.params.frame = [None]  # return value
-                    nRunningFrm.params.parent = [None]
-                    nRunningFrm.params.label = ["Active Objects: "+str(len(WyeCore.World.objStacks))]
-                    nRunningFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    WyeUI.InputLabel.run(nRunningFrm)
-                    dlgFrm.params.inputs[0].append([nRunningFrm])
+                    nRunningFrm = WyeUI.doInputLabel(dlgFrm,"Active Objects: "+str(len(WyeCore.World.objStacks)), color=Wye.color.SUBHD_COLOR)
                     frame.vars.nRunningFrm[0] = nRunningFrm
 
                     attrIx = [0]
                     row = [0]
-
                     # recursively display stack contents
                     for stack in WyeCore.World.objStacks:
                         WyeUI.DebugMain.listStack(stack, dlgFrm, row, attrIx, frame, level=0, top=True)
@@ -5631,21 +5642,21 @@ class WyeUI(Wye.staticObj):
 
         # replace the task rows
         def update(frame, dlgFrm):
-            print("DebugMain.update: frame", frame.verb.__name__)
-            print("                        dlgFrm", dlgFrm.verb.__name__)
+            #print("DebugMain.update: frame", frame.verb.__name__)
+            #print("                        dlgFrm", dlgFrm.verb.__name__)
 
             # delete all dialog task input rows
-            print("Before clear dialog task rows, inputs len", len(dlgFrm.params.inputs[0]))
+            #print("Before clear dialog task rows, inputs len", len(dlgFrm.params.inputs[0]))
             delCt = 0
             for bFrmRef in frame.vars.rows[0]:
                 inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], bFrmRef)
                 oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                 if oldFrm in dlgFrm.vars.clickedBtns[0]:
                     dlgFrm.vars.clickedBtns[0].remove(oldFrm)
-                print(" remove", oldFrm.verb.__name__, " ", oldFrm.params.label[0])
+                #print(" remove", oldFrm.verb.__name__, " ", oldFrm.params.label[0])
                 oldFrm.verb.close(oldFrm)   # remove graphic content
                 delCt+= 1
-            print("after delete", delCt," dialog rows, inputs len", len(dlgFrm.params.inputs[0]))
+            #print("after delete", delCt," dialog rows, inputs len", len(dlgFrm.params.inputs[0]))
             frame.vars.rows[0].clear()      # old inputs gone
 
             # rebuild dialog task input rows
@@ -5657,7 +5668,7 @@ class WyeUI(Wye.staticObj):
 
             # if nothing running
             if attrIx == 0:
-                print("DebugMain.update: ERROR - it thinks nothings running")
+                #print("DebugMain.update: ERROR - it thinks nothings running")
                 lbl = WyeUI.doInputLabel(dlgFrm, "<no active objects>")
                 frame.vars.rows[0].append(lbl)
 
@@ -5670,7 +5681,7 @@ class WyeUI(Wye.staticObj):
             nRnFrm = frame.vars.nRunningFrm[0]
             nRnFrm.verb.setLabel(nRnFrm, "Active Objects: "+str(len(WyeCore.World.objStacks)))
 
-            print("after rebuild dialog task rows, inputs len", len(dlgFrm.params.inputs[0]))
+            #print("after rebuild dialog task rows, inputs len", len(dlgFrm.params.inputs[0]))
 
             dlgFrm.vars.currInp[0] = None  # we just deleted it, so clear it
             dlgFrm.verb.redisplay(dlgFrm)  # redisplay the dialog
@@ -5789,6 +5800,25 @@ class WyeUI(Wye.staticObj):
                 data = frame.eventData
                 chkFrm = data[1][0]
                 Wye.breakAll = chkFrm.params.value[0]
+
+        # Toggle world pause flag Wye.breakAll
+        class RefreshCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("dlgFrm", Wye.dType.INTEGER, -1),
+                        ("dlgStat", Wye.dType.INTEGER, -1),
+                        )
+
+            def start(stack):
+                # print("RefreshCallback started")
+                return Wye.codeFrame(WyeUI.DebugMain.RefreshCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                dbgMainFrm = data[1][0]
+                dlgFrm = data[1][1]
+                dbgMainFrm.verb.update(dbgMainFrm, dlgFrm)
 
     # Open up an object and debug it
     class ObjectDebugger:
