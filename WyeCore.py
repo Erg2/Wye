@@ -94,7 +94,7 @@ class WyeCore(Wye.staticObj):
     worldInitialized = False
 
     # DEBUG - SHOW COMPILED CODE
-    debugListCode = True       # true to list Python code generated from Wye code
+    debugListCode = False       # true to list Python code generated from Wye code
 
     picker = None   # object picker object
     base = None     # panda3d base - set by application

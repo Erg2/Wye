@@ -5449,6 +5449,7 @@ class WyeUI(Wye.staticObj):
         paramDescr = (("objFrm", Wye.dType.OBJECT, Wye.access.REFERENCE),)  # object frame to edit
         varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
                     ("dlgStat", Wye.dType.INTEGER, -1),
+                    ("nRunningFrm", Wye.dType.OBJECT, None),
                     ("rows", Wye.dType.OBJECT_LIST, None)      # list of refreshable objects
                     )
 
@@ -5491,20 +5492,21 @@ class WyeUI(Wye.staticObj):
                     breakAllFrm.verb.run(breakAllFrm)
 
                     # running objects
-                    lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                    lblFrm.params.frame = [None]  # return value
-                    lblFrm.params.parent = [None]
-                    lblFrm.params.label = ["Active Objects: "+str(len(WyeCore.World.objStacks))]
-                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    WyeUI.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append([lblFrm])
+                    nRunningFrm = WyeUI.InputLabel.start(dlgFrm.SP)
+                    nRunningFrm.params.frame = [None]  # return value
+                    nRunningFrm.params.parent = [None]
+                    nRunningFrm.params.label = ["Active Objects: "+str(len(WyeCore.World.objStacks))]
+                    nRunningFrm.params.color = [Wye.color.SUBHD_COLOR]
+                    WyeUI.InputLabel.run(nRunningFrm)
+                    dlgFrm.params.inputs[0].append([nRunningFrm])
+                    frame.vars.nRunningFrm[0] = nRunningFrm
 
                     attrIx = [0]
                     row = [0]
 
                     # recursively display stack contents
                     for stack in WyeCore.World.objStacks:
-                        WyeUI.DebugMain.listStack(stack, dlgFrm, row, attrIx, frame, 0, top=True)
+                        WyeUI.DebugMain.listStack(stack, dlgFrm, row, attrIx, frame, level=0, top=True)
                         attrIx[0] += 1
 
                     # if nothing running
@@ -5531,15 +5533,17 @@ class WyeUI(Wye.staticObj):
 
 
         def listStack(stack, dlgFrm, rowIx, attrIx, frame, level, prefix="stack", top=False):
-            print("listStack level", level, " prefix", prefix)
+            #if top and len(stack) > 0:
+            #        print("listStack top", stack[0].verb.__name__)
+            #print("listStack level", level, " prefix", prefix, " top", top)
             indent = "".join(["  " for l in range(level)])      # indent by recursion depth
             sLen = len(stack)
             if sLen > 0:  # if there's something on the stack
                 offset = 0
                 for objFrm in stack:
 
-                    # only delete top level non-system objects on regular stack
-                    if top and prefix == "stack" and not hasattr(stack[0], "systemObject"):       # HACK!
+                    # only let user delete top level non-system objects on regular stack
+                    if top and offset == 0 and prefix == "stack" and not hasattr(stack[0], "systemObject"):       # HACK!
                         doKillBtn = True
                     else:
                         doKillBtn = False
@@ -5549,7 +5553,8 @@ class WyeUI(Wye.staticObj):
                         delFrm.params.optData = [(delFrm, frame, dlgFrm, objFrm),]
                         frame.vars.rows[0].append(delFrm)
                     else:
-                        WyeUI.doInputLabel(dlgFrm, "    .")
+                        noDelFrm = WyeUI.doInputLabel(dlgFrm, "    .")
+                        frame.vars.rows[0].append(noDelFrm)
 
                     # make the dialog row
                     if offset == 0:
@@ -5575,13 +5580,13 @@ class WyeUI(Wye.staticObj):
                 if firstFrm.verb == WyeCore.World.repeatEventExecObj:
                     pAttrIx = [0]
                     prefix = "RepEvt"
-                    print("Children of repeatEventExecObj")
+                    #print("Children of repeatEventExecObj")
                     for evtID in WyeCore.World.repeatEventCallbackDict:
-                        print("  evtID", evtID)
+                       #print("  evtID", evtID)
                         evt = WyeCore.World.repeatEventCallbackDict[evtID]
                         evtStk = evt[0]
                         if len(evtStk) > 0:  # if there's something on the stack
-                            print(" repeatEventExecObj child evt", evt, " level", level, " prefix", prefix)
+                            #print(" repeatEventExecObj child evt", evt, " level", level, " prefix", prefix)
                             WyeUI.DebugMain.listStack(evtStk, dlgFrm, rowIx, pAttrIx, frame, level + 1, prefix=prefix)
                             pAttrIx[0] += 1
                             rowIx[0] += 1
@@ -5598,7 +5603,7 @@ class WyeUI(Wye.staticObj):
 
         # replace the task rows
         def update(frame, dlgFrm):
-            print("DebugMainDialog.update: frame", frame.verb.__name__)
+            print("DebugMain.update: frame", frame.verb.__name__)
             print("                        dlgFrm", dlgFrm.verb.__name__)
 
             # delete all dialog task input rows
@@ -5607,10 +5612,13 @@ class WyeUI(Wye.staticObj):
             for bFrmRef in frame.vars.rows[0]:
                 inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], bFrmRef)
                 oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
+                if oldFrm in dlgFrm.vars.clickedBtns[0]:
+                    dlgFrm.vars.clickedBtns[0].remove(oldFrm)
+                print(" remove", oldFrm.verb.__name__, " ", oldFrm.params.label[0])
                 oldFrm.verb.close(oldFrm)   # remove graphic content
                 delCt+= 1
             print("after delete", delCt," dialog rows, inputs len", len(dlgFrm.params.inputs[0]))
-            frame.vars.rows[0].clear()
+            frame.vars.rows[0].clear()      # old inputs gone
 
             # rebuild dialog task input rows
             attrIx = [0]
@@ -5621,6 +5629,7 @@ class WyeUI(Wye.staticObj):
 
             # if nothing running
             if attrIx == 0:
+                print("DebugMain.update: ERROR - it thinks nothings running")
                 lbl = WyeUI.doInputLabel(dlgFrm, "<no active objects>")
                 frame.vars.rows[0].append(lbl)
 
@@ -5628,6 +5637,10 @@ class WyeUI(Wye.staticObj):
             pos = [0, 0, 0]
             for frm in frame.vars.rows[0]:
                 frm.verb.display(frm, dlgFrm, pos)
+
+            # update n running top level tasks
+            nRnFrm = frame.vars.nRunningFrm[0]
+            nRnFrm.verb.setLabel(nRnFrm, "Active Objects: "+str(len(WyeCore.World.objStacks)))
 
             print("after rebuild dialog task rows, inputs len", len(dlgFrm.params.inputs[0]))
 
@@ -5700,7 +5713,7 @@ class WyeUI(Wye.staticObj):
                 #print("KillFrameCallback")
 
                 data = frame.eventData
-                print("KillFrameCallback data='" + str(data) + "'")
+                print("KillFrameCallback data='" + str(data) + "', case", frame.PC)
                 delLnFrm = data[1][0]
                 mainDbgFrm = data[1][1]
                 dlgFrm = data[1][2]
@@ -6535,7 +6548,7 @@ class WyeUI(Wye.staticObj):
                             delattr(objFrm.SP[0], "doBreakPt")
                 else:
                     if objFrm.verb is WyeCore.ParallelStream:
-                        objFrm.ParentFrame.SP[0].doBreakPt = True
+                        objFrm.parentFrame.SP[0].doBreakPt = True
                     else:
                         objFrm.SP[0].doBreakPt = True
 
