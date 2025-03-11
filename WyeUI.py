@@ -3920,7 +3920,7 @@ class WyeUI(Wye.staticObj):
         # level is the recursion level (starting at 2)
         # verb is the verb being edited
         # Put the results in rowLst so this can be used by both Dialog and EditLineCallback
-        def bldEditCodeLine(tuple, level, editVerbFrm, dlgFrm, rowLst):
+        def bldEditCodeLine(tuple, level, editVerbFrm, dlgFrm, rowLst, prefix=""):
             #print("level", level, " indent '"+indent+"' tuple", tuple)
 
             # line edit dropdown
@@ -3956,46 +3956,52 @@ class WyeUI(Wye.staticObj):
                 vStr = str(tuple[0])
                 if vStr.startswith("WyeCore.libs."):
                     vStr = vStr[13:]
-                btnFrm.params.label = [indent + "Verb: " + vStr]
+                libStr,verbStr = vStr.split(".")
+                lib = WyeCore.World.libDict[libStr]
+                verb = getattr(lib, verbStr)
+                btnFrm.params.label = [indent + prefix + "Verb: " + vStr]
                 btnFrm.params.callback = [WyeUI.EditVerb.EditVerbCallback]  # button callback
 
                 # display verb's params (if any)
                 if len(tuple) > 1:
+                    paramIx = 0
                     for paramTuple in tuple[1:]:
-                        WyeUI.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, dlgFrm, rowLst)
+                        prefix = "(" + verb.paramDescr[paramIx][0] + ") "
+                        WyeUI.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, dlgFrm, rowLst, prefix)
+                        paramIx += 1
             else:
                 match tuple[0]:
                     case "Code" | None:  # raw Python
-                        btnFrm.params.label = [indent + "Code: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "Code: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
                     case "CodeBlock":  # multi-line raw Python
-                        btnFrm.params.label = [indent + "CodeBLock: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "CodeBLock: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
                     case "Expr":
-                        btnFrm.params.label = [indent + "Expression: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "Expression: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
                     case "Const":
-                        btnFrm.params.label = [indent + "Constant: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "Constant: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "Var":
-                        btnFrm.params.label = [indent + "Variable: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "Variable: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "Var=":
-                        btnFrm.params.label = [indent + "Variable=: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "Variable=: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "GoTo":
-                        btnFrm.params.label = [indent + "GoTo: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "GoTo: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "Label":
-                        btnFrm.params.label = [indent + "Label: " + str(tuple[1])]
+                        btnFrm.params.label = [indent + prefix + "Label: " + str(tuple[1])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
 
                     case "IfGoTo":
-                        btnFrm.params.label = [indent + "If: " + str(tuple[1]) + " GoTo: " + str(tuple[2])]
+                        btnFrm.params.label = [indent + prefix + "If: " + str(tuple[1]) + " GoTo: " + str(tuple[2])]
                         btnFrm.params.callback = [WyeUI.EditVerb.EditCodeCallback]  # button callback
 
             #print("bldEditCodeLine btnFrm", btnFrm.params.label[0])
@@ -4127,6 +4133,7 @@ class WyeUI(Wye.staticObj):
                         ("libNames", Wye.dType.STRING_LIST, []),
                         ("verbName", Wye.dType.STRING, ""),
                         ("verbNames", Wye.dType.STRING_LIST, []),
+                        ("prefix", Wye.dType.STRING, ""),
                         )
 
             # global list of frames being edited
@@ -4150,6 +4157,12 @@ class WyeUI(Wye.staticObj):
 
                 match (frame.PC):
                     case 0:
+                        # if there is a prefix, save it
+                        labelStr = btnFrm.params.label[0].strip()
+                        if labelStr[0] == "(":      # if there's a prefix
+                            endPrefIx = labelStr.find(")")
+                            frame.vars.prefix[0] = labelStr[:endPrefIx+2]
+
                         # build verb select/edit dialog
                         dlgFrm = WyeUI.Dialog.start(frame.SP)
                         dlgFrm.params.retVal = frame.vars.dlgStat
@@ -4231,7 +4244,7 @@ class WyeUI(Wye.staticObj):
                                 newLib = oldLib
 
                             vrbFrm = dlgFrm.params.inputs[0][-1][0]
-                            print("vrbFrm ix", vrbFrm.params.selectionIx[0], " in list", vrbFrm.params.list[0])
+                            #print("vrbFrm ix", vrbFrm.params.selectionIx[0], " in list", vrbFrm.params.list[0])
                             if vrbFrm.params.selectionIx[0] >= 0:
                                 newVerb = vrbFrm.vars.list[0][vrbFrm.params.selectionIx[0]]
                             else:
@@ -4245,8 +4258,9 @@ class WyeUI(Wye.staticObj):
 
 
                             # update display
+                            prefix = frame.vars.prefix[0]
                             indent = "".join(["    " for l in range(level)])  # indent by recursion depth
-                            btnFrm.verb.setLabel(btnFrm, indent + "Verb: " + str(tuple[0]))
+                            btnFrm.verb.setLabel(btnFrm, indent + prefix + "Verb: " + str(tuple[0]))
 
                         frame.status = dlgFrm.status
 
@@ -4440,7 +4454,6 @@ class WyeUI(Wye.staticObj):
                 #print("EditVarLineCallback: operator ix", opIx, " varDescr", var)
                 #WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
 
-
                 # "0 Move line up",
                 # "1 Add line before",
                 # "2 Copy line",
@@ -4463,8 +4476,6 @@ class WyeUI(Wye.staticObj):
                                                           WyeUI.EditVerb.EditVarLineCallback,
                                                           WyeUI.EditVerb.EditVarCallback,
                                                           newData, insertBefore=True)
-
-
 
                     # copy line
                     case 2:
@@ -4713,6 +4724,7 @@ class WyeUI(Wye.staticObj):
             paramDescr = ()
             varDescr = (("tuple", Wye.dType.OBJECT, None),
                         ("dlgStat", Wye.dType.INTEGER, -1),
+                        ("prefix", Wye.dType.STRING, ""),
                         )
 
             def start(stack):
@@ -4734,10 +4746,15 @@ class WyeUI(Wye.staticObj):
                         #print("EditCodeCallback data='" + str(frame.eventData) + "'")
 
                         # build code dialog
-                        # TODO - build this out to handle all diff code types
                         dlgFrm = WyeUI.Dialog.start(frame.SP)
 
                         frame.vars.tuple[0] = tuple
+
+                        # if there is a prefix, save it
+                        labelStr = btnFrm.params.label[0].strip()
+                        if labelStr[0] == "(":      # if there's a prefix
+                            endPrefIx = labelStr.find(")")
+                            frame.vars.prefix[0] = labelStr[:endPrefIx+2]
 
                         # parallel verb
                         #if editVerbFrm.vars.oldVerb[0].mode == Wye.mode.PARALLEL:
@@ -4833,33 +4850,35 @@ class WyeUI(Wye.staticObj):
                             # update display
                             indent = "".join(["    " for l in range(level)])  # indent by recursion depth
 
+                            prefix = frame.vars.prefix[0]
+
                             match tuple[0]:
                                 case "Code" | None:  # raw Python
-                                    btnFrm.verb.setLabel(btnFrm, indent + "Code: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Code: " + str(tuple[1]))
 
                                 case "CodeBlock":  # multi-line raw Python
-                                    btnFrm.verb.setLabel(btnFrm, indent + "CodeBLock: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "CodeBLock: " + str(tuple[1]))
 
                                 case "Expr":
-                                    btnFrm.verb.setLabel(btnFrm, indent + "Expression: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Expression: " + str(tuple[1]))
 
                                 case "Const":
-                                    btnFrm.verb.setLabel(btnFrm, indent + "Constant: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Constant: " + str(tuple[1]))
 
                                 case "Var":
-                                    btnFrm.verb.setLabel(btnFrm, indent + "Variable: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Variable: " + str(tuple[1]))
 
                                 case "Var=":
-                                    btnFrm.verb.setLabel(btnFrm, indent + "Variable=: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Variable=: " + str(tuple[1]))
 
                                 case "GoTo":
-                                    btnFrm.verb.setLabel(btnFrm, indent + " GoTo: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + " GoTo: " + str(tuple[1]))
 
                                 case "Label":
-                                    btnFrm.verb.setLabel(btnFrm, indent + "Label: " + str(tuple[1]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Label: " + str(tuple[1]))
 
                                 case "IfGoTo":
-                                    btnFrm.verb.setLabel(btnFrm, indent + "If: " + str(tuple[1]) + " GoTo: " + str(tuple[2]))
+                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "If: " + str(tuple[1]) + " GoTo: " + str(tuple[2]))
 
                                 case _:  # raw Python
                                     print("EditCodeCallback done: unknown operation '"+tuple[0]+"'.  Default to Code")
