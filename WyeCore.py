@@ -648,8 +648,12 @@ class WyeCore(Wye.staticObj):
                 self.accept('keystroke', self.keyFunc)
                 self.accept('arrow_right', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
                 self.accept('arrow_left', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
+                self.accept('arrow_right-repeat', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
+                self.accept('arrow_left-repeat', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
                 self.accept('control-arrow_right', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
                 self.accept('control-arrow_left', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
+                self.accept('control-arrow_right-repeat', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
+                self.accept('control-arrow_left-repeat', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
                 self.accept('arrow_up', self.controlKeyFunc, [Wye.ctlKeys.UP])
                 self.accept('arrow_down', self.controlKeyFunc, [Wye.ctlKeys.DOWN])
                 self.accept('shift_down', self.controlKeyFunc, [Wye.ctlKeys.SHIFT_DOWN])
@@ -657,6 +661,8 @@ class WyeCore(Wye.staticObj):
                 self.accept('ctl_down', self.controlKeyFunc, [Wye.ctlKeys.CTL_DOWN])
                 self.accept('ctl_up', self.controlKeyFunc, [Wye.ctlKeys.CTL_UP])
                 self.accept('delete', self.controlKeyFunc, [Wye.ctlKeys.DELETE])
+                self.accept('home', self.controlKeyFunc, [Wye.ctlKeys.HOME])
+                self.accept('end', self.controlKeyFunc, [Wye.ctlKeys.END])
 
             def controlKeyFunc(self, keyID):
                 #print("Control key", keyID)

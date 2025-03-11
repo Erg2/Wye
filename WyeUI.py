@@ -2513,10 +2513,12 @@ class WyeUI(Wye.staticObj):
                             insPt -= 1
                             inFrm.vars.currInsPt[0] = insPt
                         txt = preTxt + postTxt
+
                     if key == -9:  # delete (forward) key
                         if insPt < len(txt):
                             postTxt = postTxt[1:]
                         txt = preTxt + postTxt
+
                     # arrow keys
                     elif key == Wye.ctlKeys.LEFT:   # arrow keys
                         # if ctl down, skip whole alphanum word, or at least 1 ch
@@ -2535,6 +2537,7 @@ class WyeUI(Wye.staticObj):
                         inFrm.vars.currInsPt[0] = insPt
                         WyeUI.Dialog.drawCursor(inFrm)
                         return
+
                     elif key == Wye.ctlKeys.RIGHT:
                         # if ctl down, skip whole alphanum word, or at least 1 ch
                         txtLen = len(txt)
@@ -2552,6 +2555,18 @@ class WyeUI(Wye.staticObj):
                         inFrm.vars.currInsPt[0] = insPt
                         WyeUI.Dialog.drawCursor(inFrm)
                         return
+
+                    elif key == Wye.ctlKeys.END:
+                        txtLen = len(txt)
+                        insPt = txtLen
+                        inFrm.vars.currInsPt[0] = insPt
+                        WyeUI.Dialog.drawCursor(inFrm)
+
+                    elif key == Wye.ctlKeys.HOME:
+                        inFrm.vars.currInsPt[0] = 0
+                        WyeUI.Dialog.drawCursor(inFrm)
+
+
                     # not special control, if printable char, insert it in the string
                     else:
                         if isinstance(key,str):
@@ -3533,7 +3548,7 @@ class WyeUI(Wye.staticObj):
         def __init__(self):
             self.currObj = None
 
-        # User clicked on object.  It alt key down and it's editable, open the editor
+        # User clicked on object.  If alt key down and it's editable, open the editor
         # note: all object frames must have a "position" variable with the object's position in it
         # for edit and debug dialog's to be positioned near
         def tagClicked(self, wyeID):

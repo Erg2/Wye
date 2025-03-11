@@ -562,25 +562,42 @@ class Wye:
         SHIFT_DOWN = -7
         SHIFT_UP = -8
         DELETE = -9
+        END = -10
+        HOME = -11
 
-        def tostring(key):
-            match key:
-                case Wye.ctlKyes.RIGHT:
-                    return "RIGHT"
-                case Wye.ctlKyes.LEFT:
-                    return "LEFT"
-                case Wye.ctlKyes.UP:
-                    return "UP"
-                case Wye.ctlKyes.DOWN:
-                    return "DOWN"
-                case Wye.ctlKyes.CTL_DOWN:
-                    return "CTL_DOWN"
-                case Wye.ctlKyes.CTL_UP:
-                    return "CTL_UP"
-                case Wye.ctlKyes.SHIFT_DOWN:
-                    return "SHIFT_DOWN"
-                case Wye.ctlKyes.SHIFT_UP:
-                    return "SHIFT_UP"
+        ctlList = [
+            RIGHT,
+            LEFT,
+            UP,
+            DOWN,
+            CTL_DOWN,
+            CTL_UP,
+            SHIFT_DOWN,
+            SHIFT_UP,
+            DELETE,
+            END,
+            HOME
+        ]
+
+        stringLookup = {
+            RIGHT: "RIGHT",
+            LEFT: "LEFT",
+            UP: "UP",
+            DOWN: "DOWN",
+            CTL_DOWN: "CTL_DOWN",
+            CTL_UP: "CTL_UP",
+            SHIFT_DOWN: "SHIFT_DOWN",
+            SHIFT_UP: "SHIFT_UP",
+            DELETE: "DELETE",
+            END: "END",
+            HOME: "HOME"
+        }
+
+        def tostring(val):
+            if val in Wye.ctlKeys.stringLookup:
+                return Wye.ctlKeys.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
     # UI text color
     class color:
