@@ -93,7 +93,7 @@ class EditLib:
 
         codeDescr = (
 
-            #(None, "print('EditLib ShowFishDialog')"),
+            (None, "print('EditLib ShowFishDialog')"),
             (None, "frame.vars.dlgButton[0] = WyeUI._3dText(text='Set Fish and Light Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
