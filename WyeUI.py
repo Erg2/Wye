@@ -5850,23 +5850,23 @@ class WyeUI(Wye.staticObj):
                         dlgFrm.params.inputs[0].append([lblFrm])
                     # regular boring normal single stream code
                     else:
-                        print("Debug", oFrm.verb.__name__)
+                        #print("Debug", oFrm.verb.__name__)
                         if hasattr(oFrm.verb, "codeDescr"):
                             codeDescr = oFrm.verb.codeDescr
 
                             # get current code block highlight info
                             caseIx = str(oFrm.PC)
                             tupleLst = None
-                            print("oFrm", oFrm.verb.__name__, " oFrm.PC", oFrm.PC)
+                            #print("oFrm", oFrm.verb.__name__, " oFrm.PC", oFrm.PC)
                             if hasattr(oFrm.verb, "caseCodeDictLst"):
-                                print("caseCodeDictLst[0]", oFrm.verb.caseCodeDictLst[0])
+                                #print("caseCodeDictLst[0]", oFrm.verb.caseCodeDictLst[0])
                                 if caseIx in oFrm.verb.caseCodeDictLst[0]:
                                     tupleLst = oFrm.verb.caseCodeDictLst[0][caseIx]
-                                    print("tupleLst for", oFrm.verb.__name__,"\n",tupleLst)
-                                else:
-                                    print("verb", oFrm.verb.__name__, " caseCodeDictLst[0] has no entry for caseIx", caseIx)
-                            else:
-                                print("verb", oFrm.verb.__name__, " has no caseCodeDict")
+                                    #print("tupleLst for", oFrm.verb.__name__,"\n",tupleLst)
+                                #else:
+                                #    print("verb", oFrm.verb.__name__, " caseCodeDictLst[0] has no entry for caseIx", caseIx)
+                            #else:
+                            #    print("verb", oFrm.verb.__name__, " has no caseCodeDict")
 
                             # draw the top level code rows
                             for tuple in codeDescr:
@@ -5882,10 +5882,10 @@ class WyeUI(Wye.staticObj):
                                 # highlight currently executing section of code
                                 if tupleLst:
                                     if tuple in tupleLst:
-                                        print(" found tuple", tuple)
+                                        print(" caseIx", caseIx," found tuple", tuple)
                                         btnFrm.params.backgroundColor = [Wye.color.LIGHT_GREEN]
-                                    else:
-                                        print(" no match for tuple", tuple, "\n in tupleLst", tupleLst)
+                                    #else:
+                                    #    print(" no match for tuple", tuple, "\n in tupleLst", tupleLst)
 
                                 # fill in text and callback based on code row type
                                 if tuple[0] is None:
@@ -5997,9 +5997,6 @@ class WyeUI(Wye.staticObj):
                     tupleLst = objFrm.verb.caseCodeDictLst[0][caseIx]
                     if tupleLst:
                         for btnFrm in frame.vars.codeInpLst[0]:
-                            print("------------")
-                            print("btnFrm", btnFrm.verb.__name__, " ", btnFrm.params.label[0], " data", btnFrm.params.optData)
-                            print("------------")
                             tuple = btnFrm.params.optData[0][4]
                             if tuple in tupleLst:
                                 btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.LIGHT_GREEN)

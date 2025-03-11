@@ -1127,7 +1127,7 @@ class WyeCore(Wye.staticObj):
             parFnText = ""
             # Wye verb
             if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
-                print("lib.verb tuple", wyeTuple)
+                #print("lib.verb tuple", wyeTuple)
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
@@ -1420,7 +1420,7 @@ class WyeCore(Wye.staticObj):
                 # stick debug struct on verb
                 if not hasattr(verb, "caseCodeDictList"):
                     verb.caseCodeDictLst = [caseCodeDict]
-                    print("put caseCodeDict on verb", verb.__name__, "\n", caseCodeDict)
+                    #print("put caseCodeDict on verb", verb.__name__, "\n", caseCodeDict)
                 else:
                     verb.caseCodeDictLst.append(caseCodeDict)
 
