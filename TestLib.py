@@ -15,8 +15,8 @@ class TestLib:
     class testObj3:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        dataType = Wye.dType.NONE
+        paramDescr = ()
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, ""),
@@ -83,8 +83,8 @@ class TestLib:
     class testObj3b:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        dataType = Wye.dType.NONE
+        paramDescr = ()
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, ""),
@@ -148,8 +148,8 @@ class TestLib:
     class testObj3c:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        dataType = Wye.dType.NONE
+        paramDescr = ()
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, ""),
@@ -650,8 +650,8 @@ else:
     class ground:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        dataType = Wye.dType.NONE
+        paramDescr = ()
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
@@ -813,8 +813,8 @@ for ii in range(len(frame.vars.bubbles[0])):
     class angleFish:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        dataType = Wye.dType.NONE
+        paramDescr = ()  # gotta have a ret param
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, "objTag"),
@@ -823,7 +823,7 @@ for ii in range(len(frame.vars.bubbles[0])):
                     )  # var 4
 
         codeDescr=(
-            (None, ("print('angleFish 1 case', frame.PC)")),
+            #(None, ("print('angleFish 1 case', frame.PC)")),
             ("WyeCore.libs.WyeLib.loadObject",
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
@@ -839,16 +839,15 @@ for ii in range(len(frame.vars.bubbles[0])):
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
             (None, "frame.vars.sound[0] = Wye.audio3d.loadSfx('WyePew.wav')"),
             ("Label", "Repeat"),
-            (None, ("print('angleFish 2 case', frame.PC)")),
+            #(None, ("print('angleFish 2 case', frame.PC)")),
             ("WyeCore.libs.TestLib.clickWiggle", (None, "frame.vars.gObj"), (None, "frame.vars.objTag"), (None, "[0]")),
-            (None, ("print('angleFish 3 case', frame.PC)")),
+            #(None, ("print('angleFish 3 case', frame.PC)")),
             ("WyeCore.libs.TestLib.clickWiggle", (None, "frame.vars.gObj"), (None, "frame.vars.objTag"), (None, "[1]")),
-            (None, ("print('angleFish 4 case', frame.PC)")),
+            #(None, ("print('angleFish 4 case', frame.PC)")),
             ("WyeCore.libs.TestLib.clickWiggle", (None, "frame.vars.gObj"), (None, "frame.vars.objTag"), (None, "[2]")),
-            (None, ("print('angleFish 5 case', frame.PC)")),
+            #(None, ("print('angleFish 5 case', frame.PC)")),
             ("GoTo", "Repeat"),
-            (None, ("print('angleFish 6 case', frame.PC)")),
-            (None, ("print('angleFish end case', frame.PC)")),
+            #(None, ("print('angleFish end case', frame.PC)")),
         )
 
         def build():
@@ -871,8 +870,8 @@ for ii in range(len(frame.vars.bubbles[0])):
         cType = Wye.cType.OBJECT
         mode = Wye.mode.PARALLEL
         autoStart = True
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        dataType = Wye.dType.NONE
+        paramDescr = ()
         # varDescr = (("a", Wye.dType.NUMBER, 0), ("b", Wye.dType.NUMBER, 1), ("c", Wye.dType.NUMBER, 2))
         varDescr = (("gObj", Wye.dType.OBJECT, None),
                     ("objTag", Wye.dType.STRING, ""),
@@ -955,8 +954,8 @@ frame.vars.posAngle[0] = angle
     class PlaceHolder:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = False
-        dataType = Wye.dType.INTEGER
-        paramDescr = (("ret", Wye.dType.INTEGER, Wye.access.REFERENCE),)  # gotta have a ret param
+        dataType = Wye.dType.NONE
+        paramDescr = ()
         varDescr = (("myVar", Wye.dType.INTEGER, 0),)
         codeDescr = (
             ("Code", "print('PlaceHolder running!')"),

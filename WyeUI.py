@@ -590,7 +590,6 @@ class WyeUI(Wye.staticObj):
             pos = self._nodePath.getPos()
             scale = self._nodePath.getScale()
             if self.bg[3] > 0:
-                print("3dText", self.dbgTxt, " bg", bg)
                 self._genCardObj(bg)                     # generate new card obj for updated text object
             self._nodePath.detachNode()            # detach 3d node path from old card
             self._gen3dTextObj(pos, scale, color, self._nodePath)     # make new 3d node path to new card
@@ -3404,6 +3403,13 @@ class WyeUI(Wye.staticObj):
                         if attr != "__class__":
                             verb = getattr(lib, attr)
                             if inspect.isclass(verb):
+                                # can only start verbs that don't require data
+                                if hasattr(verb, "paramDescr") and len(verb.paramDescr) == 0:
+                                    canStart = True
+                                    WyeUI.doInputButton(dlgFrm, "Start", WyeUI.EditLibCallback.startLibVerbCallback, (verb,))
+                                else:
+                                    WyeUI.doInputLabel(dlgFrm, "    .")
+
                                 if hasattr(verb, "codeDescr"):
                                     # print("lib", lib.__name__, " verb", verb.__name__)
                                     btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
@@ -3413,6 +3419,7 @@ class WyeUI(Wye.staticObj):
                                     btnFrm.params.label = [txt]  # button label is verb name
                                     btnFrm.params.callback = [WyeUI.EditLibCallback.EditLibaryVerbCallback]  # button callback
                                     btnFrm.params.optData = [(btnFrm, dlgFrm, verb)]  # button data - offset to button
+                                    btnFrm.params.layout = [Wye.layout.ADD_RIGHT]
                                     WyeUI.InputButton.run(btnFrm)
                                     dlgFrm.params.inputs[0].append([btnFrm])
                                 else:
@@ -3421,6 +3428,7 @@ class WyeUI(Wye.staticObj):
                                     lblFrm.params.parent = [None]
                                     txt = "  " + lib.__name__ + "." + verb.__name__
                                     lblFrm.params.label = [txt]
+                                    lblFrm.params.layout = [Wye.layout.ADD_RIGHT]
                                     lblFrm.params.color = [Wye.color.DISABLED_COLOR]
                                     WyeUI.InputLabel.run(lblFrm)
                                     dlgFrm.params.inputs[0].append([lblFrm])
@@ -3476,6 +3484,26 @@ class WyeUI(Wye.staticObj):
                         edFrm = frame.SP.pop()  # remove dialog frame from stack
                         #print("EditLibraryVerbCallback case 1: popped frame", edFrm.verb.__name__)
                         frame.status = Wye.status.SUCCESS  # done
+
+
+
+        # edit verb in lib
+        class startLibVerbCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("count", Wye.dType.INTEGER, 0),)
+
+            def start(stack):
+                #print("startLibVerbCallback start")
+                return Wye.codeFrame(WyeUI.EditLibCallback.startLibVerbCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                verb = data[1][0]
+
+                WyeCore.World.startActiveObject(verb)
+
 
 
     # class instance is called when user clicks on a graphic object that has a WyeID tag
@@ -5681,7 +5709,7 @@ class WyeUI(Wye.staticObj):
                         objOffset = (objRow + 2) * .3
                         objPos = (2, -.5, -objOffset)
                         dbgFrm = WyeUI.ObjectDebugger.start(frame.SP)
-                        dlgFrm.systemObject = True
+                        dbgFrm.systemObject = True
                         dbgFrm.params.objFrm = [objFrm]
                         dbgFrm.params.position = [[objPos[0], objPos[1], objPos[2]]]
                         dbgFrm.params.parent = [parentDlg]
@@ -5964,7 +5992,7 @@ class WyeUI(Wye.staticObj):
                     if hasattr(oFrm.verb, "codeDescr"):
                         codeDescr = oFrm.verb.codeDescr
                         if oFrm.verb.mode == Wye.mode.PARALLEL:
-                            print("verb", oFrm.verb.__name__," has", len(codeDescr), " streams")
+                            #print("verb", oFrm.verb.__name__," has", len(codeDescr), " streams")
                             pIx = 0
                             for parDescr in codeDescr:
                                 WyeUI.doInputLabel(dlgFrm, "  " + parDescr[0])
@@ -5972,7 +6000,7 @@ class WyeUI(Wye.staticObj):
                                 chldStk = oFrm.stacks[pIx]
                                 if len(chldStk) > 0:
                                     chldFrm = chldStk[0]
-                                    caseIx = str(chldFrm.PC)
+                                    caseIx = str(-1)
                                 else:
                                     chldFrm = None
                                     caseIx = 0
@@ -5980,7 +6008,7 @@ class WyeUI(Wye.staticObj):
 
                                 tupleLst = None
                                 if hasattr(oFrm.verb, "caseCodeDictLst"):
-                                    print("verb", oFrm.verb.__name__, " has", len(oFrm.verb.caseCodeDictLst), " caseCodeDicts")
+                                    #print("verb", oFrm.verb.__name__, " has", len(oFrm.verb.caseCodeDictLst), " caseCodeDicts")
                                     if caseIx in oFrm.verb.caseCodeDictLst[pIx]:
                                         tupleLst = oFrm.verb.caseCodeDictLst[pIx][caseIx]
 
@@ -6120,7 +6148,6 @@ class WyeUI(Wye.staticObj):
 
             # current case row(s) highlight
             if hasattr(objFrm.verb, "caseCodeDictLst"):
-                print("caseCodeDictLst[0]", objFrm.verb.caseCodeDictLst[0])
                 caseIx = str(objFrm.PC)
                 # get list of tuples in current case (if any)
                 if caseIx in objFrm.verb.caseCodeDictLst[0]:

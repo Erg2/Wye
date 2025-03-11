@@ -1120,9 +1120,6 @@ class WyeCore(Wye.staticObj):
         # fns is a list that parallel functions are added to
         def parseWyeTuple(wyeTuple, fNum, caseNumList, caseCodeDict):
             caseStr = str(caseNumList[0])
-            if not caseStr in caseCodeDict:
-                caseCodeDict[caseStr] = []
-            caseCodeDict[caseStr].append(wyeTuple)
             codeText = ""
             parFnText = ""
             # Wye verb
@@ -1145,6 +1142,9 @@ class WyeCore(Wye.staticObj):
                     # or
                     #  (None, "python code to inline")
                     case Wye.mode.SINGLE_CYCLE:
+                        if not caseStr in caseCodeDict:
+                            caseCodeDict[caseStr] = []
+                        caseCodeDict[caseStr].append(wyeTuple)
                         eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
                         # put local frames on the parent frame as attributes to keep local scope
                         codeText += "    if not hasattr(frame,'"+eff+"'):\n     setattr(frame,'"+eff+"',None)\n"
@@ -1232,6 +1232,7 @@ class WyeCore(Wye.staticObj):
                     # generates a new case statement in this verb that will pick up when the pushed frame completes
                     # Note that a parallel verb is a multi-cycle verb from the caller's perspective
                     case Wye.mode.MULTI_CYCLE | Wye.mode.PARALLEL:
+                        # do not add to caseCodeDict 'cause it will be picked up in the next case
                         #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
                         eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
                         # put local frames on the parent frame as attributes to keep local scope across display cycles
@@ -1294,6 +1295,7 @@ class WyeCore(Wye.staticObj):
 
                         codeText += "    frame.SP.append(frame."+eff+")\n    frame.PC += 1\n"
                         caseNumList[0] += 1
+                        # Debugger highlighting data
                         caseStr = str(caseNumList[0])
                         caseCodeDict[caseStr] = []
                         caseCodeDict[caseStr].append(wyeTuple)
@@ -1314,6 +1316,9 @@ class WyeCore(Wye.staticObj):
 
             # Tuple has no verb, just raw Python code
             else:
+                if not caseStr in caseCodeDict:
+                    caseCodeDict[caseStr] = []
+                caseCodeDict[caseStr].append(wyeTuple)
                 if len(wyeTuple) > 1:
                     # if multi-line block of code, offset it all correctly
                     codeLines = wyeTuple[1].split('\n')
@@ -1337,7 +1342,7 @@ class WyeCore(Wye.staticObj):
             caseNumList = [0]   # current case stmt number - in list so called fn can increment it.  (pass by reference)
             labelDict = {}
             fwdLabelDict = {}
-            caseCodeDict = {}   # debugging info - match case number to codeDescr wyeTuple
+            caseCodeDict = {"-1":[]}   # debugging info - match case number to codeDescr wyeTuple
             # define runtime method for this function
             codeText = " def " + name + "_run_rt(frame):\n  match frame.PC:\n   case 0:\n"
             parFnText = ""
