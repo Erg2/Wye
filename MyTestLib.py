@@ -77,11 +77,11 @@ class MyTestLib:
     
         def build():
             # print("Build ",MyTestFish3)
-            return WyeCore.Utils.buildCodeText('MyTestFish3', MyTestLib.MyTestFish3.codeDescr)
+            return WyeCore.Utils.buildCodeText('MyTestFish3', MyTestLib.MyTestFish3.codeDescr, MyTestLib.MyTestFish3)
     
         def start(stack):
             # print('MyTestFish3 object start')
-                        return Wye.codeFrame(MyTestLib.MyTestFish3, stack)
+            return Wye.codeFrame(MyTestLib.MyTestFish3, stack)
     
         def run(frame):
             # print('Run 'MyTestFish3)

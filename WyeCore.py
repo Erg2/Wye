@@ -1118,11 +1118,16 @@ class WyeCore(Wye.staticObj):
         #       execution streams
         # caseNumList is a list so the number can be incremented
         # fns is a list that parallel functions are added to
-        def parseWyeTuple(wyeTuple, fNum, caseNumList):
+        def parseWyeTuple(wyeTuple, fNum, caseNumList, caseCodeDict):
+            caseStr = str(caseNumList[0])
+            if not caseStr in caseCodeDict:
+                caseCodeDict[caseStr] = []
+            caseCodeDict[caseStr].append(wyeTuple)
             codeText = ""
             parFnText = ""
             # Wye verb
             if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
+                print("lib.verb tuple", wyeTuple)
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
@@ -1165,8 +1170,8 @@ class WyeCore(Wye.staticObj):
                                     #print(" parseWyeTuple: skip 0th entry in wyeTuple")
                                     continue        # skip processing any more of this tuple parameter
 
-                                # skip empty tuples (list ended in ",")
-                                if len(paramTuple) == 0:
+                                # skip empty tuples (list ended in ",") and debug highlighting tuples
+                                if len(paramTuple) == 0 or paramTuple[0] == "caseNum":
                                     continue
 
                                 tupleKey = paramTuple[0]
@@ -1189,7 +1194,7 @@ class WyeCore(Wye.staticObj):
                                 else:                           # recurse to parse nested code tuple
                                     #print(" parseWyeTuple: paramTuple[0] is", paramTuple[0], " >>>> Recurse <<<<")
                                     # Recurse to generate code to call verb and return its value
-                                    cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList)
+                                    cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList, caseCodeDict)
 
                                     # NOTE: Assumes that IDE ensured verb is a function!
                                     #print("  popped back to parsing verb", verbClass.__name__, " wyeTuple", wyeTuple)
@@ -1266,8 +1271,7 @@ class WyeCore(Wye.staticObj):
 
                                 # param tuple starts with library word
                                 else: # recurse to parse nested code tuple
-                                    #caseNumList[0] += 1
-                                    cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList)
+                                    cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList, caseCodeDict)
 
                                     # debug
                                     #print("parseWyeTuple paramIx", paramIx, " verb", verbClass.__name__, " paramDescr ", verbClass.paramDescr)
@@ -1290,6 +1294,9 @@ class WyeCore(Wye.staticObj):
 
                         codeText += "    frame.SP.append(frame."+eff+")\n    frame.PC += 1\n"
                         caseNumList[0] += 1
+                        caseStr = str(caseNumList[0])
+                        caseCodeDict[caseStr] = []
+                        caseCodeDict[caseStr].append(wyeTuple)
                         #codeText += "   case "+str(caseNumList[0])+":\n    pass\n    frame."+eff+"=frame.SP.pop()\n"
                         codeText += "   case "+str(caseNumList[0])+":\n    frame."+eff+"=frame.SP.pop()\n"
                         codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
@@ -1325,11 +1332,12 @@ class WyeCore(Wye.staticObj):
 
         # build run time code for a sequential verb (single or multiple cycle)
         # parse verb's code (list of Wye tuples) into Python code text
-        def buildCodeText(name, codeDescr):
+        def buildCodeText(name, codeDescr, verb):
             #print("buildCodeText for", name)
             caseNumList = [0]   # current case stmt number - in list so called fn can increment it.  (pass by reference)
             labelDict = {}
             fwdLabelDict = {}
+            caseCodeDict = {}   # debugging info - match case number to codeDescr wyeTuple
             # define runtime method for this function
             codeText = " def " + name + "_run_rt(frame):\n  match frame.PC:\n   case 0:\n"
             parFnText = ""
@@ -1401,12 +1409,20 @@ class WyeCore(Wye.staticObj):
                             #print('WyeCore buildCodeText caller:', callrframe[1][3])
                             #print("WyeCore buildCodeText: compile tuple=", wyeTuple)
                             # DEBUG end ^^^^
-                            cdTxt, parTxt, firstParam = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
+                            cdTxt, parTxt, firstParam = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList, caseCodeDict)
 
                             codeText += cdTxt
                             parFnText += parTxt
                     except Exception as e:
                         print("buildCodeText failed at tuple", wyeTuple, "\n", str(e))
+                        traceback.print_exception(e)
+
+                # stick debug struct on verb
+                if not hasattr(verb, "caseCodeDictList"):
+                    verb.caseCodeDictLst = [caseCodeDict]
+                    print("put caseCodeDict on verb", verb.__name__, "\n", caseCodeDict)
+                else:
+                    verb.caseCodeDictLst.append(caseCodeDict)
 
             # no code, make sure fn compiles
             else:
@@ -1419,7 +1435,7 @@ class WyeCore(Wye.staticObj):
         # build run time code for parallel function verb (always multi cycle)
         # which includes the inline runtime runction and the separate
         # parallel runtime functions
-        def buildParallelText(libName, verbName, streamDescr):
+        def buildParallelText(libName, verbName, streamDescr, verb):
             #print("buildParallelText for", verbName)
             # build the parallel stream functions
             parFnText = ""
@@ -1427,7 +1443,8 @@ class WyeCore(Wye.staticObj):
             # create run function for each stream
             for ix in range(nStreams):
                 #print("  Create ",verbName," stream ", ix)
-                cd, fn = WyeCore.Utils.buildCodeText(verbName+"_" + streamDescr[ix][0] + "_" + str(ix), streamDescr[ix][1])
+                # note: streamDescr[ix][0] is user supplied name of this stream.  streamDescr[ix][1] is the codeDescr for the stream
+                cd, fn = WyeCore.Utils.buildCodeText(verbName+"_" + streamDescr[ix][0] + "_" + str(ix), streamDescr[ix][1], verb)
                 parFnText += cd + fn
 
             # create start routine for this parallel verb
@@ -1461,7 +1478,7 @@ class WyeCore(Wye.staticObj):
             codeStr = "class "+libName+"_rt:\n"
             parFnStr = ""     # any parallel stream fns to add to end of codeStr
 
-            # for any class in the lib that has a build function, call it to build class code into the lib runtime
+            # for any class in the lib that has a build function, call it to generate class code for the lib runtime
             doBuild = False     # assume nothing to do
             for attr in dir(libClass):
                 if attr != "__class__":     # avoid lib's self reference
@@ -1470,10 +1487,8 @@ class WyeCore(Wye.staticObj):
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(val, "build"):
                             doBuild = True      # there is code to compile
-                            #print("class ", attr, " has build method") #  attr is ", type(attr), " val is ", type(val))
-                            build = getattr(val, "build")  # get child's build method
-                            # call the build function to get the "run" code string
-                            cdStr, parStr = build()  # call it to get child's runtime code string(s)
+                            val.library = libClass      # add pointer from verb class to parent library class
+                            cdStr, parStr = val.build()  # call verb build to get verb's runtime code string(s)
                             codeStr += cdStr
                             parFnStr += parStr
 
@@ -1482,9 +1497,6 @@ class WyeCore(Wye.staticObj):
                             classStr = libName + "." + libName + "." + val.__name__
                             #print("buildLib autoStart: ", classStr)
                             WyeCore.World.startObjs.append(classStr)
-
-                        # add pointer from verb class to parent library class
-                        setattr(val, "library", libClass)
 
             # if there's code to build for the library, doit
             if doBuild:
@@ -1597,9 +1609,9 @@ class WyeCore(Wye.staticObj):
             else:
                 vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
             if doTest:
-                vrbStr += name + "', " + name + ".codeDescr)\n"
+                vrbStr += name + "', " + name + ".codeDescr" + ", " + name + ")\n"
             else:
-                vrbStr += name + "', " + libName + "." + name + ".codeDescr)\n\n"
+                vrbStr += name + "', " + libName + "." + name + ".codeDescr" + ", " + libName + "." + name + ")\n\n"
             vrbStr += "    def start(stack):\n"
             #vrbStr += "        print('" + name + " object start')\n"
             if verbSettings['mode'] == Wye.mode.PARALLEL:
@@ -1688,13 +1700,20 @@ class WyeCore(Wye.staticObj):
 
             # DEBUG - print out verb's runtime code with line numbers
             if listCode:
-                vrbStr += "print('createVerb: runtime text')\n"
-                vrbStr += "lnIx = 1\n"
-                vrbStr += "for ln in cdStr.split('\\n'):\n"
-                vrbStr += "    print('%2d ' % lnIx, ln)\n"
-                vrbStr += "    lnIx += 1\n"
-                vrbStr += "print('')\n"
-
+                if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
+                    vrbStr += "print('createVerb: runtime text')\n"
+                    vrbStr += "lnIx = 1\n"
+                    vrbStr += "for ln in parStr.split('\\n'):\n"
+                    vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                    vrbStr += "    lnIx += 1\n"
+                    vrbStr += "print('')\n"
+                else:
+                    vrbStr += "print('createVerb: runtime text')\n"
+                    vrbStr += "lnIx = 1\n"
+                    vrbStr += "for ln in cdStr.split('\\n'):\n"
+                    vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                    vrbStr += "    lnIx += 1\n"
+                    vrbStr += "print('')\n"
             # when the verb string is executed, the verb's build will be run.
             # The build will return the runtime string for the verb.
             # So the verb's string we're compiling now will need to compile that returned string into code

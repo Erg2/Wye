@@ -34,7 +34,7 @@ class WyeLib:
 
         def build():
             #print("Build noop")
-            return WyeCore.Utils.buildCodeText("noop", WyeLib.noop.codeDescr)
+            return WyeCore.Utils.buildCodeText("noop", WyeLib.noop.codeDescr, WyeLib.noop)
 
         def start(stack):
             #print("noop start")
@@ -176,11 +176,11 @@ class WyeLib:
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.params.gObj"), (None, "frame.params.rotVec")),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.gObj"), (None, "frame.params.colorVec")),
             ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec")),
-            ("Code", "frame.stopHack = [frame.params.gObj[0]] # hack for stopping verbs with graphic objs - todo - implement verb.stop()"),
+            ("Code", "frame.stopHack = [frame.params.gObj[0]]"), # hack for stopping verbs with graphic objs - todo - implement verb.stop()
         )
 
         def build():
-            return WyeCore.Utils.buildCodeText("loadObject", WyeLib.loadObject.codeDescr)
+            return WyeCore.Utils.buildCodeText("loadObject", WyeLib.loadObject.codeDescr, WyeLib.loadObject)
 
         def start(stack):
             return Wye.codeFrame(WyeLib.loadObject, stack)

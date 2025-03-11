@@ -72,7 +72,7 @@ class EditLib:
 
             WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))
 
-    # find and set angle of wiggle fish (testObj2)
+    # find and set angle of wiggle fish (angleFish)
     class showFishDialog:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.STRING
@@ -101,7 +101,7 @@ class EditLib:
             ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
 
             ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"),
-             (None, "[WyeCore.World.findActiveObj('testObj2')]")),
+             (None, "[WyeCore.World.findActiveObj('angleFish')]")),
             ("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
             # read current value
 #            (None, "frame.vars.XAngle[0] = int(frame.vars.target[0].vars.gObj[0].getHpr()[0])"),
@@ -148,7 +148,7 @@ class EditLib:
         )
 
         def build():
-            return WyeCore.Utils.buildCodeText("showFishDialog", EditLib.showFishDialog.codeDescr)
+            return WyeCore.Utils.buildCodeText("showFishDialog", EditLib.showFishDialog.codeDescr, EditLib.showFishDialog)
 
         def start(stack):
             #print("showFishDialog object start")
@@ -216,7 +216,7 @@ class EditLib:
 
         def build():
             # print("Build ",MyTestVerb)
-            return WyeCore.Utils.buildCodeText('MyTestVerb', EditLib.MyTestVerb.codeDescr)
+            return WyeCore.Utils.buildCodeText('MyTestVerb', EditLib.MyTestVerb.codeDescr, EditLib.MyTestVerb)
 
         def start(stack):
             # print('MyTestVerb object start')

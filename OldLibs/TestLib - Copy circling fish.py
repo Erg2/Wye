@@ -226,9 +226,9 @@ class TestLib:
              ),
 
             #(None, "print('fishDialog XAngle', frame.vars.XAngle, ' YAngle', frame.vars.YAngle, ' ZAngle', frame.vars.ZAngle)"),
-            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"), (None, "[TestLib.fishDialog.findActiveObj('testObj2')]")),
+            ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.target"), (None, "[TestLib.fishDialog.findActiveObj('angleFish')]")),
             ("IfGoTo", "frame.vars.target[0] is None", "PopDialog"),
-            #(None, "print('testObj2 frm', frame.vars.target[0].verb.__name__)"),
+            #(None, "print('angleFish frm', frame.vars.target[0].verb.__name__)"),
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.target[0].vars.obj"),
                 (None, "[[int(frame.vars.XAngle[0]),int(frame.vars.YAngle[0]),int(frame.vars.ZAngle[0])]]")),
             ("GoTo", "PopDialog")
@@ -543,7 +543,7 @@ class TestLib:
             TestLib.TestLib_rt.leaderFish_run_rt(frame)
 
 
-    class testObj2:
+    class angleFish:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
         dataType = Wye.dType.INTEGER
@@ -554,7 +554,7 @@ class TestLib:
                     ("sound", Wye.dType.OBJECT, None))  # var 4
 
         codeDescr=(
-            (None, ("print('testObj2 case 0: start - set up object')")),
+            (None, ("print('angleFish case 0: start - set up object')")),
             ("TestLib.testLoader",
                 (None, "frame.vars.obj"),
                 (None, "['flyer_01.glb']"),
@@ -574,15 +574,15 @@ class TestLib:
         )
 
         def build():
-            #print("Build testObj2")
-            return WyeCore.Utils.buildCodeText("testObj2", TestLib.testObj2.codeDescr)
+            #print("Build angleFish")
+            return WyeCore.Utils.buildCodeText("angleFish", TestLib.angleFish.codeDescr)
 
         def start(stack):
-            #print("testObj2 object start")
-            return Wye.codeFrame(TestLib.testObj2, stack)
+            #print("angleFish object start")
+            return Wye.codeFrame(TestLib.angleFish, stack)
 
         def run(frame):
-            #print("Run testObj2")
-            TestLib.TestLib_rt.testObj2_run_rt(frame)
+            #print("Run angleFish")
+            TestLib.TestLib_rt.angleFish_run_rt(frame)
 
 
