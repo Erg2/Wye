@@ -5721,7 +5721,7 @@ class WyeUI(Wye.staticObj):
                         botStkFrm = objFrm.parentFrame.SP[-1]
                         if botStkFrm != objFrm.parentFrame:
                             botStkFrm.breakpt = True
-                            print("Actual break on obj", botStkFrm.verb.__name__)
+                            #print("Actual break on obj", botStkFrm.verb.__name__)
                         Wye.debugOn += 1  # make sure debugging is happening
                         #print("ObjectDebugger: set parallel parent breakpt on", objFrm.parentFrame.verb.__name__," debugOn to", Wye.debugOn)
                     else:
@@ -5732,7 +5732,7 @@ class WyeUI(Wye.staticObj):
                         botStkFrm = objFrm.SP[-1]
                         if botStkFrm != objFrm:
                             botStkFrm.breakpt = True
-                            print("Actual break at bot of stack on", objFrm.SP[-1].verb.__name__)
+                            #print("Actual break at bot of stack on", objFrm.SP[-1].verb.__name__)
                         Wye.debugOn += 1  # make sure debugging is happening
                         #print("ObjectDebugger: set breakpt on", objFrm.verb.__name__," debugOn to", Wye.debugOn)
 
@@ -5841,99 +5841,42 @@ class WyeUI(Wye.staticObj):
                         oFrm = objFrm.parentFrame
                     else:
                         oFrm = objFrm
-                    if oFrm.verb.mode == Wye.mode.PARALLEL:
-                        lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                        lblFrm.params.frame = [None]  # return value
-                        lblFrm.params.parent = [None]
-                        lblFrm.params.label = ["  <TODO - Parallel Code>"]
-                        WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append([lblFrm])
-                    # regular boring normal single stream code
-                    else:
-                        #print("Debug", oFrm.verb.__name__)
-                        if hasattr(oFrm.verb, "codeDescr"):
-                            codeDescr = oFrm.verb.codeDescr
+                    if hasattr(oFrm.verb, "codeDescr"):
+                        codeDescr = oFrm.verb.codeDescr
+                        if oFrm.verb.mode == Wye.mode.PARALLEL:
+                            print("verb", oFrm.verb.__name__," has", len(codeDescr), " streams")
+                            pIx = 0
+                            for parDescr in codeDescr:
+                                WyeUI.doInputLabel(dlgFrm, "  " + parDescr[0])
 
+                                chldStk = oFrm.stacks[pIx]
+                                if len(chldStk) > 0:
+                                    chldFrm = chldStk[0]
+                                    caseIx = str(chldFrm.PC)
+                                else:
+                                    chldFrm = None
+                                    caseIx = 0
+                                # get current code block highlight info
+
+                                tupleLst = None
+                                if hasattr(oFrm.verb, "caseCodeDictLst"):
+                                    print("verb", oFrm.verb.__name__, " has", len(oFrm.verb.caseCodeDictLst), " caseCodeDicts")
+                                    if caseIx in oFrm.verb.caseCodeDictLst[pIx]:
+                                        tupleLst = oFrm.verb.caseCodeDictLst[pIx][caseIx]
+
+                                WyeUI.ObjectDebugger.bldDebugCodeLines(parDescr[1], dlgFrm, frame, tupleLst, chldFrm)
+                                pIx += 1
+
+                        # regular boring normal single stream code
+                        else:
                             # get current code block highlight info
                             caseIx = str(oFrm.PC)
                             tupleLst = None
-                            #print("oFrm", oFrm.verb.__name__, " oFrm.PC", oFrm.PC)
                             if hasattr(oFrm.verb, "caseCodeDictLst"):
-                                #print("caseCodeDictLst[0]", oFrm.verb.caseCodeDictLst[0])
                                 if caseIx in oFrm.verb.caseCodeDictLst[0]:
                                     tupleLst = oFrm.verb.caseCodeDictLst[0][caseIx]
-                                    #print("tupleLst for", oFrm.verb.__name__,"\n",tupleLst)
-                                #else:
-                                #    print("verb", oFrm.verb.__name__, " caseCodeDictLst[0] has no entry for caseIx", caseIx)
-                            #else:
-                            #    print("verb", oFrm.verb.__name__, " has no caseCodeDict")
 
-                            # draw the top level code rows
-                            for tuple in codeDescr:
-                                # make the dialog row
-                                # >> disable debug on code lines until decide how to actually do it! <<
-                                #btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-                                btnFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                                dlgFrm.params.inputs[0].append([btnFrm])
-                                frame.vars.codeInpLst[0].append(btnFrm)
-                                btnFrm.params.frame = [None]  # return value
-                                btnFrm.params.parent = [None]
-                                btnFrm.params.color = [Wye.color.DISABLED_COLOR]
-                                # highlight currently executing section of code
-                                if tupleLst:
-                                    if tuple in tupleLst:
-                                        print(" caseIx", caseIx," found tuple", tuple)
-                                        btnFrm.params.backgroundColor = [Wye.color.LIGHT_GREEN]
-                                    #else:
-                                    #    print(" no match for tuple", tuple, "\n in tupleLst", tupleLst)
-
-                                # fill in text and callback based on code row type
-                                if tuple[0] is None:
-                                    btnFrm.params.label = ["  Code: " + str(tuple[1])]
-                                    btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugParamCallback]  # button callback
-                                elif "." in tuple[0]:
-                                    vStr = str(tuple[0])
-                                    if vStr.startswith("WyeCore.libs."):
-                                        vStr = vStr[13:]
-                                    btnFrm.params.label = ["  Verb: " + vStr + ", " + str(tuple[1])]
-                                    btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugVerbCallback]  # button callback
-                                else:
-                                    match tuple[0]:
-                                        case "Code":         # raw Python
-                                            btnFrm.params.label = ["  Code: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
-                                        case "CodeBlock":    # multi-line raw Python
-                                            btnFrm.params.label = ["  CodeBLock: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
-                                        case "Expr":
-                                            btnFrm.params.label = ["  Expression: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
-                                        case "Const":
-                                            btnFrm.params.label = ["  Constant: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.DebugCodeCallback]  # button callback
-
-                                        case "Var":
-                                            btnFrm.params.label = ["  Variable: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
-
-                                        case "Var=":
-                                            btnFrm.params.label = ["  Variable=: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
-
-                                        case "GoTo":
-                                            btnFrm.params.label = ["  GoTo: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugSpecialCallback]  # button callback
-
-                                        case "Label":
-                                            btnFrm.params.label = ["  Label: " + str(tuple[1])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugSpecialCallback]  # button callback
-
-                                        case "IfGoTo":
-                                            btnFrm.params.label = ["  If: " + str(tuple[1]) + " GoTo: " + str(tuple[2])]
-                                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugSpecialCallback]  # button callback
-
-                                btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, oFrm, tuple)]  # button row, dialog frame
-                                btnFrm.verb.run(btnFrm)
+                            WyeUI.ObjectDebugger.bldDebugCodeLines(codeDescr, dlgFrm, frame, tupleLst, oFrm)
 
                     WyeUI.ObjectDebugger.activeObjs[objFrm] = dlgFrm
 
@@ -5972,6 +5915,73 @@ class WyeUI(Wye.staticObj):
 
                     Wye.debugOn -= 1
 
+        def bldDebugCodeLines(codeDescr, dlgFrm, frame, tupleLst, oFrm):
+            # draw the top level code rows
+            for tuple in codeDescr:
+                # make the dialog row
+                # >> disable debug on code lines until decide how to actually do it! <<
+                # btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
+                btnFrm = WyeUI.InputLabel.start(dlgFrm.SP)
+                dlgFrm.params.inputs[0].append([btnFrm])
+                frame.vars.codeInpLst[0].append(btnFrm)
+                btnFrm.params.frame = [None]  # return value
+                btnFrm.params.parent = [None]
+                btnFrm.params.color = [Wye.color.DISABLED_COLOR]
+                # highlight currently executing section of code
+                if tupleLst:
+                    if tuple in tupleLst:
+                        # print(" caseIx", caseIx," found tuple", tuple)
+                        btnFrm.params.backgroundColor = [Wye.color.LIGHT_GREEN]
+                    # else:
+                    #    print(" no match for tuple", tuple, "\n in tupleLst", tupleLst)
+
+                # fill in text and callback based on code row type
+                if tuple[0] is None:
+                    btnFrm.params.label = ["  Code: " + str(tuple[1])]
+                    btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugParamCallback]  # button callback
+                elif "." in tuple[0]:
+                    vStr = str(tuple[0])
+                    if vStr.startswith("WyeCore.libs."):
+                        vStr = vStr[13:]
+                    btnFrm.params.label = ["  Verb: " + vStr + ", " + str(tuple[1])]
+                    btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugVerbCallback]  # button callback
+                else:
+                    match tuple[0]:
+                        case "Code":  # raw Python
+                            btnFrm.params.label = ["  Code: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
+                        case "CodeBlock":  # multi-line raw Python
+                            btnFrm.params.label = ["  CodeBLock: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
+                        case "Expr":
+                            btnFrm.params.label = ["  Expression: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
+                        case "Const":
+                            btnFrm.params.label = ["  Constant: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.DebugCodeCallback]  # button callback
+
+                        case "Var":
+                            btnFrm.params.label = ["  Variable: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
+
+                        case "Var=":
+                            btnFrm.params.label = ["  Variable=: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugCodeCallback]  # button callback
+
+                        case "GoTo":
+                            btnFrm.params.label = ["  GoTo: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugSpecialCallback]  # button callback
+
+                        case "Label":
+                            btnFrm.params.label = ["  Label: " + str(tuple[1])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugSpecialCallback]  # button callback
+
+                        case "IfGoTo":
+                            btnFrm.params.label = ["  If: " + str(tuple[1]) + " GoTo: " + str(tuple[2])]
+                            btnFrm.params.callback = [WyeUI.ObjectDebugger.DebugSpecialCallback]  # button callback
+
+                btnFrm.params.optData = [(btnFrm, dlgFrm, oFrm, tuple)]  # button row, dialog frame
+                btnFrm.verb.run(btnFrm)
 
         def refresh(frame):
             objFrm = frame.params.objFrm[0]
@@ -5997,7 +6007,7 @@ class WyeUI(Wye.staticObj):
                     tupleLst = objFrm.verb.caseCodeDictLst[0][caseIx]
                     if tupleLst:
                         for btnFrm in frame.vars.codeInpLst[0]:
-                            tuple = btnFrm.params.optData[0][4]
+                            tuple = btnFrm.params.optData[0][3]
                             if tuple in tupleLst:
                                 btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.LIGHT_GREEN)
                             else:
@@ -6220,10 +6230,9 @@ class WyeUI(Wye.staticObj):
             def run(frame):
                 data = frame.eventData
                 # print("DebugCodeCallback data='" + str(data) + "'")
-                paramIx = data[1][0]  # offset to param in object's paramDescr list
-                btnFrm = data[1][1]
-                parentFrm = data[1][2]
-                objFrm = data[1][3]
+                btnFrm = data[1][0]
+                parentFrm = data[1][1]
+                objFrm = data[1][2]
                 if objFrm.verb is WyeCore.ParallelStream:
                     codeDescr = objFrm.parentFrame.verb.paramDescr
                 else:
@@ -6256,10 +6265,9 @@ class WyeUI(Wye.staticObj):
             def run(frame):
                 data = frame.eventData
                 # print("DebugCodeCallback data='" + str(data) + "'")
-                paramIx = data[1][0]  # offset to param in object's paramDescr list
-                btnFrm = data[1][1]
-                parentFrm = data[1][2]
-                objFrm = data[1][3]
+                btnFrm = data[1][0]
+                parentFrm = data[1][1]
+                objFrm = data[1][2]
                 if objFrm.verb is WyeCore.ParallelStream:
                     codeDescr = objFrm.parentFrame.verb.paramDescr
                 else:
@@ -6292,10 +6300,9 @@ class WyeUI(Wye.staticObj):
             def run(frame):
                 data = frame.eventData
                 # print("DebugSpecialCallback data='" + str(data) + "'")
-                paramIx = data[1][0]  # offset to param in object's paramDescr list
-                btnFrm = data[1][1]
-                parentFrm = data[1][2]
-                objFrm = data[1][3]
+                btnFrm = data[1][0]
+                parentFrm = data[1][1]
+                objFrm = data[1][2]
                 if objFrm.verb is WyeCore.ParallelStream:
                     codeDescr = objFrm.parentFrame.verb.paramDescr
                 else:

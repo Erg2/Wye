@@ -1418,9 +1418,8 @@ class WyeCore(Wye.staticObj):
                         traceback.print_exception(e)
 
                 # stick debug struct on verb
-                if not hasattr(verb, "caseCodeDictList"):
+                if not hasattr(verb, "caseCodeDictLst"):
                     verb.caseCodeDictLst = [caseCodeDict]
-                    #print("put caseCodeDict on verb", verb.__name__, "\n", caseCodeDict)
                 else:
                     verb.caseCodeDictLst.append(caseCodeDict)
 
@@ -1700,8 +1699,9 @@ class WyeCore(Wye.staticObj):
 
             # DEBUG - print out verb's runtime code with line numbers
             if listCode:
-                if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
-                    vrbStr += "print('createVerb: runtime text')\n"
+                #if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
+                if verbSettings['mode'] == Wye.mode.PARALLEL:
+                    vrbStr += "print('createVerb: parallel runtime text')\n"
                     vrbStr += "lnIx = 1\n"
                     vrbStr += "for ln in parStr.split('\\n'):\n"
                     vrbStr += "    print('%2d ' % lnIx, ln)\n"

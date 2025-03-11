@@ -846,10 +846,8 @@ for ii in range(len(frame.vars.bubbles[0])):
             (None, ("print('angleFish 4 case', frame.PC)")),
             ("WyeCore.libs.TestLib.clickWiggle", (None, "frame.vars.gObj"), (None, "frame.vars.objTag"), (None, "[2]")),
             (None, ("print('angleFish 5 case', frame.PC)")),
-            ("WyeCore.libs.TestLib.clickWiggle", (None, 'frame.vars.gObj'), (None, "frame.vars.objTag"), (None, "[0]")),
-            (None, ("print('angleFish 6 case', frame.PC)")),
-            #("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.objTag")),
             ("GoTo", "Repeat"),
+            (None, ("print('angleFish 6 case', frame.PC)")),
             (None, ("print('angleFish end case', frame.PC)")),
         )
 
@@ -869,7 +867,7 @@ for ii in range(len(frame.vars.bubbles[0])):
 
 
     # circling fish
-    class testObj4:
+    class testParallelFish:
         cType = Wye.cType.OBJECT
         mode = Wye.mode.PARALLEL
         autoStart = True
@@ -888,8 +886,8 @@ for ii in range(len(frame.vars.bubbles[0])):
 
         codeDescr=(
             ("loaderStream", (
-                #("Code", "print('testObj4 run stream 0 loadObject')"),
-                #(None, ("print('testObj4 case 0: start - set up object')")),
+                #("Code", "print('testParallelFish run stream 0 loadObject')"),
+                #(None, ("print('testParallelFish case 0: start - set up object')")),
                 ("WyeCore.libs.WyeLib.loadObject",
                     (None, "[frame]"),
                     (None, "frame.vars.gObj"),
@@ -908,14 +906,14 @@ for ii in range(len(frame.vars.bubbles[0])):
             ("setAngleStream", (
                 ("Label", "Repeat"),
                 # set angle
-                #("Code", "print('testObj4 run stream 1 setRelAngle', frame.vars.gObj[0].getHpr())"),
+                #("Code", "print('testParallelFish run stream 1 setRelAngle', frame.vars.gObj[0].getHpr())"),
                 ("WyeCore.libs.WyeLib.setObjRelAngle", (None, "frame.vars.gObj"), (None, "frame.vars.dAngleDeg")),
                 ("GoTo", "Repeat")
             )),
             ("setPositionStream", (
                 ("Label", "Repeat"),
                 # Step forward
-                #("Code", "print('testObj4 run stream 2 setRelPos', frame.vars.gObj[0].getPos())"),
+                #("Code", "print('testParallelFish run stream 2 setRelPos', frame.vars.gObj[0].getPos())"),
                 ("CodeBlock", '''
 import math
 angle = frame.vars.posAngle[0]
@@ -937,17 +935,17 @@ frame.vars.posAngle[0] = angle
         )
 
         def build():
-            #print("Build testObj4")
-            return WyeCore.Utils.buildParallelText("TestLib", "testObj4", TestLib.testObj4.codeDescr, TestLib.testObj4)
+            #print("Build testParallelFish")
+            return WyeCore.Utils.buildParallelText("TestLib", "testParallelFish", TestLib.testParallelFish.codeDescr, TestLib.testParallelFish)
 
         def start(stack):
-            #print("testObj4 object start")
-            #return Wye.codeFrame(TestLib.testObj4, stack)
-            return TestLib.TestLib_rt.testObj4_start_rt(stack)        # run compiled start code to build parallel code stacks
+            #print("testParallelFish object start")
+            #return Wye.codeFrame(TestLib.testParallelFish, stack)
+            return TestLib.TestLib_rt.testParallelFish_start_rt(stack)        # run compiled start code to build parallel code stacks
 
         def run(frame):
-            #print("Run testObj4")
-            #TestLib.TestLib_rt.testObj4_run_rt(frame)
+            #print("Run testParallelFish")
+            #TestLib.TestLib_rt.testParallelFish_run_rt(frame)
             frame.runParallel()
 
 
