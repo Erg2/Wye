@@ -202,38 +202,39 @@ class WyeUI(Wye.staticObj):
             self.radius = radius
             ballBuilder = SphereMaker(radius=radius)
             self.node = ballBuilder.generate()
+            self.path = None
             if self.node:
-                self.path = render.attachNewNode(self.node)
-                self.path.setPos(pos[0], pos[1], pos[2])
+                self._path = render.attachNewNode(self.node)
+                self._path.setPos(pos[0], pos[1], pos[2])
             else:
                 print("WyeUI _ball: SphereMaker didn't")
 
         def removeNode(self):
-            self._nodePath.removeNode()
+            self._path.removeNode()
 
         def setColor(self, val):
-            self._nodePath.setColor(val)
+            self._path.setColor(val)
 
         def setScale(self, val):
-            self._nodePath.setScale(val)
+            self._path.setScale(val)
 
         def setPos(self, *args):
-            self._nodePath.setPos(args)
+            self._path.setPos(args)
 
         def setTag(self, tag):
             self.node.setTag("wyeTag", tag)
 
         def getColor(self):
-            return self._nodePath.getColor()
+            return self._path.getColor()
 
         def getNodePath(self):
-            return self._nodePath
+            return self._path
 
         def getPos(self):
-            return self._nodePath.getPos()
+            return self._path.getPos()
 
         def getScale(self):
-            return self._nodePath.getScale()
+            return self._path.getScale()
 
         def getTag(self):
             return self.node.getTag()
@@ -246,9 +247,9 @@ class WyeUI(Wye.staticObj):
 
 
         def show(self):
-            self._nodePath.show()
+            self._path.show()
         def hide(self):
-            self._nodePath.hide()
+            self._path.hide()
 
     # create a scaled rectangular prism
     # (primarily used for InputText cursor)
@@ -312,46 +313,44 @@ class WyeUI(Wye.staticObj):
             self.node = GeomNode("node")
             self.node.addGeom(geom)
 
-            self._nodePath = render.attachNewNode(self.node)
+            self._path = render.attachNewNode(self.node)
             if parent:
-                self._nodePath.reparentTo(parent)
-            self._nodePath.setPos(pos[0], pos[1], pos[2])
+                self._path.reparentTo(parent)
+            self.setPos(pos[0], pos[1], pos[2])
 
 
         def removeNode(self):
-            self._nodePath.removeNode()
+            self._path.removeNode()
 
         def setColor(self, val):
-            self._nodePath.setColor(val)
+            self._path.setColor(val)
 
         def setScale(self, val):
-            self._nodePath.setScale(val)
+            self._path.setScale(val)
 
         def setPos(self, *args):
-            self._nodePath.setPos(args)
+            self._path.setPos(args)
 
         def setTag(self, tag):
             return self.node.setTag("wyeTag", tag)
 
         def show(self):
-            self._nodePath.show()
+            self._path.show()
+
         def hide(self):
-            self._nodePath.hide()
+            self._path.hide()
 
         def getColor(self):
-            return self._nodePath.getColor()
+            return self._path.getColor()
 
         def getNodePath(self):
-            return self._nodePath
+            return self._path
 
         def getPos(self):
-            return self._nodePath.getPos()
+            return self._path.getPos()
 
         def getScale(self):
-            return self._nodePath.getScale()
-
-        def getTag(self):
-            return self.text.name
+            return self._path.getScale()
 
         def getHeight(self):
             return self.size[2]
@@ -442,18 +441,48 @@ class WyeUI(Wye.staticObj):
 
             self.node = node
 
-            self.path = render.attachNewNode(self.node)
-            self.path.setPos(pos[0], pos[1], pos[2])
+            self._path = render.attachNewNode(self.node)
+            self._path.setPos(pos[0], pos[1], pos[2])
 
 
         def removeNode(self):
-            self._nodePath.removeNode()
+            self._path.removeNode()
 
         def show(self):
-            self._nodePath.show()
+            self._path.show()
 
         def hide(self):
-            self._nodePath.hide()
+            self._path.hide()
+
+        def setScale(self, val):
+            self._path.setScale(val)
+
+        def getScale(self):
+            return self._path.getScale()
+
+        def setPos(self, *args):
+            self._path.setPos(args)
+
+        def getPos(self):
+            return self._path.getPos()
+
+        def show(self):
+            self._path.show()
+
+        def hide(self):
+            self._path.hide()
+
+        def setTag(self, tag):
+            return self.node.setTag("wyeTag", tag)
+
+        def getTag(self):
+            return self.node.getTag()
+
+        def setColor(self, val):
+            self._path.setColor(val)
+
+        def getColor(self):
+            return self._path.getColor()
 
     # Build run_rt methods on each class in library
     def build():
@@ -486,7 +515,7 @@ class WyeUI(Wye.staticObj):
             #
             self.text = None
             self.card = None
-            self._nodePath = None
+            self._path = None
             self.gFrame = None
             #
             self._genTextObj(text, color)
@@ -520,13 +549,13 @@ class WyeUI(Wye.staticObj):
             self._regen3d()
 
         def setPos(self, *args):
-            self._nodePath.setPos(*args)
+            self._path.setPos(*args)
 
         def setHpr(self, *args):
-            self._nodePath.setHpr(*args)
+            self._path.setHpr(*args)
 
         def setScale(self, val):
-            self._nodePath.setScale(val)
+            self._path.setScale(val)
 
         # changing the text requires regenerating the background card and the 3d node
         def setText(self, text):
@@ -542,7 +571,7 @@ class WyeUI(Wye.staticObj):
             return self.text.getAlign()
 
         def getColor(self):
-            return self._nodePath.getColor()
+            return self._path.getColor()
 
         def getFrame(self):
             return self.gFrame
@@ -551,20 +580,20 @@ class WyeUI(Wye.staticObj):
             return self.gFrame[3] - self.gFrame[2]
 
         def getFrameColor(self):
-            return self._nodePath.getColor()
+            return self._path.getColor()
 
         # update the margin spacing
         def getFrameMargin(self):
             return (self.marginL, self.marginR, self.marginB, self.marginT)
 
         def getNodePath(self):
-            return self._nodePath
+            return self._path
 
         def getPos(self):
-            return self._nodePath.getPos()
+            return self._path.getPos()
 
         def getScale(self):
-            return self._nodePath.getScale()
+            return self._path.getScale()
 
         def getTag(self):
             return self.text.name
@@ -581,20 +610,20 @@ class WyeUI(Wye.staticObj):
         ## methods
 
         def show(self):
-            self._nodePath.show()
+            self._path.show()
         def hide(self):
-            self._nodePath.hide()
+            self._path.hide()
 
         # rebuild card and path for updated text object
         def _regen3d(self):
             bg = self.bg
-            color = self._nodePath.getColor()
-            pos = self._nodePath.getPos()
-            scale = self._nodePath.getScale()
+            color = self._path.getColor()
+            pos = self._path.getPos()
+            scale = self._path.getScale()
             if self.bg[3] > 0:
                 self._genCardObj(bg)                     # generate new card obj for updated text object
-            self._nodePath.detachNode()            # detach 3d node path from old card
-            self._gen3dTextObj(pos, scale, color, self._nodePath)     # make new 3d node path to new card
+            self._path.detachNode()            # detach 3d node path from old card
+            self._gen3dTextObj(pos, scale, color, self._path)     # make new 3d node path to new card
 
         # internal rtn to gen text object with unique wyeTag name
         def _genTextObj(self, text, color=(1,1,1,1)):
@@ -627,30 +656,30 @@ class WyeUI(Wye.staticObj):
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), color=(0,0,0,1), genNodePath = True):
             if genNodePath:
-                self._nodePath = NodePath(self.text.generate())
+                self._path = NodePath(self.text.generate())
             else:
-                self._nodePath.attachNewNode(self.text.generate())
+                self._path.attachNewNode(self.text.generate())
             if self.bg[3] > 0:      # if visible background color, gen background card
                 if genNodePath:
-                    self._nodePath = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
+                    self._path = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
                 else:
-                    self._nodePath.attachNewNode(self.card.generate())
-                self._nodePath.attachNewNode(self.text)
-                self._nodePath.setEffect(DecalEffect.make())        # glue text onto card
+                    self._path.attachNewNode(self.card.generate())
+                self._path.attachNewNode(self.text)
+                self._path.setEffect(DecalEffect.make())        # glue text onto card
             # finished gen card
-            self._nodePath.reparentTo(self.parent)
+            self._path.reparentTo(self.parent)
 
 
-            WyeCore.picker.makePickable(self._nodePath)         # make selectable
-            self._nodePath.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
-            self._nodePath.setPos(pos[0], pos[1], pos[2])
-            self._nodePath.setScale(scale)
+            WyeCore.picker.makePickable(self._path)         # make selectable
+            self._path.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
+            self._path.setPos(pos[0], pos[1], pos[2])
+            self._path.setScale(scale)
 
             #took billboard off 'cause it broke mouse intersection critical to UI.  Done elsewhere manually now
-            #self._nodePath.setBillboardPointWorld(0.)           # always face the camera
-            #self._nodePath.setBillboardAxis()
-            self._nodePath.setLightOff()                        # unaffected by world lighting
-            self._nodePath.setColor(color)
+            #self._path.setBillboardPointWorld(0.)           # always face the camera
+            #self._path.setBillboardAxis()
+            self._path.setLightOff()                        # unaffected by world lighting
+            self._path.setColor(color)
 
             if not self.gFrame:
                 self.gFrame = self.text.getFrameActual()
@@ -664,7 +693,7 @@ class WyeUI(Wye.staticObj):
                 self.gFrame[3] += self.marginT
 
         def removeNode(self):
-            self._nodePath.removeNode()
+            self._path.removeNode()
 
 
     # text verb
@@ -894,13 +923,13 @@ class WyeUI(Wye.staticObj):
                     else:               # otherwise, drag whole dialog stack
                         dragFrame = self.topDragFrame
 
-                    objPath = dragFrame.vars.dragObj[0]._nodePath
+                    objPath = dragFrame.vars.dragObj[0]._path
                     fwd = render.getRelativeVector(objPath, (0, -1, 0))
                     pos = objPath.getPos(render)    # sub dialogs pos rel to parent.  Get pos rel to world
                     self.objPlane = LPlanef(fwd, pos)
                     self.dragStartPos = pos
 
-                    #frame.vars.dragObj[0]._nodePath.wrtReparentTo(base.camera)
+                    #frame.vars.dragObj[0]._path.wrtReparentTo(base.camera)
 
                     mpos = base.mouseWatcherNode.getMouse()
                     newPos = Point3(0,0,0)
@@ -922,7 +951,7 @@ class WyeUI(Wye.staticObj):
                     else:               # otherwise, drag whole dialog stack
                         dragFrame = self.topDragFrame
 
-                    objPath = dragFrame.vars.dragObj[0]._nodePath
+                    objPath = dragFrame.vars.dragObj[0]._path
                     # get mouse pos
                     mpos = base.mouseWatcherNode.getMouse()
 
@@ -2617,7 +2646,7 @@ class WyeUI(Wye.staticObj):
             inWidg = inFrm.vars.gWidget[0]
             #wPos = inWidg.getPos()
             xOff = 0
-            WyeUI.Dialog._cursor._nodePath.reparentTo(inWidg._nodePath)
+            WyeUI.Dialog._cursor._path.reparentTo(inWidg._path)
             WyeUI.Dialog._cursor.setColor(Wye.color.CURSOR_COLOR)
             # If cursor not at beginning of text in widget,
             # get length of text before insert pt by generating temp text obj
@@ -2636,7 +2665,7 @@ class WyeUI(Wye.staticObj):
             WyeUI.Dialog._cursor.hide()
 
         def setPos(frame, pos):
-            frame.vars.dragObj[0]._nodePath.setPos(pos[0], pos[1], pos[2])
+            frame.vars.dragObj[0]._path.setPos(pos[0], pos[1], pos[2])
 
     # dropdown menu
     # subclass of Dialog so FocusManager can handle focus properly
@@ -3097,10 +3126,12 @@ class WyeUI(Wye.staticObj):
 ("color", Wye.dType.FLOAT_LIST, [.5, .5, .5, 1]),
 ("skew", Wye.dType.FLOAT, 0),
 ("delta", Wye.dType.FLOAT, 0),
+("cleanUpObjs", Wye.dType.OBJECT_LIST, None),  # list of graphic elements to delete on Stop
 )
 
                 codeDescr = (
 # (None, ("print('MyTestVerb case 0: start - set up object')")),
+("Var=", "frame.vars.cleanUpObjs[0] = []"),
 ("WyeCore.libs.WyeLib.loadObject",
  (None, "[frame]"),
  (None, "frame.vars.gObj"),
@@ -3109,7 +3140,8 @@ class WyeUI(Wye.staticObj):
  (None, "[[0, 90, 0]]"),  # rotVec
  (None, "[[.25,.25,.25]]"),  # scaleVec
  (None, "frame.vars.objTag"),
- (None, "frame.vars.color")
+ (None, "frame.vars.color"),
+ ("Var", "frame.vars.cleanUpObjs"),
  ),
 # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
 # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
@@ -3640,12 +3672,14 @@ class WyeUI(Wye.staticObj):
         activeVerbs = {}
 
         modOpLst = [
-            "todo Move line up",
+            "Move line up",
             "Add line before",
             "todo Copy line",
+            "todo Cut line",
+            "todo Paste line",
             "Delete Line",
             "Add line after",
-            "todo Move line down",
+            "Move line down",
         ]
 
         opList = [
@@ -3802,7 +3836,7 @@ class WyeUI(Wye.staticObj):
 
                         for param in frame.vars.newParamDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeUI.doInputDropdown(dlgFrm, "  +/-", [WyeUI.EditVerb.modOpLst], [0],
+                            editLnFrm = WyeUI.doInputDropdown(dlgFrm, "  +/-"+str(attrIx), [WyeUI.EditVerb.modOpLst], [0],
                                                               WyeUI.EditVerb.EditParamLineCallback, showText=False)
                             label = "  '"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])
                             if len(param) > 3:
@@ -4435,8 +4469,41 @@ class WyeUI(Wye.staticObj):
                 match (opIx):
                     # move line up
                     case 0:
-                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        # .index(param) not working, dunno why
+                        # dIx = editVerbFrm.vars.newParamDescr[0].index(param)
+                        dIx = -1
+                        for p in editVerbFrm.vars.newParamDescr[0]:
+                            dIx += 1
+                            if p==param:
+                                break;
+                        if dIx < 0:
+                            print("EditParamLineCallback ERROR: param not found in paramDescr")
+                            return
+
+                        if dIx == 0:
+                            #print("EditParamLineCallback Warning: line already at top")
+                            return
+
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        if rIx < 0:
+                            print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.params.label[0], " not in input list")
+                            return
+
+                        # move code descr
+                        descr = editVerbFrm.vars.newParamDescr[0].pop(dIx)
+                        editVerbFrm.vars.newParamDescr[0].insert(dIx-1, descr)
+
+                        # move dialog row (2 inputs)
+                        edLnRef = parentFrm.params.inputs[0].pop(rIx)
+                        parentFrm.params.inputs[0].insert(rIx-2, edLnRef)
+                        pRef = parentFrm.params.inputs[0].pop(rIx+1)
+                        parentFrm.params.inputs[0].insert(rIx-1, pRef)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
 
                     # add line before
                     case 1:
@@ -4454,9 +4521,19 @@ class WyeUI(Wye.staticObj):
                         WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
                         pass
 
-                    # delete line
+                    # cut Line
                     case 3:
-                        print("EditParamLineCallback: Delete")
+                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        pass
+
+                    # paste line
+                    case 5:
+                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        pass
+
+                    # delete line
+                    case 5:
+                        #print("EditParamLineCallback: Delete")
 
                         # find row in dlg
                         rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
@@ -4476,8 +4553,8 @@ class WyeUI(Wye.staticObj):
                         parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
 
-                    # add line after
-                    case 4:
+                    # Add line after
+                    case 6:
                         # print("EditParamLineCallback: Add down")
                         newData = ["newParam", Wye.dType.ANY, Wye.access.REFERENCE]  # placeholder param to insert
                         label = "  '" + newData[0] + "' " + Wye.dType.tostring(newData[1]) + " call by:" + Wye.access.tostring(newData[2])
@@ -4489,9 +4566,46 @@ class WyeUI(Wye.staticObj):
 
 
                     # move line down
-                    case 5:
-                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                    case 7:
+                        # .index(param) not working, dunno why
+                        # dIx = editVerbFrm.vars.newParamDescr[0].index(param)
+                        dIx = -1
+                        for p in editVerbFrm.vars.newParamDescr[0]:
+                            dIx += 1
+                            if p==param:
+                                break;
+                        if dIx < 0:
+                            print("EditParamLineCallback ERROR: param not found in paramDescr")
+                            return
+
+                        if dIx == len(editVerbFrm.vars.newParamDescr[0])-1:
+                            #print("EditParamLineCallback Warning: line already at bottom")
+                            return
+
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        if rIx < 0:
+                            print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.params.label[0], " not in input list")
+                            return
+
+                        # move code descr
+                        descr = editVerbFrm.vars.newParamDescr[0].pop(dIx)
+                        editVerbFrm.vars.newParamDescr[0].insert(dIx+1, descr)
+
+                        # move dialog row (2 inputs)
+                        edLnRef = parentFrm.params.inputs[0].pop(rIx)
+                        parentFrm.params.inputs[0].insert(rIx+3, edLnRef)
+                        pRef = parentFrm.params.inputs[0].pop(rIx)
+                        parentFrm.params.inputs[0].insert(rIx+3, pRef)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
+
+                        #print("after move line")
+                        #for ii in range(rIx-2, rIx+2):
+                        #    print("rIx", ii," ", parentFrm.params.inputs[0][ii][0].params.label[0])
 
         # modify variable row list (add/rem/copy)
         class EditVarLineCallback:
@@ -4525,20 +4639,53 @@ class WyeUI(Wye.staticObj):
                 # "1 Add line before",
                 # "2 Copy line",
                 # "3 Delete Line",
-                # "4 Add line after",
+                # "4 Paste line after",
                 # "5 Move line down",
                 match (opIx):
                     # move line up
                     case 0:
-                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        # .index(var) not working, dunno why
+                        # dIx = editVerbFrm.vars.newParamDescr[0].index(var)
+                        dIx = -1
+                        for p in editVerbFrm.vars.newVarDescr[0]:
+                            dIx += 1
+                            if p == var:
+                                break;
+                        if dIx < 0:
+                            print("EditVarLineCallback ERROR: var not found in varDescr")
+                            return
+
+                        if dIx == 0:
+                            # print("EditVarLineCallback Warning: line already at top")
+                            return
+
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        if rIx < 0:
+                            print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.vars.label[0], " not in input list")
+                            return
+
+                        # move code descr
+                        descr = editVerbFrm.vars.newVarDescr[0].pop(dIx)
+                        editVerbFrm.vars.newVarDescr[0].insert(dIx - 1, descr)
+
+                        # move dialog row (2 inputs)
+                        edLnRef = parentFrm.params.inputs[0].pop(rIx)
+                        parentFrm.params.inputs[0].insert(rIx - 2, edLnRef)
+                        pRef = parentFrm.params.inputs[0].pop(rIx + 1)
+                        parentFrm.params.inputs[0].insert(rIx - 1, pRef)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
 
                     # add line before
                     case 1:
                         # print("EditVarLineCallback: Add up")
                         newData = ["newVar", Wye.dType.ANY, None]  # placeholder var to insert
                         label = "  '"+newData[0] + "' "+Wye.dType.tostring(newData[1]) + " = "+str(newData[2])
-                        editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, var,
+                        editVerbFrm.verb.insertVarOrVar(parentFrm, editVerbFrm, editLnFrm, var,
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUI.EditVerb.EditVarLineCallback,
                                                           WyeUI.EditVerb.EditVarCallback,
@@ -4549,8 +4696,18 @@ class WyeUI(Wye.staticObj):
                         WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
                         pass
 
-                    # delete line
+                    # cut Line
                     case 3:
+                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        pass
+
+                    # paste line
+                    case 4:
+                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        pass
+
+                    # delete line
+                    case 5:
                         # print("EditVarLineCallback: Delete")
                         # find row in dlg
                         rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
@@ -4570,8 +4727,8 @@ class WyeUI(Wye.staticObj):
                         parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
 
-                    # add line after
-                    case 4:
+                    # Add line after
+                    case 6:
                         # print("EditVarLineCallback: Add up")
                         newData = ["newVar", Wye.dType.ANY, None]  # placeholder var to insert
                         label = "  '" + newData[0] + "' " + Wye.dType.tostring(newData[1]) + " = " + str(newData[2])
@@ -4581,10 +4738,47 @@ class WyeUI(Wye.staticObj):
                                                           WyeUI.EditVerb.EditVarCallback,
                                                           newData, insertBefore=False)
 
-                # move line down
-                    case 5:
-                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                    # move line down
+                    case 7:
+                        # .index(var) not working, dunno why
+                        # dIx = editVerbFrm.vars.newVarDescr[0].index(var)
+                        dIx = -1
+                        for p in editVerbFrm.vars.newVarDescr[0]:
+                            dIx += 1
+                            if p==var:
+                                break;
+                        if dIx < 0:
+                            print("EditVarLineCallback ERROR: var not found in varDescr")
+                            return
+
+                        if dIx == len(editVerbFrm.vars.newVarDescr[0])-1:
+                            #print("EditVarLineCallback Warning: line already at bottom")
+                            return
+
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        if rIx < 0:
+                            print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.vars.label[0], " not in input list")
+                            return
+
+                        # move code descr
+                        descr = editVerbFrm.vars.newVarDescr[0].pop(dIx)
+                        editVerbFrm.vars.newVarDescr[0].insert(dIx+1, descr)
+
+                        # move dialog row (2 inputs)
+                        edLnRef = parentFrm.params.inputs[0].pop(rIx)
+                        parentFrm.params.inputs[0].insert(rIx+3, edLnRef)
+                        pRef = parentFrm.params.inputs[0].pop(rIx)
+                        parentFrm.params.inputs[0].insert(rIx+3, pRef)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
+
+                        #print("after move line")
+                        #for ii in range(rIx-2, rIx+2):
+                        #    print("rIx", ii," ", parentFrm.params.inputs[0][ii][0].params.label[0])
 
 
         class EditCodeLineCallback:
@@ -4621,8 +4815,45 @@ class WyeUI(Wye.staticObj):
                 match (opIx):
                     # move line up
                     case 0:
-                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        # find the parent list for this line's code tuple
+                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
+                        if parentList:
+                            tIx = parentList.index(tuple)
+                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                        else:
+                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                                  editVerbFrm.vars.newCodeDescr[0])
+                            return
+                        if tIx == 0:
+                            #print("Already at top")
+                            return
+
+                        # find the number of display rows for this tuple
+                        dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
+
+                        # find the first display row of this tuple
+                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+
+                        # get the number of rows to skip
+                        preTuple = parentList[tIx-1]
+                        preDLen = 1 + WyeCore.Utils.countNestedLists(preTuple)
+
+                        # pull the tuple off and move it down one
+                        tuple = parentList.pop(tIx)  # codeDescr entry
+                        parentList.insert(tIx-1, tuple)  # codeDescr entry
+
+                        # pop the display inputs (2 per row) to tmp
+                        tmp = []
+                        for ii in range(dIx, dIx + (dLen * 2)):
+                            tmp.append(parentFrm.params.inputs[0].pop(dIx))
+
+                        pasteStart = dIx - (preDLen*2)
+                        for ii in range(dLen*2):
+                            parentFrm.params.inputs[0].insert(pasteStart + ii, tmp[ii])
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
                     # add line before
                     case 1:
@@ -4678,13 +4909,20 @@ class WyeUI(Wye.staticObj):
                         WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
                         pass
 
-                    # delete line
+                    # cut Line
                     case 3:
+                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        pass
+
+                    # paste line
+                    case 4:
+                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        pass
+
+                    # delete line
+                    case 5:
                         # print("EditCodeLineCallback: Delete")
                         # get location of this frame in dialog input list
-
-                        # insert new (noop) code before this one in verb's codeDescr
-                        # print("EditCodeLineCallback codeFrm", codeFrm.verb.__name__)
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
                             ix = parentList.index(tuple)
@@ -4700,7 +4938,7 @@ class WyeUI(Wye.staticObj):
                         # Placeholder for "add line" so user has row to fill in with their code
                         # newData = ["WyeLib.noop", ["Const", "[0]"]]
 
-                        tuple = parentList.pop(ix)                      # codeDescr entry
+
 
                         # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
                         count = 1 + WyeCore.Utils.countNestedLists(tuple)
@@ -4722,8 +4960,8 @@ class WyeUI(Wye.staticObj):
                         parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
-                    # add line after
-                    case 4:
+                    # Add line after
+                    case 6:
                         # print("EditCodeLineCallback: Add down")
                         # get location of this frame in dialog input list
 
@@ -4780,9 +5018,47 @@ class WyeUI(Wye.staticObj):
 
 
                     # move line down
-                    case 5:
-                        WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                    case 7:
+                        # find the parent list for this line's code tuple
+                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
+                        if parentList:
+                            tIx = parentList.index(tuple)
+                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                        else:
+                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                                  editVerbFrm.vars.newCodeDescr[0])
+                            return
+                        if tIx == len(parentList)-1:
+                            #print("Already at bottom")
+                            return
+
+                        # find the number of display rows for this tuple
+                        dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
+
+                        # find the first display row of this tuple
+                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+
+                        # get the number of rows to skip
+                        postTuple = parentList[tIx+1]
+                        postDLen = 1 + WyeCore.Utils.countNestedLists(postTuple)
+
+                        # pull the tuple off and move it down one
+                        tuple = parentList.pop(tIx)  # codeDescr entry
+                        parentList.insert(tIx+1, tuple)  # codeDescr entry
+
+                        # pop the display inputs (2 per row) to tmp
+                        tmp = []
+                        for ii in range(dIx, dIx + (dLen * 2)):
+                            tmp.append(parentFrm.params.inputs[0].pop(dIx))
+
+                        pasteStart = dIx + (postDLen*2)
+                        for ii in range(dLen*2):
+                            parentFrm.params.inputs[0].insert(pasteStart + ii, tmp[ii])
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
+
 
 
         class EditCodeCallback:
@@ -5764,10 +6040,11 @@ class WyeUI(Wye.staticObj):
 
 
             def run(frame):
+                global base
                 #print("KillFrameCallback")
 
                 data = frame.eventData
-                print("KillFrameCallback data='" + str(data) + "', case", frame.PC)
+                #print("KillFrameCallback data='" + str(data) + "', case", frame.PC)
                 delLnFrm = data[1][0]
                 mainDbgFrm = data[1][1]
                 dlgFrm = data[1][2]
@@ -5775,14 +6052,15 @@ class WyeUI(Wye.staticObj):
 
                 match(frame.PC):
                     case 0:
-                        print("KillFrame delLnFrm", delLnFrm.verb.__name__, " ", delLnFrm.params.label[0])
-                        print("  mainDbgFrm", mainDbgFrm.verb.__name__)
-                        print("  dlgFrm", dlgFrm.verb.__name__, " ", dlgFrm.params.title[0])
-                        print("  objFrm", objFrm.verb.__name__)
+                        #print("KillFrame delLnFrm", delLnFrm.verb.__name__, " ", delLnFrm.params.label[0])
+                        #print("  mainDbgFrm", mainDbgFrm.verb.__name__)
+                        #print("  dlgFrm", dlgFrm.verb.__name__, " ", dlgFrm.params.title[0])
+                        #print("  objFrm", objFrm.verb.__name__)
 
-                        print("KillFrameCallback: stop", objFrm.verb.__name__)
-                        print("Before stop, ")
+                        #print("KillFrameCallback: stop", objFrm.verb.__name__)
+                        #print("Before stop, ")
                         WyeCore.World.stopActiveObject(objFrm)
+
                         frame.PC += 1
 
                     # delay 2 frames to let object get removedd
@@ -5791,6 +6069,14 @@ class WyeUI(Wye.staticObj):
 
                     case 2:
                         frame.status = Wye.status.SUCCESS
+
+                        # object has stopped by now
+                        # if the object has any graphic elements, delete them
+                        if hasattr(objFrm.vars, "cleanUpObjs"):
+                            for obj in objFrm.vars.cleanUpObjs[0]:
+                                #base.loader.unloadModel(obj)
+                                obj.removeNode()
+
                         try:
                             mainDbgFrm.verb.update(mainDbgFrm, dlgFrm)
                         except Exception as e:
@@ -5978,7 +6264,7 @@ class WyeUI(Wye.staticObj):
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 
                     # vars
-                    WyeUI.doInputLabel(dlgFrm, "Variables:")
+                    WyeUI.doInputLabel(dlgFrm, "Variables:", color=Wye.color.SUBHD_COLOR)
 
                     if len(varDescr) > 0:       # if we have variables, list them
 

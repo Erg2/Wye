@@ -177,9 +177,11 @@ class EditLib:
 ("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
 #("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
 ("color", Wye.dType.FLOAT_LIST, [1,1,1, 1]),
+("cleanUpObjs", Wye.dType.OBJECT_LIST, None),  # list of graphic elements to delete on Stop
         )
         codeDescr = (
             # (None, ("print('TestObject123 case 0: start - set up object')")),
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
              (None, "[frame]"),
              (None, "frame.vars.gObj"),
@@ -188,7 +190,8 @@ class EditLib:
              (None, "[[0, 90, 0]]"),  # rotVec
              (None, "[[2,2,2]]"),  # scaleVec
              (None, "frame.vars.objTag"),
-             (None, "frame.vars.color")
+             (None, "frame.vars.color"),
+             ("Var", "frame.vars.cleanUpObjs"),
              ),
             # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             # ("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),

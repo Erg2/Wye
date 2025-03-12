@@ -166,19 +166,21 @@ class WyeLib:
                       ("rotVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # YPR angles to orient graphic
                       ("scaleVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # scale to apply to object
                       ("tag", Wye.dType.STRING_LIST, Wye.access.REFERENCE),     # returned tag assigned to graphic object
-                      ("colorVec", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE)) # color to assign to object
+                      ("colorVec", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE), # color to assign to object
+                      ("cleanUpObjs", Wye.dType.OBJECT_LIST, Wye.access.REFERENCE), # cleanup list to add obj to
+                      )
         varDescr = ()
         codeDescr = (
             #(None, "print('test inline code')"),
             # call loadModel with testLoader params 0 and 1
             ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.gObj"), (None, "frame.params.file")),
+            ("Code", "frame.params.cleanUpObjs[0].append(frame.params.gObj[0])"),
             #(None, "print('loadObject frame.params.gObj', frame.params.gObj)"),
             ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.gObj")),
             (None, "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
             ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.params.gObj"), (None, "frame.params.rotVec")),
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.gObj"), (None, "frame.params.colorVec")),
             ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec")),
-            ("Code", "frame.stopHack = [frame.params.gObj[0]]"), # hack for stopping verbs with graphic objs - todo - implement verb.stop()
         )
 
         def build():

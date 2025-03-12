@@ -27,10 +27,12 @@ class TestLib:
                     ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
                     ("colorInc", Wye.dType.FLOAT_LIST, [8, 8, 8]),
                     ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),           # list of graphic elements to delete on Stop
                     )  # var 4
 
         codeDescr=(
             #(None, ("print('testObj3 case 0: start - set up object')")),
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
@@ -39,7 +41,8 @@ class TestLib:
                 (None, "[[0, 90, 0]]"),      # rotVec
                 (None, "[[2,2,2]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
-                (None, "frame.vars.color")
+                (None, "frame.vars.color"),
+                ("Var", "frame.vars.cleanUpObjs"),
             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
@@ -95,10 +98,12 @@ class TestLib:
                     ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
                     ("colorInc", Wye.dType.FLOAT_LIST, [12, 12, 12]),
                     ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),  # list of graphic elements to delete on Stop
                     )  # var 4
 
         codeDescr=(
             #(None, ("print('testObj3 case 0: start - set up object')")),
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
@@ -107,8 +112,9 @@ class TestLib:
                 (None, "[[0, 90, 0]]"),      # rotVec
                 (None, "[[2,2,2]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
-                (None, "frame.vars.color")
-            ),
+                (None, "frame.vars.color"),
+                ("Var", "frame.vars.cleanUpObjs"),
+             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
             #(None, "frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
@@ -160,10 +166,12 @@ class TestLib:
                     ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
                     ("colorInc", Wye.dType.FLOAT_LIST, [10, 10, 10]),
                     ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
-                    )  # var 4
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),           # list of graphic elements to delete on Stop
+                    )
 
         codeDescr=(
             #(None, ("print('testObj3 case 0: start - set up object')")),
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
@@ -172,7 +180,8 @@ class TestLib:
                 (None, "[[0, 90, 0]]"),      # rotVec
                 (None, "[[2,2,2]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
-                (None, "frame.vars.color")
+                (None, "frame.vars.color"),
+                ("Var", "frame.vars.cleanUpObjs"),
             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
@@ -376,12 +385,14 @@ class TestLib:
                     ("count", Wye.dType.INTEGER, 0),        # loop counter
                     ("nFish", Wye.dType.INTEGER, 3),        # total number of fish
                     ("objAhead", Wye.dType.OBJECT, None),   # object in front of this one in train
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),           # list of graphic elements to delete on Stop
                     )
         codeDescr=(
             #(None, ("print('fish case 0: set up object')")),
             # initialize arrays
             ("Var=", "frame.vars.fishes = []"),
             ("Var=", "frame.vars.fishTags = []"),
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
 
             ("Label", "MakeFish"),
             #(None, "print('makeFish loop start: count', frame.vars.count[0])"),
@@ -397,7 +408,8 @@ class TestLib:
              ("Const", "[[0, 90, 0]]"),  # rotVec
              ("Const", "[[1,1,1]]"),  # scaleVec
              ("Expr", "frame.vars.fishTags[frame.vars.count[0]]"),
-             ("Expr", "[[frame.vars.count[0] % 3,(frame.vars.count[0] + 1) % 3,(frame.vars.count[0] + 2) % 3,1]]")  # color
+             ("Expr", "[[frame.vars.count[0] % 3,(frame.vars.count[0] + 1) % 3,(frame.vars.count[0] + 2) % 3,1]]"),  # color
+             ("Var", "frame.vars.cleanUpObjs"),
              ),
             ("Var=", "frame.vars.count[0] += 1"),     # next fish
             ("IfGoTo", "frame.vars.count[0] < frame.vars.nFish[0]", "MakeFish"),      # if not done, loop for next fish
@@ -483,12 +495,14 @@ class TestLib:
                     ("lerpT", Wye.dType.FLOAT, 0.),
                     ("horizLim", Wye.dType.FLOAT, 10.),
                     ("vertLim", Wye.dType.FLOAT, 3.),
-                    ("tgtChgCt", Wye.dType.INTEGER, 60 * 10)
+                    ("tgtChgCt", Wye.dType.INTEGER, 60 * 10),
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),           # list of graphic elements to delete on Stop
                     )
 
         codeDescr=(
             ("loaderStream", (
-                ("Code", "frame.vars.deltaV=[[0,0,0]]"),
+                ("Var=", "frame.vars.deltaV=[[0,0,0]]"),
+                ("Var=", "frame.vars.cleanUpObjs[0] = []"),
                 ("WyeCore.libs.WyeLib.loadObject",
                  (None, "[frame]"),
                  (None, "frame.vars.fish"),
@@ -497,7 +511,8 @@ class TestLib:
                  (None, "[[0, 0, 0]]"),  # rotVec
                  (None, "[[1,1,1]]"),  # scaleVec
                  (None, "frame.vars.fishTag"),
-                 (None, "[[1,0,0,1]]")
+                 (None, "[[1,0,0,1]]"),
+                 ("Var", "frame.vars.cleanUpObjs"),
                  ),
 
                 # convert tgtPos from list to LPoint3f
@@ -666,10 +681,12 @@ else:
                     ("bubbleMin", Wye.dType.FLOAT, 180),
                     ("bubbleRand", Wye.dType.FLOAT, 180),
                     ("bubbleFloat", Wye.dType.FLOAT_LIST, [.001, .001, .075]),
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None)
                     )
 
         codeDescr=(
             ("CodeBlock", '''
+frame.vars.cleanUpObjs[0] = []
 # ground
 floorPos = [] #[[0]*20]*20      # 20x20 floor tile heights
 from random import random
@@ -688,14 +705,15 @@ for yy in range(floorX + 1):
         floorPos[yy].append(random()*5)  # + (1 - math.cos(angle)) * 50)
         #print("floorPos", yy, ",", xx, "=", floorPos[yy][xx])
 floor = WyeUI._surf(floorPos, (10,10,1), (-(int(floorX * 10/2)),-(int(floorY*10/2)),-18))
-floor.path.setColor((.95,.84,.44,.1))
+frame.vars.cleanUpObjs[0].append(floor._path)
+floor.setColor((.95,.84,.44,.1))
 
 tag = "wyeTag" + str(WyeCore.Utils.getId())
-floor.path.setTag("wyeTag", tag)
-#print("Set tag", tag, " on", floor.path)
-WyeCore.picker.makePickable(floor.path)
+floor.setTag(tag)
+#print("Set tag", tag, " on", floor._path)
+WyeCore.picker.makePickable(floor._path)
 #print("test floor with tagDebug")
-#WyeCore.picker.tagDebug(floor.path)
+#WyeCore.picker.tagDebug(floor._path)
             
 
 from random import random
@@ -719,18 +737,20 @@ for xx in range(int(floorX * floorY * .08)):
     ht  = 2+3*random()
     color = (.25+random()*.75,.25+random()*.75,.25+random()*.75, .5)
     weed = WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
+    frame.vars.cleanUpObjs[0].append(weed)
     frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
-    weed._nodePath.setColor(color)
-    frame.vars.weeds[0].append(weed)
-    weed._nodePath.setTag("wyeTag", tag)
-    WyeCore.picker.makePickable(weed._nodePath)
-    #print("Set tag", tag, " on weed", weed._nodePath)
+    weed.setColor(color)
+    frame.vars.weeds[0].append(weed._path)
+    weed.setTag(tag)
+    WyeCore.picker.makePickable(weed._path)
+    #print("Set tag", tag, " on weed", weed._path)
     
     # Create bubble, init color change amt and countdown to pop
     bubble = WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
-    bubble.path.setColor(color)
-    bubble.path.setTag("wyeTag", tag)
-    WyeCore.picker.makePickable(bubble.path)
+    frame.vars.cleanUpObjs[0].append(bubble._path)
+    bubble.setColor(color)
+    bubble.setTag(tag)
+    WyeCore.picker.makePickable(bubble._path)
     frame.vars.bubbles[0].append(bubble)
     pop = 60 + frame.vars.bubbleRand[0] * random()
     frame.vars.bubblePop[0].append(pop)
@@ -755,28 +775,29 @@ for ii in range(len(frame.vars.bubbles[0])):
     if frame.vars.bubbleCt[0][ii] >= frame.vars.bubblePop[0][ii]:
         # reset bubble
         weed = frame.vars.weeds[0][ii]
-        pos = weed._nodePath.getPos()
+        pos = weed.getPos()
         pos[2] += 2
-        bubble.path.setPos(pos)
+        bubble.setPos(pos[0], pos[1], pos[2])
         frame.vars.bubbleCt[0][ii] = 0
         frame.vars.bubblePop[0][ii] = frame.vars.bubbleMin[0] + frame.vars.bubbleRand[0] * random()
-        #weed._nodePath.setColor(bubble.path.getColor())
+        #weed.setColor(bubble.getColor())
 
     else:
         # float bubble up
-        bubble.path.setPos(bubble.path, frame.vars.bubbleFloat[0][0], frame.vars.bubbleFloat[0][1], frame.vars.bubbleFloat[0][2])
+        from panda3d.core import LVector3f
+        bubble._path.setPos(bubble._path, LVector3f(frame.vars.bubbleFloat[0][0], frame.vars.bubbleFloat[0][1], frame.vars.bubbleFloat[0][2]))
         # trigger pop now so it sounds when bubble pops
         if frame.vars.bubblePop[0][ii]-9 > frame.vars.bubbleCt[0][ii] > frame.vars.bubblePop[0][ii]-10:
             # pop bubble
-            viewerDist = (base.camera.getPos() - bubble.path.getPos()).length()
+            viewerDist = (base.camera.getPos() - bubble.getPos()).length()
             if viewerDist < 100:
                 #Wye.midi.playNote(118, 60, int(127-viewerDist), .1)
-                Wye.audio3d.attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble.path)
+                Wye.audio3d.attachSoundToObject(frame.vars.sounds[0][frame.vars.currSnd[0]], bubble._path)
                 frame.vars.sounds[0][frame.vars.currSnd[0]].play()
                 frame.vars.currSnd[0] = (frame.vars.currSnd[0] + 1) % 100
             
         # do weed color
-        color = weed._nodePath.getColor()
+        color = weed.getColor()
         # cycle weed colors before resetting bubble
         if frame.vars.bubbleCt[0][ii] > frame.vars.bubblePop[0][ii]-30:
             for cc in range(3):
@@ -787,10 +808,10 @@ for ii in range(len(frame.vars.bubbles[0])):
                 if color[cc] < .25:
                     color[cc] = .25
                     frame.vars.weedColorInc[0][ii][cc] *= -1
-            weed._nodePath.setColor(color)
+            weed.setColor(color)
         # bubble reset, pick up weed color
         if frame.vars.bubbleCt[0][ii] < 2:
-            bubble.path.setColor(color)
+            bubble.setColor(color)
 ''')
         )
 
@@ -820,10 +841,12 @@ for ii in range(len(frame.vars.bubbles[0])):
                     ("objTag", Wye.dType.STRING, "objTag"),
                     ("sound", Wye.dType.OBJECT, None),
                     ("position", Wye.dType.FLOAT_LIST, [-3,2,2.5]),
-                    )  # var 4
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),           # list of graphic elements to delete on Stop
+                    )
 
         codeDescr=(
             #(None, ("print('angleFish 1 case', frame.PC)")),
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
                 (None, "[frame]"),
                 (None, "frame.vars.gObj"),
@@ -832,8 +855,9 @@ for ii in range(len(frame.vars.bubbles[0])):
                 (None, "[[0, 90, 0]]"),      # rotVec
                 (None, "[[1,1,1]]"),    # scaleVec
                 (None, "frame.vars.objTag"),
-                (None, "[[0,1,0,1]]")
-            ),
+                (None, "[[0,1,0,1]]"),
+                ("Var", "frame.vars.cleanUpObjs"),
+             ),
             #("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
 
             #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "[0,5,-.5]")),
@@ -881,12 +905,14 @@ for ii in range(len(frame.vars.bubbles[0])):
                     ("posAngle", Wye.dType.FLOAT, 4.712388),
                     ("dAngleDeg", Wye.dType.FLOAT_LIST, [0., 0., .5]),
                     ("dAngleRad", Wye.dType.FLOAT, -0.0087266462),
-                    )  # var 4
+                    ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),           # list of graphic elements to delete on Stop
+                    )
 
         codeDescr=(
             ("loaderStream", (
                 #("Code", "print('testParallelFish run stream 0 loadObject')"),
                 #(None, ("print('testParallelFish case 0: start - set up object')")),
+                ("Var=", "frame.vars.cleanUpObjs[0] = []"),
                 ("WyeCore.libs.WyeLib.loadObject",
                     (None, "[frame]"),
                     (None, "frame.vars.gObj"),
@@ -895,7 +921,8 @@ for ii in range(len(frame.vars.bubbles[0])):
                     (None, "[[0, 90, 0]]"),      # rotVec
                     (None, "[[.25,.25,.25]]"),    # scaleVec
                     (None, "frame.vars.objTag"),
-                    (None, "[[.9,0.5,0,1]]")
+                    (None, "[[.9,0.5,0,1]]"),
+                    ("Var", "frame.vars.cleanUpObjs"),
                 ),
                 # ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.vars.gObj"), (None, "[-90,90,0]")),
                 #("WyeCore.libs.WyeLib.setObjPos", (None, "frame.vars.gObj"),(None, "frame.vars.dPos")),

@@ -30,8 +30,11 @@ class MyTestLib:
             ("color","FL",
               (0.5,0.5,0.5,1)),
             ("skew","F",0),
-            ("delta","F",0))
+            ("delta","F",0),
+            ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),  # list of graphic elements to delete on Stop
+        )
         codeDescr =        (
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -41,6 +44,7 @@ class MyTestLib:
               (None,"[[3,3,3]]"),
               (None,"frame.vars.objTag"),
               (None,"frame.vars.color")),
+              ("Var", "frame.vars.cleanUpObjs"),
             (None,"frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
             ("Label","Repeat"),
             ("Code","from random import random"),
@@ -118,8 +122,11 @@ class MyTestLib:
             ("color","FL",
               (0.5,0.5,0.5,1)),
             ("skew","F",0),
-            ("delta","F",0))
+            ("delta","F",0),
+            ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),  # list of graphic elements to delete on Stop
+        )
         codeDescr =        (
+            ("Var=", "frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -128,7 +135,9 @@ class MyTestLib:
               (None,"[[0, 90, 0]]"),
               (None,"[[3,3,3]]"),
               (None,"frame.vars.objTag"),
-              (None,"frame.vars.color")),
+              (None,"frame.vars.color"),
+              ("Var", "frame.vars.cleanUpObjs"),
+             ),
             (None,"frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
             ("Label","Repeat"),
             ("Code","from random import random"),

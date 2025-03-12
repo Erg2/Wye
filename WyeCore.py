@@ -94,7 +94,7 @@ class WyeCore(Wye.staticObj):
     worldInitialized = False
 
     # DEBUG - SHOW COMPILED CODE
-    debugListCode = False       # true to list Python code generated from Wye code
+    debugListCode = True       # true to list Python code generated from Wye code
 
     picker = None   # object picker object
     base = None     # panda3d base - set by application
@@ -250,8 +250,9 @@ class WyeCore(Wye.staticObj):
         mouseHandler = None         # mouse handler slot
         debugger = None             # no debugger running
         editMenu = None             # no edit menu running
-        objEditor = None  # user editor of registered Wye objects
-        mainMenu = None  # no main menu currently being displayed
+        pasteMenu = None            # no pasteMenu running
+        objEditor = None            # editor of Wye objects
+        mainMenu = None             # no main menu currently being displayed
         mouseCallbacks = []         # any function wanting mouse events
                                     #   Control seems to jam mouse events,
                                     #   (neither mouse nor control-mouse gets called)
@@ -261,12 +262,11 @@ class WyeCore(Wye.staticObj):
         dlight = None           # global directional light
         dLightPath = None
         libList = []
-        libDict = {}  # lib name -> lib lookup dictionary
+        libDict = {}            # lib name -> lib lookup dictionary
         startObjs = []
-        objs = []  # runnable objects
-        objStacks = []  # objects run in parallel so each one gets a stack
-        objKillList = []    # frames of objects to be removed from the active list at the end of the current display cycle
-        objTags = {}     # map of graphic tags to object frames
+        objStacks = []          # objects run in parallel so each one gets a stack
+        objKillList = []        # frames of objects to be removed from the active list at the end of the current display cycle
+        objTags = {}            # map of graphic tags to object frames
 
         eventCallbackDict = {}              # dictionary of event callbacks
         repeatEventCallbackDict = {}        # dictionary of repeated event frames
@@ -360,10 +360,7 @@ class WyeCore(Wye.staticObj):
 
                 ###########
 
-
-
                 # put rep exec obj on obj list
-                WyeCore.World.objs.append(WyeCore.World.repeatEventExecObj)
                 stk = []
                 f = WyeCore.World.repeatEventExecObj.start(stk)  # start the object and get its stack frame
                 stk.append(f)  # create a stack for it
@@ -518,7 +515,6 @@ class WyeCore(Wye.staticObj):
         # Start object verb and put it on active list so called every display cycle
         # return its stack frame
         def startActiveObject(obj):
-            #WyeCore.World.objs.append(obj)  # add to list of runtime objects
             stk = []            # create stack to run object on
             frame = obj.start(stk)  # start the object and get its stack frame
             stk.append(frame)       # put obj frame on its stack
