@@ -3179,7 +3179,7 @@ class WyeUI(Wye.staticObj):
 ("GoTo", "Repeat")
 )
                 WyeCore.Utils.createVerb(lib, "MyTestFish", vertSettings, paramDescr, varDescr, codeDescr,
-                                         doTest=False, listCode=editVerbFrm.vars.listCode[0])
+                                         listCode=editVerbFrm.vars.listCode[0])
 
         # test midi player
         class TestMidiCallback:
@@ -3240,6 +3240,7 @@ class WyeUI(Wye.staticObj):
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
                     ("dlgFrm", Wye.dType.OBJECT, None),
                     ("fileName", Wye.dType.STRING, "MyTestLib.py"),  # file name to save to
+                    ("libNameFrm", Wye.dType.OBJECT, "MyTestLib"),  # new lib name input, if user wants to create one
                     )
 
         # global list of libs being edited
@@ -3266,41 +3267,26 @@ class WyeUI(Wye.staticObj):
 
                     # build dialog
 
-                    attrIx = [0]
-                    rowIx = [0]
-
-
-                    loadLibFrm = WyeUI.doInputButton(dlgFrm, " Load Library", WyeUI.EditMainDialog.LoadLibCallback)
+                    loadLibFrm = WyeUI.doInputButton(dlgFrm, " Load Library:", WyeUI.EditMainDialog.LoadLibCallback)
                     loadLibFrm.params.optData = [(loadLibFrm, dlgFrm, frame)]
 
-                    WyeUI.doInputText(dlgFrm, "  Library File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
+                    WyeUI.doInputText(dlgFrm, "  File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
+                    #   new lib
+                    newLibFrm = WyeUI.doInputButton(dlgFrm, " New Library:", WyeUI.EditMainDialog.NewLibCallback)
+                    newLibFrm.params.optData = [(newLibFrm, dlgFrm, frame)]
+                    libNameFrm = WyeUI.doInputText(dlgFrm, "  Lib Name:", ["newLibName"], layout=Wye.layout.ADD_RIGHT)
+                    frame.vars.libNameFrm[0] = libNameFrm
+
+
                     WyeUI.doInputLabel(dlgFrm, "Select Library to Edit", color=Wye.color.SUBHD_COLOR)
 
+                    # list all the known libs
                     for lib in WyeCore.World.libList:
                         # make the dialog row
-                        btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-                        dlgFrm.params.inputs[0].append([btnFrm])
-                        btnFrm.params.frame = [None]  # return value
-                        btnFrm.params.parent = [None]
-                        btnFrm.params.label = [" " + lib.__name__]
-                        btnFrm.params.callback = [WyeUI.EditLibCallback]  # button callback
-                        # note: optData is list so can hack into it if reload lib
+                        btnFrm = WyeUI.doInputButton(dlgFrm, " " + lib.__name__, WyeUI.EditLibCallback)
                         btnFrm.params.optData = [[btnFrm, dlgFrm, lib, frame]]  # button row, row frame, dialog frame, obj frame
-                        WyeUI.InputButton.run(btnFrm)
-                        rowIx[0] += 1
-                        attrIx[0] += 1
-
-                    # if no libs loaded
-                    if attrIx == 0:
-                        lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                        lblFrm.params.frame = [None]  # return value
-                        lblFrm.params.parent = [None]
-                        lblFrm.params.label = ["<no libraries loaded>"]
-                        WyeUI.InputLabel.run(lblFrm)
-                        dlgFrm.params.inputs[0].append([lblFrm])
 
 
-                    # WyeUI.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
 
                     frame.PC += 1  # on return from dialog, run next case
@@ -3333,7 +3319,6 @@ class WyeUI(Wye.staticObj):
                 parentFrm = data[1][1]
                 editFrm = data[1][2]
 
-                # Save verb to library file
 
                 # get lib name
                 libFilePath = editFrm.vars.fileName[0].strip()
@@ -3419,11 +3404,70 @@ class WyeUI(Wye.staticObj):
                         WyeUI.doPopUpDialog("File Read Failed", err, Wye.color.ERROR_COLOR)
                         return
 
-
                 else:
                     err = "Invalid library file name '"+ libFilePath +"'.  Library not saved"
                     WyeUI.doPopUpDialog("File Read Failed", err, Wye.color.ERROR_COLOR)
                     return
+
+
+
+        # load library from file and start any autoStart verbs in it
+        class NewLibCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                #print("NewLibCallback started")
+                return Wye.codeFrame(WyeUI.EditMainDialog.NewLibCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                #print("NewLibCallback data=", data)
+                btnFrm = data[1][0]
+                parentFrm = data[1][1]
+                editFrm = data[1][2]
+
+                libName = editFrm.vars.libNameFrm[0].vars.currVal[0].strip()
+
+                if not libName:
+                    WyeUI.doPopUpDialog("Name Required", "Please enter a name for the new library",
+                                        Wye.color.WARNING_COLOR)
+                    return
+
+                newLib = True   # assume this is a new lib
+                oldLibIx = -1
+                if libName in WyeCore.World.libDict:
+                    # print("Lib", libName, " already loaded.  Delete old and add new")
+                    oldLib = WyeCore.World.libDict[libName]
+                    if not hasattr(oldLib, "systemLib"):
+                        oldLibIx = WyeCore.World.libList.index(oldLib)
+                        WyeCore.World.libList.remove(oldLib)
+                        mewlib = False
+                        # don't allow overwrite of system lib
+                    else:
+                        WyeUI.doPopUpDialog("System Library", libName + " is a system library.  Overwriting not allowed",
+                                            Wye.color.ERROR_COLOR)
+                        return
+
+                # if we got here, finally we can create the lib
+                lib = WyeCore.Utils.createLib(libName)
+
+                # show new library
+                if newLib:
+                    btnFrm = WyeUI.doInputButton(parentFrm, " " + lib.__name__, WyeUI.EditLibCallback)
+                    btnFrm.params.optData = [[btnFrm, parentFrm, lib, editFrm]]
+                    # create dialog line
+                    pos = [0, 0, 0]
+                    btnFrm.verb.display(btnFrm, parentFrm, pos)
+                    # redisplay dialog
+                    parentFrm.verb.redisplay(parentFrm)
+                else:
+                    # ugh, hacky, find index of lib button to update with updated lib
+                    backIx = 0 - (len(WyeCore.World.libList) - oldLibIx)
+                    oldBtn = parentFrm.params.inputs[0][backIx][0]
+                    oldBtn.params.optData[0][2] = lib
 
     # put up dialog showing verbs in given library
     class EditLibCallback:
@@ -3434,11 +3478,16 @@ class WyeUI(Wye.staticObj):
                     ("selVerb", Wye.dType.OBJECT, None),
                     ("coord", Wye.dType.FLOAT_LIST, (0.,0.,0.)),
                     ("vrbStat", Wye.dType.INTEGER, -1),
+                    ("newVerbName", Wye.dType.STRING, "NewVerb"),
+                    ("rows", Wye.dType.OBJECT_LIST, None),
+                    ("lib", Wye.dType.OBJECT, None)
                     )
 
         def start(stack):
             # print("EditLibCallback started")
-            return Wye.codeFrame(WyeUI.EditLibCallback, stack)
+            f = Wye.codeFrame(WyeUI.EditLibCallback, stack)
+            f.vars.rows[0] = []
+            return f
 
 
         def run(frame):
@@ -3449,6 +3498,7 @@ class WyeUI(Wye.staticObj):
                     btnFrm = data[1][0]
                     parentDlgFrm = data[1][1]
                     lib = data[1][2]
+                    frame.vars.lib[0] = lib
 
                     #print("param ix", data[1][0], " debug frame", objFrm) # objFrm.verb.__name__)
 
@@ -3460,48 +3510,18 @@ class WyeUI(Wye.staticObj):
                     dlgFrm = WyeUI.Dialog.start(parentDlgFrm.SP)
 
                     dlgFrm.params.retVal = frame.vars.vrbStat
-                    dlgFrm.params.title = ["Library '" + lib.__name__ + "': Select Verb to Edit"]
+                    dlgFrm.params.title = ["Library '" + lib.__name__ ]
                     dlgFrm.params.position = [[frame.vars.coord[0][0], frame.vars.coord[0][1], frame.vars.coord[0][2]],]
                     dlgFrm.params.parent = [parentDlgFrm]
 
+                    createFrm = WyeUI.doInputButton(dlgFrm, "  New Verb:", WyeUI.EditLibCallback.CreateVerbCallback)
+                    newVerbNameFrm = WyeUI.doInputText(dlgFrm, "  Name:", frame.vars.newVerbName, layout=Wye.layout.ADD_RIGHT)
+                    createFrm.params.optData = [(createFrm, newVerbNameFrm, dlgFrm, lib, frame),]
+
+                    WyeUI.doInputLabel(dlgFrm, "Select Verb to Edit", color=Wye.color.SUBHD_COLOR)
+
                     # create a row for each verb in the library
-                    attrIx = 0
-                    # print("_displayLib: process library", lib.__name__)
-                    for attr in dir(lib):
-                        if attr != "__class__":
-                            verb = getattr(lib, attr)
-                            if inspect.isclass(verb):
-                                # can only start verbs that don't require data
-                                if hasattr(verb, "paramDescr") and len(verb.paramDescr) == 0:
-                                    canStart = True
-                                    WyeUI.doInputButton(dlgFrm, "Start", WyeUI.EditLibCallback.startLibVerbCallback, (verb,))
-                                else:
-                                    WyeUI.doInputLabel(dlgFrm, "    .")
-
-                                if hasattr(verb, "codeDescr"):
-                                    # print("lib", lib.__name__, " verb", verb.__name__)
-                                    btnFrm = WyeUI.InputButton.start(dlgFrm.SP)
-                                    txt = "  " + lib.__name__ + "." + verb.__name__
-                                    btnFrm.params.frame = [None]  # return value
-                                    btnFrm.params.parent = [dlgFrm]
-                                    btnFrm.params.label = [txt]  # button label is verb name
-                                    btnFrm.params.callback = [WyeUI.EditLibCallback.EditLibaryVerbCallback]  # button callback
-                                    btnFrm.params.optData = [(btnFrm, dlgFrm, verb)]  # button data - offset to button
-                                    btnFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                                    WyeUI.InputButton.run(btnFrm)
-                                    dlgFrm.params.inputs[0].append([btnFrm])
-                                else:
-                                    lblFrm = WyeUI.InputLabel.start(dlgFrm.SP)
-                                    lblFrm.params.frame = [None]
-                                    lblFrm.params.parent = [None]
-                                    txt = "  " + lib.__name__ + "." + verb.__name__
-                                    lblFrm.params.label = [txt]
-                                    lblFrm.params.layout = [Wye.layout.ADD_RIGHT]
-                                    lblFrm.params.color = [Wye.color.DISABLED_COLOR]
-                                    WyeUI.InputLabel.run(lblFrm)
-                                    dlgFrm.params.inputs[0].append([lblFrm])
-
-                                attrIx += 1
+                    WyeUI.EditLibCallback.listVerbs(frame, dlgFrm)
 
                     # WyeUI.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)     # push dialog so it runs next cycle
@@ -3516,7 +3536,53 @@ class WyeUI(Wye.staticObj):
                     # hang here forever?  that's not good
                     frame.status = Wye.status.SUCCESS
 
+        def listVerbs(frame, dlgFrm):
+            lib = frame.vars.lib[0]
+            # print("_displayLib: process library", lib.__name__)
+            for attr in dir(lib):
+                if attr != "__class__":
+                    verb = getattr(lib, attr)
+                    if inspect.isclass(verb):
+                        # can only start verbs that don't require data
+                        if hasattr(verb, "paramDescr") and len(verb.paramDescr) == 0:
+                            canStart = True
+                            prefFrm = WyeUI.doInputButton(dlgFrm, "Start", WyeUI.EditLibCallback.startLibVerbCallback, (verb,))
+                        else:
+                            prefFrm = WyeUI.doInputLabel(dlgFrm, "        .")
+                        frame.vars.rows[0].append(prefFrm)
 
+                        if hasattr(verb, "codeDescr"):
+                            # print("lib", lib.__name__, " verb", verb.__name__)
+                            btnFrm = WyeUI.doInputButton(dlgFrm, "  " + verb.__name__,
+                                                         WyeUI.EditLibCallback.EditLibaryVerbCallback,
+                                                         layout=Wye.layout.ADD_RIGHT)
+                            btnFrm.params.optData = [(btnFrm, dlgFrm, verb)]  # button data - offset to button
+                            frame.vars.rows[0].append(btnFrm)
+                        else:
+                            btnFrm = WyeUI.doInputLabel(dlgFrm, "  " + verb.__name__,
+                                                        layout=Wye.layout.ADD_RIGHT,
+                                                        color=Wye.color.DISABLED_COLOR)
+                            frame.vars.rows[0].append(btnFrm)
+
+        # delete all verb rows and redo them
+        def update(frame, dlgFrm):
+            # delete all dialog lib verb inputs
+            delCt = 0
+            for bFrmRef in frame.vars.rows[0]:
+                inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], bFrmRef)
+                oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
+                oldFrm.verb.close(oldFrm)  # remove graphic content
+                delCt += 1
+            # print("after delete", delCt," dialog rows, inputs len", len(dlgFrm.params.inputs[0]))
+            frame.vars.rows[0].clear()  # old inputs gone
+
+            # rebuild dialog lib verb list
+            WyeUI.EditLibCallback.listVerbs(frame, dlgFrm)
+            # update display
+            for frm in frame.vars.rows[0]:
+                pos = [0, 0, 0]
+                frm.verb.display(frm, dlgFrm, pos)
+            dlgFrm.verb.redisplay(dlgFrm)
 
         # edit verb in lib
         class EditLibaryVerbCallback:
@@ -3555,7 +3621,7 @@ class WyeUI(Wye.staticObj):
 
 
 
-        # edit verb in lib
+        # Start verb
         class startLibVerbCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -3571,6 +3637,93 @@ class WyeUI(Wye.staticObj):
                 verb = data[1][0]
 
                 WyeCore.World.startActiveObject(verb)
+
+
+        # edit verb in lib
+        # May create new verb in same or new lib
+        class CreateVerbCallback:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("verbName", Wye.dType.INTEGER, 0),)
+
+            def start(stack):
+                #print("CreateVerbCallback start")
+                return Wye.codeFrame(WyeUI.EditLibCallback.CreateVerbCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                print("CreateVerbCallback data:", data)
+                btnFrm = data[1][0]
+                verbNmFrm = data[1][1]
+                dlgFrm = data[1][2]
+                lib = data[1][3]
+                editLibFrm = data[1][4]
+
+                editLibFrm = data[1][4]
+
+                match(frame.PC):
+                    case 0:
+
+                        # build a default verb
+                        vertSettings = {
+                            'mode': Wye.mode.MULTI_CYCLE,
+                            'autoStart': True,
+                            'dataType': Wye.dType.NONE
+                        }
+
+                        paramDescr = (("newParam", Wye.dType.ANY, Wye.access.REFERENCE),)
+
+                        varDescr = (("newVar", Wye.dType.ANY, None),)
+
+                        codeDescr = (("WyeLib.noop", ("Code", "0")),)
+
+                        frame.vars.verbName[0] = verbNmFrm.vars.currVal[0].strip()
+
+                        if not frame.vars.verbName[0]:
+                            WyeUI.doPopUpDialog("Name Required", "Please enter a name for the new verb",
+                                                Wye.color.WARNING_COLOR)
+                            frame.status = Wye.status.SUCCESS
+                            return
+
+                        if hasattr(lib, frame.vars.verbName[0]):
+                            WyeUI.doPopUpDialog("Unique Name Required", "'"+frame.vars.verbName[0]+"' already in library. Please enter a unique name",
+                                                Wye.color.WARNING_COLOR)
+                            frame.status = Wye.status.SUCCESS
+                            return
+
+                        WyeCore.Utils.createVerb(lib, frame.vars.verbName[0], vertSettings, paramDescr, varDescr, codeDescr)
+
+                        verb = getattr(lib, frame.vars.verbName[0])
+
+                        # open object editor
+                        edFrm = WyeUI.EditVerb.start(frame.SP)
+                        edFrm.params.verb = [verb]
+                        edFrm.params.parent = [dlgFrm]
+                        edFrm.params.position = [(.5, -1.3, -.5 + btnFrm.vars.position[0][2]),]
+
+                        frame.SP.append(edFrm)
+                        frame.PC += 1
+
+                    case 1:
+                        edFrm = frame.SP.pop()  # remove dialog frame from stack
+
+                        # if we should throw out the verb created above
+                        # a) user cancelled b) user changed verb name and created that c) user put verb in diff lib
+                        if edFrm.params.retVal[0] != Wye.status.SUCCESS or \
+                            edFrm.vars.nameFrm[0].vars.currVal[0] != verbNmFrm.vars.currVal[0] or \
+                                (edFrm.params.retLib[0] and (edFrm.params.retLib[0].__name__ != lib.__name__)):
+
+                            # delete the verb created above from the lib
+                            delattr(lib, frame.vars.verbName[0])
+
+                        # on success, redisplay lib
+                        if edFrm.params.retVal[0] == Wye.status.SUCCESS:
+                            editLibFrm.verb.update(editLibFrm, dlgFrm)
+
+                        #print("EditLibraryVerbCallback case 1: popped frame", edFrm.verb.__name__)
+                        frame.status = Wye.status.SUCCESS  # done
+
 
 
 
@@ -3646,19 +3799,19 @@ class WyeUI(Wye.staticObj):
     # put up object dialog for given object
     class EditVerb:
         mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.STRING
+        dataType = Wye.dType.INTEGER
         autoStart = False
-        paramDescr = (("verb", Wye.dType.OBJECT, Wye.access.REFERENCE),     # library verb to edit
+        paramDescr = (("retVal", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.status.FAIL), # if doesn't get replaced, is fail
+                      ("verb", Wye.dType.OBJECT, Wye.access.REFERENCE),     # library verb to edit
                       ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE),   # parent dialog, if any
-                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))  # object frame to edit
+                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE),  # object frame to edit
+                      ("retLib", Wye.dType.OBJECT, Wye.access.REFERENCE, None))
         varDescr = (("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
                     ("varInpLst", Wye.dType.OBJECT_LIST, None),     # Inputs showing vars
                     ("oldVerb", Wye.dType.OBJECT, None),            # verb used as a source
                     ("nameFrm", Wye.dType.OBJECT, None),            # new verb name
-                    ("libRadio", Wye.dType.OBJECT, None),     # existing lib name input
                     ("existingLibFrm", Wye.dType.OBJECT, None),     # existing lib name input
                     ("disaAutoFrm", Wye.dType.OBJECT, None),        # disable auto for testing (updates running object instead of create new)
-                    ("libNameFrm", Wye.dType.OBJECT, None),         # new lib name input, if user wants to create one
                     ("listCodeFrm", Wye.dType.OBJECT, None),        # new lib name input, if user wants to create one
                     ("settingsFrms", Wye.dType.OBJECT_LIST, None),  # new verb settings
                     ("newVerbSettings", Wye.dType.OBJECT, None),    # verb used as a source
@@ -3782,20 +3935,10 @@ class WyeUI(Wye.staticObj):
                     verbNameFrm = WyeUI.doInputText(dlgFrm, "  Name:", [verb.__name__])
                     frame.vars.nameFrm[0] = verbNameFrm
 
-                    # Library
-                    #   existing lib
-                    libRad = WyeUI.doInputCheckbox(dlgFrm, "  Existing Library:", [True], radioGroup="libRadGrp")
-                    frame.vars.libRadio[0] = libRad
-
+                    # Choose from existing Library list
                     libList = [lib.__name__ for lib in WyeCore.World.libList]
-                    libFrm = WyeUI.doInputDropdown(dlgFrm, "Library", [libList], [libList.index(verb.library.__name__)], layout=Wye.layout.ADD_RIGHT)
+                    libFrm = WyeUI.doInputDropdown(dlgFrm, "Library", [libList], [libList.index(verb.library.__name__)])
                     frame.vars.existingLibFrm[0] = libFrm
-
-                    #   new lib
-                    WyeUI.doInputCheckbox(dlgFrm, "  New Library      :", [False], radioGroup="libRadGrp")
-
-                    libNameFrm = WyeUI.doInputText(dlgFrm, "Name:", ["TestLibrary"], layout=Wye.layout.ADD_RIGHT)
-                    frame.vars.libNameFrm[0] = libNameFrm
 
 
                     # settings
@@ -3831,7 +3974,6 @@ class WyeUI(Wye.staticObj):
                     WyeUI.doInputLabel(dlgFrm, "Parameters:", color=Wye.color.SUBHD_COLOR)
 
                     if len(verb.paramDescr) > 0:     # if we have params, list them
-
                         attrIx = 0
 
                         for param in frame.vars.newParamDescr[0]:
@@ -3957,6 +4099,10 @@ class WyeUI(Wye.staticObj):
                     WyeUI.EditVerb.activeVerbs.pop(verb)
                     #print("ObjEditor: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
 
+                    # pass dlg status back to our caller
+                    frame.params.retVal = dlgFrm.params.retVal
+
+                    # if success, update verb
                     if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
                         # read settings
                         modeFrm = frame.vars.settingsFrms[0]['mode']
@@ -3984,24 +4130,10 @@ class WyeUI(Wye.staticObj):
                             name = "TestVerb"
 
                         # if existing library
-                        if frame.vars.libRadio[0].params.selectedRadio[0] == 0:
-                            libList = [lib for lib in WyeCore.World.libList]
-                            lib = libList[frame.vars.existingLibFrm[0].params.selectionIx[0]]
-                            #if name != frame.params.verb[0].__name__:
-                            #    print("Put new verb", name, " in existing lib", lib.__name__)
-                            #else:
-                            #    print("Replace verb", name, " in existing lib", lib.__name__)
-                        # else new library
-                        else:
-                            libName = frame.vars.libNameFrm[0].params.value[0]
-                            if libName:
-                                libName = libName.strip()
-                            # if user didn't supply a name, default
-                            if not libName:
-                                libName = "TestLibrary"
+                        libList = [lib for lib in WyeCore.World.libList]
+                        lib = libList[frame.vars.existingLibFrm[0].params.selectionIx[0]]
 
-                            lib = WyeCore.Utils.createLib(libName)
-                            #print("Put verb", name, " in new library", lib.__name__)
+                        frame.params.retLib[0] = lib   # tell caller where verb went
 
                         disableAuto = frame.vars.disaAutoFrm[0].params.value[0]
 
@@ -4460,6 +4592,8 @@ class WyeUI(Wye.staticObj):
 
                 #print("EditParamLineCallback: operator ix", opIx, " paramDescr", param)
 
+                newData = ["newParam", Wye.dType.ANY, Wye.access.REFERENCE]  # placeholder param to insert
+
                 # "0 Move line up",
                 # "1 Add line before",
                 # "2 Copy line",
@@ -4508,7 +4642,7 @@ class WyeUI(Wye.staticObj):
                     # add line before
                     case 1:
                          # print("EditParamLineCallback: Add up")
-                        newData = ["newParam", Wye.dType.ANY, Wye.access.REFERENCE]  # placeholder param to insert
+
                         label = "  '" + newData[0] + "' " + Wye.dType.tostring(newData[1]) + " call by:" + Wye.access.tostring(newData[2])
                         editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, param,
                                                           editVerbFrm.vars.newParamDescr[0], label,
@@ -4527,7 +4661,7 @@ class WyeUI(Wye.staticObj):
                         pass
 
                     # paste line
-                    case 5:
+                    case 4:
                         WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
                         pass
 
@@ -4556,7 +4690,6 @@ class WyeUI(Wye.staticObj):
                     # Add line after
                     case 6:
                         # print("EditParamLineCallback: Add down")
-                        newData = ["newParam", Wye.dType.ANY, Wye.access.REFERENCE]  # placeholder param to insert
                         label = "  '" + newData[0] + "' " + Wye.dType.tostring(newData[1]) + " call by:" + Wye.access.tostring(newData[2])
                         editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, param,
                                                           editVerbFrm.vars.newParamDescr[0], label,
@@ -4635,6 +4768,8 @@ class WyeUI(Wye.staticObj):
                 #print("EditVarLineCallback: operator ix", opIx, " varDescr", var)
                 #WyeUI.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
 
+                newData = ["newVar", Wye.dType.ANY, None]  # placeholder var to insert
+
                 # "0 Move line up",
                 # "1 Add line before",
                 # "2 Copy line",
@@ -4683,7 +4818,7 @@ class WyeUI(Wye.staticObj):
                     # add line before
                     case 1:
                         # print("EditVarLineCallback: Add up")
-                        newData = ["newVar", Wye.dType.ANY, None]  # placeholder var to insert
+
                         label = "  '"+newData[0] + "' "+Wye.dType.tostring(newData[1]) + " = "+str(newData[2])
                         editVerbFrm.verb.insertVarOrVar(parentFrm, editVerbFrm, editLnFrm, var,
                                                           editVerbFrm.vars.newVarDescr[0], label,
@@ -4730,7 +4865,6 @@ class WyeUI(Wye.staticObj):
                     # Add line after
                     case 6:
                         # print("EditVarLineCallback: Add up")
-                        newData = ["newVar", Wye.dType.ANY, None]  # placeholder var to insert
                         label = "  '" + newData[0] + "' " + Wye.dType.tostring(newData[1]) + " = " + str(newData[2])
                         editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, var,
                                                           editVerbFrm.vars.newVarDescr[0], label,
@@ -4806,6 +4940,7 @@ class WyeUI(Wye.staticObj):
                 # get selectionIx
                 opIx = editLnFrm.params.selectionIx[0]
 
+                newData = ["Code", "#< your code goes here>"]
                 #"0 Move line up",
                 #"1 Add line before",
                 #"2 Copy line",
@@ -4875,9 +5010,6 @@ class WyeUI(Wye.staticObj):
                         # todo - it would simplify life to have an AST tree holding var, call info and
                         #  linking relevant parts to relevant controls/data
 
-                        # Placeholder for "add line" so user has row to fill in with their code
-                        # newData = ["WyeLib.noop", ["Const", "[0]"]]
-                        newData = ["Code", "#< your code goes here>"]
                         parentList.insert(ix, newData)
 
                         # create new dialog row for this code line
@@ -4935,11 +5067,6 @@ class WyeUI(Wye.staticObj):
                         # todo - it would simplify life to have an AST abstract syntax tree holding var, call, type, etc. info and
                         #  linking relevant parts to relevant controls/data
 
-                        # Placeholder for "add line" so user has row to fill in with their code
-                        # newData = ["WyeLib.noop", ["Const", "[0]"]]
-
-
-
                         # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
                         count = 1 + WyeCore.Utils.countNestedLists(tuple)
 
@@ -4980,9 +5107,6 @@ class WyeUI(Wye.staticObj):
                         # todo - it would simplify life to have an AST tree holding var, call info and
                         #  linking relevant parts to relevant controls/data
 
-                        # Placeholder for "add line" so user has row to fill in with their code
-                        # newData = ["WyeLib.noop", ["Const", "[0]"]]
-                        newData = ["Code", "#< your code goes here>"]
                         ix += 1     # put after the current line
                         if ix < len(parentList):
                             parentList.insert(ix, newData)
@@ -5695,21 +5819,9 @@ class WyeUI(Wye.staticObj):
                 if not name:
                     name = "TestVerb"
 
-                # if existing library
-                if editFrm.vars.libRadio[0].params.selectedRadio[0] == 0:
-                    libList = [lib for lib in WyeCore.World.libList]
-                    lib = libList[editFrm.vars.existingLibFrm[0].params.selectionIx[0]]
-                # else new library
-                else:
-                    libName = editFrm.vars.libNameFrm[0].params.value[0]
-                    if libName:
-                        libName = libName.strip()
-                    # if user didn't supply a name, default
-                    if not libName:
-                        libName = "TestLibrary"
-
-                    lib = WyeCore.Utils.createLib(libName)
-
+                # existing library
+                libList = [lib for lib in WyeCore.World.libList]
+                lib = libList[editFrm.vars.existingLibFrm[0].params.selectionIx[0]]
 
                 listFlag = editFrm.vars.listCodeFrm[0].params.value[0]
                 #print("TestCodeCallback: List Code")
@@ -5879,11 +5991,11 @@ class WyeUI(Wye.staticObj):
                         doKillBtn = False
 
                     if doKillBtn:
-                        delFrm = WyeUI.doInputButton(dlgFrm, "kill", WyeUI.DebugMain.KillFrameCallback)
+                        delFrm = WyeUI.doInputButton(dlgFrm, "Del", WyeUI.DebugMain.KillFrameCallback)
                         delFrm.params.optData = [(delFrm, frame, dlgFrm, objFrm),]
                         frame.vars.rows[0].append(delFrm)
                     else:
-                        noDelFrm = WyeUI.doInputLabel(dlgFrm, "    .")
+                        noDelFrm = WyeUI.doInputLabel(dlgFrm, "     .")
                         frame.vars.rows[0].append(noDelFrm)
 
                     # make the dialog row

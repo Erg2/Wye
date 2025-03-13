@@ -28,10 +28,10 @@ class WyeLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
         autoStart = False
-        paramDescr = (("placeHolder", Wye.dType.ANY, Wye.access.REFERENCE),
+        paramDescr = (("param", Wye.dType.ANY, Wye.access.REFERENCE),
                       )
-        varDescr = (("placeHolder", Wye.dType.INTEGER, 0),)
-        codeDescr = (("Label", "Repeat"),)
+        varDescr = (("var", Wye.dType.INTEGER, 0),)
+        codeDescr = (("Label", "Noop"),)
 
 
         def build():

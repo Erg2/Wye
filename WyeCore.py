@@ -94,7 +94,7 @@ class WyeCore(Wye.staticObj):
     worldInitialized = False
 
     # DEBUG - SHOW COMPILED CODE
-    debugListCode = True       # true to list Python code generated from Wye code
+    debugListCode = False       # true to list Python code generated from Wye code
 
     picker = None   # object picker object
     base = None     # panda3d base - set by application
@@ -1527,6 +1527,7 @@ class WyeCore(Wye.staticObj):
                         libName:libClass,
                         "Wye":Wye,
                         "WyeCore":WyeCore,
+                        "WyeLib": WyeCore.libs.WyeLib,
                         "WyeUI":WyeCore.libs.WyeUI
                     }
                     exec(code, libDict)
@@ -1571,6 +1572,45 @@ class WyeCore(Wye.staticObj):
             libTpl += "    canSave = True  # all verbs can be saved with the library\n"
             libTpl += "    class "+name+"_rt:\n        pass\n"
             return libTpl
+
+
+        # Create a new in-memory library
+        def createLib(name):
+
+            libTpl = WyeCore.Utils.createLibString(name)
+            libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
+
+        #    print("createLib: Library text:")
+        #    lnIx = 1
+        #    for ln in libTpl.split('\n'):
+        #        print("%2d " % lnIx, ln)
+        #        lnIx += 1
+        #    print("")
+
+            code = compile(libTpl, "<string>", "exec")
+
+            libDict = {
+                name: name,
+                "Wye": Wye,
+                "WyeCore": WyeCore,
+                "WyeLib": WyeCore.libs.WyeLib,
+                "WyeUI": WyeCore.libs.WyeUI
+            }
+            #print("createLib: exec library", name)
+            exec(code, libDict)
+            lib = getattr(WyeCore.libs, name)
+            #print("Run test from template lib")
+            #lib.test()
+            #print("Build", name)
+            lib.build()
+            if name in WyeCore.World.libDict:
+                WyeCore.World.libList.remove(WyeCore.World.libDict[name])
+            WyeCore.World.libDict[name] = lib
+            WyeCore.World.libList.append(lib)
+            #print("createLib: Built and installed new library successfully", lib.__name__)
+            return lib
+
+
 
         # create the text description of a verb from lib, verb name, settings, param/var/code descrs.
         # If doTest, builds a self-contained Python class that can build itself without having to be in a lib
@@ -1621,9 +1661,9 @@ class WyeCore(Wye.staticObj):
             vrbStr += "    def start(stack):\n"
             #vrbStr += "        print('" + name + " object start')\n"
             if verbSettings['mode'] == Wye.mode.PARALLEL:
-                vrbStr += "                        return " + libName + "." + libName + "_rt." + name + "_start_rt(stack)\n"
+                vrbStr += "        return " + libName + "." + libName + "_rt." + name + "_start_rt(stack)\n"
             else:
-                vrbStr += "                        return Wye.codeFrame("
+                vrbStr += "        return Wye.codeFrame("
                 vrbStr += libName + "." + name + ", stack)\n"
 
             vrbStr += '''
@@ -1645,42 +1685,6 @@ class WyeCore(Wye.staticObj):
             vrbStr += "            traceback.print_exception(e)\n"
             vrbStr += "            frame.errOnce = True\n\n"
             return vrbStr
-
-
-        # Create a new in-memory library
-        def createLib(name):
-
-            libTpl = WyeCore.Utils.createLibString(name)
-            libTpl += "setattr(WyeCore.libs, "+name+".__name__, "+name+")\n"
-
-        #    print("createLib: Library text:")
-        #    lnIx = 1
-        #    for ln in libTpl.split('\n'):
-        #        print("%2d " % lnIx, ln)
-        #        lnIx += 1
-        #    print("")
-
-            code = compile(libTpl, "<string>", "exec")
-
-            libDict = {
-                name: name,
-                "Wye": Wye,
-                "WyeCore": WyeCore,
-                "WyeUI": WyeCore.libs.WyeUI
-            }
-            #print("createLib: exec library", name)
-            exec(code, libDict)
-            lib = getattr(WyeCore.libs, name)
-            #print("Run test from template lib")
-            #lib.test()
-            #print("Build", name)
-            lib.build()
-            if name in WyeCore.World.libDict:
-                WyeCore.World.libList.remove(WyeCore.World.libDict[name])
-            WyeCore.World.libDict[name] = lib
-            WyeCore.World.libList.append(lib)
-            #print("createLib: Built and installed new library successfully", lib.__name__)
-            return lib
 
 
 
@@ -1743,7 +1747,7 @@ cdStr = "class tmp:\\n" + cdStr + "\\n"
 try:
     # compile the verb's runtime code
     code = compile(cdStr, "<string>", "exec")
-    #print("createVerb: Compiled verb runtime successfully")
+    print("createVerb: Compiled verb runtime successfully")
     
     libDict = {
 '''
@@ -1751,6 +1755,7 @@ try:
             vrbStr += '''
         "Wye": Wye,
         "WyeCore": WyeCore,
+        "WyeLib": WyeCore.libs.WyeLib,
         "WyeUI": WyeCore.libs.WyeUI
     }
     
@@ -1807,6 +1812,7 @@ except Exception as e:
                     vrbLib.__name__: vrbLib,
                     "Wye": Wye,
                     "WyeCore": WyeCore,
+                    "WyeLib": WyeCore.libs.WyeLib,
                     "WyeUI": WyeCore.libs.WyeUI
                 }
 
