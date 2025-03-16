@@ -253,6 +253,7 @@ class WyeCore(Wye.staticObj):
         pasteMenu = None            # no pasteMenu running
         objEditor = None            # editor of Wye objects
         mainMenu = None             # no main menu currently being displayed
+        cutPastManager = None       # cut/paste manager goes here
         mouseCallbacks = []         # any function wanting mouse events
                                     #   Control seems to jam mouse events,
                                     #   (neither mouse nor control-mouse gets called)
@@ -404,6 +405,9 @@ class WyeCore(Wye.staticObj):
 
                 # set up editor
                 WyeCore.World.objEditor = WyeCore.libs.WyeUILib.ObjEditCtl()
+
+                # set up cut/paste manager
+                WyeCore.World.cutPastManager = WyeCore.libs.WyeUILib.CutPasteManager()
 
                 # WyeCore.picker.makePickable(_3dText)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
@@ -632,6 +636,7 @@ class WyeCore(Wye.staticObj):
             def __init__(self):
                 base.buttonThrowers[0].node().setKeystrokeEvent('keystroke')
                 self.accept('keystroke', self.keyFunc)
+                self.accept('keystroke-repeat', self.keyFunc)
                 self.accept('arrow_right', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
                 self.accept('arrow_left', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
                 self.accept('arrow_right-repeat', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
@@ -647,6 +652,7 @@ class WyeCore(Wye.staticObj):
                 self.accept('ctl_down', self.controlKeyFunc, [Wye.ctlKeys.CTL_DOWN])
                 self.accept('ctl_up', self.controlKeyFunc, [Wye.ctlKeys.CTL_UP])
                 self.accept('delete', self.controlKeyFunc, [Wye.ctlKeys.DELETE])
+                self.accept('delete-repeat', self.controlKeyFunc, [Wye.ctlKeys.DELETE])
                 self.accept('home', self.controlKeyFunc, [Wye.ctlKeys.HOME])
                 self.accept('end', self.controlKeyFunc, [Wye.ctlKeys.END])
 
@@ -1480,10 +1486,10 @@ class WyeCore(Wye.staticObj):
                 if attr != "__class__":     # avoid lib's self reference
                     val = getattr(libClass, attr)
                     if inspect.isclass(val):
+                        val.library = libClass  # add pointer from verb class to parent library class
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(val, "build"):
                             doBuild = True      # there is code to compile
-                            val.library = libClass      # add pointer from verb class to parent library class
                             cdStr, parStr = val.build()  # call verb build to get verb's runtime code string(s)
                             codeStr += cdStr
                             parFnStr += parStr
@@ -1631,6 +1637,7 @@ class WyeCore(Wye.staticObj):
             # That would screw up vars expecting mutable arrays and getting const tuples.  However, the codeFrame does
             # a deep copy of any initial value list/tuple to ensure frames don't share values, and it turns all tuples
             # into lists again.  This could be a surprise somewhere down the road.
+
             paramStr = WyeCore.Utils.listToTupleString(paramDescr, 0)
             varStr = WyeCore.Utils.listToTupleString(varDescr, 0)
             codeStr = WyeCore.Utils.listToTupleString(codeDescr, 0)

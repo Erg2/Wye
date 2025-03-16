@@ -33,10 +33,18 @@ class EditLib:
             # so have to pull out the temp values from the input controls
             # Do some hackery to get to the pop up dialog's inputs' local variables
             #print("dlgFrm", dlgFrm.params.title)
-            x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])
-            y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])
-            z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])
-
+            try:
+                x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])
+            except:
+                x = 0.
+            try:
+                y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])
+            except:
+                y = 0.
+            try:
+                z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])
+            except:
+                z = 0.
             frm.vars.target[0].vars.gObj[0].setHpr(x, y, z)
 
             WyeCore.World.dlightPath.setHpr(x, y, z)
