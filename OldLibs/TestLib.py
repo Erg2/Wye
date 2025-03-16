@@ -618,7 +618,10 @@ f()
             #print("testObj exec code")
             try:
                 exec(TestLib.testObj.code, {"TestLib":TestLib, "frame":frame, "Wye":Wye, "WyeCore":WyeCore,
-                                            "WyeLib":WyeCore.libs.WyeLib, "WyeUI":WyeCore.libs.WyeUI})
+                                            "WyeLib":WyeCore.libs.WyeLib, "WyeUILib":WyeCore.libs.WyeUILib,
+                                            "WyeUIUtilsLib": WyeCore.libs.WyeUIUtilsLib,
+                                            "Wye3dObjsLib": WyeCore.libs.Wye3dObjsLib})
+
             except:
                 #print("testObj run error:")
                 frame.status = Wye.status.FAIL
@@ -727,7 +730,9 @@ f()
             #print("testObj2 exec code")
             try:
                 exec(TestLib.testObj2.code, {"TestLib":TestLib, "frame":frame, "Wye":Wye, "WyeCore":WyeCore,
-                                            "WyeLib":WyeCore.libs.WyeLib, "WyeUI":WyeCore.libs.WyeUI})
+                                            "WyeLib":WyeCore.libs.WyeLib, "WyeUILib":WyeCore.libs.WyeUILib,
+                                            "WyeUIUtilsLib": WyeCore.libs.WyeUIUtilsLib,
+                                            "Wye3dObjsLib": WyeCore.libs.Wye3dObjsLib})
             except:
                 #print("testObj2 run error:")
                 frame.status = Wye.status.FAIL

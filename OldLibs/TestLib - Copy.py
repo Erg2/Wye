@@ -20,7 +20,7 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = Wye3dObjsLib._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 (None, "frame.status = Wye.status.SUCCESS")
             ),
@@ -28,7 +28,7 @@ class TestLib:
                 ("Label", "Loop"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
                 #(None, "print('doitButton call _displayLib with frame', frame.tostring())"),
-                (None, "WyeUI._displayLib(frame, (0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
+                (None, "WyeUILib._displayLib(frame, (0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
                 ("GoTo", "Loop"),
                 ("Label", "Done")
             ),
@@ -106,22 +106,22 @@ class TestLib:
         codeDescr = (
             #(None, "print('Callback 2, create dialog. parent ', frame.eventData[1])"),
             #(None, "print('           frame.eventData ', frame.eventData)"),
-            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
+            ("WyeUILib.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
              (None, "[(1,-1,-1),]"), (None, "[frame.eventData[1]]"),
-             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),
+             ("WyeUILib.InputText", (None, "frame.vars.txt1ID"),
               (None, "['TextLabel']"),
               (None, "frame.vars.text1Val")
               ),
-             ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
+             ("WyeUILib.InputText", (None, "frame.vars.txt2IO"),
               (None, "['Text2Label']"),
               (None, "frame.vars.text2Val")
               ),
-             ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
+             ("WyeUILib.InputButton", (None, "frame.vars.BtnID"),
               (None, "['Click Me counter']"),
               (None, "[TestLib.BtnCallback]"),
               (None, "[[frame.f1,frame.vars.clickCt]]")
               ),
-             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
+             ("WyeUILib.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
              ),
             #("Label", "Done"),
             #(None, "print('Callback 2 done with SUCCESS')"),
@@ -158,12 +158,12 @@ class TestLib:
             #(None, "print('           frame.eventData ', frame.eventData)"),
             ("WyeCore.libs.WyeLib.setEqual",
                 (None, "frame.vars.selRow"),
-                ("WyeUI.DropDown", (None, "frame.vars.tstDlg3Frm"), (None, "frame.vars.Title"),
+                ("WyeUILib.DropDown", (None, "frame.vars.tstDlg3Frm"), (None, "frame.vars.Title"),
                  (None, "(1,-1,-1.5*5)"), (None, "[frame.eventData[1]]"),
                  (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
                 )
              ),
-            #("WyeUI.DropDown", (None, "frame.vars.tstDlg3Frm"), (None, "frame.vars.Title"),
+            #("WyeUILib.DropDown", (None, "frame.vars.tstDlg3Frm"), (None, "frame.vars.Title"),
             #  (None, "(1,-1,-1.5*5)"), (None, "[frame.eventData[1]]"),
             #  (None, "(('Line 0'), ('Line 1'), ('Line 2'), ('Line 3'))"),
             #),
@@ -214,23 +214,23 @@ class TestLib:
 
         codeDescr = (
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
-            ("WyeUI.Dialog", (None, "frame.vars.frame"), (None, "frame.vars.Title"),
+            ("WyeUILib.Dialog", (None, "frame.vars.frame"), (None, "frame.vars.Title"),
                                 (None, "[(-2,10,0),]"), (None, "[None]"),
-                                ("WyeUI.InputLabel", (None, "frame.vars.labelId"), (None, "['InputLabel']")),
-                                ("WyeUI.InputText", (None, "frame.vars.test1frm"),
+                                ("WyeUILib.InputLabel", (None, "frame.vars.labelId"), (None, "['InputLabel']")),
+                                ("WyeUILib.InputText", (None, "frame.vars.test1frm"),
                                   (None, "['Enter Text 1']"),
                                   (None, "frame.vars.text1Val")
                                 ),
-                                ("WyeUI.InputText", (None, "frame.vars.test2frm"),
+                                ("WyeUILib.InputText", (None, "frame.vars.test2frm"),
                                  (None, "['Enter Text 2']"),
                                  (None, "frame.vars.test2Val")
                                 ),
-                                ("WyeUI.InputButton", (None, "frame.vars.id1"),
+                                ("WyeUILib.InputButton", (None, "frame.vars.id1"),
                                   (None, "['Click Me for Dialog']"),
                                   (None, "[TestLib.BtnCallback2]"),
                                   (None, "frame.vars.frame")
                                 ),
-                                ("WyeUI.InputButton", (None, "frame.vars.click2Id"),
+                                ("WyeUILib.InputButton", (None, "frame.vars.click2Id"),
                                   (None, "['Click Me for Dropdown']"),
                                   (None, "[TestLib.BtnCallback3]"),
                                   (None, "frame.vars.frame")
@@ -238,13 +238,13 @@ class TestLib:
              ),
             #(None, "print('DlgTst frame 1 vars', frame.vars)"),
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
-            ("WyeUI.Dialog", (None, "frame.vars.Dlg2Frm"), (None, "frame.vars.Title2"),
+            ("WyeUILib.Dialog", (None, "frame.vars.Dlg2Frm"), (None, "frame.vars.Title2"),
                                (None, "[(2,10,0),]"), (None, "[None]"),
-                               ("WyeUI.InputText", (None, "frame.vars.text1frm2"),
+                               ("WyeUILib.InputText", (None, "frame.vars.text1frm2"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars.test1Val2")
                                ),
-                               ("WyeUI.InputText", (None, "frame.vars.text2frm2"),
+                               ("WyeUILib.InputText", (None, "frame.vars.text2frm2"),
                                   (None, "['T4Label']"),
                                   (None, "frame.vars.text2Val2")
                                )

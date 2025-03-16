@@ -397,13 +397,13 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.keyHandler = WyeCore.World.KeyHandler()
 
                 #print("start CameraControl")
-                WyeCore.World.mouseHandler = WyeCore.libs.WyeUI.CameraControl()
+                WyeCore.World.mouseHandler = WyeCore.libs.WyeUILib.CameraControl()
 
                 # create picker object for object selection events
                 WyeCore.picker = WyeCore.Picker(WyeCore.base)
 
                 # set up editor
-                WyeCore.World.objEditor = WyeCore.libs.WyeUI.ObjEditCtl()
+                WyeCore.World.objEditor = WyeCore.libs.WyeUILib.ObjEditCtl()
 
                 # WyeCore.picker.makePickable(_3dText)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
@@ -448,26 +448,16 @@ class WyeCore(Wye.staticObj):
                                 #if stack[0].verb.__name__ == "Dialog":
                                 #    print("  ", stack[0].params.title[0])
                                 continue
-                            #else:
-                            #   print("breakAll exec sysObj stack", stack[0].verb.__name__, " run obj", frame.verb.__name__)
-
-                        #if frame:
-                            #print("worldRunner stack # ", stackNum, " verb", frame.verb.__name__) #,
-
-                            #      " status ", Wye.status.tostring(frame.status),
-                            #      " stack:", frame.stackToString(frame.SP))
-                        # else:
-                        #    print("worldRunner ERROR: stack # ", stackNum, " depth", len(stack)," stack[-1] frame = None")
-                        #    exit(1)
                         if frame.status == Wye.status.CONTINUE:
                             #if Wye.debugOn:
                             if Wye.debugOn:
                                 Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC))
                             else:
-                                #print("WorldRun: run", frame.verb.__name__)
+                                # print("WorldRun: run", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ", " status", Wye.status.tostring(frame.status))
                                 # run the object frame.  If it throws an error, kill that object stack
                                 try:
                                     frame.verb.run(frame)
+                                    # print("WorldRun: after run", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ", " status", Wye.status.tostring(frame.status))
                                 except Exception as e:
                                     print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                     WyeCore.World.stopActiveObject(frame)
@@ -483,13 +473,13 @@ class WyeCore(Wye.staticObj):
                                 if Wye.debugOn:
                                     Wye.debug(pFrame, "worldRunner: return from call to"+ pFrame.verb.__name__+". Run parent frame "+pFrame.verb.__name__)
                                 else:
-                                    #print("WorldRun: child done, run parent", pFrame.verb.__name__)
+                                    # print("WorldRun: child done, run parent", pFrame.verb.__name__, " ", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ")
                                     # bottom frame done, run its parent
                                     # If it throws an error, kill that object stack
                                     try:
                                         pFrame.verb.run(pFrame)  # parent will remove child frame
                                     except Exception as e:
-                                        print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
+                                        # print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                         WyeCore.World.stopActiveObject(frame)
                                         traceback.print_exception(e)
 
@@ -1126,7 +1116,7 @@ class WyeCore(Wye.staticObj):
             parFnText = ""
             # Wye verb
             if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
-                #print("lib.verb tuple", wyeTuple)
+                #print("parseWyeTuple: lib.verb tuple", wyeTuple)
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
@@ -1173,7 +1163,7 @@ class WyeCore(Wye.staticObj):
                                     continue        # skip processing any more of this tuple parameter
 
                                 # skip empty tuples (list ended in ",") and debug highlighting tuples
-                                if len(paramTuple) == 0 or paramTuple[0] == "caseNum":
+                                if len(paramTuple) == 0:
                                     continue
 
                                 tupleKey = paramTuple[0]
@@ -1528,7 +1518,9 @@ class WyeCore(Wye.staticObj):
                         "Wye":Wye,
                         "WyeCore":WyeCore,
                         "WyeLib": WyeCore.libs.WyeLib,
-                        "WyeUI":WyeCore.libs.WyeUI
+                        "WyeUILib":WyeCore.libs.WyeUILib,
+                        "WyeUIUtilsLib": WyeCore.libs.WyeUIUtilsLib,
+                        "Wye3dObjsLib": WyeCore.libs.Wye3dObjsLib,
                     }
                     exec(code, libDict)
                 except Exception as e:
@@ -1594,7 +1586,9 @@ class WyeCore(Wye.staticObj):
                 "Wye": Wye,
                 "WyeCore": WyeCore,
                 "WyeLib": WyeCore.libs.WyeLib,
-                "WyeUI": WyeCore.libs.WyeUI
+                "WyeUILib": WyeCore.libs.WyeUILib,
+                "WyeUIUtilsLib": WyeCore.libs.WyeUIUtilsLib,
+                "Wye3dObjsLib": WyeCore.libs.Wye3dObjsLib,
             }
             #print("createLib: exec library", name)
             exec(code, libDict)
@@ -1747,7 +1741,7 @@ cdStr = "class tmp:\\n" + cdStr + "\\n"
 try:
     # compile the verb's runtime code
     code = compile(cdStr, "<string>", "exec")
-    print("createVerb: Compiled verb runtime successfully")
+    #print("createVerb: Compiled verb runtime successfully")
     
     libDict = {
 '''
@@ -1756,7 +1750,9 @@ try:
         "Wye": Wye,
         "WyeCore": WyeCore,
         "WyeLib": WyeCore.libs.WyeLib,
-        "WyeUI": WyeCore.libs.WyeUI
+        "WyeUILib": WyeCore.libs.WyeUILib,
+        "WyeUIUtilsLib": WyeCore.libs.WyeUIUtilsLib,
+        "Wye3dObjsLib": WyeCore.libs.Wye3dObjsLib,
     }
     
     #print('createVerb: exec verb " + vrbLib.__name__ + "." + name + "')
@@ -1765,7 +1761,7 @@ try:
     try:
         exec(code, libDict)
 '''
-            vrbStr += "        print('Created verb "+vrbLib.__name__ + "." + name + "')\n"
+            #vrbStr += "        print('Created verb "+vrbLib.__name__ + "." + name + "')\n"
             vrbStr += '''
     except Exception as e:
         print("exec verb runtime failed\\n", str(e))
@@ -1813,7 +1809,9 @@ except Exception as e:
                     "Wye": Wye,
                     "WyeCore": WyeCore,
                     "WyeLib": WyeCore.libs.WyeLib,
-                    "WyeUI": WyeCore.libs.WyeUI
+                    "WyeUILib": WyeCore.libs.WyeUILib,
+                    "WyeUIUtilsLib": WyeCore.libs.WyeUIUtilsLib,
+                    "Wye3dObjsLib": WyeCore.libs.Wye3dObjsLib,
                 }
 
                 #if doTest:

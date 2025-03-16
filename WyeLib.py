@@ -167,9 +167,9 @@ class WyeLib:
                       ("scaleVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # scale to apply to object
                       ("tag", Wye.dType.STRING_LIST, Wye.access.REFERENCE),     # returned tag assigned to graphic object
                       ("colorVec", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE), # color to assign to object
-                      ("cleanUpObjs", Wye.dType.OBJECT_LIST, Wye.access.REFERENCE), # cleanup list to add obj to
+                      ("cleanUpObjs", Wye.dType.OBJECT_LIST, Wye.access.REFERENCE),
                       )
-        varDescr = ()
+        varDescr = () # cleanup list to add obj to
         codeDescr = (
             #(None, "print('test inline code')"),
             # call loadModel with testLoader params 0 and 1

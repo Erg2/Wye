@@ -20,13 +20,13 @@ class TestLib3:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = Wye3dObjsLib._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 (None, "frame.status = Wye.status.SUCCESS")
             ),
             (
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitid")),
-                (None, "WyeUI._displayLib(WyeCore.libs.TestLib3, (.1,10,.8))"),
+                (None, "WyeUILib._displayLib(WyeCore.libs.TestLib3, (.1,10,.8))"),
                 ("Label", "Done")
             ),
             (
@@ -77,31 +77,31 @@ class TestLib3:
 
         codeDescr = (
             #(None, "print('DlgTst frame before Dialog 1',WyeCore.Utils.frameToString(frame))"),
-            ("WyeUI.Dialog", (None, "frame.vars.id"), (None, "frame.vars.Title"),
+            ("WyeUILib.Dialog", (None, "frame.vars.id"), (None, "frame.vars.Title"),
                                 (None, "[(-2,10,0),]"), (None, "None"),
-                                ("WyeUI.InputLabel", (None, "frame.vars.labelId"), (None, "['InputLabel']")),
-                                ("WyeUI.InputText", (None, "frame.vars.text1ID"),
+                                ("WyeUILib.InputLabel", (None, "frame.vars.labelId"), (None, "['InputLabel']")),
+                                ("WyeUILib.InputText", (None, "frame.vars.text1ID"),
                                   (None, "['T1Label']"),
                                   (None, "frame.vars.Text1Val")
                                 ),
-                                ("WyeUI.InputText", (None, "frame.vars.text2ID"),
+                                ("WyeUILib.InputText", (None, "frame.vars.text2ID"),
                                  (None, "['T2Label']"),
                                  (None, "frame.vars.text2Val")
                                 ),
-                                ("WyeUI.InputButton", (None, "frame.vars.id1"),
+                                ("WyeUILib.InputButton", (None, "frame.vars.id1"),
                                   (None, "['Click Me for Dialog']"),
-                                  (None, "[WyeUI.BtnCallback2]")
+                                  (None, "[WyeUILib.BtnCallback2]")
                                 ),
              ),
             #(None, "print('DlgTst frame 1 vars', frame.vars)"),
             #(None, "print('DlgTst frame after Dialog 1',WyeCore.Utils.frameToString(frame))"),
-            ("WyeUI.Dialog", (None, "frame.vars.id2"), (None, "frame.vars.Title2"),
+            ("WyeUILib.Dialog", (None, "frame.vars.id2"), (None, "frame.vars.Title2"),
                                (None, "[(2,10,0),]"), (None, "None"),
-                               ("WyeUI.InputText", (None, "frame.vars.text1ID2"),
+                               ("WyeUILib.InputText", (None, "frame.vars.text1ID2"),
                                 (None, "['T3Label']"),
                                 (None, "frame.vars.text1Val2")
                                ),
-                               ("WyeUI.InputText", (None, "frame.vars.text2ID2"),
+                               ("WyeUILib.InputText", (None, "frame.vars.text2ID2"),
                                   (None, "['T4Label']"),
                                   (None, "frame.vars.text2Val2")
                                )

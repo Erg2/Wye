@@ -94,7 +94,7 @@ class EditLib:
         codeDescr = (
 
             #(None, "print('EditLib ShowFishDialog')"),
-            (None, "frame.vars.dlgButton[0] = WyeUI._3dText(text='Set Fish and Light Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
+            (None, "frame.vars.dlgButton[0] = Wye3dObjsLib._3dText(text='Set Fish and Light Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
             (None, "frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
 
             ("Label", "PopDialog"),
@@ -111,29 +111,29 @@ class EditLib:
             (None, "frame.vars.YAngle[0] = WyeCore.World.dlightPath.getHpr()[1]"),
             (None, "frame.vars.ZAngle[0] = WyeCore.World.dlightPath.getHpr()[2]"),
 
-            ("WyeUI.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
+            ("WyeUILib.Dialog", (None, "frame.vars.dlgRetVal"),    # frame
                 (None, "['Fish Angle Dialog']"),                   # title
                 (None, "[(-3,2,1.5),]"),                                # position
                 (None, "[None]"),                                  # parent
-                ("WyeUI.InputFloat", (None, "frame.vars.XAngleID"),   # inputs (variable length)
+                ("WyeUILib.InputFloat", (None, "frame.vars.XAngleID"),   # inputs (variable length)
                     (None, "['XAngle']"),
                     (None, "frame.vars.XAngle"),
                     (None, "[EditLib.UpdateCallback]"),
                     (None, "[frame]")
                 ),
-                ("WyeUI.InputFloat", (None, "frame.vars.YAngleID"),
+                ("WyeUILib.InputFloat", (None, "frame.vars.YAngleID"),
                     (None, "['YAngle']"),
                     (None, "frame.vars.YAngle"),
                     (None, "[EditLib.UpdateCallback]"),
                     (None, "[frame]")
                  ),
-                ("WyeUI.InputFloat", (None, "frame.vars.ZAngleID"),
+                ("WyeUILib.InputFloat", (None, "frame.vars.ZAngleID"),
                     (None, "['ZAngle']"),
                     (None, "frame.vars.ZAngle"),
                     (None, "[EditLib.UpdateCallback]"),
                     (None, "[frame]")
                  ),
-                ("WyeUI.InputButton", (None, "frame.vars.updateBtnId"),
+                ("WyeUILib.InputButton", (None, "frame.vars.updateBtnId"),
                     (None, "['Click to reset Position']"),
                     (None, "[EditLib.ResetCallback]"),
                     (None, "[frame]")

@@ -704,7 +704,7 @@ for yy in range(floorX + 1):
         #    floorPos[yy].append(random()*5)  # + (1 - math.cos(angle)) * 50)
         floorPos[yy].append(random()*5)  # + (1 - math.cos(angle)) * 50)
         #print("floorPos", yy, ",", xx, "=", floorPos[yy][xx])
-floor = WyeUI._surf(floorPos, (10,10,1), (-(int(floorX * 10/2)),-(int(floorY*10/2)),-18))
+floor = Wye3dObjsLib._surf(floorPos, (10,10,1), (-(int(floorX * 10/2)),-(int(floorY*10/2)),-18))
 frame.vars.cleanUpObjs[0].append(floor._path)
 floor.setColor((.95,.84,.44,.1))
 
@@ -736,7 +736,7 @@ for xx in range(int(floorX * floorY * .08)):
     #print("ixX", ixX, " ixY", ixY, " posX", posX, " posY", posY, " posZ", posZ)
     ht  = 2+3*random()
     color = (.25+random()*.75,.25+random()*.75,.25+random()*.75, .5)
-    weed = WyeUI._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
+    weed = Wye3dObjsLib._box([.1, .1, ht], [posX, posY, -18 + posZ+ht*.5])
     frame.vars.cleanUpObjs[0].append(weed)
     frame.vars.weedColorInc[0].append([random() * .05, random() * .05, random() * .05])
     weed.setColor(color)
@@ -746,7 +746,7 @@ for xx in range(int(floorX * floorY * .08)):
     #print("Set tag", tag, " on weed", weed._path)
     
     # Create bubble, init color change amt and countdown to pop
-    bubble = WyeUI._ball(.2, [posX, posY, -18 + random() * 20])
+    bubble = Wye3dObjsLib._ball(.2, [posX, posY, -18 + random() * 20])
     frame.vars.cleanUpObjs[0].append(bubble._path)
     bubble.setColor(color)
     bubble.setTag(tag)

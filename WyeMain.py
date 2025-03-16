@@ -16,7 +16,7 @@ from WyeCore import WyeCore
 from Wye import Wye
 import sys, os
 
-libLoadList = ["WyeLib.py", "WyeUI.py"] # list of lib files to load on start.  libList on cmd line added to it
+libLoadList = ["WyeLib.py", "WyeUILib.py", "WyeUIUtilsLib.py", "Wye3dObjsLib.py"] # list of lib files to load on start.  libList on cmd line added to it
 startObjList = []           # list of lib objs from command line to load on start
 
 
@@ -85,6 +85,8 @@ for libFile in libLoadList:
         print("Failed to load class ", libName, " From file ", path)
         ex = sys.exception()
         traceback.print_exception(ex)
+
+print("Known libraries:", WyeCore.World.libList)
 
 # load starting objects
 WyeCore.World.startObjs.extend(startObjList)

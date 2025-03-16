@@ -20,7 +20,7 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = Wye3dObjsLib._3dText(text='Click',color=(1,1,1,1), pos=(0,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 (None, "frame.status = Wye.status.SUCCESS")
             ),
@@ -28,7 +28,7 @@ class TestLib:
                 ("Label", "Loop"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
                 #(None, "print('doitButton call _displayLib with frame', frame.tostring())"),
-                #(None, "WyeUI._displayLib(frame, (0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
+                #(None, "WyeUILib._displayLib(frame, (0,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
                 ("GoTo", "Loop"),
                 ("Label", "Done")
             ),
@@ -72,24 +72,24 @@ class TestLib:
 
         codeDescr = (
             #(None, "print('test, create param list ')"),
-            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
+            ("WyeUILib.Dialog", (None, "frame.vars.tstDlg3ID"), (None, "frame.vars.Title"),
              (None, "[(1,-1,-1),]"), (None, "[frame.eventData[1]]"),
              ("WyeCore.libs.WyeLib.setEqual", (None, "frame.vars.retList"),
 
-                 ("WyeUI.InputText", (None, "frame.vars.txt1ID"),
+                 ("WyeUILib.InputText", (None, "frame.vars.txt1ID"),
                   (None, "['TextLabel']"),
                   (None, "frame.vars.text1Val")
                   ),
-                 ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
+                 ("WyeUILib.InputText", (None, "frame.vars.txt2IO"),
                   (None, "['Text2Label']"),
                   (None, "frame.vars.text2Val")
                   ),
-                 ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
+                 ("WyeUILib.InputButton", (None, "frame.vars.BtnID"),
                   (None, "['Click Me counter']"),
                   (None, "[TestLib.BtnCallback]"),
                   (None, "[[frame.f1,frame.vars.clickCt]]")
                   ),
-                 ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
+                 ("WyeUILib.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")),
               )
              ),
             ("WyeCore.libs.WyeLib.setEqual",

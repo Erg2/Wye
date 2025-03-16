@@ -24,7 +24,7 @@ class TestLib:
 
         codeDescr = (
             (
-                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Click',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = Wye3dObjsLib._3dText(text='Click',color=(1,1,1,1), pos=(1,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 (None, "frame.status = Wye.status.SUCCESS")
@@ -33,7 +33,7 @@ class TestLib:
                 ("Label", "ClickLoop"),
                 #(None, "print('doitbutton stream1: waitclick. status=', Wye.status.tostring(frame.status))"),
                 ("WyeCore.libs.WyeLib.waitClick", (None, "frame.vars.doitId")),
-                (None, "WyeUI._displayLib(frame, (1,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
+                (None, "WyeUILib._displayLib(frame, (1,10,1), WyeCore.libs.TestLib, (.1,10,.8))"),
                 ("Label", "Dummy"),         # display pushed a dialog frame.  label creates a case
                 (None, "frame.SP.pop()"),   # when return from stack, pop display's pushed frame
                 ("GoTo", "ClickLoop"),
@@ -112,24 +112,24 @@ class TestLib:
 
         codeDescr = (
             #(None, "print('testDialog, startup - create param list ')"),
-            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
+            ("WyeUILib.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
              (None, "frame.vars.Title"),                        # title
              (None, "[(-3,8,1)]"),                                # position
              (None, "[None]"),                                  # parent
-             ("WyeUI.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
+             ("WyeUILib.InputText", (None, "frame.vars.txt1ID"),   # inputs (variable length)
               (None, "['TextLabel']"),
               (None, "frame.vars.text1Val")
               ),
-             ("WyeUI.InputText", (None, "frame.vars.txt2IO"),
+             ("WyeUILib.InputText", (None, "frame.vars.txt2IO"),
               (None, "['Text2Label']"),
               (None, "frame.vars.text2Val")
               ),
-             ("WyeUI.InputButton", (None, "frame.vars.BtnID"),
+             ("WyeUILib.InputButton", (None, "frame.vars.BtnID"),
               (None, "['Click Me counter']"),
               (None, "[TestLib.BtnCallback]"),
               (None, "[[frame.f1,frame.vars.clickCt]]")
               ),
-             ("WyeUI.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")
+             ("WyeUILib.InputLabel", (None, "frame.vars.lblID"), (None, "['Count -1']")
               ),
             ),
             ("WyeCore.libs.WyeLib.setEqual",
@@ -166,7 +166,7 @@ class TestLib:
 
         codeDescr = (
 
-                (None, "frame.vars.doitBtn[0] = WyeUI._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
+                (None, "frame.vars.doitBtn[0] = Wye3dObjsLib._3dText(text='Open Fish Angle Dialog',color=(1,1,1,1), pos=(-3,10,1), scale=(.2,.2,.2))"),
                 (None, "frame.vars.doitId[0] = frame.vars.doitBtn[0].getTag()"),
                 #(None, "print('doitbutton frame0: loaded button & id vars')"),
                 ("Label", "ClickLoop"),
@@ -206,19 +206,19 @@ class TestLib:
 
         codeDescr = (
             ("Label", "PopDialog"),
-            ("WyeUI.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
+            ("WyeUILib.Dialog", (None, "frame.vars.tstDlg3ID"),    # frame
              (None, "['Fish Angle Dialog']"),                        # title
              (None, "[(-3,8,1)]"),                                # position
              (None, "[None]"),                                  # parent
-             ("WyeUI.InputText", (None, "frame.vars.XAngleID"),   # inputs (variable length)
+             ("WyeUILib.InputText", (None, "frame.vars.XAngleID"),   # inputs (variable length)
               (None, "['XAngle']"),
               (None, "frame.vars.XAngle")
               ),
-             ("WyeUI.InputText", (None, "frame.vars.YAngleID"),
+             ("WyeUILib.InputText", (None, "frame.vars.YAngleID"),
               (None, "['YAngle']"),
               (None, "frame.vars.YAngle")
               ),
-             ("WyeUI.InputText", (None, "frame.vars.ZAngleID"),
+             ("WyeUILib.InputText", (None, "frame.vars.ZAngleID"),
               (None, "['ZAngle']"),
               (None, "frame.vars.ZAngle")
               ),
