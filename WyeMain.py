@@ -86,7 +86,7 @@ for libFile in libLoadList:
         ex = sys.exception()
         traceback.print_exception(ex)
 
-print("Known libraries:", WyeCore.World.libList)
+#print("Known libraries:", WyeCore.World.libList)
 
 # load starting objects
 WyeCore.World.startObjs.extend(startObjList)

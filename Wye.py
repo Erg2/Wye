@@ -22,7 +22,7 @@ class Wye:
 
     dragging = False
 
-    version = "0.6"
+    version = "0.7"
 
     startPos = (0, -10, 0)      # initial camera position
 
@@ -65,6 +65,8 @@ class Wye:
             if isinstance(oldElem, list) or isinstance(oldElem, tuple):
                 newLst.append(Wye.listCopy(oldElem))
             else:
+                if isinstance(oldElem, str) and len(oldElem) == 0:
+                    newElem = str(oldElem)  # prevent empty string being optimized away
                 newElem = oldElem
                 newLst.append(newElem)
         return newLst
@@ -661,7 +663,7 @@ class Wye:
                     if len(varDef) > 2:
                         #print("  vars attr ", varDef[0], "=", varDef[2])
                         if varDef[1] == Wye.dType.STRING and not varDef[2]:
-                            varVal = [""]   # prevent empty string from being optimized away
+                            varVal = str("")   # prevent empty string from being optimized away
                         else:
                             varVal = varDef[2]
                         # deep copy to give each frame its own data
@@ -670,7 +672,7 @@ class Wye:
                         if isinstance(varVal, tuple) or isinstance(varVal, list):
                             varVal = Wye.listCopy(varVal)
                         setattr(self.vars, varDef[0], [varVal])
-                    #    print("  set vars '", varDef[0], "' to", str(getattr(self.vars, varDef[0])))
+                        #print("  set vars."+varDef[0], "to", str(getattr(self.vars, varDef[0])))
                     #else:
                     #    if len(varDef) > 0:
                     #        print("codeFrame ERROR: verb", verb.__name__, " var", varDef[1], " missing no type or value")

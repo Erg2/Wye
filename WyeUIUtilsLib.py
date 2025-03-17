@@ -212,13 +212,13 @@ class WyeUIUtilsLib(Wye.staticObj):
         return frm
 
     # note: dropdownListRef is a list of strings
-    def doInputDropdown(dlgFrm, label, dropdownListRef, selectionIxList, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputDropdown(dlgFrm, label, dropdownListRef, selectionIxRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, showText=True):
         frm = WyeUILib.InputDropdown.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
         frm.params.list = dropdownListRef
-        frm.params.selectionIx = selectionIxList
+        frm.params.selectionIx = selectionIxRef
         frm.params.callback = [callback]
         frm.params.optData = [optData]
         frm.params.label = [label]
