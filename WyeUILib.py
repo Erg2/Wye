@@ -45,6 +45,8 @@ class WyeUILib(Wye.staticObj):
     def build():
         WyeCore.Utils.buildLib(WyeUILib)
 
+    # instantiated class to manage cut-paste list
+    # todo - rethink this as std Wye object
     class CutPasteManager:
         def __init__(self):
             self.cutList = []   # cut data goes here
@@ -57,22 +59,24 @@ class WyeUILib(Wye.staticObj):
             if len(self.cutList) >= self.maxLen:
                 self.cutList.pop(0)
             self.cutList.append(rec)
-            self.setSelected(rec)
 
-            print("CutPasteManager: added ", rec, "\n  to", self.cutList)
-
+            #print("CutPasteManager: added", rec, "\n  to", self.cutList)
             self.show()
+            if len(self.cutList) > 1:
+                self.setSelected(rec)
+            else:
+                self.selectedRow = rec
 
         def setSelected(self, row):
             if row in self.cutList:
+                print("CutPasteManager set selected row", row)
                 self.selectedRow = row
 
                 if self.displayObj:
-                    # todo - clean this up
-                    for frm in self.displayObj.vars.dlgFrm[0].params.inputs[0]:
-                        frm.verb.setBackgroundColor(frm, Wye.color.TRANSPARENT)
-                    ix = self.displayObj.vars.rows[0].index(row)
-                    self.displayObj.vars.dlgFrm[0].params.inputs[0][ix].verb.setBackgroundColor(frm, Wye.color.SELECTED_COLOR)
+                    ix = self.cutList.index(row)
+                    #print("CutPasteManager setSelected: highlight row", ix, " out of ", len(self.cutList), " cutList rows")
+                    #print("   display rows:", len(self.displayObj.vars.dlgFrm[0].params.inputs[0]))
+                    self.displayObj.verb.highlightRow(self.displayObj, ix)
 
             else:
                 print("CutPasteManager setSelected ERROR: selected row not in cutList")
@@ -83,13 +87,16 @@ class WyeUILib(Wye.staticObj):
 
         def show(self):
             if self.displayObj:
-                print("CutPasteManager dialog already showing, bring to front and update")
-                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0, 10, 0)
+                #print("CutPasteManager dialog already showing, bring to front and update")
+                self.displayObj.verb.redisplay(self.displayObj)
+                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, (2, 7, 0))
                 self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
-                self.displayObj.redisplay(self.displayObj)
             else:
-                print("CutPasteManager: open dialog")
+                #print("CutPasteManager: open dialog")
                 self.displayObj = WyeCore.World.startActiveObject(WyeUILib.CutPasteManager.CutPasteDisplay)
+                # todo - rethink this when cvt cut/paste to Wye obj
+                # Need object graphics to exist 'cause need to set highlight
+                self.displayObj.verb.run(self.displayObj)
 
         class CutPasteDisplay:
             mode = Wye.mode.MULTI_CYCLE
@@ -97,31 +104,32 @@ class WyeUILib(Wye.staticObj):
             autoStart = False
             paramDescr = ()
             varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
-                        ("rows", Wye.dType.OBJECT_LIST, None)  # list of refreshable objects
+                        ("rows", Wye.dType.OBJECT_LIST, None),  # list of refreshable objects
+                        ("currRowIx", Wye.dType.INTEGER, 0),
                         )
 
             # global list of frames being edited
             activeFrames = {}
 
             def start(stack):
-                print("CutPasteDisplay: Start")
+                #print("CutPasteDisplay: Start")
                 f = Wye.codeFrame(WyeUILib.CutPasteManager.CutPasteDisplay, stack)  # not stopped by breakAll or debugger debugger
                 f.systemObject = True
                 f.vars.rows[0] = []
                 return f
 
             def run(frame):
-                print("CutPasteDisplay: run")
+                #print("CutPasteDisplay: run")
                 match (frame.PC):
                     case 0:
-                        print("CutPasteDiaplay: run case 0:")
+                        #print("CutPasteDiaplay: run case 0:")
                         # position in front of other dialogs
                         point = NodePath("point")
                         point.reparentTo(render)
                         point.setPos(base.camera, (2, 7, 0))
                         pos = point.getPos()
                         point.removeNode()
-                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Cut List", position=pos)
+                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Cut List", position=pos, formatLst=["NO_CANCEL"])
                         WyeUILib.CutPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
 
                         frame.vars.dlgFrm[0] = dlgFrm
@@ -131,31 +139,60 @@ class WyeUILib(Wye.staticObj):
 
                     # done, remove self from everywhere
                     case 1:
-                        print("CutPasteDiaplay: run case 1: stop self")
+                        #print("CutPasteDiaplay: run case 1: stop self")
                         dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                         frame.status = Wye.status.SUCCESS  # done
                         WyeCore.World.stopActiveObject(frame)
-                        WyeCore.World.cutPastManager.displayObj = None
+                        WyeCore.World.cutPasteManager.displayObj = None
+
+            def highlightRow(frame, ix):
+                #print("CutPastDisplay highlightRow: old row", frame.vars.currRowIx[0])
+
+                if ix != frame.vars.currRowIx[0]:
+                    print("CutPastDisplay highlightRow: unhighlight", frame.vars.currRowIx[0])
+                    oldRowFrm = frame.vars.dlgFrm[0].params.inputs[0][frame.vars.currRowIx[0]][0]
+                    oldRowFrm.verb.setBackgroundColor(oldRowFrm, Wye.color.TRANSPARENT)
+                print("CutPastDisplay highlightRow: highlight", ix)
+                if ix >=  0 and ix < len(frame.vars.dlgFrm[0].params.inputs[0]):
+                    newRowFrm = frame.vars.dlgFrm[0].params.inputs[0][ix][0]
+                    #print("  row", newRowFrm.params.label[0])
+                    newRowFrm.verb.setBackgroundColor(newRowFrm, Wye.color.SELECTED_BG_COLOR)
+                    frame.vars.currRowIx[0] = ix
+                else:
+                    print("CutPasteDisplay highlightRow", ix," out of range 0.."+str(len(frame.vars.dlgFrm[0].params.inputs[0])))
 
             def displayRows(frame, dlgFrm):
-                for row in WyeCore.World.cutPastManager.cutList:
+                #print("CutPasteDisplay displayRows: display", len(WyeCore.World.cutPasteManager.cutList), " rows")
+                ix = 0
+                for row in WyeCore.World.cutPasteManager.cutList:
                     # todo - pretty print text
-                    btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, str(row),
+                    if ix == frame.vars.currRowIx[0]:
+                        btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, str(row),
+                                                                       WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
+                                                                       [row], backgroundColor=Wye.color.SELECTED_BG_COLOR)
+                        print("CutPastDisplay displayRows: highlight", ix)
+                    else:
+                        btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, str(row),
                                                                    WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
-                                                                   [row])
+                                                                   [row], backgroundColor=Wye.color.TRANSPARENT)
                     frame.vars.rows[0].append(btn)
+                    ix += 1
 
             # cut/paste list changed, update display
             def redisplay(frame):
-                # remove current rows
                 dlgFrm = frame.vars.dlgFrm[0]
+
+                # remove current rows
+                #print("CutPasteDisplay redisplay: remove", len(frame.vars.rows[0]), " rows")
                 for frmRef in frame.vars.rows[0]:
                     inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], frmRef)
+                    #print(" remove row", inpIx)
                     oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                     if oldFrm in dlgFrm.vars.clickedBtns[0]:
                         dlgFrm.vars.clickedBtns[0].remove(oldFrm)
                     #print(" remove", oldFrm.verb.__name__, " ", oldFrm.params.label[0])
                     oldFrm.verb.close(oldFrm)   # remove graphic content
+                frame.vars.rows[0].clear()
 
                 # make new rows
                 WyeUILib.CutPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
@@ -182,12 +219,12 @@ class WyeUILib(Wye.staticObj):
 
                 def run(frame):
                     data = frame.eventData
-                    print("CutPasteDisplay RowCallback: data=", data)
+                    #print("CutPasteDisplay RowCallback: data=", data)
                     row = data[1][0]
                     #parentFrm = data[1][1]
                     #editFrm = data[1][2]
 
-                    WyeCore.World.cutPastManager.setSelected(row)
+                    WyeCore.World.cutPasteManager.setSelected(row)
 
     # note: this is an instantiated class
     # This does more than camera control, it also triggers debugger and editor
@@ -1744,7 +1781,7 @@ class WyeUILib(Wye.staticObj):
             # draw user-supplied label and text inputs
             newX = pos[0]
             prevZ = pos[2]
-            #print("Dialog", frame.params.title[0]," redisplay:")
+            #print("Dialog", frame.params.title[0]," redisplay: start pos", pos)
             for ii in range(nInputs):
                 inFrm = frame.params.inputs[0][ii][0]
                 #print("  Dialog input", ii, " frame", inFrm.verb.__name__, inFrm.params.label if hasattr(inFrm.params, "label") else "<no label>")
@@ -1782,13 +1819,25 @@ class WyeUILib(Wye.staticObj):
                     newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0]
                 else:
                     print("Dialog redisplay: Error. No redisplay function on input verb", inFrm.verb.__name__)
+                #print("pos", pos)
 
             # update Ok/Cancel positions
             pos[0] = 0
             pos[1] -= .1
-            frame.vars.dlgWidgets[0][-2].setPos(pos)        # Ok
-            pos[0] += 2.5  # shove Cancel to the right of OK
-            frame.vars.dlgWidgets[0][-1].setPos(pos)
+            #print("ok pos", pos)
+            # if have cancel button, then ok (if any) will be 2nd from end
+            if (frame.params.format[0] and "NO_CANCEL" in frame.params.format[0]):
+                okIx = -1
+            else:
+                okIx = -2
+            # if have ok button, position it
+            if not (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
+                #print("Dialog redisplay: okIx", okIx, " put", frame.vars.dlgWidgets[0][okIx].dbgTxt, " at", pos)
+                frame.vars.dlgWidgets[0][okIx].setPos(pos)        # Ok
+                pos[0] += 2.5  # shove Cancel to the right of OK
+                haveOk = True
+            if not (haveOk and frame.params.format[0] and "NO_CANCEL" in frame.params.format[0]):
+                frame.vars.dlgWidgets[0][-1].setPos(pos)
 
             # update background
             frame.vars.bgndGObj[0].removeNode()
@@ -3538,9 +3587,9 @@ class WyeUILib(Wye.staticObj):
         modOpLst = [
             "Move line up",
             "Add line before",
-            "todo Copy line",
-            "todo Cut line",
-            "todo Paste line",
+            "Copy line",
+            "Cut line",
+            "Paste line before",
             "Delete Line",
             "Add line after",
             "Move line down",
@@ -3695,7 +3744,7 @@ class WyeUILib(Wye.staticObj):
 
                         for param in frame.vars.newParamDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-"+str(attrIx), [WyeUILib.EditVerb.modOpLst], [0],
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0],
                                                               WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                             label = "  '"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])
                             if len(param) > 3:
@@ -4363,25 +4412,56 @@ class WyeUILib(Wye.staticObj):
 
                     # copy line
                     case 2:
-                        #WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        #pass
-
                         # copy param descr
                         ix = editVerbFrm.vars.newParamDescr[0].index(param)
                         copyRec = ("paramDescr", (Wye.listCopy(editVerbFrm.vars.newParamDescr[0][ix])))
                         print("EditParamLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPastManager.add(copyRec)
+                        WyeCore.World.cutPasteManager.add(copyRec)
 
 
                     # cut Line
                     case 3:
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        # copy param descr
+                        ix = editVerbFrm.vars.newParamDescr[0].index(param)
+                        copyRec = ("paramDescr", (Wye.listCopy(editVerbFrm.vars.newParamDescr[0][ix])))
+                        print("EditParamLineCallback cut: copyRec", copyRec)
+                        WyeCore.World.cutPasteManager.add(copyRec)
 
-                    # paste line
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        print("EditParamLineCallback cut: dlg row", rIx)
+                        if rIx < 0:
+                            print("EditParamLineCallback cut: ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.params.label[0], " not in input list")
+                            return
+                        
+                        # remove param descr
+                        editVerbFrm.vars.newParamDescr[0].remove(param)
+                        # remove dialog row (2 inputs
+                        for ii in range(2):
+                            frm = parentFrm.params.inputs[0].pop(rIx)[0]
+                            print("EditParamLineCallback cut: remove", frm.params.label[0])
+                            frm.verb.close(frm)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
+
+                    # paste line before
                     case 4:
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        print("paste param before: cutData", cutData)
+                        if cutData[0] != "paramDescr":
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'paramDescr' row from Cut List",
+                                                                     Wye.color.WARNING_COLOR)
+                            return
+                        data = cutData[1]
+                        label = "  '" + data[0] + "' " + Wye.dType.tostring(data[1]) + " call by:" + Wye.access.tostring(data[2])
+                        editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, param,
+                                                          editVerbFrm.vars.newParamDescr[0], label,
+                                                          WyeUILib.EditVerb.EditParamLineCallback,
+                                                          WyeUILib.EditVerb.EditParamCallback,
+                                                          data, insertBefore=True)
 
                     # delete line
                     case 5:
@@ -4538,7 +4618,7 @@ class WyeUILib(Wye.staticObj):
                         # print("EditVarLineCallback: Add up")
 
                         label = "  '"+newData[0] + "' "+Wye.dType.tostring(newData[1]) + " = "+str(newData[2])
-                        editVerbFrm.verb.insertVarOrVar(parentFrm, editVerbFrm, editLnFrm, var,
+                        editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, var,
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUILib.EditVerb.EditVarLineCallback,
                                                           WyeUILib.EditVerb.EditVarCallback,
@@ -4553,20 +4633,58 @@ class WyeUILib(Wye.staticObj):
                         ix = editVerbFrm.vars.newVarDescr[0].index(var)
                         copyRec = ("varDescr", (Wye.listCopy(editVerbFrm.vars.newVarDescr[0][ix])))
                         print("EditVarLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPastManager.add(copyRec)
+                        WyeCore.World.cutPasteManager.add(copyRec)
 
 
                 # cut Line
                     case 3:
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        #WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        #pass
+
+                        # copy var descr
+                        ix = editVerbFrm.vars.newVarDescr[0].index(var)
+                        copyRec = ("varDescr", (Wye.listCopy(editVerbFrm.vars.newVarDescr[0][ix])))
+                        print("EditVarLineCallback copy: copyRec", copyRec)
+                        WyeCore.World.cutPasteManager.add(copyRec)
+
+                        # find row in dlg
+                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        if rIx < 0:
+                            print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
+                                  editLnFrm.params.label[0], " not in input list")
+                            return
+
+                        # remove var descr
+                        editVerbFrm.vars.newVarDescr[0].remove(var)
+                        # remove dialog row (2 inputs
+                        for ii in range(2):
+                            frm = parentFrm.params.inputs[0].pop(rIx)[0]
+                            frm.verb.close(frm)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None  # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)  # redisplay the dialog
 
                     # paste line
                     case 4:
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        #WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
+                        #pass
 
-                    # delete line
+                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        print("paste param before: cutData", cutData)
+                        if cutData[0] != "varDescr":
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'varDescr' row from Cut List",
+                                                                     Wye.color.WARNING_COLOR)
+
+                        data = cutData[1]
+                        label = "  '"+data[0] + "' "+Wye.dType.tostring(data[1]) + " = "+str(data[2])
+                        editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, var,
+                                                          editVerbFrm.vars.newVarDescr[0], label,
+                                                          WyeUILib.EditVerb.EditVarLineCallback,
+                                                          WyeUILib.EditVerb.EditVarCallback,
+                                                          data, insertBefore=True)
+
+                # delete line
                     case 5:
                         # print("EditVarLineCallback: Delete")
                         # find row in dlg
@@ -4768,7 +4886,11 @@ class WyeUILib(Wye.staticObj):
 
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
-                            ix = parentList.index(tuple)
+                            try:
+                                ix = parentList.index(tuple)
+                            except:
+                                print("EditCodeLineCallback ERROR: failed to find", tuple, "\m  in", parentList)
+                                return
                             # print("found tuple", tuple, " at", ix, " in", parentList)
                         else:
                             print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
@@ -4776,19 +4898,108 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         copyRec = ("codeDescr", (Wye.listCopy(parentList[ix])))
-                        print("EditCodeLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPastManager.add(copyRec)
+                        #print("EditCodeLineCallback copy: copyRec", copyRec)
+                        WyeCore.World.cutPasteManager.add(copyRec)
 
 
                     # cut Line
                     case 3:
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        # copy line
+                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
+                        if parentList:
+                            try:
+                                ix = parentList.index(tuple)
+                            except:
+                                print("EditCodeLineCallback ERROR: failed to find", tuple, "\m  in", parentList)
+                                return
+                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                        else:
+                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                                  editVerbFrm.vars.newCodeDescr[0])
+                            return
+
+                        copyRec = ("codeDescr", (Wye.listCopy(parentList[ix])))
+                        # print("EditCodeLineCallback copy: copyRec", copyRec)
+                        WyeCore.World.cutPasteManager.add(copyRec)
+
+                        # get location of this frame in dialog input list
+                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
+                        if parentList:
+                            ix = parentList.index(tuple)
+                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                        else:
+                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                                  editVerbFrm.vars.newCodeDescr[0])
+
+                        # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
+                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
+
+                        # delete as many rows as there are lists
+                        # find index to row to delete
+                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        # Debug: if the unthinkable happens, give us a hint
+                        if ix < 0:
+                            print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
+
+                        count *= 2      # del both editLn and line inputs for each row
+                        parent = None
+                        for ii in range(count):
+                            frm = parentFrm.params.inputs[0].pop(ix)[0]
+                            frm.verb.close(frm)
+
+                        # redisplay parent dialog
+                        parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
+                        parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
                     # paste line
                     case 4:
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
-                        pass
+                        # get line from cutList
+                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        print("paste code before: cutData", cutData)
+                        if cutData[0] != "codeDescr":
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'codeDescr' row from Cut List",
+                                                                     Wye.color.WARNING_COLOR)
+                            return
+                        data = cutData[1]
+
+                        # insert code before this one in verb's codeDescr
+                        # print("EditCodeLineCallback codeFrm", codeFrm.verb.__name__)
+                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
+                        if parentList:
+                            ix = parentList.index(tuple)
+                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                        else:
+                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
+                                  editVerbFrm.vars.newCodeDescr[0])
+                            return
+
+                        parentList.insert(ix, data)
+
+                        # create new dialog row for this code line
+
+                        # find index to row to insert before
+                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        # Debug: if the unthinkable happens, give us a hint
+                        if ix < 0:
+                            print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
+
+                            # build dialog rows
+                        rowLst = []  # put dialog row(s) here
+                        WyeUILib.EditVerb.bldEditCodeLine(data, level, editVerbFrm, parentFrm, rowLst)
+
+                        # insert new dialog rows into dialog
+                        # display new dialog rows (don't sweat the position, they will be correctly
+                        # placed by dialog redisplay, below)
+                        pos = [0, 0, 0]
+                        for rowFrmLst in rowLst:
+                            parentFrm.params.inputs[0].insert(ix, rowFrmLst)
+                            ix += 1
+                            rowFrmLst[0].verb.display(rowFrmLst[0], parentFrm, pos)
+
+                            # update position of all fields
+                        parentFrm.verb.redisplay(parentFrm)
+
+
 
                     # delete line
                     case 5:

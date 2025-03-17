@@ -253,7 +253,7 @@ class WyeCore(Wye.staticObj):
         pasteMenu = None            # no pasteMenu running
         objEditor = None            # editor of Wye objects
         mainMenu = None             # no main menu currently being displayed
-        cutPastManager = None       # cut/paste manager goes here
+        cutPasteManager = None       # cut/paste manager goes here
         mouseCallbacks = []         # any function wanting mouse events
                                     #   Control seems to jam mouse events,
                                     #   (neither mouse nor control-mouse gets called)
@@ -407,7 +407,7 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.objEditor = WyeCore.libs.WyeUILib.ObjEditCtl()
 
                 # set up cut/paste manager
-                WyeCore.World.cutPastManager = WyeCore.libs.WyeUILib.CutPasteManager()
+                WyeCore.World.cutPasteManager = WyeCore.libs.WyeUILib.CutPasteManager()
 
                 # WyeCore.picker.makePickable(_3dText)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
@@ -1037,22 +1037,27 @@ class WyeCore(Wye.staticObj):
 
             return result.normalized()
 
-        # find the enclosing list of a given code tuple in verb's codeDescr
-        def findTupleParent(parent, tuple):
-            #print("findTupleParent: is", tuple, " in", parent)
-            if isinstance(parent, str):
-                #print("tuple not found")
+        # recursively search for tuple in hierarchicaly list
+        def findTupleParent(parent, tuple, level=0):
+            #indent = "".join(["    " for l in range(level)])
+            #print(indent + "findTupleParent: is", tuple, " in", parent)
+            if parent is None or isinstance(parent, str):
+                #print(indent+"tuple not found")
                 return None
             if tuple in parent:
                 return parent
             else:
                 if len(parent) > 0:
                     for childTuple in parent:
-                        if WyeCore.Utils.findTupleParent(childTuple, tuple):
-                            #print(" Found tuple ", tuple, " parent", childTuple)
-                            return childTuple
+                        #print(indent+"try child", childTuple)
+                        foundParent = WyeCore.Utils.findTupleParent(childTuple, tuple, level+1)
+                        if foundParent:
+                            #print(" Found tuple ", tuple, " parent", foundParent)
+                            return foundParent
+                #else:
+                #    print(indent+"zero len parent", parent)
             # if get here, failed to find tuple
-            #print("tuple not found")
+            #print(indent+"tuple not found")
             return None
 
         # convert hierarchical tree of lists to nicely formatted tuple string
@@ -1710,7 +1715,7 @@ class WyeCore(Wye.staticObj):
             vrbStr += "cdStr, parStr = "+name + ".build()\n"
 
             # DEBUG - print out verb's runtime code with line numbers
-            if listCode:
+            if listCode or WyeCore.debugListCode:
                 #if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
                 if verbSettings['mode'] == Wye.mode.PARALLEL:
                     vrbStr += "print('createVerb: parallel runtime text')\n"
@@ -1731,27 +1736,51 @@ class WyeCore(Wye.staticObj):
             # So the verb's string we're compiling now will need to compile that returned string into code
             # that is put into the verb's lib runtime class. (yes, this code when compiled will run the new verb
             # to generate code that then needs to be compiled...)
-            vrbStr += '''
+
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += '''
+
+# compile verb runtime to tmp class
+parStr = "class tmp:\\n" + parStr + "\\n"
+'''
+            else:
+                vrbStr += '''
 
 # compile verb runtime
 cdStr = "class tmp:\\n" + cdStr + "\\n"
 '''
-            # put verb runtime code function in lib runtime code class
-            if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
-                vrbStr += "cdStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + name + "_run_rt\", tmp." + name + "_run_rt)\\n'\n"
-
-            # vrbStr += "print('parStr', parStr)\n"
-            # vrbStr += "print('createVerb: Compile'," + name + ")\n"
+            # put in code to copy verb runtime code function(s) from tmp class to lib runtime class
+            if not doTest:
+                if verbSettings['mode'] == Wye.mode.PARALLEL:
+                    startName = name + "_start_rt"
+                    #vrbStr += "parStr += 'print(\"put "+startName+" on "+ vrbLib.__name__ + "_rt\")\\n'\n"
+                    vrbStr += "parStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + startName+"\", tmp."+ startName+ ")\\n'\n"
+                    ix = 0
+                    for stream in codeDescr:
+                        streamName = name + "_" + stream[0] + "_" + str(ix)+"_run_rt"
+                        ix += 1
+                        #vrbStr += "parStr += 'print(\"put " + streamName + " on " + vrbLib.__name__ + "_rt\")\\n'\n"
+                        vrbStr += "parStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + streamName +"\", tmp."+streamName +")\\n'\n"
+                else:
+                    vrbStr += "cdStr += 'setattr(WyeCore.libs." + vrbLib.__name__ + "." + vrbLib.__name__ + "_rt, \"" + name + "_run_rt\", tmp." + name + "_run_rt)\\n'\n"
 
             # compile runtime code function
-            vrbStr += '''
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += '''
+try:
+    # compile the verb's runtime code
+    code = compile(parStr, "<string>", "exec")
+    #print("createVerb: Compiled verb runtime successfully")
+'''
+            else:
+                vrbStr += '''
 try:
     # compile the verb's runtime code
     code = compile(cdStr, "<string>", "exec")
     #print("createVerb: Compiled verb runtime successfully")
-    
-    libDict = {
 '''
+            vrbStr += "    libDict = {\n"
+
             vrbStr += "        '" + vrbLib.__name__ + "':" + vrbLib.__name__ + ",\n"
             vrbStr += '''
         "Wye": Wye,
@@ -1771,22 +1800,49 @@ try:
             #vrbStr += "        print('Created verb "+vrbLib.__name__ + "." + name + "')\n"
             vrbStr += '''
     except Exception as e:
+'''
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += '''
+        print('parStr')
+        lnIx = 1
+        for ln in parStr.split('\\n'):
+            print('%2d ' % lnIx, ln)
+            lnIx += 1
+        print('')                
+'''
+            else:
+                vrbStr += '''
         print("exec verb runtime failed\\n", str(e))
         print('cdStr')
         lnIx = 1
         for ln in cdStr.split('\\n'):
             print('%2d ' % lnIx, ln)
             lnIx += 1
-        print('')
-
+        print('')                
+'''
+            vrbStr += '''
 except Exception as e:
     print("compile verb runtime failed\\n", str(e))
+'''
+
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += '''
+    print('parStr')
+    lnIx = 1
+    for ln in parStr.split('\\n'):
+        print('%2d ' % lnIx, ln)
+        lnIx += 1
+    print('')                
+'''
+            else:
+                vrbStr += '''
+    print("exec verb runtime failed\\n", str(e))
     print('cdStr')
     lnIx = 1
     for ln in cdStr.split('\\n'):
         print('%2d ' % lnIx, ln)
         lnIx += 1
-    print('')
+    print('')                
 '''
             if not doTest:
                 # if verb has autostart, do it, unless blocked by caller
@@ -1797,7 +1853,7 @@ except Exception as e:
                     vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
             # DEBUG print verb code with line numbers
-            if listCode:
+            if listCode or WyeCore.debugListCode:
                 print("createVerb: verb text:")
                 lnIx = 1
                 for ln in vrbStr.split('\n'):

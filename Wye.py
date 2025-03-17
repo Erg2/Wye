@@ -603,6 +603,7 @@ class Wye:
     class color:
         TEXT_COLOR = (.8, .8, .8, 1)
         SELECTED_COLOR = (0, 1, 0, 1)
+        SELECTED_BG_COLOR = (.25, .75, .25, 1)
         LABEL_COLOR = (1, 1, .5, 1)
         BACKGROUND_COLOR = (.4, .4, .4, .1)
         BACKGROUND_COLOR_SEL = (.3, .3, .3, .1)
