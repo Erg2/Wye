@@ -170,7 +170,7 @@ class WyeUILib(Wye.staticObj):
                         btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, str(row),
                                                                        WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
                                                                        [row], backgroundColor=Wye.color.SELECTED_BG_COLOR)
-                        print("CutPastDisplay displayRows: highlight", ix)
+                        #print("CutPastDisplay displayRows: highlight", ix)
                     else:
                         btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, str(row),
                                                                    WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
@@ -3584,16 +3584,51 @@ class WyeUILib(Wye.staticObj):
         # global list of frames being edited
         activeVerbs = {}
 
-        modOpLst = [
-            "Move line up",
-            "Add line before",
-            "Copy line",
-            "Cut line",
-            "Paste line before",
-            "Delete Line",
-            "Add line after",
-            "Move line down",
+
+        modParamOpLst = [
+            "Move Parameter up",
+            "Add Parameter before",
+            "Copy Parameter",
+            "Cut Parameter",
+            "Paste Parameter before",
+            "Delete Parameter",
+            "Add Parameter after",
+            "Move Parameter down",
         ]
+
+        modVarOpLst = [
+            "Move Variable up",
+            "Add Variable before",
+            "Copy Variable",
+            "Cut Variable",
+            "Paste Variable before",
+            "Delete Variable",
+            "Add Variable after",
+            "Move Variable down",
+        ]
+
+        modCodeOpLst = [
+            "Move Code up",
+            "Add Code before",
+            "Copy Code",
+            "Cut Code",
+            "Paste Code before",
+            "Delete Code",
+            "Add Code after",
+            "Move Code down",
+        ]
+
+        modStreamOpLst = [
+            "Move stream up",
+            "Add stream before",
+            "Copy stream",
+            "Cut stream",
+            "Paste stream before",
+            "Delete stream",
+            "Add stream after",
+            "Move stream down",
+        ]
+
 
         opList = [
             "Verb",
@@ -3744,7 +3779,7 @@ class WyeUILib(Wye.staticObj):
 
                         for param in frame.vars.newParamDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0],
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modParamOpLst], [0],
                                                               WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                             label = "  '"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])
                             if len(param) > 3:
@@ -3778,7 +3813,7 @@ class WyeUILib(Wye.staticObj):
 
                         for var in frame.vars.newVarDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0],
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modVarOpLst], [0],
                                                               WyeUILib.EditVerb.EditVarLineCallback, showText=False)
 
                             label = "  '"+var[0] + "' "+Wye.dType.tostring(var[1]) + " = "+str(var[2])
@@ -3919,7 +3954,7 @@ class WyeUILib(Wye.staticObj):
             editLnFrm.params.parent = [None]
             editLnFrm.params.showText = [False]
             editLnFrm.params.label = ["  +/-"]
-            editLnFrm.params.list = [WyeUILib.EditVerb.modOpLst]
+            editLnFrm.params.list = [WyeUILib.EditVerb.modCodeOpLst]
             editLnFrm.params.callback = [WyeUILib.EditVerb.EditCodeLineCallback]  # button callback
             editLnFrm.params.selectionIx = [0]
             editLnFrm.verb.run(editLnFrm)
@@ -4003,7 +4038,7 @@ class WyeUILib(Wye.staticObj):
             #print("bldEditCodeLine create code button", btnFrm.params.label)
             btnFrm.verb.run(btnFrm)
 
-        def insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, currDesc, descrList, label, prefixCallback, rowCallback, newData, insertBefore):
+        def insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, currDesc, descrList, label, prefixCallback, rowCallback, newData, insertBefore, isParam=True):
             # print("insertParamOrVar: Add up")
 
             # find index to this row's param in EditVerb's newParamDescr
@@ -4014,7 +4049,7 @@ class WyeUILib(Wye.staticObj):
 
             # create new dialog row for this param
 
-            # find index to dialog row to insert before
+            # find index to dialog row to insert before/after
             rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
             # Debug: if the unthinkable happens, give us a hint
             if rIx < 0:
@@ -4027,7 +4062,10 @@ class WyeUILib(Wye.staticObj):
             newEdLnFrm.params.frame = [None]
             newEdLnFrm.params.parent = [None]
             newEdLnFrm.params.label = ["  +/-"]
-            newEdLnFrm.params.list = [WyeUILib.EditVerb.modOpLst]
+            if isParam:
+                newEdLnFrm.params.list = [WyeUILib.EditVerb.modParamOpLst]
+            else:
+                newEdLnFrm.params.list = [WyeUILib.EditVerb.modVarOpLst]
             newEdLnFrm.params.showText = [False]
             newEdLnFrm.params.callback = [prefixCallback]
             # callback data below, after create param button
@@ -4621,7 +4659,7 @@ class WyeUILib(Wye.staticObj):
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUILib.EditVerb.EditVarLineCallback,
                                                           WyeUILib.EditVerb.EditVarCallback,
-                                                          newData, insertBefore=True)
+                                                          newData, insertBefore=True, isParam=False)
 
                     # copy line
                     case 2:
@@ -4681,7 +4719,7 @@ class WyeUILib(Wye.staticObj):
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUILib.EditVerb.EditVarLineCallback,
                                                           WyeUILib.EditVerb.EditVarCallback,
-                                                          data, insertBefore=True)
+                                                          data, insertBefore=True, isParam=False)
 
                 # delete line
                     case 5:
@@ -4712,7 +4750,7 @@ class WyeUILib(Wye.staticObj):
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUILib.EditVerb.EditVarLineCallback,
                                                           WyeUILib.EditVerb.EditVarCallback,
-                                                          newData, insertBefore=False)
+                                                          newData, insertBefore=False, isParam=False)
 
                     # move line down
                     case 7:
@@ -5064,7 +5102,7 @@ class WyeUILib(Wye.staticObj):
 
                         # create new dialog row for this code line
 
-                        # find index to row to insert before
+                        # find index to row to insert after
                         ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
@@ -6352,7 +6390,7 @@ class WyeUILib(Wye.staticObj):
                     # else nothing to do here
                     else:
                         # todo fix this so it will work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
+                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modParamOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                         lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no parameters>", layout=Wye.layout.ADD_RIGHT)
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 
@@ -6376,7 +6414,7 @@ class WyeUILib(Wye.staticObj):
                     # else nothing to do here
                     else:
                         # todo - make this work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
+                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modVarOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                         lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no variables>")
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 

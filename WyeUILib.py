@@ -62,6 +62,7 @@ class WyeUILib(Wye.staticObj):
 
             #print("CutPasteManager: added", rec, "\n  to", self.cutList)
             self.show()
+            # There are sequencing issues setting background of row first time - do this way, or do some debugging...
             if len(self.cutList) > 1:
                 self.setSelected(rec)
             else:
@@ -129,7 +130,7 @@ class WyeUILib(Wye.staticObj):
                         point.setPos(base.camera, (2, 7, 0))
                         pos = point.getPos()
                         point.removeNode()
-                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Cut List", position=pos, formatLst=["NO_CANCEL"])
+                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Copy/Paste List", position=pos, formatLst=["NO_CANCEL"])
                         WyeUILib.CutPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
 
                         frame.vars.dlgFrm[0] = dlgFrm
@@ -167,12 +168,12 @@ class WyeUILib(Wye.staticObj):
                 for row in WyeCore.World.cutPasteManager.cutList:
                     # todo - pretty print text
                     if ix == frame.vars.currRowIx[0]:
-                        btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, str(row),
+                        btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, row[0]+": "+str(row[1]),
                                                                        WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
                                                                        [row], backgroundColor=Wye.color.SELECTED_BG_COLOR)
-                        print("CutPastDisplay displayRows: highlight", ix)
+                        #print("CutPastDisplay displayRows: highlight", ix)
                     else:
-                        btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, str(row),
+                        btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, row[0]+": "+str(row[1]),
                                                                    WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
                                                                    [row], backgroundColor=Wye.color.TRANSPARENT)
                     frame.vars.rows[0].append(btn)
@@ -2442,25 +2443,17 @@ class WyeUILib(Wye.staticObj):
                     sndChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  3D Sound On", [Wye.soundOn], WyeUILib.MainMenuDialog.SoundCheckCallback)
                     sndChkFrm.params.optData = [sndChkFrm]
 
-                    codeChkFrm = WyeUILib.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([codeChkFrm])
-                    codeChkFrm.params.frame = [None]
-                    codeChkFrm.params.parent = [None]
-                    codeChkFrm.params.value = [WyeCore.debugListCode]
-                    codeChkFrm.params.label = ["  List Compiled Code"]
-                    codeChkFrm.params.callback = [WyeUILib.MainMenuDialog.ListCodeCallback]  # button callback
+                    codeChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  List Compiled Code", [WyeCore.debugListCode],
+                                        WyeUILib.MainMenuDialog.ListCodeCallback)
                     codeChkFrm.params.optData = [codeChkFrm]
-                    codeChkFrm.verb.run(codeChkFrm)
 
-                    verChkFrm = WyeUILib.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([verChkFrm])
-                    verChkFrm.params.frame = [None]
-                    verChkFrm.params.parent = [None]
-                    verChkFrm.params.value = [True]
-                    verChkFrm.params.label = ["  Show Wye Version"]
-                    verChkFrm.params.callback = [WyeUILib.MainMenuDialog.VerCheckCallback]  # button callback
+                    verChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Show Wye Version", [True],
+                                        WyeUILib.MainMenuDialog.VerCheckCallback)
                     verChkFrm.params.optData = [verChkFrm]
-                    verChkFrm.verb.run(verChkFrm)
+
+                    copyBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Show Copy Paste List",
+                                        WyeUILib.MainMenuDialog.CopyPasteCallback)
+                    copyBtnFrm.params.optData = [copyBtnFrm]
 
                     #
                     # system debug
@@ -2608,6 +2601,23 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.versionText.show()
                 else:
                     WyeCore.World.versionText.hide()
+
+        # show/hide version in world
+        class CopyPasteCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("CopyPasteCallback started")
+                return Wye.codeFrame(WyeUILib.MainMenuDialog.CopyPasteCallback, stack)
+
+
+            def run(frame):
+                data = frame.eventData
+                rowFrm = data[1]
+                WyeCore.World.cutPasteManager.show()
 
         #
         # diagnostic callbacks
@@ -3584,15 +3594,48 @@ class WyeUILib(Wye.staticObj):
         # global list of frames being edited
         activeVerbs = {}
 
-        modOpLst = [
-            "Move line up",
-            "Add line before",
-            "Copy line",
-            "Cut line",
-            "Paste line before",
-            "Delete Line",
-            "Add line after",
-            "Move line down",
+        modParamOpLst = [
+            "Move Parameter up",
+            "Add Parameter before",
+            "Copy Parameter",
+            "Cut Parameter",
+            "Paste Parameter before",
+            "Delete Parameter",
+            "Add Parameter after",
+            "Move Parameter down",
+        ]
+
+        modVarOpLst = [
+            "Move Variable up",
+            "Add Variable before",
+            "Copy Variable",
+            "Cut Variable",
+            "Paste Variable before",
+            "Delete Variable",
+            "Add Variable after",
+            "Move Variable down",
+        ]
+
+        modCodeOpLst = [
+            "Move Code up",
+            "Add Code before",
+            "Copy Code",
+            "Cut Code",
+            "Paste Code before",
+            "Delete Code",
+            "Add Code after",
+            "Move Code down",
+        ]
+
+        modStreamOpLst = [
+            "Move stream up",
+            "Add stream before",
+            "Copy stream",
+            "Cut stream",
+            "Paste stream before",
+            "Delete stream",
+            "Add stream after",
+            "Move stream down",
         ]
 
         opList = [
@@ -3744,7 +3787,7 @@ class WyeUILib(Wye.staticObj):
 
                         for param in frame.vars.newParamDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0],
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modParamOpLst], [0],
                                                               WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                             label = "'"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])
                             if len(param) > 3:
@@ -3778,7 +3821,7 @@ class WyeUILib(Wye.staticObj):
 
                         for var in frame.vars.newVarDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0],
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modVarOpLst], [0],
                                                               WyeUILib.EditVerb.EditVarLineCallback, showText=False)
 
                             label = "'"+var[0] + "' "+Wye.dType.tostring(var[1]) + " = "+str(var[2])
@@ -3806,7 +3849,7 @@ class WyeUILib(Wye.staticObj):
                                     WyeUILib.EditVerb.bldStreamCodeLine(streamTuple, frame, dlgFrm, rowLst)
 
                                 dlgFrm.params.inputs[0].extend(rowLst)
-                                print("Stream added", len(rowLst), " rows to dialog")
+                                #print("Stream added", len(rowLst), " rows to dialog")
 
                             # regular boring normal single stream code
                             else:
@@ -3815,7 +3858,7 @@ class WyeUILib(Wye.staticObj):
                                 for tuple in frame.vars.newCodeDescr[0]:
                                     WyeUILib.EditVerb.bldEditCodeLine(tuple, level, frame, dlgFrm, rowLst)
                                 dlgFrm.params.inputs[0].extend(rowLst)
-                                print("added", len(rowLst), " rows to dialog")
+                                #print("added", len(rowLst), " rows to dialog")
 
                         # no code, put <add code here>
                         # todo handle this on OK exit!!!!
@@ -3908,12 +3951,13 @@ class WyeUILib(Wye.staticObj):
             level = 0  # start at left, no indent
 
             # line edit dropdown
+            #print("bldStreamCodeLine: Build stream", streamTuple[0])
             editLnFrm = WyeUILib.InputDropdown.start(dlgFrm.SP)
             editLnFrm.params.frame = [None]
             editLnFrm.params.parent = [None]
             editLnFrm.params.showText = [False]
             editLnFrm.params.label = ["  +/-"]
-            editLnFrm.params.list = [WyeUILib.EditVerb.modOpLst]
+            editLnFrm.params.list = [WyeUILib.EditVerb.modStreamOpLst]
             editLnFrm.params.callback = [WyeUILib.EditVerb.EditStreamLineCallback]  # button callback
             editLnFrm.params.selectionIx = [0]
             editLnFrm.verb.run(editLnFrm)
@@ -3957,7 +4001,7 @@ class WyeUILib(Wye.staticObj):
             editLnFrm.params.parent = [None]
             editLnFrm.params.showText = [False]
             editLnFrm.params.label = ["  +/-"]
-            editLnFrm.params.list = [WyeUILib.EditVerb.modOpLst]
+            editLnFrm.params.list = [WyeUILib.EditVerb.modCodeOpLst]
             editLnFrm.params.callback = [WyeUILib.EditVerb.EditCodeLineCallback]  # button callback
             editLnFrm.params.selectionIx = [0]
             editLnFrm.verb.run(editLnFrm)
@@ -4037,7 +4081,7 @@ class WyeUILib(Wye.staticObj):
                         btnFrm.params.callback = [WyeUILib.EditVerb.EditCodeCallback]  # button callback
 
         # single-row insert into paramDescr/varDescr and add row to dialog
-        def insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, currDesc, descrList, label, prefixCallback, rowCallback, newData, insertBefore):
+        def insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, currDesc, descrList, label, prefixCallback, rowCallback, newData, insertBefore, isParam=True):
             # print("insertParamOrVar: Add up")
 
             # find index to this row's param in EditVerb's newParamDescr
@@ -4048,7 +4092,7 @@ class WyeUILib(Wye.staticObj):
 
             # create new dialog row for this param
 
-            # find index to dialog row to insert before
+            # find index to dialog row to insert before/after
             rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
             # Debug: if the unthinkable happens, give us a hint
             if rIx < 0:
@@ -4061,7 +4105,10 @@ class WyeUILib(Wye.staticObj):
             newEdLnFrm.params.frame = [None]
             newEdLnFrm.params.parent = [None]
             newEdLnFrm.params.label = ["  +/-"]
-            newEdLnFrm.params.list = [WyeUILib.EditVerb.modOpLst]
+            if isParam:
+                newEdLnFrm.params.list = [WyeUILib.EditVerb.modParamOpLst]
+            else:
+                newEdLnFrm.params.list = [WyeUILib.EditVerb.modVarOpLst]
             newEdLnFrm.params.showText = [False]
             newEdLnFrm.params.callback = [prefixCallback]
             # callback data below, after create param button
@@ -4082,15 +4129,15 @@ class WyeUILib(Wye.staticObj):
 
             # print("params before insert", WyeCore.Utils.listToTupleString(editVerbFrm.vars.newParamDescr, 0))
 
-            # Insert planceholder param before the current param
+            # Insert placeholder param after the current param
             if insertBefore:
                 descrList.insert(dIx, newData)
             else:
                 descrList.insert(dIx+1, newData)
 
 
-            for desc in descrList:
-                print("  ", desc)
+            #for desc in descrList:
+            #    print("  ", desc)
 
             # print("params after insert", WyeCore.Utils.listToTupleString(editVerbFrm.vars.newParamDescr, 0))
 
@@ -4463,7 +4510,7 @@ class WyeUILib(Wye.staticObj):
                         cutData = WyeCore.World.cutPasteManager.getSelected()
                         print("paste param before: cutData", cutData)
                         if cutData[0] != "Parameter":
-                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'paramDescr' row from Cut List",
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'paramDescr' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
                             return
                         data = cutData[1]
@@ -4633,7 +4680,7 @@ class WyeUILib(Wye.staticObj):
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUILib.EditVerb.EditVarLineCallback,
                                                           WyeUILib.EditVerb.EditVarCallback,
-                                                          newData, insertBefore=True)
+                                                          newData, insertBefore=True, isParam=False)
 
                     # copy line
                     case 2:
@@ -4684,7 +4731,7 @@ class WyeUILib(Wye.staticObj):
                         cutData = WyeCore.World.cutPasteManager.getSelected()
                         print("paste param before: cutData", cutData)
                         if cutData[0] != "Variable":
-                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'varDescr' row from Cut List",
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'varDescr' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
 
                         data = cutData[1]
@@ -4693,7 +4740,7 @@ class WyeUILib(Wye.staticObj):
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUILib.EditVerb.EditVarLineCallback,
                                                           WyeUILib.EditVerb.EditVarCallback,
-                                                          data, insertBefore=True)
+                                                          data, insertBefore=True, isParam=False)
 
                 # delete line
                     case 5:
@@ -4724,7 +4771,7 @@ class WyeUILib(Wye.staticObj):
                                                           editVerbFrm.vars.newVarDescr[0], label,
                                                           WyeUILib.EditVerb.EditVarLineCallback,
                                                           WyeUILib.EditVerb.EditVarCallback,
-                                                          newData, insertBefore=False)
+                                                          newData, insertBefore=False, isParam=False)
 
                     # move line down
                     case 7:
@@ -4793,6 +4840,7 @@ class WyeUILib(Wye.staticObj):
 
                 # get selectionIx
                 opIx = editLnFrm.params.selectionIx[0]
+                #print("EditStreamLineCallback: op", WyeUILib.EditVerb.modStreamOpLst[opIx])
 
                 newData = ["NewStream", [["Code", "#< your code goes here>"],]]
                 #"0 Move line up",
@@ -4818,14 +4866,14 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find the number of display rows for this tuple
-                        dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
+                        dLen = WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
                         dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         preTuple = parentList[tIx-1]
-                        preDLen = 1 + WyeCore.Utils.countNestedLists(preTuple)
+                        preDLen = WyeCore.Utils.countNestedLists(preTuple)
 
                         # pull the tuple off and move it down one
                         tuple = parentList.pop(tIx)  # codeDescr entry
@@ -4850,19 +4898,19 @@ class WyeUILib(Wye.staticObj):
                         # get location of this frame in dialog input list
 
                         # insert new stream code before this one in verb's codeDescr
-                        print("EditStreamLineCallback find tuple", tuple, "\n   in", editVerbFrm.vars.newCodeDescr[0])
+                        #print("EditStreamLineCallback find tuple", tuple, "\n   in", editVerbFrm.vars.newCodeDescr[0])
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
                             ix = parentList.index(tuple)
-                            print("found tuple", tuple, " at", ix, " in", parentList)
+                            #print("found tuple", tuple, " at", ix, " in", parentList)
                         else:
                             print("EditStreamLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
                                   editVerbFrm.vars.newCodeDescr[0])
                             return
 
-                        print("EditStreamLineCallback: insert tuple", newData, "into\n ", parentList)
+                        #print("EditStreamLineCallback: insert tuple", newData, "into\n ", parentList)
                         parentList.insert(ix, newData)
-                        print("  updated list\n ", parentList)
+                        #print("  updated list\n ", parentList)
 
                         # create new dialog row for this code line
 
@@ -4957,13 +5005,13 @@ class WyeUILib(Wye.staticObj):
                         parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
-                    # paste line
+                    # paste line before
                     case 4:
                         # get line from cutList
                         cutData = WyeCore.World.cutPasteManager.getSelected()
-                        print("paste code before: cutData", cutData)
+                        #print("paste code before: cutData", cutData)
                         if cutData[0] != "Stream":
-                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'Stream' row from Cut List",
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'Stream' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
                             return
                         data = cutData[1]
@@ -5059,7 +5107,8 @@ class WyeUILib(Wye.staticObj):
                                   editVerbFrm.vars.newCodeDescr[0])
                             return
 
-                        ix += 1     # put after the current line
+                        ix += 1  # put after the current line
+
                         if ix < len(parentList):
                             parentList.insert(ix, newData)
                         else:
@@ -5067,12 +5116,16 @@ class WyeUILib(Wye.staticObj):
 
                         # create new dialog row for this code line
 
-                        # find index to row to insert before
+                        # find index to row to insert after
                         ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
-                        ix += 2     # put after the current code display input
+
+                        # skip over current tuple rows in dialog for every row of tuple
+                        tupleLen = WyeCore.Utils.countNestedLists(tuple)
+                        ix += (tupleLen)*2     # put after the current line
+                        #print("EditStreamLineCallback: len", tupleLen, " of tuple", tuple)
                                     # Note: there is an OK/Cancel after the last code input, so insert works even
                                     # at the end of the current code listing
 
@@ -5109,14 +5162,14 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find the number of display rows for this tuple
-                        dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
+                        dLen = WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
                         dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         postTuple = parentList[tIx+1]
-                        postDLen = 1 + WyeCore.Utils.countNestedLists(postTuple)
+                        postDLen = WyeCore.Utils.countNestedLists(postTuple)
 
                         # pull the tuple off and move it down one
                         tuple = parentList.pop(tIx)  # codeDescr entry
@@ -5134,6 +5187,8 @@ class WyeUILib(Wye.staticObj):
                         # redisplay parent dialog
                         parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
+
+                #print("EditStreamLineCallback: after operation\n ", editVerbFrm.vars.newCodeDescr[0])
 
         # add/remove/move code line
         class EditCodeLineCallback:
@@ -5329,13 +5384,13 @@ class WyeUILib(Wye.staticObj):
                         parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
-                    # paste line
+                    # paste line before
                     case 4:
                         # get line from cutList
                         cutData = WyeCore.World.cutPasteManager.getSelected()
                         print("paste code before: cutData", cutData)
                         if cutData[0] != "Code":
-                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'codeDescr' row from Cut List",
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'codeDescr' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
                             return
                         data = cutData[1]
@@ -5431,11 +5486,7 @@ class WyeUILib(Wye.staticObj):
                                   editVerbFrm.vars.newCodeDescr[0])
                             return
 
-                        # Insert new line into code desr
-                        # todo - it would simplify life to have an AST tree holding var, call info and
-                        #  linking relevant parts to relevant controls/data
-
-                        ix += 1     # put after the current line
+                        ix += 1
                         if ix < len(parentList):
                             parentList.insert(ix, newData)
                         else:
@@ -5443,12 +5494,16 @@ class WyeUILib(Wye.staticObj):
 
                         # create new dialog row for this code line
 
-                        # find index to row to insert before
+                        # find index to row to insert after
                         ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
-                        ix += 2     # put after the current code display input
+
+                        # skip over current tuple rows in dialog for every row of tuple
+                        tupleLen = WyeCore.Utils.countNestedLists(tuple)
+                        ix += (tupleLen+1)*2     # put after the current line
+                        print("EditCodeLineCallback: len", tupleLen, " of tuple", tuple)
                                     # Note: there is an OK/Cancel after the last code input, so insert works even
                                     # at the end of the current code listing
 
@@ -5511,7 +5566,7 @@ class WyeUILib(Wye.staticObj):
                         parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
-
+                #print("EditCodeLineCallback: after operation\n ", editVerbFrm.vars.newCodeDescr[0])
 
         # Edit the stream name
         class EditStreamCallback:
@@ -6800,7 +6855,7 @@ class WyeUILib(Wye.staticObj):
                     # else nothing to do here
                     else:
                         # todo fix this so it will work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
+                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modParamOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                         lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no parameters>", layout=Wye.layout.ADD_RIGHT)
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 
@@ -6824,7 +6879,7 @@ class WyeUILib(Wye.staticObj):
                     # else nothing to do here
                     else:
                         # todo - make this work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
+                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modVarOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                         lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no variables>")
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 
