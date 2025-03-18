@@ -421,6 +421,8 @@ class Wye:
                                 else:
                                     num = float(elem)
                             except:
+                                if dataType == Wye.dType.FLOAT_LIST:    # DEBUG
+                                    print("float(",elem,") failed")     # DEBUG
                                 print(" err", num, " replaced with 0")
                                 if dataType == Wye.dType.INTEGER_LIST:
                                     num = 0
@@ -429,6 +431,8 @@ class Wye:
                             if elemLst:
                                 num = [num]
                             retVal.append(num)
+                        #if dataType == Wye.dType.FLOAT_LIST:                # DEBUG
+                        #    print("converted F_LST", value, " to", retVal)  # DEBUG
                         #print("  result", retVal)
                     # else make it numeric
                     else:

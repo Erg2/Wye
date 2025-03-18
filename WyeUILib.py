@@ -70,7 +70,7 @@ class WyeUILib(Wye.staticObj):
 
         def setSelected(self, row):
             if row in self.cutList:
-                print("CutPasteManager set selected row", row)
+                #print("CutPasteManager set selected row", row)
                 self.selectedRow = row
 
                 if self.displayObj:
@@ -150,10 +150,10 @@ class WyeUILib(Wye.staticObj):
                 #print("CutPastDisplay highlightRow: old row", frame.vars.currRowIx[0])
 
                 if ix != frame.vars.currRowIx[0]:
-                    print("CutPastDisplay highlightRow: unhighlight", frame.vars.currRowIx[0])
+                    #print("CutPastDisplay highlightRow: unhighlight", frame.vars.currRowIx[0])
                     oldRowFrm = frame.vars.dlgFrm[0].params.inputs[0][frame.vars.currRowIx[0]][0]
                     oldRowFrm.verb.setBackgroundColor(oldRowFrm, Wye.color.TRANSPARENT)
-                print("CutPastDisplay highlightRow: highlight", ix)
+                #print("CutPastDisplay highlightRow: highlight", ix)
                 if ix >=  0 and ix < len(frame.vars.dlgFrm[0].params.inputs[0]):
                     newRowFrm = frame.vars.dlgFrm[0].params.inputs[0][ix][0]
                     #print("  row", newRowFrm.params.label[0])
@@ -2344,7 +2344,8 @@ class WyeUILib(Wye.staticObj):
                       ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE, None)
                       )
         varDescr = (("fileName", Wye.dType.OBJECT, None),
-                    ("newFile", Wye.dType.BOOL, True)
+                    ("newFile", Wye.dType.BOOL, True),
+                    ("overWriteQuery", Wye.dType.BOOL, False)
                     )
 
         # global list of libs being edited
@@ -2360,8 +2361,7 @@ class WyeUILib(Wye.staticObj):
                 case 0:
                     #print("AskSaveAsFile run case 0: fileName", frame.params.fileName[0])
                     filePath = frame.params.fileName[0].strip()
-                    fileName = os.path.basename(filePath)
-                    fileName, ext = os.path.splitext(fileName)
+                    fileName, ext = os.path.splitext(os.path.basename(filePath))
                     #print("AskSaveAsFile: fileName", fileName, " ext", ext)
 
                     # generate unique name
@@ -2377,13 +2377,14 @@ class WyeUILib(Wye.staticObj):
                     pos = point.getPos()
                     point.removeNode()
 
-                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Open File", parent=frame.params.parent[0], position=pos)
+                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog(frame.params.title[0], parent=frame.params.parent[0], position=pos)
                     dlgFrm.vars._savRadVal = [0]
                     WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Save New", frame.vars.newFile, radioGroup="newRad")
                     WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "File Name:", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
                     WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Overwrite "+frame.params.fileName[0], [False], radioGroup="newRad")
 
                     frame.SP.append(dlgFrm)     # push dialog so it runs next cycle
+
                     frame.PC += 1               # on return from dialog, run next case
                     #print("AskSaveAsFile: case 0: push dialog frame. Stack:")
                     #for ii in range(len(frame.SP)):
@@ -2393,13 +2394,18 @@ class WyeUILib(Wye.staticObj):
                     dlgFrm = frame.SP.pop()
                     frame.status = Wye.status.SUCCESS       # we always succeed
                     #print("AskSaveAsFile: case 1: dlg done with status", Wye.status.tostring(dlgFrm.status), ", dlg retVal", Wye.status.tostring(dlgFrm.params.retVal[0]))
-                    frame.params.retVal[0] = dlgFrm.params.retVal[0] # return dialog's status
+                    frame.params.retVal[0] = dlgFrm.params.retVal[0]    # return dialog's status
                     if frame.params.retVal[0] == Wye.status.SUCCESS:
                         if frame.vars.newFile[0]:   # if user chose new file name
-                            fileName = frame.vars.fileName[0].strip()
-                            # ensure has correct extension
-                            fileName = os.path.basename(fileName)
+                            filePath = frame.vars.fileName[0].strip()
+
+                        else:
+                            filePath = frame.params.fileName[0].strip()
+                        # ensure has correct extension
+                        fileName = os.path.splitext(os.path.basename(filePath))[0]
+                        #print("AskSaveAs ", filePath," base name:", fileName)
                         frame.params.fileName[0] = fileName + frame.params.fileType[0]
+                    #print("AskSaveAs final fileName", fileName)
 
     # Wye main menu - user settings n stuff
     class MainMenuDialog:
@@ -2560,7 +2566,7 @@ class WyeUILib(Wye.staticObj):
                 data = frame.eventData
                 rowFrm = data[1]
                 Wye.soundOn = rowFrm.vars.currVal[0]
-                print("3D Sound On", Wye.soundOn)
+                #print("3D Sound On", Wye.soundOn)
 
 
         # turn compile code listing
@@ -2579,7 +2585,7 @@ class WyeUILib(Wye.staticObj):
                 data = frame.eventData
                 rowFrm = data[1]
                 WyeCore.debugListCode = rowFrm.vars.currVal[0]
-                print("List Code On", WyeCore.debugListCode)
+                #("List Code On", WyeCore.debugListCode)
 
         # show/hide version in world
         class VerCheckCallback:
@@ -2686,7 +2692,7 @@ class WyeUILib(Wye.staticObj):
                 return Wye.codeFrame(WyeUILib.MainMenuDialog.TestButtonCallback, stack)
 
             def run(frame):
-                print("Test Button")
+                #("Test Button")
                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Test Callback", "Pop Up Dialog Test default color")
                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Test Callback", "Pop Up Dialog Test normal", Wye.color.NORMAL_COLOR)
                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Test Callback", "Pop Up Dialog Test warning", Wye.color.WARNING_COLOR)
@@ -2845,9 +2851,9 @@ class WyeUILib(Wye.staticObj):
         paramDescr = ()
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
                     ("dlgFrm", Wye.dType.OBJECT, None),
-                    ("fileName", Wye.dType.STRING, "MyTestLib.py"),  # file name to save to
-                    ("libFileNameFrm", Wye.dType.OBJECT, "MyTestLib"),  # new lib name input, if user wants to create one
-                    ("libNameFrm", Wye.dType.OBJECT, "MyTestLib"),  # new lib name input, if user wants to create one
+                    ("fileName", Wye.dType.STRING, "MyWyeLib.py"),  # file name to save to
+                    ("libFileNameFrm", Wye.dType.OBJECT, "MyWyeLib"),  # new lib name input, if user wants to create one
+                    ("libNameFrm", Wye.dType.OBJECT, "MyWyeLib"),  # new lib name input, if user wants to create one
                     ("libRows", Wye.dType.OBJECT_LIST, None),
                     )
 
@@ -2878,15 +2884,15 @@ class WyeUILib(Wye.staticObj):
                     # build dialog
 
                     # Load lib from file
-                    loadLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Load Library:", WyeUILib.EditMainDialog.LoadLibCallback)
+                    loadLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Load Library From:", WyeUILib.EditMainDialog.LoadLibCallback)
                     loadLibFrm.params.optData = [(loadLibFrm, dlgFrm, frame)]
                     libFileNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
                     frame.vars.libFileNameFrm[0] = libFileNameFrm
 
                     # New lib
-                    newLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " New Library:", WyeUILib.EditMainDialog.NewLibCallback)
+                    newLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Create New Library:", WyeUILib.EditMainDialog.NewLibCallback)
                     newLibFrm.params.optData = [(newLibFrm, dlgFrm, frame)]
-                    libNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Lib Name:", ["newLibName"], layout=Wye.layout.ADD_RIGHT)
+                    libNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Lib Name:", ["MyWyeLib"], layout=Wye.layout.ADD_RIGHT)
                     frame.vars.libNameFrm[0] = libNameFrm
 
 
@@ -2913,7 +2919,7 @@ class WyeUILib(Wye.staticObj):
                 editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "      .")
                 frame.vars.libRows[0].append(editLnFrm)
             else:
-                editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [["Save", "Delete"]], [0],
+                editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [["Save To File", "Delete Library"]], [0],
                                                                        WyeUILib.EditMainDialog.EditLibLineCallback,
                                                                        showText=False)
                 frame.vars.libRows[0].append(editLnFrm)
@@ -2931,7 +2937,9 @@ class WyeUILib(Wye.staticObj):
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.NONE
             paramDescr = ()
-            varDescr = ()
+            varDescr = (("fileName", Wye.dType.STRING, ""),
+                        ("doExistsQuery", Wye.dType.BOOL, False),
+                        )
 
             def start(stack):
                 #print("EditLibLineCallback started")
@@ -2958,8 +2966,17 @@ class WyeUILib(Wye.staticObj):
                                     frame.status = Wye.status.SUCCESS
                                     return
 
-                                askSaveFrm = WyeCore.libs.WyeUIUtilsLib.doAskSaveAsFileAsync(frame, parentFrm, lib.__name__+".py")
-                                frame.SP.append(askSaveFrm)  # push dialog so it runs next cycle
+                                fileName = lib.__name__+".py"
+                                frame.vars.fileName[0] = fileName
+                                # if the file alredy exists, as the user what they want to do
+                                fileExists = os.path.exists(fileName)
+                                frame.vars.doExistsQuery[0] = fileExists
+                                if frame.vars.doExistsQuery[0]:
+                                    title = fileName + " Already Exists"
+                                    askSaveFrm = WyeCore.libs.WyeUIUtilsLib.doAskSaveAsFileAsync(frame, parentFrm,
+                                                                fileName, title=title)
+                                    frame.SP.append(askSaveFrm)  # push dialog so it runs next cycle
+
                                 frame.PC = 1  # on return from dialog, run save lib case
                                 # print("EditLibLineCallback: case 0: save library")
 
@@ -2975,64 +2992,82 @@ class WyeUILib(Wye.staticObj):
                                 frame.SP.append(delOkFrm)  # push dialog so it runs next cycle
                                 frame.PC = 2  # on return from dialog, run del ok case
 
-                    case 1: # return from lib name new/overwrite dialog
-                        askSaveFrm = frame.SP.pop()
-                        #print("EditLibLineCallback: case 1: askSaveFrm", askSaveFrm.verb.__name__,
-                        #      " user status", Wye.status.tostring(askSaveFrm.params.retVal[0]))
-                        if askSaveFrm.params.retVal[0] == Wye.status.SUCCESS:
-                            fileName = askSaveFrm.params.fileName[0]
+                    case 1: # continue saving library
+                        frame.status = Wye.status.SUCCESS
+                        # if we asked the user about overwrite, get the final filename
+                        if frame.vars.doExistsQuery[0]:
+                            askSaveFrm = frame.SP.pop()
+                            #print("EditLibLineCallback: case 1: askSaveFrm", askSaveFrm.verb.__name__,
+                            #      " user status", Wye.status.tostring(askSaveFrm.params.retVal[0]))
+
+                            # if the user cancelled, don't save the lib
+                            if askSaveFrm.params.retVal[0] != Wye.status.SUCCESS:
+                                print("User cancelled saving library")
+                                return
+
+                            # get the filename
+                            fileName = askSaveFrm.params.fileName[0].strip()
                             if not fileName:
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid File Name", "'"+fileName+"' is not a valid library file name",
                                                        Wye.color.WARNING_COLOR)
                                 frame.status = Wye.status.SUCCESS
                                 return
+                            frame.vars.fileName[0] = fileName
 
-                            libName = lib.__name__
-                            #print("EditLibLineCallback case 1: Write out lib '"+libName+"' to '"+fileName+"'")
+                        else:
+                            fileName = frame.vars.fileName[0]
 
-                            fileTxt = WyeCore.Utils.createLibString(libName)
-                            for attr in dir(lib):
-                                if attr != "__class__":
-                                    verb = getattr(lib, attr)
-                                    if inspect.isclass(verb):
-                                        # can only export verbs that have the required data
-                                        if hasattr(verb, "paramDescr") and hasattr(verb, "varDescr") and hasattr(verb, "codeDescr"):
-                                            # capture the flags
-                                            verbSettings = {}
-                                            if hasattr(verb, 'mode'):
-                                                verbSettings['mode'] = verb.mode
-                                            if hasattr(verb, 'cType'):
-                                                verbSettings['cType'] = verb.cType
-                                            if hasattr(verb, 'parTermType'):
-                                                verbSettings['parTermType'] = verb.parTermType
-                                            if hasattr(verb, 'autoStart'):
-                                                verbSettings['autoStart'] = verb.autoStart
-                                            if hasattr(verb, 'dataType'):
-                                                verbSettings['dataType'] = verb.dataType
+                        # force lib name to match file name
+                        libName = os.path.splitext(os.path.basename(fileName))[0]
+                        #print("EditLibLineCallback base file name:", libName)
 
-                                            # gen verb code
-                                            vrbStr = WyeCore.Utils.createVerbString(libName, verb.__name__,
-                                                        verbSettings,  verb.paramDescr,  verb.varDescr,
-                                                        verb.codeDescr, doTest=False)
+                        # create library header text and add text for all its verbs
+                        fileTxt = WyeCore.Utils.createLibString(libName)
+                        for attr in dir(lib):
+                            if attr != "__class__":
+                                verb = getattr(lib, attr)
+                                if inspect.isclass(verb):
+                                    # can only export verbs that have the required data
+                                    if hasattr(verb, "paramDescr") and hasattr(verb, "varDescr") and hasattr(verb, "codeDescr"):
+                                        # capture the flags
+                                        verbSettings = {}
+                                        if hasattr(verb, 'mode'):
+                                            verbSettings['mode'] = verb.mode
+                                        if hasattr(verb, 'cType'):
+                                            verbSettings['cType'] = verb.cType
+                                        if hasattr(verb, 'parTermType'):
+                                            verbSettings['parTermType'] = verb.parTermType
+                                        if hasattr(verb, 'autoStart'):
+                                            verbSettings['autoStart'] = verb.autoStart
+                                        if hasattr(verb, 'dataType'):
+                                            verbSettings['dataType'] = verb.dataType
 
-                                            fileTxt += vrbStr
+                                        # gen verb code
+                                        vrbStr = WyeCore.Utils.createVerbString(libName, verb.__name__,
+                                                    verbSettings,  verb.paramDescr,  verb.varDescr,
+                                                    verb.codeDescr, doTest=False, outDent=False)
 
-                                            try:
-                                                # write the file
-                                                f = open(fileName, "w")
-                                                f.write(fileTxt)
-                                                f.close()
-                                            except Exception as e:
-                                                print("Failed to write library '" + libName + " to file '" + fileName + "\n", str(e))
-                                                traceback.print_exception(e)
-                                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Failed to write library", "Failed to write library '"+libName+" to file '"+fileName+"'",
-                                                                       Wye.color.WARNING_COLOR)
-                                                frame.status = Wye.status.SUCCESS
-                                                return
-                        #else:
-                        #    print("EditLibLineCallback case 1: User cancelled lib write")
+                                        fileTxt += vrbStr
+                                    else:
+                                        # ignoring generated runtime code is good.  Anything else is a problem
+                                        if not verb.__name__[-3:] == "_rt":
+                                            print("WARNING: Verb", verb.__name__,
+                                              " not saved to file because it does not have all required attributes")
+                        try:
+                            # write the file
+                            f = open(fileName, "w")
+                            f.write(fileTxt)
+                            f.close()
+                        except Exception as e:
+                            print("Failed to write library '" + libName + " to file '" + fileName + "\n", str(e))
+                            traceback.print_exception(e)
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Failed to write library", "Failed to write library '"+libName+" to file '"+fileName+"'",
+                                                   Wye.color.WARNING_COLOR)
+                            frame.status = Wye.status.SUCCESS
+                            return
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to "+fileName)
+                        #print("EditLibLineCallback case 1: Wrote lib '" + libName + "' to '" + fileName + "'")
 
-                        frame.status = Wye.status.SUCCESS
 
                     case 2: # return from Del Ok? dialog
                         frame.status = Wye.status.SUCCESS
@@ -3040,9 +3075,13 @@ class WyeUILib(Wye.staticObj):
                         delOkFrm = frame.SP.pop()
                         if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
                             #print("EditLibLineCallback case 2: del lib "+lib.__name__)
+
+                            # delete the library
                             libName = lib.__name__
                             WyeCore.World.libDict.pop(libName)
                             WyeCore.World.libList.remove(lib)
+
+                            # update the dialog
 
                             # remove rows from dialog
                             firstIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editVerbFrm.vars.libRows[0][0])
@@ -3063,6 +3102,8 @@ class WyeUILib(Wye.staticObj):
 
                             # relayout display
                             parentFrm.verb.redisplay(parentFrm)
+                        else:
+                            print("User cancelled delete library")
 
         # load library from file and start any autoStart verbs in it
         class LoadLibCallback:
@@ -3086,24 +3127,26 @@ class WyeUILib(Wye.staticObj):
                 libFilePath = editFrm.vars.libFileNameFrm[0].vars.currVal[0].strip()
                 if libFilePath:
                     # make sure there's an extension
-                    libFileName = os.path.basename(libFilePath)
-                    libName, ext = os.path.splitext(libFileName)
+                    libName, ext = os.path.splitext(os.path.basename(libFilePath))
                     if not ext:
-                        # if doesn't have an extension, fix that
-                        libFileName += ".py"
+                        #print("Add .py to ", libFilePath)
+                        libFilePath += ".py"
 
                     # see if file exists
-                    if not os.path.exists(libFileName):
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("File Not Found", "File not found "+libFileName, Wye.color.ERROR_COLOR)
+                    if not os.path.exists(libFilePath):
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("File Not Found", "File not found "+libFilePath, Wye.color.ERROR_COLOR)
                         return
 
                     # path = libFile
                     path = WyeCore.Utils.resourcePath(libFilePath)[2:]
                     #print("Load library '" + path + "'")
                     try:
+                        #print("Load lib", libName, " from", path)
                         libModule = SourceFileLoader(libName, path).load_module()
+
                         # print("libModule ", libModule)
                         lib = getattr(libModule, libName)
+                        #print("Read library", lib.__name__, " from file")
                         # print("add libClass", libClass, " to libList")
                         newLib = True   # assume this is a new lib
                         oldLibIx = -1
@@ -3196,6 +3239,7 @@ class WyeUILib(Wye.staticObj):
                 editFrm = data[1][2]
 
                 libName = editFrm.vars.libNameFrm[0].vars.currVal[0].strip()
+                #print("NewLibCallback: libName", libName)
 
                 if not libName:
                     WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Name Required", "Please enter a name for the new library",
@@ -3422,7 +3466,7 @@ class WyeUILib(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                print("CreateVerbCallback data:", data)
+                #print("CreateVerbCallback data:", data)
                 btnFrm = data[1][0]
                 verbNmFrm = data[1][1]
                 dlgFrm = data[1][2]
@@ -3587,54 +3631,54 @@ class WyeUILib(Wye.staticObj):
                     ("newParamDescr", Wye.dType.OBJECT_LIST, None), # Build new verb params here
                     ("newVarDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb vars here
                     ("newCodeDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb code here
-                    ("fileName", Wye.dType.STRING, "MyTestLib.py"),             # file name to save to
+                    ("fileName", Wye.dType.STRING, "MyWyeLib.py"),             # file name to save to
                     )
 
         # global list of frames being edited
         activeVerbs = {}
 
         modParamOpLst = [
-            "Move Parameter up",
-            "Add Parameter before",
-            "Copy Parameter",
-            "Cut Parameter",
-            "Paste Parameter before",
-            "Delete Parameter",
-            "Add Parameter after",
-            "Move Parameter down",
+            "Move Line Up",
+            "Add Line Before",
+            "Copy This Line",
+            "Cut This Line",
+            "Paste Parameter Before",
+            "Delete This Line",
+            "Add Line After",
+            "Move Line Down",
         ]
 
         modVarOpLst = [
-            "Move Variable up",
-            "Add Variable before",
-            "Copy Variable",
-            "Cut Variable",
-            "Paste Variable before",
-            "Delete Variable",
-            "Add Variable after",
-            "Move Variable down",
+            "Move Line Up",
+            "Add Line Before",
+            "Copy This Line",
+            "Cut This Line",
+            "Paste Variable Before",
+            "Delete This Line",
+            "Add Line After",
+            "Move Line Down",
         ]
 
         modCodeOpLst = [
-            "Move Code up",
-            "Add Code before",
-            "Copy Code",
-            "Cut Code",
-            "Paste Code before",
-            "Delete Code",
-            "Add Code after",
-            "Move Code down",
+            "Move This Code Up",
+            "Add Line Before",
+            "Copy This",
+            "Cut This",
+            "Paste Code Before",
+            "Delete This",
+            "Add Line After",
+            "Move This Code Down",
         ]
 
         modStreamOpLst = [
-            "Move stream up",
-            "Add stream before",
-            "Copy stream",
-            "Cut stream",
-            "Paste stream before",
-            "Delete stream",
-            "Add stream after",
-            "Move stream down",
+            "Move Stream Up",
+            "Add New Stream Before",
+            "Copy This Stream",
+            "Cut This Stream",
+            "Paste Stream Before",
+            "Delete This Stream",
+            "Add New Stream After",
+            "Move Stream Down",
         ]
 
         opList = [
@@ -3709,6 +3753,7 @@ class WyeUILib(Wye.staticObj):
                     if hasattr(verb, 'dataType'):
                         frame.vars.newVerbSettings[0]['dataType'] = verb.dataType
 
+                    # copy all the descrs from immutable tuples to mutable lists
                     for param in verb.paramDescr:
                         newP = []
                         frame.vars.newParamDescr[0].append(newP)
@@ -3739,7 +3784,7 @@ class WyeUILib(Wye.staticObj):
 
                     # Choose from existing Library list
                     libList = [lib.__name__ for lib in WyeCore.World.libList]
-                    libFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "Library", [libList],
+                    libFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "    Library", [libList],
                                      [libList.index(verb.library.__name__)], layout=Wye.layout.ADD_RIGHT)
                     frame.vars.existingLibFrm[0] = libFrm
 
@@ -3748,7 +3793,7 @@ class WyeUILib(Wye.staticObj):
                                         WyeUILib.EditVerb.EditCodeSaveLibCallback)
                     saveCodeFrm.params.optData = [(saveCodeFrm, dlgFrm, frame)]
 
-                    saveCodeFileFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Library File Name", frame.vars.fileName,
+                    saveCodeFileFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "    Library File Name", frame.vars.fileName,
                                 WyeUILib.EditVerb.EditCodeSaveLibNameCallback, layout=Wye.layout.ADD_RIGHT)
                     saveCodeFileFrm.params.optData = [(saveCodeFileFrm, dlgFrm, frame)]
 
@@ -4315,7 +4360,7 @@ class WyeUILib(Wye.staticObj):
 
                             # update display
                             prefix = frame.vars.prefix[0]
-                            indent = "".join(["    " for l in range(level)])  # indent by recursion depth
+                            indent = "".join(["   " for l in range(level)])  # indent by recursion depth
                             btnFrm.verb.setLabel(btnFrm, indent + prefix + "Verb: " + str(tuple[0]))
 
 
@@ -5285,10 +5330,6 @@ class WyeUILib(Wye.staticObj):
                                   editVerbFrm.vars.newCodeDescr[0])
                             return
 
-                        # Insert new line into code desr
-                        # todo - it would simplify life to have an AST tree holding var, call info and
-                        #  linking relevant parts to relevant controls/data
-
                         parentList.insert(ix, newData)
 
                         # create new dialog row for this code line
@@ -5770,13 +5811,13 @@ class WyeUILib(Wye.staticObj):
                                     tuple[2] = newTgt
 
                             # update display
-                            indent = "".join(["    " for l in range(level)])  # indent by recursion depth
+                            indent = "".join(["   " for l in range(level)])  # indent by recursion depth
 
                             prefix = frame.vars.prefix[0]
 
                             match tuple[0]:
                                 case "Code" | None:  # raw Python
-                                    print("indent", indent, " prefix", prefix)
+                                    #print("indent", indent, " prefix", prefix)
                                     btnFrm.verb.setLabel(btnFrm, indent + prefix + "Code: " + str(tuple[1]))
 
                                 case "CodeBlock":  # multi-line raw Python
@@ -5907,7 +5948,7 @@ class WyeUILib(Wye.staticObj):
                                     tuple[2] = newTgt
 
                             # update display
-                            indent = "".join(["    " for l in range(level)])  # indent by recursion depth
+                            indent = "".join(["   " for l in range(level)])  # indent by recursion depth
 
                             match tuple[0]:
                                 case "Code" | None:  # raw Python
@@ -6065,7 +6106,7 @@ class WyeUILib(Wye.staticObj):
                                     param[3] = defaultVal
 
                             #print("EditParamCallback done: inserted at ",paramIx," in newParamDescr\n", editVerbFrm.vars.newParamDescr[0])
-                            rowTxt = "  '" + label + "' " + Wye.dType.tostring(wType) + " call by:" + accessStr
+                            rowTxt = "'" + label + "' " + Wye.dType.tostring(wType) + " call by:" + accessStr
                             if defaultVal:
                                 rowTxt += " default:"+defaultVal
                             #print("new row", rowTxt)
@@ -6195,7 +6236,7 @@ class WyeUILib(Wye.staticObj):
                             var[1] = wType
                             var[2] = initVal
 
-                            rowTxt = "  '" + label + "' " + Wye.dType.tostring(wType) + " = " + str(initVal)
+                            rowTxt = "'" + label + "' " + Wye.dType.tostring(wType) + " = " + str(initVal)
                             #print("new row", rowTxt)
                             btnFrm.verb.setLabel(btnFrm, rowTxt)
 
@@ -6364,11 +6405,13 @@ class WyeUILib(Wye.staticObj):
                         print("Failed to write library '"+libName+" to file '"+libFileName+"\n", str(e))
                         traceback.print_exception(e)
 
-
-                    print("EditCodeSaveLibCallback: Wrote verb ", verbName, " to library file", libFileName)
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+verbName+" to "+libFileName)
+                    #print("EditCodeSaveLibCallback: Wrote verb ", verbName, " to library file", libFileName)
 
                 else:
-                    print("ERROR: Invalid library file name '"+ libFilePath +"'.  Library not saved")
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("File Not Saved",
+                         "ERROR: Invalid library file name '"+ libFilePath +"'.  Library not saved", color=Wye.color.WARNING_COLOR)
+                    #print("ERROR: Invalid library file name '"+ libFilePath +"'.  Library not saved")
                     return
 
 
@@ -7107,17 +7150,17 @@ class WyeUILib(Wye.staticObj):
                         )
 
             def start(stack):
-                # print("KillFrameCallback started")
+                # print("DebugKillCallback started")
                 f = Wye.codeFrame(WyeUILib.ObjectDebugger.DebugKillCallback, stack)
                 f.systemObject = True  # not stopped by breakAll o rdebugger
                 return f
 
             def run(frame):
                 global base
-                # print("KillFrameCallback")
+                # print("DebugKillCallback")
 
                 data = frame.eventData
-                # print("KillFrameCallback data='" + str(data) + "', case", frame.PC)
+                # print("DebugKillCallback data='" + str(data) + "', case", frame.PC)
                 delLnFrm = data[1][0]
                 mainDbgFrm = data[1][1]
                 dlgFrm = data[1][2]
@@ -7125,13 +7168,7 @@ class WyeUILib(Wye.staticObj):
 
                 match (frame.PC):
                     case 0:
-                        # print("KillFrame delLnFrm", delLnFrm.verb.__name__, " ", delLnFrm.params.label[0])
-                        # print("  mainDbgFrm", mainDbgFrm.verb.__name__)
-                        # print("  dlgFrm", dlgFrm.verb.__name__, " ", dlgFrm.params.title[0])
-                        # print("  objFrm", objFrm.verb.__name__)
-
-                        print("KillFrameCallback: stop", objFrm.verb.__name__)
-                        # print("Before stop, ")
+                        print("DebugKillCallback: stop", objFrm.verb.__name__)
                         WyeCore.World.stopActiveObject(objFrm)
 
                         frame.PC += 1

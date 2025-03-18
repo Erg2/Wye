@@ -520,7 +520,7 @@ class WyeCore(Wye.staticObj):
             frame = obj.start(stk)  # start the object and get its stack frame
             stk.append(frame)       # put obj frame on its stack
             # frame.params = [[0], ]  # place to put return param
-            WyeCore.World.objStacks.append(stk)  # put obj's stack on list and put obj's frame on the stack
+            WyeCore.World.objStacks.insert(0,stk)  # put obj's stack on list and put obj's frame on the stack
             return frame
 
         # Put object instance frame on active list
@@ -1894,7 +1894,9 @@ except Exception as e:
                         print(vrbLib.__name__ + name, " executed successfully")
                 except Exception as e:
                     print("exec verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
-                    traceback.print_exception(e)
+                    msg = traceback.format_exc()
+                    print(msg)
+                    #traceback.print_exception(e)
                     print("verb text:")
                     lnIx = 1
                     for ln in vrbStr.split('\n'):
