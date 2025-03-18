@@ -1314,7 +1314,6 @@ class WyeCore(Wye.staticObj):
                         codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
                         #codeText += "     print('verb ',frame."+eff+".verb.__name__, ' failed')\n"
                         codeText += "     frame.status = frame."+eff+".status\n     return\n"
-                        pass
 
 
                     # huh, wut?
@@ -1366,7 +1365,7 @@ class WyeCore(Wye.staticObj):
                             labelDict[wyeTuple[1]] = caseNumList[0]
 
                             codeText += "    frame.PC += 1\n"
-                            codeText += "   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass\n"
+                            codeText += "   case " + str(caseNumList[0]) + ": #Label " + wyeTuple[1] + "\n    pass #2\n"
 
                             # if this is the resolution of any forward label references
                             lblStr = wyeTuple[1]
@@ -1415,7 +1414,7 @@ class WyeCore(Wye.staticObj):
 
                             caseNumList[0] += 1
                             # NOTE: This is a wasted case, just to be sure succeeding cmds are not executed
-                            codeText += "   case " + str(caseNumList[0]) + ":\n    pass\n"
+                            codeText += "   case " + str(caseNumList[0]) + ":\n    pass #5\n"
                         else: # normal tuple
                             # DEBUG start vvv
                             #currFrame = inspect.currentframe()
@@ -1440,7 +1439,7 @@ class WyeCore(Wye.staticObj):
 
             # no code, make sure fn compiles
             else:
-                codeText += "pass\n"
+                codeText += "pass #4\n"
 
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return (codeText, parFnText)
@@ -1483,7 +1482,7 @@ class WyeCore(Wye.staticObj):
             parFnText +=     "  return f\n"
 
             # print("buildParallelText complete.  parFnText=\n"+parFnText[0])
-            return ("    pass\n", parFnText)
+            return (" pass #3\n", parFnText)
 
         # build a runtime library function for this library
         def buildLib(libClass):
@@ -1496,19 +1495,19 @@ class WyeCore(Wye.staticObj):
             doBuild = False     # assume nothing to do
             for attr in dir(libClass):
                 if attr != "__class__":     # avoid lib's self reference
-                    val = getattr(libClass, attr)
-                    if inspect.isclass(val):
-                        val.library = libClass  # add pointer from verb class to parent library class
+                    vrb = getattr(libClass, attr)
+                    if inspect.isclass(vrb):
+                        vrb.library = libClass  # add pointer from verb class to parent library class
                         # if the class has a build function then call it to generate Python source code for its runtime method
-                        if hasattr(val, "build"):
+                        if hasattr(vrb, "build"):
                             doBuild = True      # there is code to compile
-                            cdStr, parStr = val.build()  # call verb build to get verb's runtime code string(s)
+                            cdStr, parStr = vrb.build()  # call verb build to get verb's runtime code string(s)
                             codeStr += cdStr
                             parFnStr += parStr
 
                         # if this class is an object that should be added to the world's active object list
-                        if hasattr(val, "autoStart") and val.autoStart:
-                            classStr = libName + "." + libName + "." + val.__name__
+                        if hasattr(vrb, "autoStart") and vrb.autoStart:
+                            classStr = libName + "." + libName + "." + vrb.__name__
                             #print("buildLib autoStart: ", classStr)
                             WyeCore.World.startObjs.append(classStr)
 
@@ -1523,7 +1522,8 @@ class WyeCore(Wye.staticObj):
                     print("\nlib '"+libClass.__name__+"' code=")
                     lnIx = 1
                     for ln in codeStr.split('\n'):
-                        print("%2d "%lnIx, ln)
+                        #print("%2d "%lnIx, ln)
+                        print(ln)
                         lnIx += 1
 
                 # compile the runtime class containing methods for all the verb runtimes
@@ -1578,9 +1578,9 @@ class WyeCore(Wye.staticObj):
         def createLibString(name):
 
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
-            libTpl += "class "+name+":\n    def build():\n        WyeCore.Utils.buildLib("+name+")\n"
-            libTpl += "    canSave = True  # all verbs can be saved with the library\n"
-            libTpl += "    class "+name+"_rt:\n        pass\n"
+            libTpl += "class "+name+":\n  def build():\n    WyeCore.Utils.buildLib("+name+")\n"
+            libTpl += "  canSave = True  # all verbs can be saved with the library\n"
+            libTpl += "  class "+name+"_rt:\n   pass #1\n"
             return libTpl
 
 
@@ -1626,9 +1626,12 @@ class WyeCore(Wye.staticObj):
 
         # create the text description of a verb from lib, verb name, settings, param/var/code descrs.
         # If doTest, builds a self-contained Python class that can build itself without having to be in a lib
-        def createVerbString(libName, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False):
+        def createVerbString(libName, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, outDent=True):
 
-            vrbStr = "\nclass " + name + ":\n"
+            if doTest or outDent:
+                vrbStr = "\nclass " + name + ":\n"
+            else:
+                vrbStr = "\n  class " + name + ":\n"
             if 'mode' in verbSettings:
                 vrbStr += "    mode = Wye.mode." + Wye.mode.tostring(verbSettings['mode']) + "\n"
             if 'autoStart' in verbSettings:

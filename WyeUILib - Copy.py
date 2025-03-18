@@ -3004,7 +3004,7 @@ class WyeUILib(Wye.staticObj):
                                             vrbStr = WyeCore.Utils.createVerbString(libName, verb.__name__,
                                                         verbSettings,  verb.paramDescr,  verb.varDescr,
                                                         verb.codeDescr, doTest=False)
-                                            vrbStr = vrbStr.replace("\n", "\n    ")     # offset to align under lib
+                                            #vrbStr = vrbStr.replace("\n", "\n    ")     # offset to align under lib
 
                                             fileTxt += vrbStr
 
@@ -5862,7 +5862,7 @@ class WyeUILib(Wye.staticObj):
                     vrbStr = WyeCore.Utils.createVerbString(libName, verbName, editFrm.vars.newVerbSettings[0],
                                 editFrm.vars.newParamDescr[0], editFrm.vars.newVarDescr[0], editFrm.vars.newCodeDescr[0],
                                 doTest=False)
-                    vrbStr = vrbStr.replace("\n", "\n    ")
+                    #vrbStr = vrbStr.replace("\n", "\n    ")
 
                     outStr += vrbStr
                     try:

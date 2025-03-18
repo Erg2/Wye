@@ -3014,7 +3014,7 @@ class WyeUILib(Wye.staticObj):
                                             vrbStr = WyeCore.Utils.createVerbString(libName, verb.__name__,
                                                         verbSettings,  verb.paramDescr,  verb.varDescr,
                                                         verb.codeDescr, doTest=False)
-                                            vrbStr = vrbStr.replace("\n", "\n    ")     # offset to align under lib
+                                            #vrbStr = vrbStr.replace("\n", "\n    ")     # offset to align under lib
 
                                             fileTxt += vrbStr
 
@@ -3740,14 +3740,18 @@ class WyeUILib(Wye.staticObj):
 
                     # Choose from existing Library list
                     libList = [lib.__name__ for lib in WyeCore.World.libList]
-                    libFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "Library", [libList], [libList.index(verb.library.__name__)])
+                    libFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "Library", [libList],
+                                     [libList.index(verb.library.__name__)], layout=Wye.layout.ADD_RIGHT)
                     frame.vars.existingLibFrm[0] = libFrm
 
                     # save to library
-                    saveCodeFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Save to Library", WyeUILib.EditVerb.EditCodeSaveLibCallback)
+                    saveCodeFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Save to Library",
+                                        WyeUILib.EditVerb.EditCodeSaveLibCallback)
                     saveCodeFrm.params.optData = [(saveCodeFrm, dlgFrm, frame)]
 
-                    WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Library File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
+                    saveCodeFileFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Library File Name", frame.vars.fileName,
+                                WyeUILib.EditVerb.EditCodeSaveLibNameCallback, layout=Wye.layout.ADD_RIGHT)
+                    saveCodeFileFrm.params.optData = [(saveCodeFileFrm, dlgFrm, frame)]
 
 
                     # settings
@@ -6283,6 +6287,27 @@ class WyeUILib(Wye.staticObj):
                                          editFrm.vars.newCodeDescr[0],
                                          True, listFlag)
 
+        # Update lib name var
+        class EditCodeSaveLibNameCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("EditCodeSaveLibNameCallback started")
+                return Wye.codeFrame(WyeUILib.EditVerb.EditCodeSaveLibNameCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                # print("EditCodeSaveLibNameCallback data=", data)
+                txtFrm = data[1][0]
+                parentFrm = data[1][1]
+                editFrm = data[1][2]
+
+                editFrm.vars.fileName[0] = txtFrm.vars.currVal[0]
+                #print("Update filename to ", editFrm.vars.fileName[0])
+
         # Save edited code to a library file
         class EditCodeSaveLibCallback:
             mode = Wye.mode.SINGLE_CYCLE
@@ -6326,8 +6351,10 @@ class WyeUILib(Wye.staticObj):
                     # gen verb code
                     vrbStr = WyeCore.Utils.createVerbString(libName, verbName, editFrm.vars.newVerbSettings[0],
                                 editFrm.vars.newParamDescr[0], editFrm.vars.newVarDescr[0], editFrm.vars.newCodeDescr[0],
-                                doTest=False)
-                    vrbStr = vrbStr.replace("\n", "\n    ")
+                                doTest=False, outDent=False)
+                    print("outStr\n"+ outStr)
+                    print("vrbStr\n"+ vrbStr)
+                    #vrbStr = vrbStr.replace("\n", "\n    ")
 
                     outStr += vrbStr
                     try:
