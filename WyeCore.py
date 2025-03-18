@@ -965,7 +965,6 @@ class WyeCore(Wye.staticObj):
             path = base_path + "/" + relative_path
 
             path = path.replace("\\","/")
-            #path = path.replace(":","")
 
             #print("  return path '"+ path+"'")
             return path

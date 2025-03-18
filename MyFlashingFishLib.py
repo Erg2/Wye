@@ -1,10 +1,10 @@
 from Wye import Wye
 from WyeCore import WyeCore
-class MyTestLib:
+class MyFlashingFishLib:
     def build():
-        WyeCore.Utils.buildLib(MyTestLib)
+        WyeCore.Utils.buildLib(MyFlashingFishLib)
     canSave = True  # all verbs can be saved with the library
-    class MyTestLib_rt:
+    class MyFlashingFishLib_rt:
         pass
 
     class FlashingTestFish:
@@ -27,7 +27,7 @@ class MyTestLib:
             ("colorWk","FL",
               (1,1,1)),
             ("colorInc","FL",
-              (2,5,15)),
+              (1,2,10)),
             ("color","FL",
               (0.5,0.5,0.5,1)),
             ("skew","F",0),
@@ -38,8 +38,7 @@ class MyTestLib:
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
-              ("Code","['fish1a.glb']"),
-              (None,"frame.vars.position"),
+              ("Code","['fish1a.glb']"),              (None,"frame.vars.position"),
               (None,"[[0, 90, 0]]"),
               (None,"[[3,3,3]]"),
               (None,"frame.vars.objTag"),
@@ -80,18 +79,18 @@ class MyTestLib:
     
         def build():
             # print("Build ",FlashingTestFish)
-            return WyeCore.Utils.buildCodeText('FlashingTestFish', MyTestLib.FlashingTestFish.codeDescr, MyTestLib.FlashingTestFish)
+            return WyeCore.Utils.buildCodeText('FlashingTestFish', MyFlashingFishLib.FlashingTestFish.codeDescr, MyFlashingFishLib.FlashingTestFish)
     
         def start(stack):
-            return Wye.codeFrame(MyTestLib.FlashingTestFish, stack)
+            return Wye.codeFrame(MyFlashingFishLib.FlashingTestFish, stack)
     
         def run(frame):
             # print('Run 'FlashingTestFish)
             try:
-              MyTestLib.MyTestLib_rt.FlashingTestFish_run_rt(frame)
+              MyFlashingFishLib.MyFlashingFishLib_rt.FlashingTestFish_run_rt(frame)
             except Exception as e:
               if not hasattr(frame, 'errOnce'):
-                print('MyTestLib.MyTestLib_rt.FlashingTestFish_run_rt failed\n', str(e))
+                print('MyFlashingFishLib.MyFlashingFishLib_rt.FlashingTestFish_run_rt failed\n', str(e))
                 import traceback
                 traceback.print_exception(e)
                 frame.errOnce = True
@@ -109,7 +108,7 @@ class MyTestLib:
             ("objTag","S","objTag"),
             ("sound","O",None),
             ("position","FL",
-              (0.0,15.0,1.0)),
+              (-4.0,15.0,4.0)),
             ("dPos","FL",
               (0.0,0.0,-0.1)),
             ("dAngle","FL",
@@ -170,24 +169,24 @@ class MyTestLib:
     
         def build():
             # print("Build ",FlyerTestFish)
-            return WyeCore.Utils.buildCodeText('FlyerTestFish', MyTestLib.FlyerTestFish.codeDescr, MyTestLib.FlyerTestFish)
+            return WyeCore.Utils.buildCodeText('FlyerTestFish', MyFlashingFishLib.FlyerTestFish.codeDescr, MyFlashingFishLib.FlyerTestFish)
     
         def start(stack):
-            return Wye.codeFrame(MyTestLib.FlyerTestFish, stack)
+            return Wye.codeFrame(MyFlashingFishLib.FlyerTestFish, stack)
     
         def run(frame):
             # print('Run 'FlyerTestFish)
             try:
-              MyTestLib.MyTestLib_rt.FlyerTestFish_run_rt(frame)
+              MyFlashingFishLib.MyFlashingFishLib_rt.FlyerTestFish_run_rt(frame)
             except Exception as e:
               if not hasattr(frame, 'errOnce'):
-                print('MyTestLib.MyTestLib_rt.FlyerTestFish_run_rt failed\n', str(e))
+                print('MyFlashingFishLib.MyFlashingFishLib_rt.FlyerTestFish_run_rt failed\n', str(e))
                 import traceback
                 traceback.print_exception(e)
                 frame.errOnce = True
     
     
-    class TestFlashingFish:
+    class SmallFlashingFish:
         mode = Wye.mode.MULTI_CYCLE
         autoStart = True
         dataType = Wye.dType.NONE
@@ -199,7 +198,7 @@ class MyTestLib:
             ("objTag","S","objTag"),
             ("sound","O",None),
             ("position","FL",
-              (0.0,15.0,-4.0)),
+              (4.0,15.0,2.0)),
             ("dPos","FL",
               (0.0,0.0,-0.1)),
             ("dAngle","FL",
@@ -218,10 +217,10 @@ class MyTestLib:
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
-              ("Code","['fish1a.glb']"),
+              ("Code","['fish.glb']"),
               (None,"frame.vars.position"),
               (None,"[[0, 90, 0]]"),
-              (None,"[[3,3,3]]"),
+              (None,"[[1,1,1]]"),
               (None,"frame.vars.objTag"),
               (None,"frame.vars.color"),
               ("Var","frame.vars.cleanUpObjs")),
@@ -259,19 +258,19 @@ class MyTestLib:
             ("GoTo","Repeat"))
     
         def build():
-            # print("Build ",TestFlashingFish)
-            return WyeCore.Utils.buildCodeText('TestFlashingFish', MyTestLib.TestFlashingFish.codeDescr, MyTestLib.TestFlashingFish)
+            # print("Build ",SmallFlashingFish)
+            return WyeCore.Utils.buildCodeText('SmallFlashingFish', MyFlashingFishLib.SmallFlashingFish.codeDescr, MyFlashingFishLib.SmallFlashingFish)
     
         def start(stack):
-            return Wye.codeFrame(MyTestLib.TestFlashingFish, stack)
+            return Wye.codeFrame(MyFlashingFishLib.SmallFlashingFish, stack)
     
         def run(frame):
-            # print('Run 'TestFlashingFish)
+            # print('Run 'SmallFlashingFish)
             try:
-              MyTestLib.MyTestLib_rt.TestFlashingFish_run_rt(frame)
+              MyFlashingFishLib.MyFlashingFishLib_rt.SmallFlashingFish_run_rt(frame)
             except Exception as e:
               if not hasattr(frame, 'errOnce'):
-                print('MyTestLib.MyTestLib_rt.TestFlashingFish_run_rt failed\n', str(e))
+                print('MyFlashingFishLib.MyFlashingFishLib_rt.SmallFlashingFish_run_rt failed\n', str(e))
                 import traceback
                 traceback.print_exception(e)
                 frame.errOnce = True
