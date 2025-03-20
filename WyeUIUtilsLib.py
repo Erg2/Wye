@@ -52,7 +52,7 @@ class WyeUIUtilsLib(Wye.staticObj):
     # Helper functions for building dialogs
 
     # put up independently running popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
-    def doPopUpDialog(titleText, mainText, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL"],
+    def doPopUpDialog(titleText, mainText, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL",],
                            headerColor=Wye.color.HEADER_COLOR):
         global base
         global render

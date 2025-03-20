@@ -540,7 +540,7 @@ class WyeCore(Wye.staticObj):
         # caller already created stack and started the object
         # (required when caller needs to pass params to the object)
         def startActiveFrame(frame):
-            WyeCore.World.objStacks.append(frame.SP)  # put obj's stack on list and put obj's frame on the stack
+            WyeCore.World.objStacks.append(frame.SP)  # put obj's stack on exec list
             return frame
 
         # Queue frame to be removed from active object list at end of this display cycle
@@ -2035,7 +2035,8 @@ except Exception as e:
 
             #if doTest:
             if WyeCore.World.noBuildErrors:
-                print(name, vrbLib.__name__ + "." + name, " compiled successfully")
+                if Wye.devPrint:
+                    print(name, vrbLib.__name__ + "." + name, " compiled successfully")
 
                 title = "Build Success"
                 if listCode:
