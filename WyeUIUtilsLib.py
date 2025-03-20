@@ -52,7 +52,8 @@ class WyeUIUtilsLib(Wye.staticObj):
     # Helper functions for building dialogs
 
     # put up independently running popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
-    def doPopUpDialog(titleText, mainText, color=Wye.color.NORMAL_COLOR):
+    def doPopUpDialog(titleText, mainText, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL"],
+                           headerColor=Wye.color.HEADER_COLOR):
         global base
         global render
         #print("doPopUpDialog title", titleText, " text", mainText, " color", color)
@@ -60,18 +61,20 @@ class WyeUIUtilsLib(Wye.staticObj):
         # position in front of other dialogs
         point = NodePath("point")
         point.reparentTo(render)
-        point.setPos(base.camera, (0, 7, 0))
+        point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
         pos = point.getPos()
         point.removeNode()
 
-        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=None, position=pos, formatLst=["NO_CANCEL"])
+        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=None, position=pos, formatLst=formatLst, headerColor=headerColor)
         WyeUIUtilsLib.doInputLabel(dlgFrm, mainText, color)
         dlgFrm.systemObject = True      # Show warnings even if system paused
         dlgFrm.verb.run(dlgFrm)
         WyeCore.World.startActiveFrame(dlgFrm)
+#        dlgFrm.vars.bgndGObj[0].setColor(color)
 
     # create and return popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
-    def doPopUpDialogAsync(frame, titleText, mainText, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL",]):
+    def doPopUpDialogAsync(frame, titleText, mainText, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL",],
+                           headerColor=Wye.color.HEADER_COLOR):
         global base
         global render
         # print("doPopUpDialog title", titleText, " text", mainText, " color", color)
@@ -79,12 +82,12 @@ class WyeUIUtilsLib(Wye.staticObj):
         # position in front of other dialogs
         point = NodePath("point")
         point.reparentTo(render)
-        point.setPos(base.camera, (0, 7, 0))
+        point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
         pos = point.getPos()
         point.removeNode()
 
-        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=None, position=pos, formatLst=formatLst)
-        WyeUIUtilsLib.doInputLabel(dlgFrm, mainText, color)
+        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=None, position=pos, formatLst=formatLst, headerColor=headerColor)
+        WyeUIUtilsLib.doInputLabel(dlgFrm, mainText, color=color)
         dlgFrm.systemObject = True  # Show warnings even if system paused
         dlgFrm.verb.run(dlgFrm)
         return dlgFrm
@@ -100,7 +103,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         return askSaveFrm
 
     # dialog.  If no position supplied, puts in front of viewpoint
-    def doDialog(title, parent=None, position=None, formatLst=[""]):
+    def doDialog(title, parent=None, position=None, formatLst=[""], headerColor=Wye.color.HEADER_COLOR):
         if parent:
             stack = parent.SP
         else:
@@ -111,12 +114,13 @@ class WyeUIUtilsLib(Wye.staticObj):
         if not position:
             point = NodePath("point")
             point.reparentTo(render)
-            point.setPos(base.camera, (0, 10, 0))
+            point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET, 0))
             pos = point.getPos()
             point.removeNode()
         dlgFrm.params.position = [(position[0], position[1], position[2]), ]
         dlgFrm.params.parent = [parent]
-        dlgFrm.params.format = formatLst
+        dlgFrm.params.format = [formatLst]
+        dlgFrm.params.headerColor = [headerColor]
         return dlgFrm
 
     def doInputLabel(dlgFrm, label, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL):

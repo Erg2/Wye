@@ -164,7 +164,7 @@ class TestLib:
                     ("dPos", Wye.dType.FLOAT_LIST, [0., 0., -.05]),
                     ("dAngle", Wye.dType.FLOAT_LIST, [0., 0., -.65]),
                     ("colorWk", Wye.dType.FLOAT_LIST, [1, 1, 1]),
-                    ("colorInc", Wye.dType.FLOAT_LIST, [10, 10, 10]),
+                    ("colorInc", Wye.dType.FLOAT_LIST, [10, Wye.UI.DIALOG_OFFSET, 10]),
                     ("color", Wye.dType.FLOAT_LIST, [0, .33, .66, 1]),
                     ("cleanUpObjs", Wye.dType.OBJECT_LIST, None),           # list of graphic elements to delete on Stop
                     )
@@ -480,7 +480,7 @@ class TestLib:
         paramDescr = ()
         varDescr = (("fish", Wye.dType.OBJECT, None),
                     ("fishTag", Wye.dType.STRING, ""),
-                    ("tgtPos", Wye.dType.FLOAT_LIST, [0, 10, 0]),
+                    ("tgtPos", Wye.dType.FLOAT_LIST, [0, Wye.UI.DIALOG_OFFSET, 0]),
                     ("tgtDist", Wye.dType.FLOAT, 1.),
                     ("posStep", Wye.dType.FLOAT, .04),
                     ("dAngleX", Wye.dType.FLOAT, .5),

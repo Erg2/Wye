@@ -259,6 +259,12 @@ class WyeCore(Wye.staticObj):
                                     #   (neither mouse nor control-mouse gets called)
                                     #   So do mouse manually.  Sigh
 
+        # used during user compile of verb/lib
+        compileErrorTitle = ""
+        compileErrorText = ""
+        noBuildErrors = True           # only display one error, then stop
+        listing = ""
+
         # universe specific
         dlight = None           # global directional light
         dLightPath = None
@@ -465,6 +471,10 @@ class WyeCore(Wye.staticObj):
                                 print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                 WyeCore.World.stopActiveObject(frame)
                                 traceback.print_exception(e)
+                                title = "Runtime Error a"
+                                msg = "Object '"+frame.verb.__name__+", died with error\n"+str(e)+"\n"+traceback.format_exc()
+                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
+
                             # if frame.status != Wye.status.CONTINUE:
                             #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
                         # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.Utils.statusToString(frame.status),
@@ -485,6 +495,9 @@ class WyeCore(Wye.staticObj):
                                         # print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                         WyeCore.World.stopActiveObject(frame)
                                         traceback.print_exception(e)
+                                        title = "Runtime Error b"
+                                        msg = "Object '"+frame.verb.__name__+", died with error\n"+str(e)+"\n"+traceback.format_exc()
+                                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
 
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
@@ -758,6 +771,10 @@ class WyeCore(Wye.staticObj):
                                 print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
                                 WyeCore.World.stopActiveObject(evtFrame)
                                 traceback.print_exception(e)
+                                title = "Runtime Error c"
+                                msg = "Object '" + frame.verb.__name__ + ", died with error\n" + str(
+                                    e) + "\n" + traceback.format_exc()
+                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
                         # bottom of stack done, run next up on stack if any
                         elif len(evt[0]) > 1:
                             dbg = evt[0][-1]
@@ -776,6 +793,10 @@ class WyeCore(Wye.staticObj):
                                       " with error:\n", str(e))
                                 WyeCore.World.stopActiveObject(evtFrame)
                                 traceback.print_exception(e)
+                                title = "Runtime Error d"
+                                msg = "Object '" + frame.verb.__name__ + ", died with error\n" + str(
+                                    e) + "\n" + traceback.format_exc()
+                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
                             # On parent error, bail out - TODO - consider letting its parent handle error
                             if evtFrame.status == Wye.status.FAIL and len(evt[0]) > 1:
                                 #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
@@ -1429,6 +1450,10 @@ class WyeCore(Wye.staticObj):
                     except Exception as e:
                         print("buildCodeText failed at tuple", wyeTuple, "\n", str(e))
                         traceback.print_exception(e)
+                        if WyeCore.worldInitialized:
+                            title = "Runtime Error e"
+                            msg = "buildCodeText'" + wyeTuple + "\n" + str(e) + "\n" + traceback.format_exc()
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
 
                 # stick debug struct on verb
                 if not hasattr(verb, "caseCodeDictLst"):
@@ -1549,6 +1574,11 @@ class WyeCore(Wye.staticObj):
                         print('%2d ' % lnIx, ln)
                         lnIx += 1
                     print('')
+
+                    if WyeCore.worldInitialized:
+                        title = "Runtime Error c"
+                        msg = "Failed to build library:"+ libClass.__name__+ " runtime code\n" + str(e) + "\n" + traceback.format_exc()
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
 
         # do we already have a UI input focus manager?
         def haveFocusManager():
@@ -1692,22 +1722,34 @@ class WyeCore(Wye.staticObj):
                 vrbStr += "          " + libName + "." + libName + "_rt." + name + "_run_rt(frame)\n"
             vrbStr += "        except Exception as e:\n"
             vrbStr += "          if not hasattr(frame, 'errOnce'):\n"
-            if verbSettings['mode'] == Wye.mode.PARALLEL:
-                vrbStr += "            print('" + libName + " " + name + " runParallel failed\\n', str(e))\n"
-            else:
-                vrbStr += "            print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
             vrbStr += "            import traceback\n"
-            vrbStr += "            traceback.print_exception(e)\n"
-            vrbStr += "            frame.errOnce = True\n\n"
+            vrbStr += "            if Wye.devPrint:\n"
+            if verbSettings['mode'] == Wye.mode.PARALLEL:
+                vrbStr += "              print('" + libName + " " + name + " runParallel failed\\n', str(e))\n"
+            else:
+                vrbStr += "              print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
+            vrbStr += "              traceback.print_exception(e)\n"
+            vrbStr += "              frame.errOnce = True\n\n"
+            vrbStr += "            WyeCore.World.compileErrorTitle='Runtime Error'\n"
+            vrbStr += "            WyeCore.World.compileErrorText='Object \\\""+name+"\\\" died with error\\n'+str(e)+'\\n'+traceback.format_exc()\n"
+            vrbStr += "            WyeCore.Utils.displayError()\n"
             return vrbStr
 
 
-
+        def displayError():
+            if WyeCore.World.noBuildErrors:                # only put up one error
+                WyeCore.World.noBuildErrors = False
+                title = WyeCore.World.compileErrorTitle
+                msg = WyeCore.World.compileErrorText
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
 
         # create a new verb
         # If test, just compile the verb and its runtime code
         # Otherwise attach it to the given library and, if autoStart, start it
         def createVerb(vrbLib, name, verbSettings, paramDescr, varDescr, codeDescr, doTest=False, listCode=False, doAutoStart=True):
+            # clear global compile error
+            WyeCore.World.noBuildErrors = True
+            WyeCore.World.listing = ""
 
             # build verb
             vrbStr = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
@@ -1727,19 +1769,30 @@ class WyeCore(Wye.staticObj):
             if listCode or WyeCore.debugListCode:
                 #if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
                 if verbSettings['mode'] == Wye.mode.PARALLEL:
-                    vrbStr += "print('createVerb: parallel runtime text')\n"
+                    vrbStr += "if Wye.devPrint:\n"
+                    vrbStr += "  print('createVerb: parallel runtime text')\n"
+                    vrbStr += "  lnIx = 1\n"
+                    vrbStr += "  for ln in parStr.split('\\n'):\n"
+                    vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                    vrbStr += "    lnIx += 1\n"
+                    vrbStr += "  print('')\n"
+                    vrbStr += "WyeCore.World.listing += '\\ncreateVerb: parallel runtime text\\n'\n"
                     vrbStr += "lnIx = 1\n"
                     vrbStr += "for ln in parStr.split('\\n'):\n"
-                    vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                    vrbStr += '    WyeCore.World.listing += (\"%2d \" % lnIx) + ln + \"\\n\"\n'
                     vrbStr += "    lnIx += 1\n"
-                    vrbStr += "print('')\n"
                 else:
-                    vrbStr += "print('createVerb: runtime text')\n"
+                    vrbStr += "if Wye.devPrint:\n"
+                    vrbStr += "  print('createVerb: runtime text')\n"
+                    vrbStr += "  lnIx = 1\n"
+                    vrbStr += "  for ln in cdStr.split('\\n'):\n"
+                    vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                    vrbStr += "  print('')\n"
+                    vrbStr += "WyeCore.World.listing += '\\ncreateVerb: runtime text\\n'\n"
                     vrbStr += "lnIx = 1\n"
                     vrbStr += "for ln in cdStr.split('\\n'):\n"
-                    vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                    vrbStr += '    WyeCore.World.listing += (\"%2d \" % lnIx) + ln + \"\\n\"\n'
                     vrbStr += "    lnIx += 1\n"
-                    vrbStr += "print('')\n"
             # when the verb string is executed, the verb's build will be run.
             # The build will return the runtime string for the verb.
             # So the verb's string we're compiling now will need to compile that returned string into code
@@ -1809,50 +1862,87 @@ try:
             #vrbStr += "        print('Created verb "+vrbLib.__name__ + "." + name + "')\n"
             vrbStr += '''
     except Exception as e:
+        print("exec verb runtime failed\\n", str(e))    
 '''
             if verbSettings['mode'] == Wye.mode.PARALLEL:
                 vrbStr += '''
-        print('parStr')
-        lnIx = 1
-        for ln in parStr.split('\\n'):
+        if Wye.devPrint:
+          print('parStr')
+          lnIx = 1
+          for ln in parStr.split('\\n'):
             print('%2d ' % lnIx, ln)
             lnIx += 1
-        print('')                
+          print('')
+        lnIx = 1
+        WyeCore.World.listing += 'parStr\\n'
+        for ln in parStr.split('\\n'):
+            WyeCore.World.listing += ('%2d ' % lnIx) + ln + '\\n'
+            lnIx += 1
 '''
             else:
                 vrbStr += '''
-        print("exec verb runtime failed\\n", str(e))
-        print('cdStr')
-        lnIx = 1
-        for ln in cdStr.split('\\n'):
+        if Wye.devPrint:
+          print('cdStr')
+          lnIx = 1
+          for ln in cdStr.split('\\n'):
             print('%2d ' % lnIx, ln)
             lnIx += 1
-        print('')                
+          print('')
+        WyeCore.World.listing += 'cdStr\\n'
+        lnIx = 1
+        for ln in cdStr.split('\\n'):
+            WyeCore.World.listing += ('%2d ' % lnIx) + ln + '\\n'
+            lnIx += 1
+
 '''
             vrbStr += '''
+        WyeCore.World.compileErrorTitle = "Build: exec verb runtime failed"
+        WyeCore.World.compileErrorText = "Error\\n" + str(e) + "\\nListing\\n" + WyeCore.World.listing
+        WyeCore.Utils.displayError()
+        
 except Exception as e:
     print("compile verb runtime failed\\n", str(e))
 '''
 
             if verbSettings['mode'] == Wye.mode.PARALLEL:
                 vrbStr += '''
-    print('parStr')
-    lnIx = 1
-    for ln in parStr.split('\\n'):
+    if Wye.devPrint:
+      print("compile verb runtime failed\\n", str(e))
+      print('parStr')
+      lnIx = 1
+      for ln in parStr.split('\\n'):
         print('%2d ' % lnIx, ln)
         lnIx += 1
-    print('')                
+      print('')
+    WyeCore.World.listing += 'parStr\\n'
+    lnIx = 1
+    for ln in parStr.split('\\n'):
+        WyeCore.World.listing += ('%2d ' % lnIx) + ln + '\\n'
+        lnIx += 1
 '''
             else:
                 vrbStr += '''
-    print("exec verb runtime failed\\n", str(e))
-    print('cdStr')
+    if Wye.devPrint:
+      print("compile verb runtime failed\\n", str(e))
+      print('cdStr')
+      lnIx = 1
+      for ln in cdStr.split('\\n'):
+          print('%2d ' % lnIx, ln)
+          lnIx += 1
+      print('')
+    WyeCore.World.listing += 'cdStr\\n'
     lnIx = 1
     for ln in cdStr.split('\\n'):
-        print('%2d ' % lnIx, ln)
+        WyeCore.World.listing += ('%2d ' % lnIx) + ln + '\\n'
         lnIx += 1
-    print('')                
 '''
+                vrbStr += '''
+    WyeCore.World.compileErrorTitle = "Build: compile verb runtime failed"
+    WyeCore.World.compileErrorText = "Error\\n" + str(e) + "\\n\\nListing:\\n" + WyeCore.World.listing
+    WyeCore.Utils.displayError()
+
+'''
+
             if not doTest:
                 # if verb has autostart, do it, unless blocked by caller
                 if doAutoStart:
@@ -1863,12 +1953,22 @@ except Exception as e:
 
             # DEBUG print verb code with line numbers
             if listCode or WyeCore.debugListCode:
-                print("createVerb: verb text:")
+                if Wye.devPrint:
+                    print("createVerb: verb text:")
+                    lnIx = 1
+                    for ln in vrbStr.split('\n'):
+                        print("%2d " % lnIx, ln)
+                        lnIx += 1
+                    print("")
+                WyeCore.World.listing += "\ncreateVerb: verb text:\n"
+                WyeCore.World.listing += "vrbStr\n"
                 lnIx = 1
                 for ln in vrbStr.split('\n'):
-                    print("%2d " % lnIx, ln)
+                    WyeCore.World.listing += ("%2d " % lnIx) + ln + "\n"
                     lnIx += 1
-                print("")
+                # only put up listing if haven't thrown an error
+                if not WyeCore.World.noBuildErrors:
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Build: verb compiled code:", WyeCore.World.listing, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
 
             # compile verb
             try:
@@ -1890,32 +1990,58 @@ except Exception as e:
                 #    print("createVerb: exec verb", vrbLib.__name__ + "." + name)
                 try:
                     exec(code, libDict)
-                    if doTest:
+                    if (doTest or Wye.devPrint) and not WyeCore.World.noBuildErrors:
                         print(vrbLib.__name__ + name, " executed successfully")
                 except Exception as e:
                     print("exec verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
-                    msg = traceback.format_exc()
-                    print(msg)
-                    #traceback.print_exception(e)
+                    lnIx = 1
+                    for ln in vrbStr.split('\n'):
+                        WyeCore.World.listing += ("%2d " % lnIx) + ln + "\n"
+                        lnIx += 1
+                    WyeCore.World.compileErrorTitle = "Runtime Error"
+                    WyeCore.World.compileErrorText = "Object '" + name+", died with error\n" + str(e) + "\n" + traceback.format_exc() +"\n\nListing:\n" +WyeCore.World.listing
+                    WyeCore.Utils.displayError()
+
+                    if Wye.devPrint:
+                        print("exec verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
+                        traceback.print_exception(e)
+                        print("verb text:")
+                        lnIx = 1
+                        for ln in vrbStr.split('\n'):
+                            print("%2d " % lnIx, ln)
+                            lnIx += 1
+                        print("")
+                    return
+
+            except Exception as e:
+                if Wye.devPrint:
+                    print("compile verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
+                    traceback.print_exception(e)
                     print("verb text:")
                     lnIx = 1
                     for ln in vrbStr.split('\n'):
                         print("%2d " % lnIx, ln)
                         lnIx += 1
                     print("")
-                    return
 
-            except Exception as e:
-                print("compile verb", vrbLib.__name__ + "." + name, " failed\n", str(e))
-                traceback.print_exception(e)
-                print("verb text:")
                 lnIx = 1
                 for ln in vrbStr.split('\n'):
-                    print("%2d " % lnIx, ln)
+                    WyeCore.World.listing += ("%2d " % lnIx) + ln + "\n"
                     lnIx += 1
-                print("")
+                WyeCore.World.compileErrorTitle = "Build: compile verb failed"
+                WyeCore.World.compileErrorText = "exec verb" + vrbLib.__name__ + "." + name + " failed\n" + str(e) + "\n" + traceback.format_exc() + "\n\nListing:\n" + WyeCore.World.listing
+                WyeCore.Utils.displayError()
                 return
 
-            if doTest:
+            #if doTest:
+            if WyeCore.World.noBuildErrors:
                 print(name, vrbLib.__name__ + "." + name, " compiled successfully")
+
+                title = "Build Success"
+                if listCode:
+                    msg = name + " " + vrbLib.__name__ + "." + name + " built successfully\n" + WyeCore.World.listing
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
+                else:
+                    msg = name + " " + vrbLib.__name__ + "." + name + " built successfully"
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg)
 

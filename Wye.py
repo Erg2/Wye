@@ -24,6 +24,8 @@ class Wye:
 
     version = "0.7"
 
+    devPrint = False       # We're running in the Python debugger and want to see messages in text
+
     startPos = (0, -10, 0)      # initial camera position
 
     startLightAngle = (45, -65, 0)
@@ -101,6 +103,10 @@ class Wye:
 
 
     # Constants
+
+    class UI:
+        DIALOG_OFFSET = 20      # how far from viewpoint dialogs pop up
+        NOTIFICATION_OFFSET = 18 # how far from viewpoint warnings etc. pop up (i.e. closer than normal dlgs)
 
     # status values returned by multi-cycle verbs
     class status:
