@@ -40,7 +40,7 @@ class TestLib3:
             )
         )
 
-        def build():
+        def build(rowRef):
             #print("Testlib2 build testCompiledPar")
             return WyeCore.Utils.buildParallelText("TestLib3", "doitButton", TestLib3.doitButton.codeDescr)
 
@@ -109,8 +109,8 @@ class TestLib3:
             ("Label", "Done")
         )
 
-        def build():
-            return WyeCore.Utils.buildCodeText("DlgTst", TestLib3.DlgTst.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("DlgTst", TestLib3.DlgTst.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib3.DlgTst, stack)

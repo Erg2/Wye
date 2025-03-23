@@ -49,9 +49,9 @@ class newLibName:
           (None,"[2]")),
         ("GoTo","Repeat"))
 
-    def build():
+    def build(rowRef):
         # print("Build ",MyAngleFish)
-        return WyeCore.Utils.buildCodeText('MyAngleFish', newLibName.MyAngleFish.codeDescr, newLibName.MyAngleFish)
+        return WyeCore.Utils.buildCodeText('MyAngleFish', newLibName.MyAngleFish.codeDescr, newLibName.MyAngleFish, rowRef)
 
     def start(stack):
         return Wye.codeFrame(newLibName.MyAngleFish, stack)

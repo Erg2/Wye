@@ -22,7 +22,7 @@ class Wye:
 
     dragging = False
 
-    version = "0.7"
+    version = "0.8"
 
     devPrint = False       # We're running in the Python debugger and want to see messages in text
 
@@ -106,7 +106,7 @@ class Wye:
 
     class UI:
         DIALOG_OFFSET = 20      # how far from viewpoint dialogs pop up
-        NOTIFICATION_OFFSET = 18 # how far from viewpoint warnings etc. pop up (i.e. closer than normal dlgs)
+        NOTIFICATION_OFFSET = 16 # how far from viewpoint warnings etc. pop up (i.e. closer than normal dlgs)
 
     # status values returned by multi-cycle verbs
     class status:

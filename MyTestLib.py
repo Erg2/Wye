@@ -175,7 +175,7 @@ else:
             ("Code","frame.vars.sound[0].play()"),
             ("GoTo","top"))))
 
-    def build():
+    def build(rowRef):
         # print("Build ",leaderFish)
         return WyeCore.Utils.buildParallelText('MyTestLib','leaderFish', MyTestLib.leaderFish.codeDescr, MyTestLib.leaderFish)
 

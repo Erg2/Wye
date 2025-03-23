@@ -34,9 +34,9 @@ class WyeLib:
         codeDescr = (("Label", "Noop"),)
 
 
-        def build():
+        def build(rowRef):
             #print("Build noop")
-            return WyeCore.Utils.buildCodeText("noop", WyeLib.noop.codeDescr, WyeLib.noop)
+            return WyeCore.Utils.buildCodeText("noop", WyeLib.noop.codeDescr, WyeLib.noop, rowRef)
 
         def start(stack):
             #print("noop start")
@@ -183,8 +183,8 @@ class WyeLib:
             ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec")),
         )
 
-        def build():
-            return WyeCore.Utils.buildCodeText("loadObject", WyeLib.loadObject.codeDescr, WyeLib.loadObject)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("loadObject", WyeLib.loadObject.codeDescr, WyeLib.loadObject, rowRef)
 
         def start(stack):
             return Wye.codeFrame(WyeLib.loadObject, stack)
@@ -472,6 +472,12 @@ class WyeLib:
             mat.setDiffuse((color[0], color[1], color[2], color[3]))  # Make this material blue
             gObj.setMaterial(mat, 1)
 
+        def setColor(gObj, color):
+            mat = Material()
+            mat.setShininess(5.0)  # Make this material shiny
+            mat.setAmbient((color[0], color[1], color[2], color[3]))  # Make this material blue
+            mat.setDiffuse((color[0], color[1], color[2], color[3]))  # Make this material blue
+            gObj.setMaterial(mat, 1)
 
     class delay:
         mode = Wye.mode.MULTI_CYCLE

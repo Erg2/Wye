@@ -252,7 +252,7 @@ class TestLib2:
                      )
         code = None
 
-        def build():
+        def build(rowRef):
             #print("Testlib2 build testCompiledPar")
             return WyeCore.Utils.buildParallelText("TestLib2", "testCompiledPar", TestLib2.testCompiledPar.codeDescr)
 
@@ -297,9 +297,9 @@ class TestLib2:
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(0,1,0,1)"))
         )
 
-        def build():
+        def build(rowRef):
             #print("Testlib2 build testMCycle")
-            return WyeCore.Utils.buildCodeText("testMCycle", TestLib2.testMCycle.codeDescr)
+            return WyeCore.Utils.buildCodeText("testMCycle", TestLib2.testMCycle.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib2.testMCycle, stack)
@@ -325,9 +325,9 @@ class TestLib2:
             #(None, "print('testMCycle2 one case ',frame.PC)"),
         )
 
-        def build():
+        def build(rowRef):
             #print("Testlib2 build testMCycle2")
-            return WyeCore.Utils.buildCodeText("testMCycle2", TestLib2.testMCycle2.codeDescr)
+            return WyeCore.Utils.buildCodeText("testMCycle2", TestLib2.testMCycle2.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib2.testMCycle2, stack)

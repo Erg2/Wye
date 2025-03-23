@@ -18,9 +18,9 @@ class TestLib:
             ("Code","print('PlaceHolder running!')"),
             ("Label","DoNothing"))
     
-        def build():
+        def build(rowRef):
             # print("Build ",PlaceHolder)
-            return WyeCore.Utils.buildCodeText('PlaceHolder', TestLib.PlaceHolder.codeDescr, TestLib.PlaceHolder)
+            return WyeCore.Utils.buildCodeText('PlaceHolder', TestLib.PlaceHolder.codeDescr, TestLib.PlaceHolder, rowRef)
     
         def start(stack):
             return Wye.codeFrame(TestLib.PlaceHolder, stack)

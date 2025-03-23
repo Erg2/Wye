@@ -72,7 +72,7 @@ Compiling
 class TestLib:
 
     # Build run_rt methods on each class
-    def build():
+    def build(rowRef):
         WyeCore.Utils.buildLib(TestLib)
 
 
@@ -107,9 +107,8 @@ class TestLib:
 '''
         code = None
 
-        def build():
+        def build(rowRef):
             # string will be added to TestLib_rt.testAddInPlace_rt
-            #print("Called testAddInPlace.build()")
             return TestLib.testAddInPlace.codeString, ""
 
         def start(stack):
@@ -136,9 +135,9 @@ class TestLib:
 '''
         code = None
 
-        def build():
+        def build(rowRef):
             # string will be added to TestLib_rt.testAdd_rt
-            #print("Called testAdd.build()")
+            #print("Called testAdd.build(rowref)")
             return TestLib.testAdd.codeString, ""
 
         def start(stack):
@@ -160,8 +159,8 @@ class TestLib:
         )
         code = None
 
-        def build():
-            return WyeCore.Utils.buildCodeText("testAdd2", TestLib.testAdd2.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("testAdd2", TestLib.testAdd2.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testAdd2, stack)
@@ -352,7 +351,7 @@ class TestLib:
                     #print("spin (neg) obj ", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
                     if vec[axis] < -45:    # end of swing other way
-                        frame.PC += 1   # go to previous state
+                        frame.PC += 1   # go to next state
 
                 case 5:
                     frame.vars[0][0] += 1  # count cycles
@@ -430,8 +429,8 @@ class TestLib:
             )
         code = None
 
-        def build():
-            return WyeCore.Utils.buildCodeText("testLoader2", TestLib.testLoader2.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("testLoader2", TestLib.testLoader2.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testLoader2, stack)
@@ -463,8 +462,8 @@ class TestLib:
         )
         code = None
 
-        def build():
-            return WyeCore.Utils.buildCodeText("testLoader3", TestLib.testLoader3.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("testLoader3", TestLib.testLoader3.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testLoader3, stack)

@@ -155,8 +155,8 @@ class EditLib:
             ("GoTo", "PopDialog")
         )
 
-        def build():
-            return WyeCore.Utils.buildCodeText("showFishDialog", EditLib.showFishDialog.codeDescr, EditLib.showFishDialog)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("showFishDialog", EditLib.showFishDialog.codeDescr, EditLib.showFishDialog, rowRef)
 
         def start(stack):
             #print("showFishDialog object start")
@@ -225,9 +225,9 @@ class EditLib:
             ("GoTo", "Repeat")
         )
 
-        def build():
+        def build(rowRef):
             # print("Build ",MyTestVerb)
-            return WyeCore.Utils.buildCodeText('MyTestVerb', EditLib.MyTestVerb.codeDescr, EditLib.MyTestVerb)
+            return WyeCore.Utils.buildCodeText('MyTestVerb', EditLib.MyTestVerb.codeDescr, EditLib.MyTestVerb, rowRef)
 
         def start(stack):
             # print('MyTestVerb object start')

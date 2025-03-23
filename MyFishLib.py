@@ -89,9 +89,9 @@ class MyFishLib:
           ("Var","frame.vars.fishes[0]")),
         ("GoTo","SwimLoop"))
 
-    def build():
+    def build(rowRef):
         # print("Build ",fish2)
-        return WyeCore.Utils.buildCodeText('fish2', MyFishLib.fish2.codeDescr, MyFishLib.fish2)
+        return WyeCore.Utils.buildCodeText('fish2', MyFishLib.fish2.codeDescr, MyFishLib.fish2, rowRef)
 
     def start(stack):
         return Wye.codeFrame(MyFishLib.fish2, stack)
@@ -279,7 +279,7 @@ else:
             ("Code","frame.vars.sound[0].play()"),
             ("GoTo","top"))))
 
-    def build():
+    def build(rowRef):
         # print("Build ",leaderFish2)
         return WyeCore.Utils.buildParallelText('MyFishLib','leaderFish2', MyFishLib.leaderFish2.codeDescr, MyFishLib.leaderFish2)
 

@@ -52,8 +52,8 @@ class WyeUIUtilsLib(Wye.staticObj):
     # Helper functions for building dialogs
 
     # put up independently running popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
-    def doPopUpDialog(titleText, mainText, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL",],
-                           headerColor=Wye.color.HEADER_COLOR):
+    def doPopUpDialog(titleText, mainText, headerColor=Wye.color.HEADER_COLOR, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL"],
+                           ):
         global base
         global render
         #print("doPopUpDialog title", titleText, " text", mainText, " color", color)
@@ -73,8 +73,8 @@ class WyeUIUtilsLib(Wye.staticObj):
 #        dlgFrm.vars.bgndGObj[0].setColor(color)
 
     # create and return popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
-    def doPopUpDialogAsync(frame, titleText, mainText, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL",],
-                           headerColor=Wye.color.HEADER_COLOR):
+    def doPopUpDialogAsync(frame, titleText, mainText, headerColor=Wye.color.HEADER_COLOR, color=Wye.color.NORMAL_COLOR,
+                           formatLst=["NO_CANCEL",]):
         global base
         global render
         # print("doPopUpDialog title", titleText, " text", mainText, " color", color)
@@ -93,13 +93,20 @@ class WyeUIUtilsLib(Wye.staticObj):
         return dlgFrm
 
     # create and return file save/overwrite dialog box
-    def doAskSaveAsFileAsync(frame, parent, fileName, fileType=".py", title="Save As", retValRef=[Wye.status.CONTINUE]):
+    def doAskSaveAsFileAsync(frame, parent, fileName, position=(0,0,0), fileType=".py", title="Save As", retValRef=[Wye.status.CONTINUE]):
         askSaveFrm = WyeUILib.AskSaveAsFile.start(frame.SP)
         askSaveFrm.params.retVal = retValRef
         askSaveFrm.params.fileName = [fileName]
         askSaveFrm.params.fileType = [fileType]
         askSaveFrm.params.title = [title]
         askSaveFrm.params.parent = [parent]
+        if not parent and position == (0,0,0):
+            point = NodePath("point")
+            point.reparentTo(render)
+            point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
+            position = point.getPos()
+            point.removeNode()
+        askSaveFrm.params.position = [position]
         return askSaveFrm
 
     # dialog.  If no position supplied, puts in front of viewpoint

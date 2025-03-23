@@ -48,7 +48,7 @@ class TestLib:
         #    )
         )
 
-        def build():
+        def build(rowRef):
             #print("Testlib2 build testCompiledPar")
             return WyeCore.Utils.buildParallelText("TestLib", "doitButton", TestLib.doitButton.codeDescr)
 
@@ -140,8 +140,8 @@ class TestLib:
             (None, "frame.status = Wye.status.SUCCESS")
         )
 
-        def build():
-            return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr, rowRef)
 
         def start(stack):
             #print("testDialog object start")
@@ -177,8 +177,8 @@ class TestLib:
                 ("GoTo", "ClickLoop")
             )
 
-        def build():
-            return WyeCore.Utils.buildCodeText("fishDlgButton", TestLib.fishDlgButton.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("fishDlgButton", TestLib.fishDlgButton.codeDescr, rowRef)
 
         def start(stack):
             #print("fishDlgButton object start")
@@ -234,9 +234,9 @@ class TestLib:
             ("GoTo", "PopDialog")
         )
 
-        def build():
+        def build(rowRef):
             #print("Build fishDialog")
-            return WyeCore.Utils.buildCodeText("fishDialog", TestLib.fishDialog.codeDescr)
+            return WyeCore.Utils.buildCodeText("fishDialog", TestLib.fishDialog.codeDescr, rowRef)
 
         def start(stack):
             #print("fishDialog object start")
@@ -286,8 +286,8 @@ class TestLib:
         )
         code = None
 
-        def build():
-            return WyeCore.Utils.buildCodeText("testLoader", TestLib.testLoader.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("testLoader", TestLib.testLoader.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib.testLoader, stack)
@@ -347,7 +347,7 @@ class TestLib:
                     #print("spin (neg) obj ", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
                     if vec[axis] < -45:    # end of swing other way
-                        frame.PC += 1   # go to previous state
+                        frame.PC += 1   # go to next state
 
                 case 5:
                     frame.vars.rotCt[0] += 1  # count cycles
@@ -441,9 +441,9 @@ class TestLib:
             ("GoTo", "Repeat")
         )
 
-        def build():
+        def build(rowRef):
             #print("Build fish")
-            return WyeCore.Utils.buildCodeText("fish", TestLib.fish.codeDescr)
+            return WyeCore.Utils.buildCodeText("fish", TestLib.fish.codeDescr, rowRef)
 
         def start(stack):
             #print("fish object start")
@@ -530,9 +530,9 @@ class TestLib:
 #            ("GoTo", "Start"),   # Back to the top
         )
 
-        def build():
+        def build(rowRef):
             #print("Build leaderFish")
-            return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr)
+            return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr, rowRef)
 
         def start(stack):
             #print("leaderFish object start")
@@ -573,9 +573,9 @@ class TestLib:
             ("GoTo", "Repeat")
         )
 
-        def build():
+        def build(rowRef):
             #print("Build angleFish")
-            return WyeCore.Utils.buildCodeText("angleFish", TestLib.angleFish.codeDescr)
+            return WyeCore.Utils.buildCodeText("angleFish", TestLib.angleFish.codeDescr, rowRef)
 
         def start(stack):
             #print("angleFish object start")

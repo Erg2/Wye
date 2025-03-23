@@ -468,9 +468,10 @@ class WyeCore(Wye.staticObj):
                                     frame.verb.run(frame)
                                     # print("WorldRun: after run", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ", " status", Wye.status.tostring(frame.status))
                             except Exception as e:
-                                print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                 WyeCore.World.stopActiveObject(frame)
-                                traceback.print_exception(e)
+                                if Wye.devPrint:
+                                    print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
+                                    traceback.print_exception(e)
                                 title = "Runtime Error a"
                                 msg = "Object '"+frame.verb.__name__+", died with error\n"+str(e)+"\n"+traceback.format_exc()
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
@@ -649,7 +650,6 @@ class WyeCore(Wye.staticObj):
                 print("Error: clearRepeatEventCallback failed to find frameTag '", frameTag,
                       "' in WyeCore.World.repeatEventCallbackDict")
 
-
         # key event dispatcher
         # (panda3d key event callback)
         class KeyHandler(DirectObject):
@@ -704,7 +704,7 @@ class WyeCore(Wye.staticObj):
                             for evt in evtLst:
                                 frame = evt[0]
                                 data = evt[1]
-                                #print("KeyHandler event: inc frame ", frame.verb.__name__, " PC ", frame.PC)
+                                print("KeyHandler event: inc frame ", frame.verb.__name__, " PC ", frame.PC)
                                 frame.PC += 1
                                 frame.eventData = (wyeID, keyname, data)  # user data
                             delLst.append(wyeID)
@@ -741,8 +741,8 @@ class WyeCore(Wye.staticObj):
 
                 evtIx = 0       # debug
                 for evtID in WyeCore.World.repeatEventCallbackDict:
-                    #print("repeatEventExecObj run: process evt", evtID)
                     evt = WyeCore.World.repeatEventCallbackDict[evtID]
+                    #print("repeatEventExecObj run: process evtID", evtID, " evt", evt)
                     if len(evt[0]) > 0:
                         #print("repeatEventExecObj run: process evt", evt)
                         evtFrame = evt[0][-1]
@@ -769,7 +769,7 @@ class WyeCore(Wye.staticObj):
                                     evtFrame.verb.run(evtFrame)
                             except Exception as e:
                                 print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
-                                WyeCore.World.stopActiveObject(evtFrame)
+                                delList.append(evt[3])          # don't run this again
                                 traceback.print_exception(e)
                                 title = "Runtime Error c"
                                 msg = "Object '" + frame.verb.__name__ + ", died with error\n" + str(
@@ -927,16 +927,17 @@ class WyeCore(Wye.staticObj):
                         if not status:
                             # if there's a callback for the specific object, call itF
                             if "click" in WyeCore.World.eventCallbackDict:
+                                #print("objSelectEvent: isPressed", isPressed, " ")
                                 tagDict = WyeCore.World.eventCallbackDict["click"]
                                 if wyeID in tagDict:
-                                    #print("Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
+                                    #print(" Found ", len(tagDict[wyeID]), " callbacks for tag ", wyeID)
                                     # run through lists calling callbacks.
                                     #print("objSelectEvent: tagDict=", tagDict)
                                     evtLst = tagDict[wyeID]
                                     for evt in evtLst:
                                         frame = evt[0]
                                         data = evt[1]
-                                        #print("objSelectEvent: inc frame ", frame.verb.__name__, " PC ", frame.PC)
+                                        #print("objSelectEvent: on mouse 'click' inc frame ", frame.verb.__name__, " PC ", frame.PC)
                                         frame.PC += 1
                                         frame.eventData = (wyeID, data)        # user data
                                     del tagDict[wyeID] # remove tag from dict of active callbacks
@@ -948,6 +949,7 @@ class WyeCore(Wye.staticObj):
                                 if "any" in tagDict:
                                     #print("Found ", len(tagDict[wyeID]), " callbacks for tag 'any'")
                                     for frame, data in tagDict.pop('any'):
+                                        #print("ObjSelectEvent: 'any'", frame.verb.__name__)
                                         frame.PC += 1
                                         frame.eventData = (wyeID, data)
                                     #print("objSelectEvent: 'any' callback used tag", wyeID)
@@ -1121,16 +1123,23 @@ class WyeCore(Wye.staticObj):
         # count nested lists in list
         def countNestedLists(tupleLst):
             count = 0
-            if isinstance(tupleLst, list):
+            if isinstance(tupleLst, list) or isinstance(tupleLst, tuple):
                 for elem in tupleLst:
-                    if isinstance(elem, list):
+                    if isinstance(elem, list) or isinstance(elem, tuple):
                         count += 1
                         count += WyeCore.Utils.countNestedLists(elem)
             return count
 
         # search for match [b] in in list of form [[[a]], [[b]], ..]
+        #
+        # This is array.index(elem) for arrays where each element is wrapped in a list so it can be passed by reference.
+        # Because each array element value is wrapped in a list, the elemeent's list can be passed to another function
+        # which can update the contained value for the calling function.
+
+        # This kind of array manually implements Pass By Reference for array elements.  But that means we need our own
+        # array.index(elem) function.
         def nestedIndexFind(lst, tgt):
-            # find index to this row's param in EditVerb's newParamDescr
+            # find index to this row's param
             ix = -1
             for ii in range(len(lst)):
                 if lst[ii][0] == tgt:
@@ -1146,208 +1155,202 @@ class WyeCore(Wye.staticObj):
         # Note: SINGLE_CYCLE and MULTI_CYCLE verb code is a list of verbs to process
         #       PARALLEL verb code is a list of verbs to split into separate parallel
         #       execution streams
-        # caseNumList is a list so the number can be incremented
+        # caseNumList is a list so the number in it can be incremented (i.e. pass by ref)
         # fns is a list that parallel functions are added to
-        def parseWyeTuple(wyeTuple, fNum, caseNumList, caseCodeDict):
-            caseStr = str(caseNumList[0])
+        def parseWyeTuple(wyeTuple, fNum, caseNumList):
             codeText = ""
             parFnText = ""
+            retParam = None
+
             # Wye verb
             if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
                 #print("parseWyeTuple: lib.verb tuple", wyeTuple)
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
-                libName = tupleParts[-2]
-                verbName = tupleParts[-1]
-                lib = WyeCore.World.libDict[libName]
-                verbClass = getattr(lib, verbName)
+                if len(tupleParts) >= 2:
+                    libName = tupleParts[-2]
+                    verbName = tupleParts[-1]
+                    lib = WyeCore.World.libDict[libName]
+                    verbClass = getattr(lib, verbName)
 
-                # generate appropriate code for verb mode
-                #print("\nWyeCore parseWyeTuple verb '" + wyeTuple[0] + "' dType "+Wye.mode.tostring(verbClass.mode))
-                match verbClass.mode:
-                    # single cycle verbs create code that runs immediately when called
-                    # parse Wye code tuples in the form
-                    #  (verb, [(optional), (params)]) - where each opt param is a recursive code tuple
-                    # or
-                    #  (None, "python code to inline")
-                    case Wye.mode.SINGLE_CYCLE:
-                        if not caseStr in caseCodeDict:
-                            caseCodeDict[caseStr] = []
-                        caseCodeDict[caseStr].append(wyeTuple)
-                        eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
-                        # put local frames on the parent frame as attributes to keep local scope
-                        codeText += "    if not hasattr(frame,'"+eff+"'):\n     setattr(frame,'"+eff+"',None)\n"
-                        codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
-                        #print("parseWyeTuple: verbClass", verbClass.__name__, " paramDescr", verbClass.paramDescr)
-                        #print("parseWyeTuple SINGLE: 1 codeText =", codeText[0], " wyeTuple", wyeTuple)
-                        #print("   len(verbClass.paramDescr)", len(verbClass.paramDescr))
-                        #print("   verbClass.paramDescr", verbClass.paramDescr)
-                        #print("   eff", eff)
-                        # for all the params in the tuple
-                        if len(wyeTuple) > 1:
-                            #print("*** parseWyeTuple: parse params")
-                            paramIx = 0
-                            for paramTuple in wyeTuple:
-                                #print(" parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple) - 1)
-                                # first tuple element is not a param
-                                if paramIx == 0:
-                                    paramIx += 1
-                                    if paramIx > len(wyeTuple):
-                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
-                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
+                    # generate appropriate code for verb mode
+                    #print("\nWyeCore parseWyeTuple verb '" + wyeTuple[0] + "' dType "+Wye.mode.tostring(verbClass.mode))
+                    match verbClass.mode:
+                        # single cycle verbs create code that runs immediately when called
+                        # parse Wye code tuples in the form
+                        #  (verb, [(optional), (params)]) - where each opt param is a recursive code tuple
+                        # or
+                        #  (None, "python code to inline")
+                        case Wye.mode.SINGLE_CYCLE:
+                            eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
+                            # put local frames on the parent frame as attributes to keep local scope
+                            codeText += "    if not hasattr(frame,'"+eff+"'):\n     setattr(frame,'"+eff+"',None)\n"
+                            codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                            #print("parseWyeTuple: verbClass", verbClass.__name__, " paramDescr", verbClass.paramDescr)
+                            #print("parseWyeTuple SINGLE: 1 codeText =", codeText[0], " wyeTuple", wyeTuple)
+                            #print("   len(verbClass.paramDescr)", len(verbClass.paramDescr))
+                            #print("   verbClass.paramDescr", verbClass.paramDescr)
+                            #print("   eff", eff)
+                            # for all the params in the tuple
+                            if len(wyeTuple) > 1:
+                                #print("*** parseWyeTuple: parse params")
+                                paramIx = 0
+                                for paramTuple in wyeTuple:
+                                    #print(" parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple) - 1)
+                                    # first tuple element is not a param
+                                    if paramIx == 0:
+                                        paramIx += 1
+                                        if paramIx > len(wyeTuple):
+                                            print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                            print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
 
-                                    #print(" parseWyeTuple: skip 0th entry in wyeTuple")
-                                    continue        # skip processing any more of this tuple parameter
+                                        #print(" parseWyeTuple: skip 0th entry in wyeTuple")
+                                        continue        # skip processing any more of this tuple parameter
 
-                                # skip empty tuples (list ended in ",") and debug highlighting tuples
-                                if len(paramTuple) == 0:
-                                    continue
+                                    # skip empty tuples (list ended in ",") and debug highlighting tuples
+                                    if len(paramTuple) == 0:
+                                        continue
 
-                                tupleKey = paramTuple[0]
-                                #print(" parseWyeTuple: 2 parse paramTuple ", paramTuple)
-                                # if tuple is code to compile
-                                #print("tupleKey", tupleKey)
-                                if tupleKey is None or tupleKey in ["Var", "Const", "Expr", "Code", "CodeBlock"]:        # constant/var (leaf node)
-                                    #print(" parseWyeTuple: paramTuple[0] is None/Const/Expr/Code")
-                                    #print("  parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
-                                    #print("   verbClass.paramDescr", verbClass.paramDescr)
-                                    #print("   verbClass.paramDescr[paramIx-1]", verbClass.paramDescr[paramIx-1][0])
+                                    tupleKey = paramTuple[0]
+                                    #print(" parseWyeTuple: 2 parse paramTuple ", paramTuple)
+                                    # if tuple is code to compile
+                                    #print("tupleKey", tupleKey)
+                                    if tupleKey is None or tupleKey in ["Var", "Const", "Expr", "Code", "CodeBlock"]:        # constant/var (leaf node)
+                                        #print(" parseWyeTuple: paramTuple[0] is None/Const/Expr/Code")
+                                        #print("  parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
+                                        #print("   verbClass.paramDescr", verbClass.paramDescr)
+                                        #print("   verbClass.paramDescr[paramIx-1]", verbClass.paramDescr[paramIx-1][0])
 
-                                    # if this is a variable param then recurse to parse list of wyetuples
-                                    if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
-                                        codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(" + paramTuple[1] + ")\n"
-                                    else:
-                                        codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=" + paramTuple[1] + "\n"
+                                        # if this is a variable param then recurse to parse list of wyetuples
+                                        if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
+                                            codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(" + paramTuple[1] + ")\n"
+                                        else:
+                                            codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=" + paramTuple[1] + "\n"
 
-                                    #print("parseWyeTuple: 3 codeText=", codeText[0])
-                                else:                           # recurse to parse nested code tuple
-                                    #print(" parseWyeTuple: paramTuple[0] is", paramTuple[0], " >>>> Recurse <<<<")
-                                    # Recurse to generate code to call verb and return its value
-                                    cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList, caseCodeDict)
+                                        #print("parseWyeTuple: 3 codeText=", codeText[0])
+                                    else:                           # recurse to parse nested code tuple
+                                        #print(" parseWyeTuple: paramTuple[0] is", paramTuple[0], " >>>> Recurse <<<<")
+                                        # Recurse to generate code to call verb and return its value
+                                        cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList)
 
-                                    # NOTE: Assumes that IDE ensured verb is a function!
-                                    #print("  popped back to parsing verb", verbClass.__name__, " wyeTuple", wyeTuple)
-                                    #print("   verbClass.paramDescr[paramIx-1]", verbClass.paramDescr[paramIx-1][0])
+                                        # NOTE: Assumes that IDE ensured verb is a function!
+                                        #print("  popped back to parsing verb", verbClass.__name__, " wyeTuple", wyeTuple)
+                                        #print("   verbClass.paramDescr[paramIx-1]", verbClass.paramDescr[paramIx-1][0])
 
-                                    if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
-                                        cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1] + "[0].append(frame.f"+str(fNum+1)+".params."+firstParam+")\n"
-                                    else:
-                                        cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
+                                        if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
+                                            cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1] + "[0].append(frame.f"+str(fNum+1)+".params."+firstParam+")\n"
+                                        else:
+                                            cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
 
-                                    codeText += cdTxt
-                                    parFnText += fnTxt
+                                        codeText += cdTxt
+                                        parFnText += fnTxt
 
-                                # if we get a VARIABLE param, all succeeding params belong to it
-                                if verbClass.paramDescr[paramIx-1][1] != Wye.dType.VARIABLE:
-                                    paramIx += 1
-                                    if paramIx > len(wyeTuple):
-                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
-                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
+                                    # if we get a VARIABLE param, all succeeding params belong to it
+                                    if verbClass.paramDescr[paramIx-1][1] != Wye.dType.VARIABLE:
+                                        paramIx += 1
+                                        if paramIx > len(wyeTuple):
+                                            print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                            print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
 
 
-                            #print("*** parseWyeTuple: finished params")
-                            
-                            # debug hook placeholder
-                            codeText += "    if not Wye.debugOn:\n"
-                            #codeText += "     print('run',frame." + eff + ".verb.__name__)\n"
-                            codeText += "     "+wyeTuple[0] + ".run(frame."+eff+")\n"
-                            codeText += "    else:\n"
-                            codeText += "     Wye.debug(frame."+eff+",'Exec run:'+frame."+eff+".verb.__name__)\n"
+                                #print("*** parseWyeTuple: finished params")
+
+                                # debug hook placeholder
+                                codeText += "    if not Wye.debugOn:\n"
+                                #codeText += "     print('run',frame." + eff + ".verb.__name__)\n"
+                                codeText += "     "+wyeTuple[0] + ".run(frame."+eff+")\n"
+                                codeText += "    else:\n"
+                                codeText += "     Wye.debug(frame."+eff+",'Exec run:'+frame."+eff+".verb.__name__)\n"
+                                codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
+                                #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
+                                codeText += "     frame.status = frame."+eff+".status\n     return\n"
+
+                        # multi-cycle verbs create code that pushes a new frame on the stack which will run on the next display cycle and
+                        # generates a new case statement in this verb that will pick up when the pushed frame completes
+                        # Note that a parallel verb is a multi-cycle verb from the caller's perspective
+                        case Wye.mode.MULTI_CYCLE | Wye.mode.PARALLEL:
+                            # do not add to caseCodeDict 'cause it will be picked up in the next case
+                            #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
+                            eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
+                            # put local frames on the parent frame as attributes to keep local scope across display cycles
+                            codeText += "    if not hasattr(frame,'" + eff + "'):\n"
+                            #codeText += "     print('create frame attr "+eff+"')\n"
+                            codeText += "     setattr(frame,'" + eff + "',None)\n"
+                            codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
+                            #print("parseWyeTuple MULTI|PARA: 1 codeText =", codeText[0], " wyeTuple", wyeTuple)
+                            if len(wyeTuple) > 1:
+                                paramIx = 0
+                                for paramTuple in wyeTuple:
+                                    #print("parseWyeTuple: 2a verbIx ", verbIx, " out of ", len(wyeTuple)-1)
+                                    #print("parseWyeTuple: 2 parse paramTuple ", paramTuple)
+                                    if paramIx == 0:
+                                        paramIx += 1
+                                        if paramIx > len(wyeTuple):
+                                            print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                            print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
+                                        #print(" parseWyeTuple: skip 0th entry in wyeTuple")
+                                        continue
+
+                                    # param starts with None, is a python code snippet returning a value
+                                    # (const, frame var ref, other expression)
+                                    tupleKey = paramTuple[0]
+                                    #print("tupleKey", tupleKey)
+                                    if tupleKey is None or tupleKey in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:
+                                        #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
+
+                                        # debug
+                                        #print("parseWyeTuple paramIx", paramIx, " verb", verbClass.__name__, " paramDescr ", verbClass.paramDescr)
+
+                                        if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
+                                            codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(" + paramTuple[1] + ")\n"
+                                        else:
+                                            codeText += "    frame." + eff + ".params." + verbClass.paramDescr[paramIx - 1][0] + "=" + paramTuple[1] + "\n"
+                                        #print("parseWyeTuple: 3 codeText=", codeText[0])
+
+                                    # param tuple starts with library word
+                                    else: # recurse to parse nested code tuple
+                                        cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList)
+
+                                        # debug
+                                        #print("parseWyeTuple paramIx", paramIx, " verb", verbClass.__name__, " paramDescr ", verbClass.paramDescr)
+
+                                        # variable params
+                                        if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
+                                            cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(frame.f"+str(fNum+1)+".params."+firstParam+")\n"
+                                        else:
+                                            cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
+
+                                        codeText += cdTxt
+                                        parFnText += fnTxt
+
+                                    # if we get a VARIABLE param, all succeeding params belong to it
+                                    if verbClass.paramDescr[paramIx - 1][1] != Wye.dType.VARIABLE:
+                                        paramIx += 1
+                                        if paramIx > len(wyeTuple):
+                                            print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
+                                            print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
+
+                            codeText += "    frame.SP.append(frame."+eff+")\n    frame.PC += 1\n"
+                            caseNumList[0] += 1
+                            #codeText += "   case "+str(caseNumList[0])+":\n    pass\n    frame."+eff+"=frame.SP.pop()\n"
+                            codeText += "   case "+str(caseNumList[0])+":\n    frame."+eff+"=frame.SP.pop()\n"
                             codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
-                            #codeText += "     print('verb ',"+eff+".verb.__name__, ' failed')\n"
+                            #codeText += "     print('verb ',frame."+eff+".verb.__name__, ' failed')\n"
                             codeText += "     frame.status = frame."+eff+".status\n     return\n"
 
-                    # multi-cycle verbs create code that pushes a new frame on the stack which will run on the next display cycle and
-                    # generates a new case statement in this verb that will pick up when the pushed frame completes
-                    # Note that a parallel verb is a multi-cycle verb from the caller's perspective
-                    case Wye.mode.MULTI_CYCLE | Wye.mode.PARALLEL:
-                        # do not add to caseCodeDict 'cause it will be picked up in the next case
-                        #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
-                        eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
-                        # put local frames on the parent frame as attributes to keep local scope across display cycles
-                        codeText += "    if not hasattr(frame,'" + eff + "'):\n"
-                        #codeText += "     print('create frame attr "+eff+"')\n"
-                        codeText += "     setattr(frame,'" + eff + "',None)\n"
-                        codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
-                        #print("parseWyeTuple MULTI|PARA: 1 codeText =", codeText[0], " wyeTuple", wyeTuple)
-                        if len(wyeTuple) > 1:
-                            paramIx = 0
-                            for paramTuple in wyeTuple:
-                                #print("parseWyeTuple: 2a verbIx ", verbIx, " out of ", len(wyeTuple)-1)
-                                #print("parseWyeTuple: 2 parse paramTuple ", paramTuple)
-                                if paramIx == 0:
-                                    paramIx += 1
-                                    if paramIx > len(wyeTuple):
-                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
-                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
-                                    #print(" parseWyeTuple: skip 0th entry in wyeTuple")
-                                    continue
 
-                                # param starts with None, is a python code snippet returning a value
-                                # (const, frame var ref, other expression)
-                                tupleKey = paramTuple[0]
-                                #print("tupleKey", tupleKey)
-                                if tupleKey is None or tupleKey in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:
-                                    #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
-
-                                    # debug
-                                    #print("parseWyeTuple paramIx", paramIx, " verb", verbClass.__name__, " paramDescr ", verbClass.paramDescr)
-
-                                    if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
-                                        codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(" + paramTuple[1] + ")\n"
-                                    else:
-                                        codeText += "    frame." + eff + ".params." + verbClass.paramDescr[paramIx - 1][0] + "=" + paramTuple[1] + "\n"
-                                    #print("parseWyeTuple: 3 codeText=", codeText[0])
-
-                                # param tuple starts with library word
-                                else: # recurse to parse nested code tuple
-                                    cdTxt, fnTxt, firstParam = WyeCore.Utils.parseWyeTuple(paramTuple, fNum+1, caseNumList, caseCodeDict)
-
-                                    # debug
-                                    #print("parseWyeTuple paramIx", paramIx, " verb", verbClass.__name__, " paramDescr ", verbClass.paramDescr)
-
-                                    # variable params
-                                    if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
-                                        cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(frame.f"+str(fNum+1)+".params."+firstParam+")\n"
-                                    else:
-                                        cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
-
-                                    codeText += cdTxt
-                                    parFnText += fnTxt
-
-                                # if we get a VARIABLE param, all succeeding params belong to it
-                                if verbClass.paramDescr[paramIx - 1][1] != Wye.dType.VARIABLE:
-                                    paramIx += 1
-                                    if paramIx > len(wyeTuple):
-                                        print("parseWyeTuple SOURCE CODE ERROR: wyeTyple has ", len(wyeTuple), " params:", wyeTuple)
-                                        print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
-
-                        codeText += "    frame.SP.append(frame."+eff+")\n    frame.PC += 1\n"
-                        caseNumList[0] += 1
-                        # Debugger highlighting data
-                        caseStr = str(caseNumList[0])
-                        caseCodeDict[caseStr] = []
-                        caseCodeDict[caseStr].append(wyeTuple)
-                        #codeText += "   case "+str(caseNumList[0])+":\n    pass\n    frame."+eff+"=frame.SP.pop()\n"
-                        codeText += "   case "+str(caseNumList[0])+":\n    frame."+eff+"=frame.SP.pop()\n"
-                        codeText += "    if frame."+eff+".status == Wye.status.FAIL:\n"
-                        #codeText += "     print('verb ',frame."+eff+".verb.__name__, ' failed')\n"
-                        codeText += "     frame.status = frame."+eff+".status\n     return\n"
+                        # huh, wut?
+                        case _:
+                            print("INTERNAL ERROR: WyeCore parseWyeTuple verb ",wyeTuple," has unknown mode ",verbClass.mode)
 
 
-                    # huh, wut?
-                    case _:
-                        print("INTERNAL ERROR: WyeCore parseWyeTuple verb ",wyeTuple," has unknown mode ",verbClass.mode)
-
-
-                retParam = verbClass.paramDescr[0][0] if (hasattr(verbClass, "paramDescr") and len(verbClass.paramDescr) > 0) else "None"
+                    retParam = verbClass.paramDescr[0][0] if (hasattr(verbClass, "paramDescr") and len(verbClass.paramDescr) > 0) else "None"
+                else:
+                    print("parseWyeTuple ERROR: expected lib.verb in", wyeTuple, " tupleParts=", tupleParts)
 
             # Tuple has no verb, just raw Python code
             else:
-                if not caseStr in caseCodeDict:
-                    caseCodeDict[caseStr] = []
-                caseCodeDict[caseStr].append(wyeTuple)
                 if len(wyeTuple) > 1:
                     # if multi-line block of code, offset it all correctly
                     codeLines = wyeTuple[1].split('\n')
@@ -1364,14 +1367,20 @@ class WyeCore(Wye.staticObj):
             # todo - figure out how to catch the None cases  softly
             return (codeText, parFnText, retParam)
 
-        # build run time code for a sequential verb (single or multiple cycle)
+        # build run time code for a sequential verb (single or multiple cycle) or a single parallel stream
         # parse verb's code (list of Wye tuples) into Python code text
-        def buildCodeText(name, codeDescr, verb):
+        def buildCodeText(name, codeDescr, verb, rowIxRef):
             #print("buildCodeText for", name)
             caseNumList = [0]   # current case stmt number - in list so called fn can increment it.  (pass by reference)
             labelDict = {}
             fwdLabelDict = {}
-            caseCodeDict = {"-1":[]}   # debugging info - match case number to codeDescr wyeTuple
+
+            if not hasattr(verb, "caseCodeDictLst"):
+                #print("buildCodeText: create caseCodeDictList for verb", verb.__name__)
+                verb.caseCodeDictLst = []
+            caseCodeDict = {}
+            verb.caseCodeDictLst.append(caseCodeDict)
+
             # define runtime method for this function
             codeText = " def " + name + "_run_rt(frame):\n  match frame.PC:\n   case 0:\n"
             parFnText = ""
@@ -1379,6 +1388,10 @@ class WyeCore(Wye.staticObj):
             if len(codeDescr) > 0:
                 for wyeTuple in codeDescr:
                     try:
+                        caseStr = str(caseNumList[0])
+                        if not caseStr in caseCodeDict:
+                            caseCodeDict[caseStr] = []
+                        caseCodeDict[caseStr].append(rowIxRef[0])
                         # label for branch/loop
                         if wyeTuple[0] == "Label":
                             caseNumList[0] += 1
@@ -1443,7 +1456,7 @@ class WyeCore(Wye.staticObj):
                             #print('WyeCore buildCodeText caller:', callrframe[1][3])
                             #print("WyeCore buildCodeText: compile tuple=", wyeTuple)
                             # DEBUG end ^^^^
-                            cdTxt, parTxt, firstParam = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList, caseCodeDict)
+                            cdTxt, parTxt, firstParam = WyeCore.Utils.parseWyeTuple(wyeTuple, 0, caseNumList)
 
                             codeText += cdTxt
                             parFnText += parTxt
@@ -1452,8 +1465,9 @@ class WyeCore(Wye.staticObj):
                         traceback.print_exception(e)
                         if WyeCore.worldInitialized:
                             title = "Runtime Error e"
-                            msg = "buildCodeText'" + wyeTuple + "\n" + str(e) + "\n" + traceback.format_exc()
+                            msg = "buildCodeText  failed at tuple '" + str(wyeTuple) + "\n" + str(e) + "\n" + traceback.format_exc()
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
+                    rowIxRef[0] += 1
 
                 # stick debug struct on verb
                 if not hasattr(verb, "caseCodeDictLst"):
@@ -1478,10 +1492,11 @@ class WyeCore(Wye.staticObj):
             parFnText = ""
             nStreams = len(streamDescr)
             # create run function for each stream
+            rowIxRef = [0]
             for ix in range(nStreams):
                 #print("  Create ",verbName," stream ", ix)
                 # note: streamDescr[ix][0] is user supplied name of this stream.  streamDescr[ix][1] is the codeDescr for the stream
-                cd, fn = WyeCore.Utils.buildCodeText(verbName+"_" + streamDescr[ix][0] + "_" + str(ix), streamDescr[ix][1], verb)
+                cd, fn = WyeCore.Utils.buildCodeText(verbName+"_" + streamDescr[ix][0] + "_" + str(ix), streamDescr[ix][1], verb, rowIxRef)
                 parFnText += cd + fn
 
             # create start routine for this parallel verb
@@ -1525,7 +1540,8 @@ class WyeCore(Wye.staticObj):
                         # if the class has a build function then call it to generate Python source code for its runtime method
                         if hasattr(vrb, "build"):
                             doBuild = True      # there is code to compile
-                            cdStr, parStr = vrb.build()  # call verb build to get verb's runtime code string(s)
+                            rowRef = [0]
+                            cdStr, parStr = vrb.build(rowRef)  # call verb build to get verb's runtime code string(s)
                             codeStr += cdStr
                             parFnStr += parStr
 
@@ -1673,7 +1689,7 @@ class WyeCore(Wye.staticObj):
                 vrbStr += "    parTermType = Wye.parTermType." + Wye.parTermType.tostring(
                     verbSettings['parTermType']) + "\n"
 
-            # Convert nested descrs into nicely formated text so won't create over-long lines and cause trouble.
+            # Convert nested descrs into nicely formatted text so won't create over-long lines and cause trouble.
             # Also looks nice
             #
             # Note: editing requires all tuples be replaced by lists.  This puts lists back to tuples.
@@ -1691,18 +1707,22 @@ class WyeCore(Wye.staticObj):
             vrbStr += "    varDescr =  " + varStr[1:] + "\n"
             vrbStr += "    codeDescr =  " + codeStr[1:] + "\n"
             vrbStr += '''
-    def build():
+    def build(rowRef):
         # print("Build ",'''
-            vrbStr += name + ")"
+            vrbStr += name + ")\n"
+            vrbStr += "\n        rowIxRef = [0]\n"
             if verbSettings['mode'] == Wye.mode.PARALLEL:
-                vrbStr += "\n        return WyeCore.Utils.buildParallelText('"
-                vrbStr += libName + "','"
+                vrbStr += "        return WyeCore.Utils.buildParallelText('"
+                if doTest:
+                    vrbStr += libName + "', '" + name + "', " + name + ".codeDescr" + ", " + name + ")\n\n"
+                else:
+                    vrbStr += libName + "', '" + name + "', " + libName + "." + name + ".codeDescr" + ", " + libName + "." + name + ")\n\n"
             else:
-                vrbStr += "\n        return WyeCore.Utils.buildCodeText('"
-            if doTest:
-                vrbStr += name + "', " + name + ".codeDescr" + ", " + name + ")\n"
-            else:
-                vrbStr += name + "', " + libName + "." + name + ".codeDescr" + ", " + libName + "." + name + ")\n\n"
+                vrbStr += "        return WyeCore.Utils.buildCodeText('"
+                if doTest:
+                    vrbStr += name + "', " + name + ".codeDescr" + ", " + name + ", rowIxRef)\n\n"
+                else:
+                    vrbStr += name + "', " + libName + "." + name + ".codeDescr" + ", " + libName + "." + name + ", rowIxRef)\n\n"
             vrbStr += "    def start(stack):\n"
             #vrbStr += "        print('" + name + " object start')\n"
             if verbSettings['mode'] == Wye.mode.PARALLEL:
@@ -1715,24 +1735,24 @@ class WyeCore(Wye.staticObj):
     def run(frame):
 '''
             vrbStr += "        # print('Run '" + name + ")\n"
-            vrbStr += "        try:\n"
+            #vrbStr += "        try:\n"
             if verbSettings['mode'] == Wye.mode.PARALLEL:
-                vrbStr += "          frame.runParallel()\n"
+                vrbStr += "        frame.runParallel()\n"
             else:
-                vrbStr += "          " + libName + "." + libName + "_rt." + name + "_run_rt(frame)\n"
-            vrbStr += "        except Exception as e:\n"
-            vrbStr += "          if not hasattr(frame, 'errOnce'):\n"
-            vrbStr += "            import traceback\n"
-            vrbStr += "            if Wye.devPrint:\n"
-            if verbSettings['mode'] == Wye.mode.PARALLEL:
-                vrbStr += "              print('" + libName + " " + name + " runParallel failed\\n', str(e))\n"
-            else:
-                vrbStr += "              print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
-            vrbStr += "              traceback.print_exception(e)\n"
-            vrbStr += "              frame.errOnce = True\n\n"
-            vrbStr += "            WyeCore.World.compileErrorTitle='Runtime Error'\n"
-            vrbStr += "            WyeCore.World.compileErrorText='Object \\\""+name+"\\\" died with error\\n'+str(e)+'\\n'+traceback.format_exc()\n"
-            vrbStr += "            WyeCore.Utils.displayError()\n"
+                vrbStr += "        " + libName + "." + libName + "_rt." + name + "_run_rt(frame)\n"
+            #vrbStr += "        except Exception as e:\n"
+            #vrbStr += "          if not hasattr(frame, 'errOnce'):\n"
+            #vrbStr += "            import traceback\n"
+            #vrbStr += "            if Wye.devPrint:\n"
+            #if verbSettings['mode'] == Wye.mode.PARALLEL:
+            #    vrbStr += "              print('" + libName + " " + name + " runParallel failed\\n', str(e))\n"
+            #else:
+            #    vrbStr += "              print('" + libName + "." + libName + "_rt." + name + "_run_rt failed\\n', str(e))\n"
+            #vrbStr += "              traceback.print_exception(e)\n"
+            #vrbStr += "              frame.errOnce = True\n\n"
+            #vrbStr += "            WyeCore.World.compileErrorTitle='Runtime Error'\n"
+            #vrbStr += "            WyeCore.World.compileErrorText='Verb \\\""+name+"\\\" died with error\\n'+str(e)+'\\n'+traceback.format_exc()\n"
+            #vrbStr += "            WyeCore.Utils.displayError()\n"
             return vrbStr
 
 
@@ -1763,20 +1783,21 @@ class WyeCore(Wye.staticObj):
                 vrbStr += "setattr(WyeCore.libs." + vrbLib.__name__ + ", " + name + ".__name__, " + name + ")\n"
 
             # build verb's Wye code
-            vrbStr += "cdStr, parStr = "+name + ".build()\n"
+            vrbStr += "rowRef = [0]\n"
+            vrbStr += "cdStr, parStr = "+name + ".build(rowRef)\n"
 
             # DEBUG - print out verb's runtime code with line numbers
             if listCode or WyeCore.debugListCode:
                 #if not doTest and not verbSettings['mode'] == Wye.mode.PARALLEL:
                 if verbSettings['mode'] == Wye.mode.PARALLEL:
                     vrbStr += "if Wye.devPrint:\n"
-                    vrbStr += "  print('createVerb: parallel runtime text')\n"
+                    vrbStr += "  print('createVerb: parallel runtime code')\n"
                     vrbStr += "  lnIx = 1\n"
                     vrbStr += "  for ln in parStr.split('\\n'):\n"
                     vrbStr += "    print('%2d ' % lnIx, ln)\n"
                     vrbStr += "    lnIx += 1\n"
                     vrbStr += "  print('')\n"
-                    vrbStr += "WyeCore.World.listing += '\\ncreateVerb: parallel runtime text\\n'\n"
+                    vrbStr += "WyeCore.World.listing += '\\n"+name+": parallel runtime code\\n'\n"
                     vrbStr += "lnIx = 1\n"
                     vrbStr += "for ln in parStr.split('\\n'):\n"
                     vrbStr += '    WyeCore.World.listing += (\"%2d \" % lnIx) + ln + \"\\n\"\n'
@@ -1787,8 +1808,9 @@ class WyeCore(Wye.staticObj):
                     vrbStr += "  lnIx = 1\n"
                     vrbStr += "  for ln in cdStr.split('\\n'):\n"
                     vrbStr += "    print('%2d ' % lnIx, ln)\n"
+                    vrbStr += "    lnIx += 1\n"
                     vrbStr += "  print('')\n"
-                    vrbStr += "WyeCore.World.listing += '\\ncreateVerb: runtime text\\n'\n"
+                    vrbStr += "WyeCore.World.listing += '\\n"+name+": runtime code:\\n'\n"
                     vrbStr += "lnIx = 1\n"
                     vrbStr += "for ln in cdStr.split('\\n'):\n"
                     vrbStr += '    WyeCore.World.listing += (\"%2d \" % lnIx) + ln + \"\\n\"\n'
@@ -1896,7 +1918,7 @@ try:
 
 '''
             vrbStr += '''
-        WyeCore.World.compileErrorTitle = "Build: exec verb runtime failed"
+        WyeCore.World.compileErrorTitle = "Build: Exec Verb Runtime Failed"
         WyeCore.World.compileErrorText = "Error\\n" + str(e) + "\\nListing\\n" + WyeCore.World.listing
         WyeCore.Utils.displayError()
         
@@ -1907,14 +1929,14 @@ except Exception as e:
             if verbSettings['mode'] == Wye.mode.PARALLEL:
                 vrbStr += '''
     if Wye.devPrint:
-      print("compile verb runtime failed\\n", str(e))
+      print("compile verb parallel runtime failed\\n", str(e))
       print('parStr')
       lnIx = 1
       for ln in parStr.split('\\n'):
         print('%2d ' % lnIx, ln)
         lnIx += 1
       print('')
-    WyeCore.World.listing += 'parStr\\n'
+    WyeCore.World.listing += 'Parallel Python Stream Runtime Methods:\\n'
     lnIx = 1
     for ln in parStr.split('\\n'):
         WyeCore.World.listing += ('%2d ' % lnIx) + ln + '\\n'
@@ -1930,14 +1952,14 @@ except Exception as e:
           print('%2d ' % lnIx, ln)
           lnIx += 1
       print('')
-    WyeCore.World.listing += 'cdStr\\n'
+    WyeCore.World.listing += 'Python Runtime Method:\\n'
     lnIx = 1
     for ln in cdStr.split('\\n'):
         WyeCore.World.listing += ('%2d ' % lnIx) + ln + '\\n'
         lnIx += 1
 '''
                 vrbStr += '''
-    WyeCore.World.compileErrorTitle = "Build: compile verb runtime failed"
+    WyeCore.World.compileErrorTitle = "Build: Compile '"+name+"' Runtime Python Failed"
     WyeCore.World.compileErrorText = "Error\\n" + str(e) + "\\n\\nListing:\\n" + WyeCore.World.listing
     WyeCore.Utils.displayError()
 
@@ -1951,24 +1973,6 @@ except Exception as e:
                     #vrbStr += "        print('autoStart "+name+"')\n"
                     vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 
-            # DEBUG print verb code with line numbers
-            if listCode or WyeCore.debugListCode:
-                if Wye.devPrint:
-                    print("createVerb: verb text:")
-                    lnIx = 1
-                    for ln in vrbStr.split('\n'):
-                        print("%2d " % lnIx, ln)
-                        lnIx += 1
-                    print("")
-                WyeCore.World.listing += "\ncreateVerb: verb text:\n"
-                WyeCore.World.listing += "vrbStr\n"
-                lnIx = 1
-                for ln in vrbStr.split('\n'):
-                    WyeCore.World.listing += ("%2d " % lnIx) + ln + "\n"
-                    lnIx += 1
-                # only put up listing if haven't thrown an error
-                if not WyeCore.World.noBuildErrors:
-                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Build: verb compiled code:", WyeCore.World.listing, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
 
             # compile verb
             try:
@@ -1998,8 +2002,8 @@ except Exception as e:
                     for ln in vrbStr.split('\n'):
                         WyeCore.World.listing += ("%2d " % lnIx) + ln + "\n"
                         lnIx += 1
-                    WyeCore.World.compileErrorTitle = "Runtime Error"
-                    WyeCore.World.compileErrorText = "Object '" + name+", died with error\n" + str(e) + "\n" + traceback.format_exc() +"\n\nListing:\n" +WyeCore.World.listing
+                    WyeCore.World.compileErrorTitle = "Build: Execute '"+name+"' Failed"
+                    WyeCore.World.compileErrorText = "Verb '" + name+"', died with error\n" + str(e) + "\n" + traceback.format_exc() +"\n\nListing:\n" +WyeCore.World.listing
                     WyeCore.Utils.displayError()
 
                     if Wye.devPrint:
@@ -2028,10 +2032,29 @@ except Exception as e:
                 for ln in vrbStr.split('\n'):
                     WyeCore.World.listing += ("%2d " % lnIx) + ln + "\n"
                     lnIx += 1
-                WyeCore.World.compileErrorTitle = "Build: compile verb failed"
-                WyeCore.World.compileErrorText = "exec verb" + vrbLib.__name__ + "." + name + " failed\n" + str(e) + "\n" + traceback.format_exc() + "\n\nListing:\n" + WyeCore.World.listing
+                WyeCore.World.compileErrorTitle = "Build: Compile '"+name+"' Failed"
+                WyeCore.World.compileErrorText = "Compile Verb" + vrbLib.__name__ + "." + name + " failed\n" + str(e) + "\n" + traceback.format_exc() + "\n\nListing:\n" + WyeCore.World.listing
                 WyeCore.Utils.displayError()
                 return
+
+            # print verb code with line numbers
+            if (listCode or WyeCore.debugListCode) and WyeCore.World.noBuildErrors:
+                if Wye.devPrint:
+                    print("createVerb: verb text:")
+                    lnIx = 1
+                    for ln in vrbStr.split('\n'):
+                        print("%2d " % lnIx, ln)
+                        lnIx += 1
+                    print("")
+                WyeCore.World.listing += "\n"+name+": Verb Python Code:\n"
+                lnIx = 1
+                for ln in vrbStr.split('\n'):
+                    WyeCore.World.listing += ("%2d " % lnIx) + ln + "\n"
+                    lnIx += 1
+                # only put up listing if haven't thrown an error
+                #if WyeCore.World.noBuildErrors:
+                #    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Build: "+name+" Python Code:", WyeCore.World.listing, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
+
 
             #if doTest:
             if WyeCore.World.noBuildErrors:
@@ -2039,10 +2062,10 @@ except Exception as e:
                     print(name, vrbLib.__name__ + "." + name, " compiled successfully")
 
                 title = "Build Success"
-                if listCode:
+                if listCode or WyeCore.debugListCode:
                     msg = name + " " + vrbLib.__name__ + "." + name + " built successfully\n" + WyeCore.World.listing
                     WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
-                else:
+                elif doTest:
                     msg = name + " " + vrbLib.__name__ + "." + name + " built successfully"
                     WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg)
 

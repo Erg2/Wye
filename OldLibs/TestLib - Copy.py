@@ -40,7 +40,7 @@ class TestLib:
             )
         )
 
-        def build():
+        def build(rowRef):
             #print("Testlib2 build testCompiledPar")
             return WyeCore.Utils.buildParallelText("TestLib", "doitButton", TestLib.doitButton.codeDescr)
 
@@ -128,8 +128,8 @@ class TestLib:
             (None, "frame.status = Wye.status.SUCCESS")
         )
 
-        def build():
-            return WyeCore.Utils.buildCodeText("BtnCallback2", TestLib.BtnCallback2.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("BtnCallback2", TestLib.BtnCallback2.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib.BtnCallback2, stack)
@@ -172,9 +172,9 @@ class TestLib:
             #(None, "frame.status = Wye.status.SUCCESS")
         )
 
-        def build():
+        def build(rowRef):
             #print("Build BtnCallback3")
-            return WyeCore.Utils.buildCodeText("BtnCallback3", TestLib.BtnCallback3.codeDescr)
+            return WyeCore.Utils.buildCodeText("BtnCallback3", TestLib.BtnCallback3.codeDescr, rowRef)
 
         def start(stack):
             #print("Start BtnCallback3")
@@ -252,8 +252,8 @@ class TestLib:
             ("Label", "Done")
         )
 
-        def build():
-            return WyeCore.Utils.buildCodeText("DlgTst", TestLib.DlgTst.codeDescr)
+        def build(rowRef):
+            return WyeCore.Utils.buildCodeText("DlgTst", TestLib.DlgTst.codeDescr, rowRef)
 
         def start(stack):
             return Wye.codeFrame(TestLib.DlgTst, stack)
