@@ -5244,6 +5244,9 @@ class WyeUILib(Wye.staticObj):
                         # print("EditStreamLineCallback copy: copyRec", copyRec)
                         WyeCore.World.cutPasteManager.add(copyRec)
 
+                        # remove from codeDescr
+                        parentList.pop(ix)
+
                         # get location of this frame in dialog input list
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
@@ -5619,6 +5622,9 @@ class WyeUILib(Wye.staticObj):
                         # print("EditCodeLineCallback copy: copyRec", copyRec)
                         WyeCore.World.cutPasteManager.add(copyRec)
 
+                        # delete from codeDescr
+                        parentList.pop(ix)
+
                         # get location of this frame in dialog input list
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
@@ -5767,7 +5773,7 @@ class WyeUILib(Wye.staticObj):
                         # skip over current tuple rows in dialog for every row of tuple
                         tupleLen = WyeCore.Utils.countNestedLists(tuple)
                         ix += (tupleLen+1)*2     # put after the current line
-                        print("EditCodeLineCallback: len", tupleLen, " of tuple", tuple)
+                        #print("EditCodeLineCallback: len", tupleLen, " of tuple", tuple)
                                     # Note: there is an OK/Cancel after the last code input, so insert works even
                                     # at the end of the current code listing
 

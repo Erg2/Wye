@@ -4021,7 +4021,7 @@ class WyeUILib(Wye.staticObj):
 
                     # Choose from existing Library list
                     libList = [lib.__name__ for lib in WyeCore.World.libList]
-                    libFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "    Update/Add to Library", [libList],
+                    libFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "    Will build in Library", [libList],
                                      [libList.index(verb.library.__name__)], layout=Wye.layout.ADD_RIGHT)
                     frame.vars.existingLibFrm[0] = libFrm
 
@@ -5291,6 +5291,9 @@ class WyeUILib(Wye.staticObj):
                         # print("EditStreamLineCallback copy: copyRec", copyRec)
                         WyeCore.World.cutPasteManager.add(copyRec)
 
+                        # delete from codeDescr
+                        parentList.pop(ix)
+
                         # get location of this frame in dialog input list
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
@@ -5377,6 +5380,7 @@ class WyeUILib(Wye.staticObj):
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
                             ix = parentList.index(tuple)
+                            parentList.pop(ix)
                             # print("found tuple", tuple, " at", ix, " in", parentList)
                         else:
                             print("EditStreamLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
@@ -5666,6 +5670,9 @@ class WyeUILib(Wye.staticObj):
                         # print("EditCodeLineCallback copy: copyRec", copyRec)
                         WyeCore.World.cutPasteManager.add(copyRec)
 
+                        # delete line from codeDescr
+                        parentList.pop(ix)
+
                         # get location of this frame in dialog input list
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
@@ -5753,6 +5760,7 @@ class WyeUILib(Wye.staticObj):
                         if parentList:
                             ix = parentList.index(tuple)
                             # print("found tuple", tuple, " at", ix, " in", parentList)
+                            parentList.pop(ix)
                         else:
                             print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
                                   editVerbFrm.vars.newCodeDescr[0])
@@ -5814,7 +5822,7 @@ class WyeUILib(Wye.staticObj):
                         # skip over current tuple rows in dialog for every row of tuple
                         tupleLen = WyeCore.Utils.countNestedLists(tuple)
                         ix += (tupleLen+1)*2     # put after the current line
-                        print("EditCodeLineCallback: len", tupleLen, " of tuple", tuple)
+                        #print("EditCodeLineCallback: len", tupleLen, " of tuple", tuple)
                                     # Note: there is an OK/Cancel after the last code input, so insert works even
                                     # at the end of the current code listing
 
@@ -6329,6 +6337,7 @@ class WyeUILib(Wye.staticObj):
                             inpIx = WyeUILib.EditVerb.EditCodeCallback.removeOldDlgLines(editLnFrm, tuple, parentFrm)
 
                             # replace oontents of old tuple in newCodeDescr
+                            # Since we are modifying in place, we don't have to search/replace
                             tuple.clear()
                             for elem in newTuple:
                                 tuple.append(elem)
@@ -6412,246 +6421,6 @@ class WyeUILib(Wye.staticObj):
 
                     edCdFrm.vars.verbDropFrm[0].verb.setList(edCdFrm.vars.verbDropFrm[0], verbList, 0)
 
-
-        # todo - NOT CURRENTLY USED.  Do we need it?
-        class EditSpecialCallback:
-            mode = Wye.mode.MULTI_CYCLE
-            dataType = Wye.dType.STRING
-            paramDescr = ()
-            varDescr = (("count", Wye.dType.INTEGER, 0),
-                        ("tuple", Wye.dType.OBJECT, None),
-                        ("dlgStat", Wye.dType.INTEGER, -1),
-                       )
-
-            def start(stack):
-                return Wye.codeFrame(WyeUILib.EditVerb.EditSpecialCallback, stack)
-
-            def run(frame):
-                data = frame.eventData
-                btnFrm = data[1][0]
-                parentFrm = data[1][1]
-                editVerbFrm = data[1][2]
-                tuple = data[1][3]
-                level = data[1][4]
-
-                match (frame.PC):
-                    case 0:
-                        #print("EditCodeCallback data='" + str(frame.eventData) + "'")
-                        #print("EditCodeCallback tuple", tuple)
-
-                        # build code dialog
-                        dlgFrm = WyeUILib.Dialog.start(frame.SP)
-
-                        frame.vars.tuple[0] = tuple
-
-                        # if there is a prefix, save it
-                        print("Do prefix")
-                        labelStr = btnFrm.params.label[0].strip()
-                        if labelStr[0] == "(":      # if there's a prefix
-                            endPrefIx = labelStr.find(")")
-                            frame.vars.prefix[0] = labelStr[:endPrefIx+2]
-                            print("save prefix", frame.vars.prefix[0])
-                        else:
-                            print("default prefix", frame.vars.prefix[0])
-
-                        # create dialog
-                        dlgFrm.params.retVal = frame.vars.dlgStat
-                        dlgFrm.params.title = ["Edit Code"]
-                        dlgFrm.params.parent = [parentFrm]
-                        dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2]),]
-
-                        # Code type
-                        verbType = tuple[0]
-                        if verbType is None:
-                            verbType = "Code"
-
-                        # verb type/name
-                        if not tuple[0]:
-                            selIx = 1       # None -> Code
-                        elif isinstance(tuple[0], str) and tuple[0].find(".") > -1:  # if there is a verb here
-                            selIx = 0       # lib.verb -> Verb
-                        else:
-                            try:            # otherwise, look up in opList
-                                selIx = WyeUILib.EditVerb.opList.index(tuple[0])
-                            except:
-                                selIx = 1   # unknown, default to Code
-                        WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "Op:", [WyeUILib.EditVerb.opList], [selIx])
-
-                        # Code
-                        WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "Expr:", [str(tuple[1])])
-
-                        # optional Code
-                        if tuple[0] == "IfGoTo":
-                            tgtTxt = [str(tuple[2])]
-                        else:
-                            tgtTxt = ["<none>"]
-                        WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "Tgt:", tgtTxt, [str(tuple[1])])
-
-                        frame.SP.append(dlgFrm)
-                        frame.PC += 1
-
-                    case 1:
-                        dlgFrm = frame.SP.pop()
-                        frame.status = dlgFrm.status
-                        if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
-                            opIx = dlgFrm.params.inputs[0][-3][0].params.selectionIx[0]
-                            #print("EditCodeCallback done: opIx", opIx)
-                            # if user canceled out and opIx is invalid, restore old value from tuple
-                            if opIx >= 0:
-                                newOp = WyeUILib.EditVerb.opList[opIx]
-
-                                newlib = None
-                                newVerb = None      # put verb here when found
-
-                                # if user switched to/from Verb, need to add/clean up parameter rows
-                                if newOp != tuple[0]:
-                                    if newOp == "Verb":
-                                        # first, do we have a valid lib.verb
-                                        newTxt = dlgFrm.params.inputs[0][-2][0].params.value[0]
-                                        txtLst = newTxt.split(".")
-                                        goodLib = True  # be optimistic
-                                        if len(txtLst) < 2:
-                                            #print("EditCodeCallback: Fail: no '.' in", newTxt)
-                                            goodLib = False
-                                        elif not txtLst[-2] in WyeCore.World.libDict:
-                                            #print("EditCodeCallback: Fail: ", txtLst[-2], " is not a current library")
-                                            goodLib = False
-                                        if goodLib:
-                                            newLib = WyeCore.World.libDict[txtLst[-2]]     # get current library
-                                            if not hasattr(newLib, txtLst[-1]):
-                                                #print("EditCodeCallback: Fail: ", txtLst[-1], " is not a valid verb in library", lib.__name__)
-                                                goodLib = False
-                                            else:
-                                                newVerb = getattr(newLib,  txtLst[-1])
-                                        if not goodLib:
-                                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid library.verb",
-                                                    newTxt + " is not a valid library.verb.\nPlease enter a valid library.verb or Cancel",
-                                                                                     Wye.color.ERROR_COLOR)
-                                            newDlg = WyeUILib.Dialog.start(frame.SP)
-                                            # clone old dialog params to new
-                                            newDlg.params.title = dlgFrm.params.title
-                                            newDlg.params.position = dlgFrm.params.position
-                                            newDlg.params.parent = dlgFrm.params.parent
-                                            newDlg.params.inputs = dlgFrm.params.inputs
-                                            newDlg.params.format = dlgFrm.params.format
-                                            newDlg.params.headerColor = dlgFrm.params.headerColor
-                                            newDlg.params.callback = dlgFrm.params.callback
-                                            newDlg.params.optData = dlgFrm.params.optData
-
-                                            # push the copied dialog and go back to waiting
-                                            #print("Pushed dialog to stack")
-                                            frame.SP.append(newDlg)
-                                            frame.status = Wye.status.CONTINUE
-                                            return
-                                        else:
-                                            # replace oontents of tuple in newCodeDescr
-                                            tuple.clear()
-                                            tuple.append(newTxt)
-                                            for param in newVerb.paramDescr:
-                                                pTuple = ["Expr", "0 # <your param value here>"]
-                                                tuple.append(pTuple)
-
-                                            #delete the current row in the mother dialog
-                                            inpIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], btnFrm) - 1       # back up to edLn input
-                                            lnFrm = parentFrm.params.inputs[0].pop(inpIx)[0]
-                                            lnFrm.verb.close(lnFrm)
-                                            lnEd = parentFrm.params.inputs[0].pop(inpIx)[0]
-                                            lnEd.verb.close(lnEd)
-
-                                            # generate new row(s)
-                                            newRows = []
-                                            editVerbFrm.verb.bldEditCodeLine(tuple, level, editVerbFrm, parentFrm, newRows, frame.vars.prefix[0])
-
-                                            # Insert rows in dialog
-                                            rIx = 0
-                                            pos = [0,0,0]       # will be fixed when dialog redisplayed
-                                            for row in newRows:
-                                                parentFrm.params.inputs[0].insert(inpIx+rIx, row)
-                                                row[0].verb.display(row[0], parentFrm, pos)
-                                                rIx += 1
-
-                                            # update dialog
-                                            parentFrm.verb.redisplay(parentFrm)
-
-                                    elif tuple[0] == "Verb":
-                                        # delete any params from tuple
-                                        delRowCt = len(tuple) - 1
-                                        for ii in range(delRowCt):
-                                            tuple.pop(-1)
-
-                                        # delete any params from dialog
-                                        inpIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],
-                                                                              btnFrm) - 1  # back up to edLn input
-                                        for ii in range(delRowCt*2):
-                                            parentFrm.params.inputs[0].pop(inpIx + 2)
-
-                                        # update dialog
-                                        parentFrm.verb.redisplay(parentFrm)
-                            else:
-                                verbType = tuple[0]
-                                if verbType is None:
-                                    verbType = "Code"
-                                newOp = verbType
-
-                            newTxt = dlgFrm.params.inputs[0][-2][0].params.value[0]
-                            newTgt = dlgFrm.params.inputs[0][-1][0].params.value[0]
-                            #print("EditCodeCallback done: newOp", newOp, "newTxt", newTxt)
-                            # save back to code
-                            tuple[0] = newOp
-                            tuple[1] = newTxt
-
-                            if tuple[0] == "IfGoTo":
-                                if len(tuple) < 3:
-                                    tuple.append(newTgt)
-                                else:
-                                    tuple[2] = newTgt
-
-                            # update display
-                            indent = "".join(["   " for l in range(level)])  # indent by recursion depth
-
-                            prefix = frame.vars.prefix[0]
-
-                            match tuple[0]:
-                                case "Verb":
-                                    pass
-
-                                case "Code" | None:  # raw Python
-                                    #print("indent", indent, " prefix", prefix)
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Code: " + str(tuple[1]))
-
-                                case "CodeBlock":  # multi-line raw Python
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "CodeBLock: " + str(tuple[1]))
-
-                                case "Expr":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Expression: " + str(tuple[1]))
-
-                                case "Const":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Constant: " + str(tuple[1]))
-
-                                case "Var":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Variable: " + str(tuple[1]))
-
-                                case "Var=":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Variable=: " + str(tuple[1]))
-
-                                case "Par=":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Parameter=: " + str(tuple[1]))
-
-                                case "GoTo":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + " GoTo: " + str(tuple[1]))
-
-                                case "Label":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "Label: " + str(tuple[1]))
-
-                                case "IfGoTo":
-                                    btnFrm.verb.setLabel(btnFrm, indent + prefix + "If: " + str(tuple[1]) + " GoTo: " + str(tuple[2]))
-
-                                case _:  # raw Python
-                                    print("EditCodeCallback done: unknown operation '"+tuple[0]+"'.  Default to Code")
-                                    btnFrm.verb.setLabel(btnFrm, indent + "Code: " + str(tuple[1]))
-
-                    # user switched to
-                    #case 2:
 
 
         class EditParamCallback:
