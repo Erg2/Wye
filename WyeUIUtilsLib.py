@@ -35,10 +35,6 @@ import inspect
 # 3d UI element library
 class WyeUIUtilsLib(Wye.staticObj):
     systemLib = True        # prevent overwriting
-
-    LINE_HEIGHT = 1.25
-    TEXT_SCALE = (.2,.2,.2)
-
     dragFrame = None    # not currently dragging anything
 
 
@@ -224,7 +220,7 @@ class WyeUIUtilsLib(Wye.staticObj):
 
     # note: dropdownListRef is a list of strings
     def doInputDropdown(dlgFrm, label, dropdownListRef, selectionIxRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
-                      backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, showText=True):
+                      backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, showText=True, showLabel=True):
         frm = WyeUILib.InputDropdown.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -236,6 +232,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.layout = [layout]
         frm.params.color = [color]
         frm.params.showText = [showText]
+        frm.params.showLabel = [showLabel]
         frm.params.backgroundColor = [backgroundColor]
         frm.verb.run(frm)
         dlgFrm.params.inputs[0].append([frm])

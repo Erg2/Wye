@@ -35,9 +35,6 @@ import inspect
 class Wye3dObjsLib(Wye.staticObj):
     systemLib = True        # prevent overwriting
 
-    LINE_HEIGHT = 1.25
-    TEXT_SCALE = (.2,.2,.2)
-
     dragFrame = None    # not currently dragging anything
 
 
