@@ -717,6 +717,8 @@ class WyeUILib(Wye.staticObj):
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
+                      ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)), # L/R/T/B
+                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -792,7 +794,9 @@ class WyeUILib(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
-                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL)
+                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
+                      ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
+                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -834,7 +838,7 @@ class WyeUILib(Wye.staticObj):
             frame.vars.tags[0].append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
             # offset 3d input field right past end of 3d label
 
-            width = lbl.getWidth() + .5
+            width = lbl.getWidth() + .5 if len(frame.params.label[0]) else 0
             txt = WyeCore.libs.Wye3dObjsLib._3dText(frame.vars.currVal[0], Wye.color.TEXT_COLOR,
                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath(), bg=frame.params.backgroundColor[0])
             #txt.setColor(WyeUILib.TEXT_COLOR)
@@ -852,7 +856,7 @@ class WyeUILib(Wye.staticObj):
             frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos[0], pos[1], pos[2])
-            width = lbl.getWidth() + .5
+            width = lbl.getWidth() + .5 if len(frame.params.label[0]) else 0
             pos[0] += width
             txt = frame.vars.gWidgetStack[0][1]
             txt.setPos(width, 0, 0)
@@ -912,7 +916,9 @@ class WyeUILib(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
-                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL)
+                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
+                      ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
+                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1016,7 +1022,9 @@ class WyeUILib(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),  # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
-                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL)
+                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
+                      ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
+                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1118,7 +1126,9 @@ class WyeUILib(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),   # 3 optional data
                       ("color", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.LABEL_COLOR),
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
-                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL)
+                      ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
+                      ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
+                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1211,6 +1221,8 @@ class WyeUILib(Wye.staticObj):
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
                       ("radioGroup", Wye.dType.STRING, Wye.access.REFERENCE, None),    # name of checkbox radio group, if any
                       ("selectedRadio", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),  # if radio button, ix of currently selected one
+                      ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
+                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1387,7 +1399,9 @@ class WyeUILib(Wye.staticObj):
                       ("optData", Wye.dType.ANY, Wye.access.REFERENCE),
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
                       ("showText", Wye.dType.BOOL, Wye.access.REFERENCE, True),
-                      ("showLabel", Wye.dType.BOOL, Wye.access.REFERENCE, True)
+                      ("showLabel", Wye.dType.BOOL, Wye.access.REFERENCE, True),
+                      ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0, 0, 0, 0)),
+                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0, 0)),
                       )
         varDescr = (("retStat", Wye.dType.INTEGER, 0),                  # Dropdown returned index
                     ("position", Wye.dType.INTEGER_LIST, (0, 0, 0)),  # position rel to parent
@@ -1444,7 +1458,8 @@ class WyeUILib(Wye.staticObj):
 
             # if show text
             if frame.params.showText[0] or not frame.params.showLabel[0]:       # have to show something, force text if user wants nothing
-                width += .5
+                if width:   # if we have label, space the button over
+                    width += .5
                 # offset 3d input field right past end of 3d label
                 if frame.vars.lWidget[0]:
                     txtParent = frame.vars.lWidget[0]
@@ -1465,7 +1480,7 @@ class WyeUILib(Wye.staticObj):
 
             # update dialog pos to next free space downward
             pos[2] -= height  # update to next position
-            frame.vars.size[0] = (width + .5, 0, height)       # TODO - width + .5 is hack to space lines nicely, add border spacing to layout
+            frame.vars.size[0] = (width, 0, height)       # TODO - width + .5 is hack to space lines nicely, add border spacing to layout
             #print("InputDropdown", frame.params.label[0], " size", frame.vars.size[0])
             #print("InputDropdown", frame.params.label[0], " redisplay size", frame.vars.size[0], " pos", pos, " width", width)
 
@@ -1482,7 +1497,8 @@ class WyeUILib(Wye.staticObj):
                 height = lbl.getHeight()
             #print("lbl '"+lbl.dbgTxt+"' width", width)
             if frame.vars.bWidget[0]:
-                width += .5
+                if width:   # if we have label, space the button over
+                    width += .5
                 btn = frame.vars.bWidget[0]
                 #print("btn'"+btn.dbgTxt+"' width", btn.getWidth())
                 if frame.vars.lWidget[0]:
@@ -1493,7 +1509,7 @@ class WyeUILib(Wye.staticObj):
                 if not height:
                     height = btn.getHeight()
             pos[2] -= height
-            frame.vars.size[0] = (width + .5, 0, height)      # TODO - width + .5 is hack to space lines nicely, add border spacing to layout
+            frame.vars.size[0] = (width, 0, height)      # TODO - width + .5 is hack to space lines nicely, add border spacing to layout
             #print("InputDropdown", frame.params.label[0], " redisplay size", frame.vars.size[0], " pos", pos, " width", width)
 
         def update(frame):
@@ -1718,32 +1734,28 @@ class WyeUILib(Wye.staticObj):
                     newX = pos[0]
                     prevZ = pos[2]
                     frame.doingDisplay = True
+                    padZNext = 0
                     for ii in range(nInputs):
                         #print("  Dialog input", ii, " frame", frame.params.inputs[0][ii])
                         inFrm = frame.params.inputs[0][ii][0]
-
-                        #print("  Dialog input", ii, " frame", inFrm.verb.__name__, inFrm.params.label if hasattr(inFrm.params, "label") else "<no label>")
-
-                        # display inputs
-                        # Note: each Input's display function updates draw "pos" downward
-                        # stash returned display obj tags in lookup dict to detect what user clicked on
-                        #print("Build dialog", frame.params.title[0])
-
                         # make sure this verb can display itself
                         if hasattr(inFrm.verb, "display"):
                             # if layout to the right instead of down
                             if inFrm.params.layout[0] == Wye.layout.ADD_RIGHT:
-                                pos[0] = newX
+                                pos[0] = newX + inFrm.params.padding[0][0]
                                 pos[2] = prevZ
                                 #print("Dialog Display:", inFrm.verb.__name__, " ", inFrm.params.label[0], " ADD_RIGHT X=", newX)
                                 inFrm.verb.display(inFrm, frame, pos)  # displays label, updates pos
+                            # else stack below prev input
                             else:
+                                pos[0] = inFrm.params.padding[0][0]
+                                pos[2] = pos[2] - inFrm.params.padding[0][2] - padZNext
                                 prevZ = pos[2]
-                                pos[0] = 0
                                 #print("Dialog Display:", inFrm.verb.__name__, " ", inFrm.params.label[0], " VERTICAL X= 0")
                                 inFrm.verb.display(inFrm, frame, pos)  # displays label, updates pos
-                            # position the input on the dialog
-                            newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0]
+                                padZNext = inFrm.params.padding[0][3]
+                            # calc the pos plus width in case next is ADD_RIGHT
+                            newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0] + inFrm.params.padding[0][1]
                             #print("Display", inFrm.verb.__name__, " ", inFrm.params.label[0], " pos"inFrm.)
                         else:
                             print("Dialog: Error. Unknown input verb", inFrm.verb.__name__)
@@ -1847,47 +1859,29 @@ class WyeUILib(Wye.staticObj):
             # draw user-supplied label and text inputs
             newX = pos[0]
             prevZ = pos[2]
+            padZNext = 0
             #print("Dialog", frame.params.title[0]," redisplay: start pos", pos)
             for ii in range(nInputs):
                 inFrm = frame.params.inputs[0][ii][0]
-                #print("  Dialog input", ii, " frame", inFrm.verb.__name__, inFrm.params.label if hasattr(inFrm.params, "label") else "<no label>")
-                # print("    inFrm", inFrm)
-                # print("    Dialog input ", ii, " inFrm", inFrm)
-                # print("       inFrm.params.title", inFrm.params.title)
-                # print("")
-
                 # update position of all inputs
                 # Note: each Input's display function updates draw position "pos" downward
                 if hasattr(inFrm.verb, "redisplay"):
                     # if stack to the right of prev input
                     if inFrm.params.layout[0] == Wye.layout.ADD_RIGHT:
-                        pos[0] = newX
+                        pos[0] = newX + inFrm.params.padding[0][0]
                         pos[2] = prevZ
-
-                        # DEBUG
-                        #if hasattr(inFrm.params, "label"):
-                        #    print("  ", inFrm.params.label[0], " at", pos)
-                        #else:
-                        #    print("   ", inFrm.verb.__name__, " at", pos)
-                        #print("Dialog Display:", inFrm.verb.__name__, " ", inFrm.params.label[0], " ADD_RIGHT X=", newX)
                         inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
-
                     # else stack below prev input
                     else:
+                        pos[0] = inFrm.params.padding[0][0]
+                        pos[2] = pos[2] - inFrm.params.padding[0][2] - padZNext
                         prevZ = pos[2]
-                        pos[0] = 0
 
-                        # DEBUG
-                        #if hasattr(inFrm.params, "label"):
-                        #    print("  ", inFrm.params.label[0], " at rel", pos)
-                        #else:
-                        #    print("   ", inFrm.verb.__name__, " at rel", pos)
-                        #print("Dialog Display:", inFrm.verb.__name__, " ", inFrm.params.label[0], " VERTICAL X= 0")
                         inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
 
                     # calc the pos plus width in case next is ADD_RIGHT
                     newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0]
-
+                    padZNext = inFrm.params.padding[0][3]
                 else:
                     print("Dialog redisplay: Error. No redisplay function on input verb", inFrm.verb.__name__)
                 #print("pos", pos)
@@ -3027,9 +3021,9 @@ class WyeUILib(Wye.staticObj):
                 editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "      .")
                 frame.vars.libRows[0].append(editLnFrm)
             else:
-                editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [["Save To File", "Delete Library"]], [0],
+                editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [["Save To File", "Delete Library"]], [0],
                                                                        WyeUILib.EditMainDialog.EditLibLineCallback,
-                                                                       showText=False)
+                                                                       showText=False, padding=(.5,.5,.05,.05))
                 frame.vars.libRows[0].append(editLnFrm)
 
             # make the dialog row
@@ -4096,8 +4090,8 @@ class WyeUILib(Wye.staticObj):
 
                         for param in frame.vars.newParamDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modParamOpList], [0],
-                                                              WyeUILib.EditVerb.EditParamLineCallback, showText=False)
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [WyeUILib.EditVerb.modParamOpList], [0],
+                                                              WyeUILib.EditVerb.EditParamLineCallback, showText=False, padding=(.5,.5,.05,.05))
                             label = "'"+param[0] + "' "+Wye.dType.tostring(param[1]) + " call by:"+Wye.access.tostring(param[2])
                             if len(param) > 3:
                                 label += " default:"+param[3]
@@ -4111,7 +4105,7 @@ class WyeUILib(Wye.staticObj):
                     # else no params to edit
                     else:
                         # todo fix this so it will work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  +/-")
+                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "+/-", padding=(.5,.5,.05,.05))
                         #editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modOpLst], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
                         lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  todo <no parameters>", layout=Wye.layout.ADD_RIGHT)
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
@@ -4130,8 +4124,8 @@ class WyeUILib(Wye.staticObj):
 
                         for var in frame.vars.newVarDescr[0]:
                             # make the dialog row
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modVarOpList], [0],
-                                                              WyeUILib.EditVerb.EditVarLineCallback, showText=False)
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [WyeUILib.EditVerb.modVarOpList], [0],
+                                                              WyeUILib.EditVerb.EditVarLineCallback, showText=False, padding=(.5,.5,.05,.05))
 
                             label = "'"+var[0] + "' "+Wye.dType.tostring(var[1]) + " = "+str(var[2])
                             btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, label, WyeUILib.EditVerb.EditVarCallback, layout=Wye.layout.ADD_RIGHT)
@@ -4173,7 +4167,7 @@ class WyeUILib(Wye.staticObj):
                         # todo handle this on OK exit!!!!
                         else:
                             # line edit button
-                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  +/-")
+                            editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "+/-", padding=(.5,.5,.05,.05))
 
                             lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  todo <add code here>", layout=Wye.layout.ADD_RIGHT)
 
@@ -4270,10 +4264,11 @@ class WyeUILib(Wye.staticObj):
             editLnFrm.params.frame = [None]
             editLnFrm.params.parent = [None]
             editLnFrm.params.showText = [False]
-            editLnFrm.params.label = ["  +/-"]
+            editLnFrm.params.label = ["+/-"]
             editLnFrm.params.list = [WyeUILib.EditVerb.modStreamOpList]
             editLnFrm.params.callback = [WyeUILib.EditVerb.EditStreamLineCallback]  # button callback
             editLnFrm.params.selectionIx = [0]
+            editLnFrm.params.padding = [(1,1,0,0)]
             editLnFrm.verb.run(editLnFrm)
             rowLst.append([editLnFrm])
             #print("bldStreamCodeLine create modCode button", editLnFrm.params.label)
@@ -4314,10 +4309,11 @@ class WyeUILib(Wye.staticObj):
             editLnFrm.params.frame = [None]
             editLnFrm.params.parent = [None]
             editLnFrm.params.showText = [False]
-            editLnFrm.params.label = ["  +/-"]
+            editLnFrm.params.label = ["+/-"]
             editLnFrm.params.list = [WyeUILib.EditVerb.modCodeOpList]
             editLnFrm.params.callback = [WyeUILib.EditVerb.EditCodeLineCallback]  # button callback
             editLnFrm.params.selectionIx = [0]
+            editLnFrm.params.padding = [(1,1,0,0)]
             editLnFrm.verb.run(editLnFrm)
             rowLst.append([editLnFrm])
             #print("bldEditCodeLine create modCode button", editLnFrm.params.label)
@@ -4420,7 +4416,7 @@ class WyeUILib(Wye.staticObj):
             newEdLnFrm = WyeUILib.InputDropdown.start(parentFrm.SP)
             newEdLnFrm.params.frame = [None]
             newEdLnFrm.params.parent = [None]
-            newEdLnFrm.params.label = ["  +/-"]
+            newEdLnFrm.params.label = ["+/-"]
             if isParam:
                 newEdLnFrm.params.list = [WyeUILib.EditVerb.modParamOpList]
             else:
@@ -4429,6 +4425,7 @@ class WyeUILib(Wye.staticObj):
             newEdLnFrm.params.callback = [prefixCallback]
             # callback data below, after create param button
             newEdLnFrm.params.selectionIx = [0]
+            newEdLnFrm.params.padding = [(1,1,0,0)]
             newEdLnFrm.verb.run(newEdLnFrm)
 
             newBtnFrm = WyeUILib.InputButton.start(parentFrm.SP)
@@ -6022,7 +6019,8 @@ class WyeUILib(Wye.staticObj):
                                       position=(.5,-.3, -.5 + btnFrm.vars.position[0][2]))
 
                         # Verb
-                        frame.vars.firstCheckFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Library Verb", [op == "Verb"], radioGroup="radGrp", selectedRadio=frame.vars.selectedOpIx)
+                        frame.vars.firstCheckFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Library Verb",
+                                      [op == "Verb"], radioGroup="radGrp", selectedRadio=frame.vars.selectedOpIx, padding=(.5,.5,.1,.1))
                         # parse input for library and verb dropdowns
                         libList = [lib.__name__ for lib in WyeCore.World.libList]
                         libIx = 0
@@ -6055,13 +6053,14 @@ class WyeUILib(Wye.staticObj):
                         #print("verbList", verbList)
                         frame.vars.libDropFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "Library",
                                                      [libList], [libIx], WyeUILib.EditVerb.EditCodeCallback.libDropCallback,
-                                                     (frame,), layout=Wye.layout.ADD_RIGHT)
-                        #WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, ".", layout=Wye.layout.ADD_RIGHT)
+                                                     (frame,), layout=Wye.layout.ADD_RIGHT, showLabel=False)
+                        WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, ".", layout=Wye.layout.ADD_RIGHT, padding=(.1,.5,0,0))
                         frame.vars.verbDropFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "Verb",
-                                                      [verbList], [verbIx], layout=Wye.layout.ADD_RIGHT)
+                                                      [verbList], [verbIx], layout=Wye.layout.ADD_RIGHT, showLabel=False)
 
                         # Var=
-                        WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "     Variable =", [op == "Var="], radioGroup="radGrp")
+                        WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "     Variable =", [op == "Var="],
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         varList = [var[0] for var in editVerbFrm.params.verb[0].varDescr]
                         if len(varList) == 0:
                             varList = ["<no variables defined>"]     # TODO - disable input
@@ -6097,7 +6096,7 @@ class WyeUILib(Wye.staticObj):
 
                         # Par=
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, " Parameter =", [op == "Par="],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         txt = str(tuple[1])
                         rest = txt
                         parList = [par[0] for par in editVerbFrm.params.verb[0].paramDescr]
@@ -6133,12 +6132,13 @@ class WyeUILib(Wye.staticObj):
 
                         # Const
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "       Constant", [op == "Const"],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.constTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # Var ref
-                        WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, " Variable ref", [op == "Var"], radioGroup="radGrp")
+                        WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, " Variable ref", [op == "Var"],
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         varList = [var[0] for var in editVerbFrm.params.verb[0].varDescr]
                         if len(varList) == 0:
                             varList = ["<no varibles defined>"]     # TODO - disable input
@@ -6159,36 +6159,36 @@ class WyeUILib(Wye.staticObj):
                                                      [varList], [varIx], layout=Wye.layout.ADD_RIGHT, showLabel=False)
                         # Expr
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "   Expression", [op == "Expr"],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.exprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
                         # Code
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "              Code", [op == "Code"],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.codeTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # CodeBlock
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "   Code Block", [op == "CodeBlock"],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.codeBlkTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # Label
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "             Label", [op == "Label"],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.labelTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # GoTo
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "            Go To", [op == "GoTo"],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.goToTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # IfGoTo
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "                    If", [op == "IfGoTo"],
-                                                                   radioGroup="radGrp")
+                                                                   radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.ifExprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
                         if len(tuple) > 2:
@@ -7741,7 +7741,8 @@ class WyeUILib(Wye.staticObj):
                     # else nothing to do here
                     else:
                         # todo fix this so it will work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modParamOpList], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
+                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [WyeUILib.EditVerb.modParamOpList],
+                                      [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False, padding=(.5,.5,.05,.05))
                         lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no parameters>", layout=Wye.layout.ADD_RIGHT)
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 
@@ -7765,7 +7766,8 @@ class WyeUILib(Wye.staticObj):
                     # else nothing to do here
                     else:
                         # todo - make this work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  +/-", [WyeUILib.EditVerb.modVarOpList], [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False)
+                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [WyeUILib.EditVerb.modVarOpList],
+                                      [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False, padding=(.5,.5,.05,.05))
                         lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no variables>")
                         editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
 

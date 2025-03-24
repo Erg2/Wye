@@ -35,9 +35,6 @@ import inspect
 class Wye3dObjsLib(Wye.staticObj):
     systemLib = True        # prevent overwriting
 
-    dragFrame = None    # not currently dragging anything
-
-
     # Build run_rt methods on each class in library
     def _build():
         WyeCore.Utils.buildLib(Wye3dObjsLib)
@@ -513,10 +510,6 @@ class Wye3dObjsLib(Wye.staticObj):
                 self._path.attachNewNode(self.text)
                 self._path.setEffect(DecalEffect.make())        # glue text onto card
             # finished gen card
-            self.gFrame = self.text.getFrameActual()
-            if self.gFrame[1] == 0:  # if empty frame
-                self.gFrame[1] = 1
-                self.gFrame[3] = 1
             self._path.reparentTo(self.parent)
 
 
@@ -531,16 +524,15 @@ class Wye3dObjsLib(Wye.staticObj):
             self._path.setLightOff()                        # unaffected by world lighting
             self._path.setColor(color)
 
-            if not self.gFrame:
-                self.gFrame = self.text.getFrameActual()
-                if self.gFrame[1] == 0:  # if empty frame
-                    self.gFrame[1] = 1
-                    self.gFrame[3] = 1
-                # print("self.gFrame", self.gFrame)
-                self.gFrame[0] -= self.marginL
-                self.gFrame[1] += self.marginR
-                self.gFrame[2] -= self.marginB
-                self.gFrame[3] += self.marginT
+            self.gFrame = self.text.getFrameActual()
+            if self.gFrame[1] == 0:  # if empty frame
+                self.gFrame[1] = 1
+                self.gFrame[3] = 1
+            # print("self.gFrame", self.gFrame)
+            self.gFrame[0] -= self.marginL
+            self.gFrame[1] += self.marginR
+            self.gFrame[2] -= self.marginB
+            self.gFrame[3] += self.marginT
 
         def removeNode(self):
             self._path.removeNode()
