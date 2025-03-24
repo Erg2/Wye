@@ -1,7 +1,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
 class MyTestLib:
-  def build():
+  def _build():
     WyeCore.Utils.buildLib(MyTestLib)
   canSave = True  # all verbs can be saved with the library
   class MyTestLib_rt:
@@ -175,7 +175,7 @@ else:
             ("Code","frame.vars.sound[0].play()"),
             ("GoTo","top"))))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",leaderFish)
         return WyeCore.Utils.buildParallelText('MyTestLib','leaderFish', MyTestLib.leaderFish.codeDescr, MyTestLib.leaderFish)
 

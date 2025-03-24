@@ -19,7 +19,7 @@ class WyeLib:
     systemLib = True        # prevent overwriting
 
     # Build run_rt methods on each class
-    def build():
+    def _build():
         WyeCore.Utils.buildLib(WyeLib)
 
 
@@ -34,7 +34,7 @@ class WyeLib:
         codeDescr = (("Label", "Noop"),)
 
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build noop")
             return WyeCore.Utils.buildCodeText("noop", WyeLib.noop.codeDescr, WyeLib.noop, rowRef)
 
@@ -183,7 +183,7 @@ class WyeLib:
             ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec")),
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("loadObject", WyeLib.loadObject.codeDescr, WyeLib.loadObject, rowRef)
 
         def start(stack):

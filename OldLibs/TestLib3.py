@@ -3,7 +3,7 @@ from WyeCore import WyeCore
 
 class TestLib3:
 
-    def build():
+    def _build():
         WyeCore.Utils.buildLib(TestLib3)
 
     class doitButton:
@@ -40,7 +40,7 @@ class TestLib3:
             )
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Testlib2 build testCompiledPar")
             return WyeCore.Utils.buildParallelText("TestLib3", "doitButton", TestLib3.doitButton.codeDescr)
 
@@ -109,7 +109,7 @@ class TestLib3:
             ("Label", "Done")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("DlgTst", TestLib3.DlgTst.codeDescr, rowRef)
 
         def start(stack):

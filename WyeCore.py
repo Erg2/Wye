@@ -384,7 +384,7 @@ class WyeCore(Wye.staticObj):
                 # build all libraries - compiles any Wye code words in each lib
                 for lib in WyeCore.World.libList:
                     #print("Build", lib)
-                    lib.build()  # build all Wye code segments in code words
+                    lib._build()  # build all Wye code segments in code words
 
                 # parse starting object names and find the objects in the known libraries
                 # print("worldRunner:  start ", len(world.startObjs), " objs")
@@ -1163,7 +1163,7 @@ class WyeCore(Wye.staticObj):
             retParam = None
 
             # Wye verb
-            if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
+            if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Par=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
                 #print("parseWyeTuple: lib.verb tuple", wyeTuple)
                 #Pick it apart to locate lib and verb
                 #print("parseWyeTuple parse ", wyeTuple)
@@ -1296,7 +1296,7 @@ class WyeCore(Wye.staticObj):
                                     # (const, frame var ref, other expression)
                                     tupleKey = paramTuple[0]
                                     #print("tupleKey", tupleKey)
-                                    if tupleKey is None or tupleKey in ["Var", "Const", "Var=", "Expr", "Code", "CodeBlock"]:
+                                    if tupleKey is None or tupleKey in ["Var", "Const", "Var=", "Par=", "Expr", "Code", "CodeBlock"]:
                                         #print("parseWyeTuple: 3a add paramTuple[1]=", paramTuple[1])
 
                                         # debug
@@ -1538,10 +1538,10 @@ class WyeCore(Wye.staticObj):
                     if inspect.isclass(vrb):
                         vrb.library = libClass  # add pointer from verb class to parent library class
                         # if the class has a build function then call it to generate Python source code for its runtime method
-                        if hasattr(vrb, "build"):
+                        if hasattr(vrb, "_build"):
                             doBuild = True      # there is code to compile
                             rowRef = [0]
-                            cdStr, parStr = vrb.build(rowRef)  # call verb build to get verb's runtime code string(s)
+                            cdStr, parStr = vrb._build(rowRef)  # call verb build to get verb's runtime code string(s)
                             codeStr += cdStr
                             parFnStr += parStr
 
@@ -1623,7 +1623,7 @@ class WyeCore(Wye.staticObj):
         def createLibString(name):
 
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
-            libTpl += "class "+name+":\n  def build():\n    WyeCore.Utils.buildLib("+name+")\n"
+            libTpl += "class "+name+":\n  def _build():\n    WyeCore.Utils.buildLib("+name+")\n"
             libTpl += "  canSave = True  # all verbs can be saved with the library\n"
             libTpl += "  class "+name+"_rt:\n   pass #1\n"
             return libTpl
@@ -1659,7 +1659,7 @@ class WyeCore(Wye.staticObj):
             #print("Run test from template lib")
             #lib.test()
             #print("Build", name)
-            lib.build()
+            lib._build()
             if name in WyeCore.World.libDict:
                 WyeCore.World.libList.remove(WyeCore.World.libDict[name])
             WyeCore.World.libDict[name] = lib
@@ -1707,7 +1707,7 @@ class WyeCore(Wye.staticObj):
             vrbStr += "    varDescr =  " + varStr[1:] + "\n"
             vrbStr += "    codeDescr =  " + codeStr[1:] + "\n"
             vrbStr += '''
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",'''
             vrbStr += name + ")\n"
             vrbStr += "\n        rowIxRef = [0]\n"
@@ -1784,7 +1784,7 @@ class WyeCore(Wye.staticObj):
 
             # build verb's Wye code
             vrbStr += "rowRef = [0]\n"
-            vrbStr += "cdStr, parStr = "+name + ".build(rowRef)\n"
+            vrbStr += "cdStr, parStr = "+name + "._build(rowRef)\n"
 
             # DEBUG - print out verb's runtime code with line numbers
             if listCode or WyeCore.debugListCode:

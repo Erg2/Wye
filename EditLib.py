@@ -7,7 +7,7 @@ import inspect      # for debugging
 
 class EditLib:
 
-    def build():
+    def _build():
         WyeCore.Utils.buildLib(EditLib)
 
     class UpdateCallback:
@@ -155,7 +155,7 @@ class EditLib:
             ("GoTo", "PopDialog")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("showFishDialog", EditLib.showFishDialog.codeDescr, EditLib.showFishDialog, rowRef)
 
         def start(stack):
@@ -217,15 +217,12 @@ class EditLib:
             # todo Think of a better way to do if/else than block code or sequential single expressions (EWWW!!)
             ("Code", "if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
             ("Code", " frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
-            ("Var=",
-             "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
-            (
-                "WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
-
+            ("Var=", "frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Var", "frame.vars.gObj"), ("Var", "frame.vars.color")),
             ("GoTo", "Repeat")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             # print("Build ",MyTestVerb)
             return WyeCore.Utils.buildCodeText('MyTestVerb', EditLib.MyTestVerb.codeDescr, EditLib.MyTestVerb, rowRef)
 

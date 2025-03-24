@@ -1,7 +1,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
 class newLibName:
-  def build():
+  def _build():
     WyeCore.Utils.buildLib(newLibName)
   canSave = True  # all verbs can be saved with the library
   class newLibName_rt:
@@ -49,7 +49,7 @@ class newLibName:
           (None,"[2]")),
         ("GoTo","Repeat"))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",MyAngleFish)
         return WyeCore.Utils.buildCodeText('MyAngleFish', newLibName.MyAngleFish.codeDescr, newLibName.MyAngleFish, rowRef)
 

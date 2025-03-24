@@ -1,7 +1,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
 class MyFishLib:
-  def build():
+  def _build():
     WyeCore.Utils.buildLib(MyFishLib)
   canSave = True  # all verbs can be saved with the library
   class MyFishLib_rt:
@@ -37,7 +37,7 @@ class fish2:
         ("Label","MakeFish"),
         ("Expr","frame.vars.fishes.append([None])"),
         ("Expr","frame.vars.fishTags.append([''])"),
-        ("Var=","objNm = 'flyer_01.glb'"),
+        ("Code","objNm = 'flyer_01.glb'"),
         ("WyeCore.libs.WyeLib.loadObject",
           ("Expr","[frame]"),
           ("Expr","frame.vars.fishes[frame.vars.count[0]]"),
@@ -89,7 +89,7 @@ class fish2:
           ("Var","frame.vars.fishes[0]")),
         ("GoTo","SwimLoop"))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",fish2)
         return WyeCore.Utils.buildCodeText('fish2', MyFishLib.fish2.codeDescr, MyFishLib.fish2, rowRef)
 
@@ -279,7 +279,7 @@ else:
             ("Code","frame.vars.sound[0].play()"),
             ("GoTo","top"))))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",leaderFish2)
         return WyeCore.Utils.buildParallelText('MyFishLib','leaderFish2', MyFishLib.leaderFish2.codeDescr, MyFishLib.leaderFish2)
 

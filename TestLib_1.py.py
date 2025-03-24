@@ -1,7 +1,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
 class TestLib:
-    def build():
+    def _build():
         WyeCore.Utils.buildLib(TestLib)
     canSave = True  # all verbs can be saved with the library
     class TestLib_rt:
@@ -18,7 +18,7 @@ class TestLib:
             ("Code","print('PlaceHolder running!')"),
             ("Label","DoNothing"))
     
-        def build(rowRef):
+        def _build(rowRef):
             # print("Build ",PlaceHolder)
             return WyeCore.Utils.buildCodeText('PlaceHolder', TestLib.PlaceHolder.codeDescr, TestLib.PlaceHolder, rowRef)
     

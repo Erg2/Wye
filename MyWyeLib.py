@@ -1,7 +1,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
 class MyWyeLib:
-  def build():
+  def _build():
     WyeCore.Utils.buildLib(MyWyeLib)
   canSave = True  # all verbs can be saved with the library
   class MyWyeLib_rt:
@@ -79,7 +79,7 @@ frame.vars.posAngle[0] = angle
                 '''),
             ("GoTo","Repeat"))))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",testParallelFish)
 
         rowIxRef = [0]
@@ -164,7 +164,7 @@ frame.vars.posAngle[0] = angle
                 '''),
             ("GoTo","Repeat"))))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",testParallelFish1)
 
         rowIxRef = [0]
@@ -249,7 +249,7 @@ frame.vars.posAngle[0] = angle
                 '''),
             ("GoTo","Repeat"))))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",testParallelFish2)
 
         rowIxRef = [0]
@@ -334,7 +334,7 @@ frame.vars.posAngle[0] = angle
                 '''),
             ("GoTo","Repeat"))))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",testParallelFish3)
 
         rowIxRef = [0]

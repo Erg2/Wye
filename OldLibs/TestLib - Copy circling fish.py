@@ -7,7 +7,7 @@ import math
 
 class TestLib:
 
-    def build():
+    def _build():
         WyeCore.Utils.buildLib(TestLib)
 
     class doitButton:
@@ -48,7 +48,7 @@ class TestLib:
         #    )
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Testlib2 build testCompiledPar")
             return WyeCore.Utils.buildParallelText("TestLib", "doitButton", TestLib.doitButton.codeDescr)
 
@@ -140,7 +140,7 @@ class TestLib:
             (None, "frame.status = Wye.status.SUCCESS")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("testDialog", TestLib.testDialog.codeDescr, rowRef)
 
         def start(stack):
@@ -177,7 +177,7 @@ class TestLib:
                 ("GoTo", "ClickLoop")
             )
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("fishDlgButton", TestLib.fishDlgButton.codeDescr, rowRef)
 
         def start(stack):
@@ -234,7 +234,7 @@ class TestLib:
             ("GoTo", "PopDialog")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build fishDialog")
             return WyeCore.Utils.buildCodeText("fishDialog", TestLib.fishDialog.codeDescr, rowRef)
 
@@ -286,7 +286,7 @@ class TestLib:
         )
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("testLoader", TestLib.testLoader.codeDescr, rowRef)
 
         def start(stack):
@@ -441,7 +441,7 @@ class TestLib:
             ("GoTo", "Repeat")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build fish")
             return WyeCore.Utils.buildCodeText("fish", TestLib.fish.codeDescr, rowRef)
 
@@ -530,7 +530,7 @@ class TestLib:
 #            ("GoTo", "Start"),   # Back to the top
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build leaderFish")
             return WyeCore.Utils.buildCodeText("leaderFish", TestLib.leaderFish.codeDescr, rowRef)
 
@@ -573,7 +573,7 @@ class TestLib:
             ("GoTo", "Repeat")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build angleFish")
             return WyeCore.Utils.buildCodeText("angleFish", TestLib.angleFish.codeDescr, rowRef)
 

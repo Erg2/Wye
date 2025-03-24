@@ -1,7 +1,7 @@
 from Wye import Wye
 from WyeCore import WyeCore
 class MyFlashingFishLib:
-  def build():
+  def _build():
     WyeCore.Utils.buildLib(MyFlashingFishLib)
   canSave = True  # all verbs can be saved with the library
   class MyFlashingFishLib_rt:
@@ -78,7 +78,7 @@ class MyFlashingFishLib:
           ("Var","frame.vars.color")),
         ("GoTo","Repeat"))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",FlashingTestFish)
 
         rowIxRef = [0]
@@ -162,7 +162,7 @@ class MyFlashingFishLib:
           ("Var","frame.vars.color")),
         ("GoTo","Repeat"))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",FlyerTestFish)
 
         rowIxRef = [0]
@@ -246,7 +246,7 @@ class MyFlashingFishLib:
           ("Var","frame.vars.color")),
         ("GoTo","Repeat"))
 
-    def build(rowRef):
+    def _build(rowRef):
         # print("Build ",SmallFlashingFish)
 
         rowIxRef = [0]

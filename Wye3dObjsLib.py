@@ -42,7 +42,7 @@ class Wye3dObjsLib(Wye.staticObj):
 
 
     # Build run_rt methods on each class in library
-    def build():
+    def _build():
         WyeCore.Utils.buildLib(Wye3dObjsLib)
 
 
@@ -516,6 +516,10 @@ class Wye3dObjsLib(Wye.staticObj):
                 self._path.attachNewNode(self.text)
                 self._path.setEffect(DecalEffect.make())        # glue text onto card
             # finished gen card
+            self.gFrame = self.text.getFrameActual()
+            if self.gFrame[1] == 0:  # if empty frame
+                self.gFrame[1] = 1
+                self.gFrame[3] = 1
             self._path.reparentTo(self.parent)
 
 

@@ -72,7 +72,7 @@ Compiling
 class TestLib:
 
     # Build run_rt methods on each class
-    def build(rowRef):
+    def _build(rowRef):
         WyeCore.Utils.buildLib(TestLib)
 
 
@@ -107,7 +107,7 @@ class TestLib:
 '''
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             # string will be added to TestLib_rt.testAddInPlace_rt
             return TestLib.testAddInPlace.codeString, ""
 
@@ -135,9 +135,9 @@ class TestLib:
 '''
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             # string will be added to TestLib_rt.testAdd_rt
-            #print("Called testAdd.build(rowref)")
+            #print("Called testAdd._build(rowref)")
             return TestLib.testAdd.codeString, ""
 
         def start(stack):
@@ -159,7 +159,7 @@ class TestLib:
         )
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("testAdd2", TestLib.testAdd2.codeDescr, rowRef)
 
         def start(stack):
@@ -429,7 +429,7 @@ class TestLib:
             )
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("testLoader2", TestLib.testLoader2.codeDescr, rowRef)
 
         def start(stack):
@@ -462,7 +462,7 @@ class TestLib:
         )
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("testLoader3", TestLib.testLoader3.codeDescr, rowRef)
 
         def start(stack):

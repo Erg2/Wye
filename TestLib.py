@@ -7,7 +7,7 @@ import inspect      # for debugging
 from panda3d.core import LQuaternionf
 
 class TestLib:
-    def build():
+    def _build():
         #print("build TestLib")
         WyeCore.Utils.buildLib(TestLib)
 
@@ -67,7 +67,7 @@ class TestLib:
             ("GoTo", "Repeat")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build testObj3")
             return WyeCore.Utils.buildCodeText("testObj3", TestLib.testObj3.codeDescr, TestLib.testObj3, rowRef)
 
@@ -136,7 +136,7 @@ class TestLib:
             ("GoTo", "Repeat")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build testObj3")
             return WyeCore.Utils.buildCodeText("testObj3b", TestLib.testObj3b.codeDescr, TestLib.testObj3b, rowRef)
 
@@ -204,7 +204,7 @@ class TestLib:
             ("GoTo", "Repeat")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build testObj3")
             return WyeCore.Utils.buildCodeText("testObj3c", TestLib.testObj3c.codeDescr, TestLib.testObj3c, rowRef)
 
@@ -239,7 +239,7 @@ class TestLib:
         )
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("testLoader", TestLib.testLoader.codeDescr, TestLib.testLoader, rowRef)
 
         def start(stack):
@@ -291,7 +291,7 @@ class TestLib:
             ("Code", "frame.status = Wye.status.SUCCESS"),
             )
 
-        def build(rowRef):
+        def _build(rowRef):
             return WyeCore.Utils.buildCodeText("clickWiggle", TestLib.clickWiggle.codeDescr, TestLib.clickWiggle, rowRef)
 
         def start(stack):
@@ -435,7 +435,7 @@ class TestLib:
             #(None, "print('makeFish loop start: count', frame.vars.count[0])"),
             ("Expr", "frame.vars.fishes.append([None])"),     # create entry for fish
             ("Expr", "frame.vars.fishTags.append([''])"),
-            ("Var=", "objNm = 'flyer_01.glb'"),
+            ("Code", "objNm = 'flyer_01.glb'"),
             # load object
             ("WyeCore.libs.WyeLib.loadObject",
              ("Expr", "[frame]"),
@@ -495,7 +495,7 @@ class TestLib:
             ("GoTo", "SwimLoop")
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build fish")
             return WyeCore.Utils.buildCodeText("fish", TestLib.fish.codeDescr, TestLib.fish, rowRef)
 
@@ -685,7 +685,7 @@ else:
             ))
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build leaderFish")
             return WyeCore.Utils.buildParallelText("TestLib", "leaderFish", TestLib.leaderFish.codeDescr, TestLib.leaderFish)
 
@@ -852,7 +852,7 @@ for ii in range(len(frame.vars.bubbles[0])):
 ''')
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build ground")
             return WyeCore.Utils.buildCodeText("ground", TestLib.ground.codeDescr, TestLib.ground, rowRef)
 
@@ -911,7 +911,7 @@ for ii in range(len(frame.vars.bubbles[0])):
             #(None, ("print('angleFish end case', frame.PC)")),
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build angleFish")
             return WyeCore.Utils.buildCodeText("angleFish", TestLib.angleFish.codeDescr, TestLib.angleFish, rowRef)
 
@@ -997,7 +997,7 @@ frame.vars.posAngle[0] = angle
             ))
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build testParallelFish")
             return WyeCore.Utils.buildParallelText("TestLib", "testParallelFish", TestLib.testParallelFish.codeDescr, TestLib.testParallelFish)
 
@@ -1026,7 +1026,7 @@ frame.vars.posAngle[0] = angle
             ("Label", "DoNothing"),
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Build PlaceHolder")
             return WyeCore.Utils.buildCodeText("PlaceHolder", TestLib.PlaceHolder.codeDescr, TestLib.PlaceHolder, rowRef)
 

@@ -43,7 +43,7 @@ class WyeUIUtilsLib(Wye.staticObj):
 
 
     # Build run_rt methods on each class in library
-    def build():
+    def _build():
         WyeCore.Utils.buildLib(WyeUIUtilsLib)
 
 

@@ -18,7 +18,7 @@ from direct.showbase.DirectObject import DirectObject
 class TestLib2:
 
     # Build run_rt methods on each class
-    def build():
+    def _build():
         #print("build TestLib2")
         WyeCore.Utils.buildLib(TestLib2)
 
@@ -252,7 +252,7 @@ class TestLib2:
                      )
         code = None
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Testlib2 build testCompiledPar")
             return WyeCore.Utils.buildParallelText("TestLib2", "testCompiledPar", TestLib2.testCompiledPar.codeDescr)
 
@@ -297,7 +297,7 @@ class TestLib2:
             ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.vars[3]"), (None, "(0,1,0,1)"))
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Testlib2 build testMCycle")
             return WyeCore.Utils.buildCodeText("testMCycle", TestLib2.testMCycle.codeDescr, rowRef)
 
@@ -325,7 +325,7 @@ class TestLib2:
             #(None, "print('testMCycle2 one case ',frame.PC)"),
         )
 
-        def build(rowRef):
+        def _build(rowRef):
             #print("Testlib2 build testMCycle2")
             return WyeCore.Utils.buildCodeText("testMCycle2", TestLib2.testMCycle2.codeDescr, rowRef)
 
