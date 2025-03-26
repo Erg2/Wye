@@ -249,7 +249,7 @@ class TestLib:
             TestLib.TestLib_rt.testLoader_run_rt(frame)
 
 
-    # when clicked, use spin to wiggle object back and forth
+    # when clicked, wiggle object back and forth
     class clickWiggle:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
@@ -280,13 +280,14 @@ class TestLib:
             ("IfGoTo", "frame.vars.vec[0][frame.vars.axis[0]] > -45", "WaitClick2"),
             ("Label", "WaitClick3"),
             ("Var=", "frame.vars.rotCt[0] += 1"),
-            ("Code", "print('rotCt', frame.vars.rotCt[0])"),
+            ("Code", "#print('rotCt', frame.vars.rotCt[0])"),
             ("IfGoTo", "frame.vars.rotCt[0] <= 3", "WaitClick1"),
             ("Label", "WaitClick4"),
             ("Code", "frame.vars.vec[0][frame.vars.axis[0]] += 5"),
             ("Code", "frame.params.obj[0].setHpr(frame.vars.vec[0][0], frame.vars.vec[0][1], frame.vars.vec[0][2])"),
-            ("Code", "print('vec back to zero', frame.vars.vec[0], ' status', Wye.status.tostring(frame.status))"),
+            ("Code", "#print('vec back to zero', frame.vars.vec[0], ' status', Wye.status.tostring(frame.status))"),
             ("IfGoTo", "frame.vars.vec[0][frame.vars.axis[0]] < 0", "WaitClick4"),
+            ("Label", "WaitClick5"),
             ("Code", "print('After idGoTo', frame.vars.vec[0], ' status', Wye.status.tostring(frame.status))"),
             ("Code", "frame.status = Wye.status.SUCCESS"),
             )

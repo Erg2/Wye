@@ -1120,7 +1120,7 @@ class WyeCore(Wye.staticObj):
                     tupleStr += str(hierList)
             return tupleStr
 
-        # count nested lists in list
+        # recursively count nested lists in list
         def countNestedLists(tupleLst):
             count = 0
             if isinstance(tupleLst, list) or isinstance(tupleLst, tuple):
@@ -1138,7 +1138,7 @@ class WyeCore(Wye.staticObj):
 
         # This kind of array manually implements Pass By Reference for array elements.  But that means we need our own
         # array.index(elem) function.
-        def nestedIndexFind(lst, tgt):
+        def refListFind(lst, tgt):
             # find index to this row's param
             ix = -1
             for ii in range(len(lst)):
@@ -1223,10 +1223,11 @@ class WyeCore(Wye.staticObj):
                                         #print("   verbClass.paramDescr[paramIx-1]", verbClass.paramDescr[paramIx-1][0])
 
                                         # if this is a variable param then recurse to parse list of wyetuples
-                                        if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
-                                            codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(" + paramTuple[1] + ")\n"
-                                        else:
-                                            codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=" + paramTuple[1] + "\n"
+                                        if True: # paramIx < len(verbClass.paramDescr):
+                                            if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
+                                                codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "[0].append(" + paramTuple[1] + ")\n"
+                                            else:
+                                                codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=" + paramTuple[1] + "\n"
 
                                         #print("parseWyeTuple: 3 codeText=", codeText[0])
                                     else:                           # recurse to parse nested code tuple
@@ -1238,10 +1239,11 @@ class WyeCore(Wye.staticObj):
                                         #print("  popped back to parsing verb", verbClass.__name__, " wyeTuple", wyeTuple)
                                         #print("   verbClass.paramDescr[paramIx-1]", verbClass.paramDescr[paramIx-1][0])
 
-                                        if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
-                                            cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1] + "[0].append(frame.f"+str(fNum+1)+".params."+firstParam+")\n"
-                                        else:
-                                            cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
+                                        if True: # paramIx < len(verbClass.paramDescr):
+                                            if verbClass.paramDescr[paramIx-1][1] == Wye.dType.VARIABLE:
+                                                cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1] + "[0].append(frame.f"+str(fNum+1)+".params."+firstParam+")\n"
+                                            else:
+                                                cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
 
                                         codeText += cdTxt
                                         parFnText += fnTxt
@@ -1562,8 +1564,7 @@ class WyeCore(Wye.staticObj):
                     print("\nlib '"+libClass.__name__+"' code=")
                     lnIx = 1
                     for ln in codeStr.split('\n'):
-                        #print("%2d "%lnIx, ln)
-                        print(ln)
+                        print("%2d "%lnIx, ln)
                         lnIx += 1
 
                 # compile the runtime class containing methods for all the verb runtimes

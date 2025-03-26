@@ -125,7 +125,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         return dlgFrm
 
     def doInputLabel(dlgFrm, label, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT,
-                     layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedSize=(0,0,0,0)):
+                     layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0):
         frm = WyeUILib.InputLabel.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -134,14 +134,14 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.color = [color]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
-        frm.params.fixedSize = [fixedSize]
+        frm.params.fixedWidth = [fixedWidth]
         WyeUILib.InputLabel.run(frm)
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
     # Note: valueRef is a list with the value in it.  It can the name of a param or var
     def doInputText(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
-                    backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedSize=(0,0,0,0)):
+                    backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0):
         frm = WyeUILib.InputText.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -153,13 +153,13 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.color = [color]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
-        frm.params.fixedSize = [fixedSize]
+        frm.params.fixedWidth = [fixedWidth]
         frm.verb.run(frm)
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
     def doInputInteger(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
-                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedSize=(0,0,0,0)):
+                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0):
         frm = WyeUILib.InputInteger.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -171,14 +171,14 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.color = [color]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
-        frm.params.fixedSize = [fixedSize]
+        frm.params.fixedWidth = [fixedWidth]
         frm.verb.run(frm)
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
 
     def doInputFloat(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
-                     backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedSize=(0,0,0,0)):
+                     backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0):
         frm = WyeUILib.InputFloat.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -190,13 +190,13 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.color = [color]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
-        frm.params.fixedSize = [fixedSize]
+        frm.params.fixedWidth = [fixedWidth]
         frm.verb.run(frm)
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
     def doInputButton(dlgFrm, label, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
-                      backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedSize=(0,0,0,0)):
+                      backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0):
         frm = WyeUILib.InputButton.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -207,14 +207,14 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.color = [color]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
-        frm.params.fixedSize = [fixedSize]
+        frm.params.fixedWidth = [fixedWidth]
         frm.verb.run(frm)
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
     def doInputCheckbox(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, radioGroup=None,
-                      selectedRadio=0, padding=(0,0,0,0), fixedSize=(0,0,0,0)):
+                      selectedRadio=0, padding=(0,0,0,0), fixedWidth=0):
         frm = WyeUILib.InputCheckbox.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -228,7 +228,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.selectedRadio = [selectedRadio]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
-        frm.params.fixedSize = [fixedSize]
+        frm.params.fixedWidth = [fixedWidth]
         frm.verb.run(frm)
         dlgFrm.params.inputs[0].append([frm])
         return frm
@@ -236,7 +236,7 @@ class WyeUIUtilsLib(Wye.staticObj):
     # note: dropdownListRef is a list of strings
     def doInputDropdown(dlgFrm, label, dropdownListRef, selectionIxRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, showText=True, showLabel=True
-                        , padding=(0,0,0,0), fixedSize=(0,0,0,0)):
+                        , padding=(0,0,0,0), fixedWidth=0):
         frm = WyeUILib.InputDropdown.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
         frm.params.parent = [None]
@@ -251,7 +251,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.showLabel = [showLabel]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
-        frm.params.fixedSize = [fixedSize]
+        frm.params.fixedWidth = [fixedWidth]
         frm.verb.run(frm)
         dlgFrm.params.inputs[0].append([frm])
         return frm

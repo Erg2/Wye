@@ -71,8 +71,8 @@ class WyeUILib(Wye.staticObj):
 
                 if self.displayObj:
                     ix = self.cutList.index(row)
-                    print("CutPasteManager setSelected: highlight row", ix, " out of ", len(self.cutList), " cutList rows")
-                    print("   display rows:", len(self.displayObj.vars.dlgFrm[0].params.inputs[0]))
+                    #print("CutPasteManager setSelected: highlight row", ix, " out of ", len(self.cutList), " cutList rows")
+                    #print("   display rows:", len(self.displayObj.vars.dlgFrm[0].params.inputs[0]))
                     self.displayObj.verb.highlightRow(self.displayObj, ix)
 
             else:
@@ -182,7 +182,7 @@ class WyeUILib(Wye.staticObj):
                 # remove current rows
                 #print("CutPasteDisplay redisplay: remove", len(frame.vars.rows[0]), " rows")
                 for frmRef in frame.vars.rows[0]:
-                    inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], frmRef)
+                    inpIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], frmRef)
                     #print(" remove row", inpIx)
                     oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                     if oldFrm in dlgFrm.vars.clickedBtns[0]:
@@ -718,7 +718,7 @@ class WyeUILib(Wye.staticObj):
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
                       ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)), # L/R/T/B
-                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
+                      ("fixedWidth", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -782,6 +782,13 @@ class WyeUILib(Wye.staticObj):
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setBackgroundColor(color)
 
+        def hide(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.hide()
+
+        def show(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.show()
 
     # text input field
     class InputText:
@@ -796,7 +803,7 @@ class WyeUILib(Wye.staticObj):
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
                       ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
-                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
+                      ("fixedWidth", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -904,6 +911,13 @@ class WyeUILib(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setBackgroundColor(color)
             frame.vars.gWidget[0].setBackgroundColor(color)
 
+        def hide(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.hide()
+
+        def show(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.show()
 
     class InputInteger(InputText):
 
@@ -918,7 +932,7 @@ class WyeUILib(Wye.staticObj):
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
                       ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
-                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
+                      ("fixedWidth", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1010,6 +1024,13 @@ class WyeUILib(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setBackgroundColor(color)
             frame.vars.gWidget[0].setBackgroundColor(color)
 
+        def hide(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.hide()
+
+        def show(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.show()
 
     class InputFloat(InputText):
 
@@ -1024,7 +1045,7 @@ class WyeUILib(Wye.staticObj):
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
                       ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
-                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
+                      ("fixedWidth", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1116,6 +1137,14 @@ class WyeUILib(Wye.staticObj):
             frame.vars.gWidgetStack[0][0].setBackgroundColor(color)
             frame.vars.gWidget[0].setBackgroundColor(color)
 
+        def hide(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.hide()
+
+        def show(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.show()
+
     # text input field
     class InputButton:
         mode = Wye.mode.SINGLE_CYCLE
@@ -1128,7 +1157,7 @@ class WyeUILib(Wye.staticObj):
                       ("backgroundColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.TRANSPARENT),
                       ("layout", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.layout.VERTICAL),
                       ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
-                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
+                      ("fixedWidth", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1206,6 +1235,14 @@ class WyeUILib(Wye.staticObj):
         def setBackgroundColor(frame, color):
             frame.vars.gWidget[0].setBackgroundColor(color)
 
+        def hide(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.hide()
+
+        def show(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.show()
+
     # checkbox
     # if radioGroup is a list, then will act as part of a group of radio buttons
     class InputCheckbox:
@@ -1222,7 +1259,7 @@ class WyeUILib(Wye.staticObj):
                       ("radioGroup", Wye.dType.STRING, Wye.access.REFERENCE, None),    # name of checkbox radio group, if any
                       ("selectedRadio", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),  # if radio button, ix of currently selected one
                       ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0,0,0)),
-                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0,0)),
+                      ("fixedWidth", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),
                       )
         varDescr = (("position", Wye.dType.INTEGER_LIST, (0,0,0)),      # position rel to parent
                     ("size", Wye.dType.INTEGER_LIST, (0, 0, 0)),        # size
@@ -1248,7 +1285,7 @@ class WyeUILib(Wye.staticObj):
             frame.vars.currVal[0] = frame.params.value[0]
             frame.params.frame[0] = frame  # self referential!
             frame.vars.localCallback[0] = WyeUILib.InputCheckbox.InputCheckboxCallback       # save verb to call
-            frame.vars.localOptData[0] = (frame)       # don't know position yet
+            frame.vars.localOptData[0] = (frame,)
 
             # return frame and success, caller dialog will use frame as placeholder for input
             frame.status = Wye.status.SUCCESS
@@ -1355,6 +1392,13 @@ class WyeUILib(Wye.staticObj):
         def setCurrentPos(frame, index):
             frame.vars.currPos[0] = index       # TODO needs validating!
 
+        def hide(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.hide()
+
+        def show(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.show()
 
         # User clicked input, generate the DropDown
         class InputCheckboxCallback:
@@ -1372,7 +1416,7 @@ class WyeUILib(Wye.staticObj):
             def run(frame):
                 data = frame.eventData
                 #print("InputCheckboxCallback run: data", data)
-                rowFrm = data[1]
+                rowFrm = data[1][0]
                 dlgFrm = rowFrm.parentDlg
 
                 #print("InputCheckboxCallback run: rowFrm", rowFrm.params.label[0], " ", rowFrm.verb.__name__)
@@ -1401,7 +1445,7 @@ class WyeUILib(Wye.staticObj):
                       ("showText", Wye.dType.BOOL, Wye.access.REFERENCE, True),
                       ("showLabel", Wye.dType.BOOL, Wye.access.REFERENCE, True),
                       ("padding", Wye.dType.INTEGER, Wye.access.REFERENCE, (0, 0, 0, 0)),
-                      ("fixedSize", Wye.dType.INTEGER, Wye.access.REFERENCE, (0, 0)),
+                      ("fixedWidth", Wye.dType.INTEGER, Wye.access.REFERENCE, 0),
                       )
         varDescr = (("retStat", Wye.dType.INTEGER, 0),                  # Dropdown returned index
                     ("position", Wye.dType.INTEGER_LIST, (0, 0, 0)),  # position rel to parent
@@ -1558,6 +1602,13 @@ class WyeUILib(Wye.staticObj):
             if frame.vars.bWidget[0]:
                 frame.vars.bWidget[0].setBackgroundColor(color)
 
+        def hide(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.hide()
+
+        def show(frame):
+            for gobj in frame.vars.gWidgetStack[0]:
+                gobj.show()
 
         # User clicked input, generate the DropDown and return selected row /
         class InputDropdownCallback:
@@ -1755,7 +1806,11 @@ class WyeUILib(Wye.staticObj):
                                 inFrm.verb.display(inFrm, frame, pos)  # displays label, updates pos
                                 padZNext = inFrm.params.padding[0][3]
                             # calc the pos plus width in case next is ADD_RIGHT
-                            newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0] + inFrm.params.padding[0][1]
+                            if inFrm.params.fixedWidth[0]:
+                                print("Dialog display fixedWidth", inFrm.params.label[0], " ", inFrm.params.fixedWidth[0])
+                                newX = inFrm.vars.position[0][0] + inFrm.params.fixedWidth[0] + inFrm.params.padding[0][1]
+                            else:
+                                newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0] + inFrm.params.padding[0][1]
                             #print("Display", inFrm.verb.__name__, " ", inFrm.params.label[0], " pos"inFrm.)
                         else:
                             print("Dialog: Error. Unknown input verb", inFrm.verb.__name__)
@@ -1880,7 +1935,11 @@ class WyeUILib(Wye.staticObj):
                         inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
 
                     # calc the pos plus width in case next is ADD_RIGHT
-                    newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0]
+                    if inFrm.params.fixedWidth[0]:
+                        print("Dialog redisplay fixedWidth", inFrm.params.label[0], " ", inFrm.params.fixedWidth[0])
+                        newX = inFrm.vars.position[0][0] + inFrm.params.fixedWidth[0] + inFrm.params.padding[0][1]
+                    else:
+                        newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0] + inFrm.params.padding[0][1]
                     padZNext = inFrm.params.padding[0][3]
                 else:
                     print("Dialog redisplay: Error. No redisplay function on input verb", inFrm.verb.__name__)
@@ -3038,7 +3097,7 @@ class WyeUILib(Wye.staticObj):
             # update the dialog
 
             # remove rows from dialog
-            firstIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], editVerbFrm.vars.libRows[0][0])
+            firstIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], editVerbFrm.vars.libRows[0][0])
             for ii in range(len(editVerbFrm.vars.libRows[0])):
                 frm = dlgFrm.params.inputs[0].pop(firstIx)[0]
                 frm.verb.close(frm)
@@ -3550,7 +3609,7 @@ class WyeUILib(Wye.staticObj):
                 # delete all dialog lib verb inputs
                 delCt = 0
                 for bFrmRef in frame.vars.rows[0]:
-                    inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], bFrmRef)
+                    inpIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], bFrmRef)
                     oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                     oldFrm.verb.close(oldFrm)  # remove graphic content
                     delCt += 1
@@ -3856,6 +3915,7 @@ class WyeUILib(Wye.staticObj):
                     ("newVarDescr", Wye.dType.OBJECT_LIST, None),   # Build new verb vars here
                     ("newCodeDescr", Wye.dType.OBJECT_LIST, None),  # Build new verb code here
                     ("fileName", Wye.dType.STRING, "MyWyeLib.py"),             # file name to save to
+                    ("test", Wye.dType.BOOL, False),
                     )
 
         # global list of frames being edited
@@ -4352,7 +4412,10 @@ class WyeUILib(Wye.staticObj):
                 if len(tuple) > 1:
                     paramIx = 0
                     for paramTuple in tuple[1:]:
-                        prefix = "(param:" + verb.paramDescr[paramIx][0] + ") "
+                        if paramIx > len(verb.paramDescr):
+                            prefix = "(param:" + verb.paramDescr[paramIx][0] + ") "
+                        else:
+                            prefix = "(param: <no parameters>) "
                         WyeUILib.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, dlgFrm, rowLst, prefix)
                         if verb.paramDescr[paramIx][1] != Wye.dType.VARIABLE:
                             paramIx += 1
@@ -4405,7 +4468,7 @@ class WyeUILib(Wye.staticObj):
             # create new dialog row for this param
 
             # find index to dialog row to insert before/after
-            rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+            rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
             # Debug: if the unthinkable happens, give us a hint
             if rIx < 0:
                 print("insertParamOrVar ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ", editLnFrm.params.label[0], " not in input list")
@@ -4485,6 +4548,7 @@ class WyeUILib(Wye.staticObj):
         # VerbEditor Callback classes
         # Callback gets passed eventData = (buttonTag, optUserData, buttonFrm)
         ######################
+
 
         # Modify lib.verb
         class EditVerbCallback:
@@ -4752,7 +4816,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditParamLineCallback op", WyeUILib.EditVerb.opList[opIx], " ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -4801,7 +4865,7 @@ class WyeUILib(Wye.staticObj):
                         WyeCore.World.cutPasteManager.add(copyRec)
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         print("EditParamLineCallback cut: dlg row", rIx)
                         if rIx < 0:
                             print("EditParamLineCallback cut: ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
@@ -4828,7 +4892,7 @@ class WyeUILib(Wye.staticObj):
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'paramDescr' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
                             return
-                        data = cutData[1]
+                        data = Wye.listCopy(cutData[1])
                         label = "  '" + data[0] + "' " + Wye.dType.tostring(data[1]) + " call by:" + Wye.access.tostring(data[2])
                         editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, param,
                                                           editVerbFrm.vars.newParamDescr[0], label,
@@ -4841,7 +4905,7 @@ class WyeUILib(Wye.staticObj):
                         #print("EditParamLineCallback: Delete")
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -4887,7 +4951,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -4966,7 +5030,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.vars.label[0], " not in input list")
@@ -5021,7 +5085,7 @@ class WyeUILib(Wye.staticObj):
                         WyeCore.World.cutPasteManager.add(copyRec)
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -5049,7 +5113,7 @@ class WyeUILib(Wye.staticObj):
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'varDescr' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
 
-                        data = cutData[1]
+                        data = Wye.listCopy(cutData[1])
                         label = "  '"+data[0] + "' "+Wye.dType.tostring(data[1]) + " = "+str(data[2])
                         editVerbFrm.verb.insertParamOrVar(parentFrm, editVerbFrm, editLnFrm, var,
                                                           editVerbFrm.vars.newVarDescr[0], label,
@@ -5061,7 +5125,7 @@ class WyeUILib(Wye.staticObj):
                     case 5:
                         # print("EditVarLineCallback: Delete")
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -5106,7 +5170,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.vars.label[0], " not in input list")
@@ -5158,12 +5222,7 @@ class WyeUILib(Wye.staticObj):
                 #print("EditStreamLineCallback: op", WyeUILib.EditVerb.modStreamOpList[opIx])
 
                 newData = ["NewStream", [["Code", "#< your code goes here>"],]]
-                #"0 Move line up",
-                #"1 Add line before",
-                #"2 Copy line",
-                #"3 Delete Line",
-                #"4 Add line after",
-                #"5 Move line down",
+
                 match (opIx):
                     # move line up
                     case 0:
@@ -5184,7 +5243,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         preTuple = parentList[tIx-1]
@@ -5230,7 +5289,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5294,21 +5353,12 @@ class WyeUILib(Wye.staticObj):
                         # delete from codeDescr
                         parentList.pop(ix)
 
-                        # get location of this frame in dialog input list
-                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
-                        if parentList:
-                            ix = parentList.index(tuple)
-                            # print("found tuple", tuple, " at", ix, " in", parentList)
-                        else:
-                            print("EditStreamLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
-                                  editVerbFrm.vars.newCodeDescr[0])
-
                         # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
-                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
+                        count = WyeCore.Utils.countNestedLists(tuple)
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5332,7 +5382,8 @@ class WyeUILib(Wye.staticObj):
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'Stream' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
                             return
-                        data = cutData[1]
+                        data = Wye.listCopy(cutData[1])
+
 
                         # insert code before this one in verb's codeDescr
                         # print("EditStreamLineCallback codeFrm", codeFrm.verb.__name__)
@@ -5350,7 +5401,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5391,11 +5442,11 @@ class WyeUILib(Wye.staticObj):
                         #  linking relevant parts to relevant controls/data
 
                         # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
-                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
+                        count = WyeCore.Utils.countNestedLists(tuple)
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5436,7 +5487,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert after
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5484,7 +5535,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         postTuple = parentList[tIx+1]
@@ -5549,7 +5600,7 @@ class WyeUILib(Wye.staticObj):
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
                             tIx = parentList.index(tuple)
-                            # print("found tuple", tuple, " at", ix, " in", parentList)
+                            print("EditCodeLineCallback: findTupleParent found tuple", tuple, " at", tIx, " in", parentList)
                         else:
                             print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
                                   editVerbFrm.vars.newCodeDescr[0])
@@ -5562,7 +5613,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         preTuple = parentList[tIx-1]
@@ -5585,6 +5636,9 @@ class WyeUILib(Wye.staticObj):
                         parentFrm.vars.currInp[0] = None        # we just deleted it, so clear it
                         parentFrm.verb.redisplay(parentFrm)     # redisplay the dialog
 
+
+
+
                     # add line before
                     case 1:
                         # print("EditCodeLineCallback: Add up")
@@ -5602,11 +5656,10 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         parentList.insert(ix, newData)
-
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5632,6 +5685,7 @@ class WyeUILib(Wye.staticObj):
                         #WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
                         #pass
 
+                        ix = 0
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
                             try:
@@ -5648,7 +5702,6 @@ class WyeUILib(Wye.staticObj):
                         copyRec = ("Code", (Wye.listCopy(parentList[ix])))
                         #print("EditCodeLineCallback copy: copyRec", copyRec)
                         WyeCore.World.cutPasteManager.add(copyRec)
-
 
                     # cut Line
                     case 3:
@@ -5687,7 +5740,7 @@ class WyeUILib(Wye.staticObj):
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5711,7 +5764,7 @@ class WyeUILib(Wye.staticObj):
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Incorrect Data Type", "Please select a 'codeDescr' row from Copy/Paste List",
                                                                      Wye.color.WARNING_COLOR)
                             return
-                        data = cutData[1]
+                        data = Wye.listCopy(cutData[1])
 
                         # insert code before this one in verb's codeDescr
                         # print("EditCodeLineCallback codeFrm", codeFrm.verb.__name__)
@@ -5729,7 +5782,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5774,7 +5827,7 @@ class WyeUILib(Wye.staticObj):
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5814,7 +5867,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert after
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5862,7 +5915,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         postTuple = parentList[tIx+1]
@@ -6028,7 +6081,9 @@ class WyeUILib(Wye.staticObj):
 
                         # Verb
                         frame.vars.firstCheckFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Library Verb",
-                                      [op == "Verb"], radioGroup="radGrp", selectedRadio=frame.vars.selectedOpIx, padding=(.5,.5,.1,.1))
+                                      [op == "Verb"], frame.verb.selectOpCallback, (frame,),
+                                      radioGroup="radGrp", selectedRadio=frame.vars.selectedOpIx,
+                                                                                                 padding=(.5,.5,.1,.1))
                         # parse input for library and verb dropdowns
                         libList = [lib.__name__ for lib in WyeCore.World.libList]
                         libIx = 0
@@ -6068,6 +6123,7 @@ class WyeUILib(Wye.staticObj):
 
                         # Var=
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "     Variable =", [op == "Var="],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         varList = [var[0] for var in editVerbFrm.params.verb[0].varDescr]
                         if len(varList) == 0:
@@ -6104,6 +6160,7 @@ class WyeUILib(Wye.staticObj):
 
                         # Par=
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, " Parameter =", [op == "Par="],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         txt = str(tuple[1])
                         rest = txt
@@ -6140,12 +6197,14 @@ class WyeUILib(Wye.staticObj):
 
                         # Const
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "       Constant", [op == "Const"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.constTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # Var ref
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, " Variable ref", [op == "Var"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         varList = [var[0] for var in editVerbFrm.params.verb[0].varDescr]
                         if len(varList) == 0:
@@ -6167,35 +6226,41 @@ class WyeUILib(Wye.staticObj):
                                                      [varList], [varIx], layout=Wye.layout.ADD_RIGHT, showLabel=False)
                         # Expr
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "   Expression", [op == "Expr"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.exprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
                         # Code
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "              Code", [op == "Code"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.codeTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # CodeBlock
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "   Code Block", [op == "CodeBlock"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.codeBlkTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # Label
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "             Label", [op == "Label"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.labelTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # GoTo
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "            Go To", [op == "GoTo"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.goToTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
 
                         # IfGoTo
                         WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "                    If", [op == "IfGoTo"],
+                                                                   frame.verb.selectOpCallback, (frame,),
                                                                    radioGroup="radGrp", padding=(.5,.5,.1,.1))
                         frame.vars.ifExprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [str(tuple[1])],
                                                                layout=Wye.layout.ADD_RIGHT)
@@ -6205,6 +6270,9 @@ class WyeUILib(Wye.staticObj):
                             lblStr = "MyGoToLabel"
                         frame.vars.ifTgtTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [lblStr],
                                                                layout=Wye.layout.ADD_RIGHT)
+                        # run dlg to generate display objects so can hide them
+                        dlgFrm.verb.run(dlgFrm)
+                        frame.verb.showHide(frame, editVerbFrm.verb.opList.index(op))      # show only current op data
 
                         # put dialog on stack and go do it
                         frame.SP.append(dlgFrm)
@@ -6349,9 +6417,78 @@ class WyeUILib(Wye.staticObj):
                         #else:
                         #    print("EditCodeCallback: User cancelled")
 
+            def showHide(frame, opIx):
+                if opIx == 0:
+                    frame.vars.libDropFrm[0].verb.show(frame.vars.libDropFrm[0])
+                    frame.vars.verbDropFrm[0].verb.show(frame.vars.verbDropFrm[0])
+                else:
+                    frame.vars.libDropFrm[0].verb.hide(frame.vars.libDropFrm[0])
+                    frame.vars.verbDropFrm[0].verb.hide(frame.vars.verbDropFrm[0])
+
+                if opIx == 1:
+                    frame.vars.varEqDropFrm[0].verb.show(frame.vars.varEqDropFrm[0])
+                    frame.vars.varEqPrefDropFrm[0].verb.show(frame.vars.varEqPrefDropFrm[0])
+                    frame.vars.varEqTextFrm[0].verb.show(frame.vars.varEqTextFrm[0])
+                else:
+                    frame.vars.varEqDropFrm[0].verb.hide(frame.vars.varEqDropFrm[0])
+                    frame.vars.varEqPrefDropFrm[0].verb.hide(frame.vars.varEqPrefDropFrm[0])
+                    frame.vars.varEqTextFrm[0].verb.hide(frame.vars.varEqTextFrm[0])
+
+                if opIx == 2:
+                    frame.vars.parEqDropFrm[0].verb.show(frame.vars.parEqDropFrm[0])
+                    frame.vars.parEqPrefDropFrm[0].verb.show(frame.vars.parEqPrefDropFrm[0])
+                    frame.vars.parEqTextFrm[0].verb.show(frame.vars.parEqTextFrm[0])
+                else:
+                    frame.vars.parEqDropFrm[0].verb.hide(frame.vars.parEqDropFrm[0])
+                    frame.vars.parEqPrefDropFrm[0].verb.hide(frame.vars.parEqPrefDropFrm[0])
+                    frame.vars.parEqTextFrm[0].verb.hide(frame.vars.parEqTextFrm[0])
+
+                if opIx == 3:
+                    frame.vars.constTextFrm[0].verb.show(frame.vars.constTextFrm[0])
+                else:
+                    frame.vars.constTextFrm[0].verb.hide(frame.vars.constTextFrm[0])
+
+                if opIx == 4:
+                    frame.vars.varDropFrm[0].verb.show(frame.vars.varDropFrm[0])
+                else:
+                    frame.vars.varDropFrm[0].verb.hide(frame.vars.varDropFrm[0])
+
+                if opIx == 5:
+                    frame.vars.exprTextFrm[0].verb.show(frame.vars.exprTextFrm[0])
+                else:
+                    frame.vars.exprTextFrm[0].verb.hide(frame.vars.exprTextFrm[0])
+
+                if opIx == 6:
+                    frame.vars.codeTextFrm[0].verb.show(frame.vars.codeTextFrm[0])
+                else:
+                    frame.vars.codeTextFrm[0].verb.hide(frame.vars.codeTextFrm[0])
+
+                if opIx == 7:
+                    frame.vars.codeBlkTextFrm[0].verb.show(frame.vars.codeBlkTextFrm[0])
+                else:
+                    frame.vars.codeBlkTextFrm[0].verb.hide(frame.vars.codeBlkTextFrm[0])
+
+                if opIx == 8:
+                    frame.vars.labelTextFrm[0].verb.show(frame.vars.labelTextFrm[0])
+                else:
+                    frame.vars.labelTextFrm[0].verb.hide(frame.vars.labelTextFrm[0])
+
+                if opIx ==9:
+                    frame.vars.goToTextFrm[0].verb.show(frame.vars.goToTextFrm[0])
+                else:
+                    frame.vars.goToTextFrm[0].verb.hide(frame.vars.goToTextFrm[0])
+
+                if opIx == 10:
+                    frame.vars.ifExprTextFrm[0].verb.show(frame.vars.ifExprTextFrm[0])
+                    frame.vars.ifTgtTextFrm[0].verb.show(frame.vars.ifTgtTextFrm[0])
+                else:
+                    frame.vars.ifExprTextFrm[0].verb.hide(frame.vars.ifExprTextFrm[0])
+                    frame.vars.ifTgtTextFrm[0].verb.hide(frame.vars.ifTgtTextFrm[0])
+
+
             def removeOldDlgLines(editLnFrm, tuple, parentFrm):
                 # delete the current row(s) in the mother dialog
-                inpIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)  # back up to edLn input
+                inpIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)  # back up to edLn input
                 if inpIx < 0:
                     print("removeOldDlgLines: EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
                     print("editLnFrm", editLnFrm.params.label[0], " ", editLnFrm, " not found in:")
@@ -6391,6 +6528,23 @@ class WyeUILib(Wye.staticObj):
                 # update position of all fields
                 parentFrm.verb.redisplay(parentFrm)
 
+
+            # User changed op, change visible data
+            class selectOpCallback:
+                mode = Wye.mode.SINGLE_CYCLE
+                dataType = Wye.dType.STRING
+                paramDescr = ()
+                varDescr = ()
+
+                def start(stack):
+                    return Wye.codeFrame(WyeUILib.EditVerb.EditCodeCallback.selectOpCallback, stack)
+
+                def run(frame):
+                    data = frame.eventData
+                    edCodeFrm = data[1][0]
+
+                    opIx = edCodeFrm.vars.firstCheckFrm[0].params.selectedRadio[0]
+                    edCodeFrm.verb.showHide(edCodeFrm, opIx)
 
             # handle lib changed so need to change verb list
             class libDropCallback:
@@ -7149,7 +7303,7 @@ class WyeUILib(Wye.staticObj):
             #print("Before clear dialog task rows, inputs len", len(dlgFrm.params.inputs[0]))
             delCt = 0
             for bFrmRef in frame.vars.rows[0]:
-                inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], bFrmRef)
+                inpIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], bFrmRef)
                 oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                 if oldFrm in dlgFrm.vars.clickedBtns[0]:
                     dlgFrm.vars.clickedBtns[0].remove(oldFrm)
@@ -7619,7 +7773,6 @@ class WyeUILib(Wye.staticObj):
 
                 # User selected an object, open its frame in the debugger
 
-
         def bldDebugCodeLines(codeDescr, dlgFrm, frame, verbFrm, streamIx):
             rowOffset = len(dlgFrm.params.inputs[0])    # get index of first row in this stream (if multiple)
             # draw the top level code rows
@@ -7775,7 +7928,7 @@ class WyeUILib(Wye.staticObj):
             #else:
             #    print("ObjectDebugger refresh: verb", objFrm.verb.__name_, " has no caseCodeDictLst")
 
-
+                
         class DebugEditCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING

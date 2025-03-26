@@ -71,8 +71,8 @@ class WyeUILib(Wye.staticObj):
 
                 if self.displayObj:
                     ix = self.cutList.index(row)
-                    print("CutPasteManager setSelected: highlight row", ix, " out of ", len(self.cutList), " cutList rows")
-                    print("   display rows:", len(self.displayObj.vars.dlgFrm[0].params.inputs[0]))
+                    #print("CutPasteManager setSelected: highlight row", ix, " out of ", len(self.cutList), " cutList rows")
+                    #print("   display rows:", len(self.displayObj.vars.dlgFrm[0].params.inputs[0]))
                     self.displayObj.verb.highlightRow(self.displayObj, ix)
 
             else:
@@ -182,7 +182,7 @@ class WyeUILib(Wye.staticObj):
                 # remove current rows
                 #print("CutPasteDisplay redisplay: remove", len(frame.vars.rows[0]), " rows")
                 for frmRef in frame.vars.rows[0]:
-                    inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], frmRef)
+                    inpIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], frmRef)
                     #print(" remove row", inpIx)
                     oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                     if oldFrm in dlgFrm.vars.clickedBtns[0]:
@@ -2990,7 +2990,7 @@ class WyeUILib(Wye.staticObj):
             # update the dialog
 
             # remove rows from dialog
-            firstIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], editVerbFrm.vars.libRows[0][0])
+            firstIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], editVerbFrm.vars.libRows[0][0])
             for ii in range(len(editVerbFrm.vars.libRows[0])):
                 frm = dlgFrm.params.inputs[0].pop(firstIx)[0]
                 frm.verb.close(frm)
@@ -3502,7 +3502,7 @@ class WyeUILib(Wye.staticObj):
                 # delete all dialog lib verb inputs
                 delCt = 0
                 for bFrmRef in frame.vars.rows[0]:
-                    inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], bFrmRef)
+                    inpIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], bFrmRef)
                     oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                     oldFrm.verb.close(oldFrm)  # remove graphic content
                     delCt += 1
@@ -3621,7 +3621,7 @@ class WyeUILib(Wye.staticObj):
                     data = frame.eventData
                     verb = data[1][0]
 
-                    print("StartLibVerbCallback: start", verb.__name__)
+                    # print("StartLibVerbCallback: start", verb.__name__)
                     WyeCore.World.startActiveObject(verb)
 
 
@@ -4354,7 +4354,7 @@ class WyeUILib(Wye.staticObj):
             # create new dialog row for this param
 
             # find index to dialog row to insert before/after
-            rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+            rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
             # Debug: if the unthinkable happens, give us a hint
             if rIx < 0:
                 print("insertParamOrVar ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ", editLnFrm.params.label[0], " not in input list")
@@ -4705,7 +4705,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -4754,7 +4754,7 @@ class WyeUILib(Wye.staticObj):
                         WyeCore.World.cutPasteManager.add(copyRec)
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         print("EditParamLineCallback cut: dlg row", rIx)
                         if rIx < 0:
                             print("EditParamLineCallback cut: ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
@@ -4794,7 +4794,7 @@ class WyeUILib(Wye.staticObj):
                         #print("EditParamLineCallback: Delete")
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -4840,7 +4840,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditParamLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -4919,7 +4919,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.vars.label[0], " not in input list")
@@ -4974,7 +4974,7 @@ class WyeUILib(Wye.staticObj):
                         WyeCore.World.cutPasteManager.add(copyRec)
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -5014,7 +5014,7 @@ class WyeUILib(Wye.staticObj):
                     case 5:
                         # print("EditVarLineCallback: Delete")
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
@@ -5059,7 +5059,7 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         # find row in dlg
-                        rIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         if rIx < 0:
                             print("EditVarLineCallback ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.vars.label[0], " not in input list")
@@ -5097,6 +5097,8 @@ class WyeUILib(Wye.staticObj):
                 return Wye.codeFrame(WyeUILib.EditVerb.EditStreamLineCallback, stack)
 
             def run(frame):
+                print("EditStreamLineCallback")
+
                 data = frame.eventData
                 #print("EditStreamLineCallback data", data)
                 editLnFrm = data[1][0]  # add/del/copy button frame
@@ -5137,7 +5139,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         preTuple = parentList[tIx-1]
@@ -5183,7 +5185,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5226,7 +5228,7 @@ class WyeUILib(Wye.staticObj):
 
                     # cut Line
                     case 3:
-                        # copy line
+                        # first, copy line
                         parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
                         if parentList:
                             try:
@@ -5245,26 +5247,22 @@ class WyeUILib(Wye.staticObj):
                         WyeCore.World.cutPasteManager.add(copyRec)
 
                         # remove from codeDescr
-                        parentList.pop(ix)
+                        code = parentList.pop(ix)
+                        print("EditStreamLineCallback: cut code tuple:", code)
 
-                        # get location of this frame in dialog input list
-                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
-                        if parentList:
-                            ix = parentList.index(tuple)
-                            # print("found tuple", tuple, " at", ix, " in", parentList)
-                        else:
-                            print("EditStreamLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
-                                  editVerbFrm.vars.newCodeDescr[0])
 
                         # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
-                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
+                        count = WyeCore.Utils.countNestedLists(tuple) + 1
+                        print("EditStreamLineCallback: delete", count, " dialog rows")
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
+
+                        print("Start deleting at display line", ix, " ", parentFrm.params.inputs[0][ix][0].params.label)
 
                         count *= 2      # del both editLn and line inputs for each row
                         parent = None
@@ -5303,7 +5301,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5343,11 +5341,12 @@ class WyeUILib(Wye.staticObj):
                         #  linking relevant parts to relevant controls/data
 
                         # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
-                        count = 1 + WyeCore.Utils.countNestedLists(tuple)
+                        count = WyeCore.Utils.countNestedLists(tuple) + 1
+                        print("delete stream. del", count, " dialog rows")
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5388,7 +5387,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert after
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditStreamLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5436,7 +5435,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         postTuple = parentList[tIx+1]
@@ -5514,7 +5513,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         preTuple = parentList[tIx-1]
@@ -5558,7 +5557,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5639,7 +5638,7 @@ class WyeUILib(Wye.staticObj):
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5681,7 +5680,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert before
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5725,7 +5724,7 @@ class WyeUILib(Wye.staticObj):
 
                         # delete as many rows as there are lists
                         # find index to row to delete
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5765,7 +5764,7 @@ class WyeUILib(Wye.staticObj):
                         # create new dialog row for this code line
 
                         # find index to row to insert after
-                        ix = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        ix = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
                         # Debug: if the unthinkable happens, give us a hint
                         if ix < 0:
                             print("EditCodeLineCallback ERROR: input", editLnFrm.verb.__name__, " not in input list")
@@ -5813,7 +5812,7 @@ class WyeUILib(Wye.staticObj):
                         dLen = 1 + WyeCore.Utils.countNestedLists(tuple)
 
                         # find the first display row of this tuple
-                        dIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],editLnFrm)
+                        dIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],editLnFrm)
 
                         # get the number of rows to skip
                         postTuple = parentList[tIx+1]
@@ -6035,7 +6034,7 @@ class WyeUILib(Wye.staticObj):
                                                 tuple.append(pTuple)
 
                                             #delete the current row in the mother dialog
-                                            inpIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], btnFrm) - 1       # back up to edLn input
+                                            inpIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], btnFrm) - 1       # back up to edLn input
                                             lnFrm = parentFrm.params.inputs[0].pop(inpIx)[0]
                                             lnFrm.verb.close(lnFrm)
                                             lnEd = parentFrm.params.inputs[0].pop(inpIx)[0]
@@ -6063,7 +6062,7 @@ class WyeUILib(Wye.staticObj):
                                             tuple.pop(-1)
 
                                         # delete any params from dialog
-                                        inpIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],
+                                        inpIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],
                                                                               btnFrm) - 1  # back up to edLn input
                                         for ii in range(delRowCt * 2):
                                             parentFrm.params.inputs[0][inpIx].pop(inpIx + 2)
@@ -6294,7 +6293,7 @@ class WyeUILib(Wye.staticObj):
                                                 tuple.append(pTuple)
 
                                             #delete the current row in the mother dialog
-                                            inpIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0], btnFrm) - 1       # back up to edLn input
+                                            inpIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], btnFrm) - 1       # back up to edLn input
                                             lnFrm = parentFrm.params.inputs[0].pop(inpIx)[0]
                                             lnFrm.verb.close(lnFrm)
                                             lnEd = parentFrm.params.inputs[0].pop(inpIx)[0]
@@ -6322,7 +6321,7 @@ class WyeUILib(Wye.staticObj):
                                             tuple.pop(-1)
 
                                         # delete any params from dialog
-                                        inpIx = WyeCore.Utils.nestedIndexFind(parentFrm.params.inputs[0],
+                                        inpIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0],
                                                                               btnFrm) - 1  # back up to edLn input
                                         for ii in range(delRowCt*2):
                                             parentFrm.params.inputs[0].pop(inpIx + 2)
@@ -7122,7 +7121,7 @@ class WyeUILib(Wye.staticObj):
             #print("Before clear dialog task rows, inputs len", len(dlgFrm.params.inputs[0]))
             delCt = 0
             for bFrmRef in frame.vars.rows[0]:
-                inpIx = WyeCore.Utils.nestedIndexFind(dlgFrm.params.inputs[0], bFrmRef)
+                inpIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], bFrmRef)
                 oldFrm = dlgFrm.params.inputs[0].pop(inpIx)[0]
                 if oldFrm in dlgFrm.vars.clickedBtns[0]:
                     dlgFrm.vars.clickedBtns[0].remove(oldFrm)

@@ -93,7 +93,6 @@ class Wye3dObjsLib(Wye.staticObj):
         def getWidth(self):
             return self.radius
 
-
         def show(self):
             self._path.show()
         def hide(self):
@@ -208,6 +207,12 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def getWidth(self):
             return self.size[0]
+
+        def show(self):
+            self._path.show()
+
+        def hide(self):
+            self._path.hide()
 
     # create a scaled surface from a point grid
     # NOTE: this class gets instantiated
@@ -331,6 +336,12 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def getColor(self):
             return self._path.getColor()
+
+        def show(self):
+            self._path.show()
+
+        def hide(self):
+            self._path.hide()
 
     # 3d positioned clickable text
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
@@ -536,4 +547,10 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def removeNode(self):
             self._path.removeNode()
+
+        def show(self):
+            self._path.show()
+
+        def hide(self):
+            self._path.hide()
 
