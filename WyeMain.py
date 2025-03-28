@@ -68,7 +68,7 @@ else:
 for libFile in libLoadList:
     #print("Load lib '", libFile, "'")
     libName = os.path.splitext(os.path.basename(libFile))[0]
-    print("Load ", libName)
+    #print("Load ", libName)
 
     #path = libFile
     path = WyeCore.Utils.resourcePath(libFile)[2:]
