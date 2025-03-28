@@ -4,34 +4,22 @@
 
 from Wye import Wye
 from WyeCore import WyeCore
-import inspect      # for debugging
+#import inspect      # for debugging
 from panda3d.core import *
 from panda3d.core import LVector3f
-#from functools import partial
 import traceback
-import sys
-#from sys import exit
 import math
 import sys, os
-#for 3d geometry (input cursor)
-#from direct.showbase.ShowBase import ShowBase
 from importlib.machinery import SourceFileLoader    # to load library from file
-
 from functools import partial
-
 from direct.showbase.DirectObject import DirectObject
 from panda3d.core import MouseButton
-
-# from https://github.com/Epihaius/procedural_panda3d_model_primitives
-from sphere import SphereMaker
-
+from os import listdir
+from os.path import isfile, join
 import inspect
 
-#import pygame.midi
-#import time
 
-
-# 3d UI element library
+# 3d UI library (generatic dialogs, parts of dialogs, and the Wye UI dialogs)
 class WyeUILib(Wye.staticObj):
     systemLib = True        # prevent overwriting
 
@@ -3049,8 +3037,16 @@ class WyeUILib(Wye.staticObj):
 
                     # Load lib from file
                     loadLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Load Library From:", WyeUILib.EditMainDialog.LoadLibCallback)
-                    loadLibFrm.params.optData = [(loadLibFrm, dlgFrm, frame)]
-                    libFileNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  File Name", frame.vars.fileName, layout=Wye.layout.ADD_RIGHT)
+                    libFiles = [f for f in listdir("UserLibraries\\") if isfile(join("UserLibraries\\", f))]
+                    libFileNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  User Library", [libFiles], [0],
+                                        layout = Wye.layout.ADD_RIGHT)
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Refresh List",
+                                    WyeUILib.EditMainDialog.RefreshLibListCallback, (libFileNameFrm, dlgFrm, frame),
+                                                             layout = Wye.layout.ADD_RIGHT)
+
+                    # pass dropdown frame to button callback
+                    loadLibFrm.params.optData = [(libFileNameFrm, dlgFrm, frame)]
+
                     frame.vars.libFileNameFrm[0] = libFileNameFrm
 
                     # New lib
@@ -3306,6 +3302,28 @@ class WyeUILib(Wye.staticObj):
                         #else:
                         #    print("User cancelled delete library")
 
+        # refresh list of user lib files
+        class RefreshLibListCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("RefreshLibListCallback started")
+                return Wye.codeFrame(WyeUILib.EditMainDialog.RefreshLibListCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                print("RefreshLibListCallback data=", data)
+                btnFrm = data[1][0]
+                parentFrm = data[1][1]
+                editFrm = data[1][2]
+
+                libFiles = [f for f in listdir("UserLibraries\\") if isfile(join("UserLibraries\\", f))]
+                btnFrm.verb.setList(btnFrm, libFiles, 0)
+
+
         # load library from file and start any autoStart verbs in it
         class LoadLibCallback:
             mode = Wye.mode.SINGLE_CYCLE
@@ -3320,12 +3338,14 @@ class WyeUILib(Wye.staticObj):
             def run(frame):
                 data = frame.eventData
                 # print("LoadLibCallback data=", data)
-                btnFrm = data[1][0]
+                dropDownFrm = data[1][0]        # dropdown frame (not our button frame)
                 parentFrm = data[1][1]
                 editFrm = data[1][2]
 
-                # get lib name
-                libFilePath = editFrm.vars.libFileNameFrm[0].vars.currVal[0].strip()
+                # get lib name from the file name dropdown
+                fileIx = dropDownFrm.params.selectionIx[0]
+                libFilePath = dropDownFrm.vars.list[0][fileIx]
+                #libFilePath = editFrm.vars.libFileNameFrm[0].vars.currVal[0].strip()
                 if libFilePath:
                     # extract libName from file name and make sure there's an extension
                     libName, ext = os.path.splitext(os.path.basename(libFilePath))
@@ -5806,9 +5826,8 @@ class WyeUILib(Wye.staticObj):
                 # We don't know if this is inserting in an empty parallel stream or the entire verb codeDescr.
                 # If it's a stream, we insert in the parent stream tuple.  If it's not, we insert in the verb's codeDescr
                 # In a future version that has an Abstract Syntax Tree, this will all be obvious.
-                # For now, HACK CITY! If this is a stream then the previous input is a button with the EditStreamLineCallback
-                # whose optData has the tuple in it.  Use that.
-                # (I SAID this was a HACK!!!!)
+                # For now, HACK CITY! If this is a stream then the input before this in the dialog is a button with the
+                # EditStreamLineCallback whose optData has the tuple in it.  Use that. (I SAID this was a HACK!!!!)
                 if editVerbFrm.params.verb[0].mode == Wye.mode.PARALLEL:
                     print("EditNoCodeLineCallback ",editVerbFrm.params.verb[0].__name__," is a parallel verb")
                     prevInpFrm = parentFrm.params.inputs[0][rIx-1][0]
