@@ -1621,7 +1621,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 # print("InputDropdownCallback started")
-                return Wye.codeFrame(WyeUILib.InputDropdown.InputDropdownCallback, stack)
+                f = Wye.codeFrame(WyeUILib.InputDropdown.InputDropdownCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -3021,6 +3023,7 @@ class WyeUILib(Wye.staticObj):
 
         def start(stack):
             f = Wye.codeFrame(WyeUILib.EditMainDialog, stack)
+            f.systemObject = True
             f.vars.libRows[0] = []
             return f
 
@@ -3148,7 +3151,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 #print("EditLibLineCallback started")
-                return Wye.codeFrame(WyeUILib.EditMainDialog.EditLibLineCallback, stack)
+                f = Wye.codeFrame(WyeUILib.EditMainDialog.EditLibLineCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -3174,9 +3179,11 @@ class WyeUILib(Wye.staticObj):
                                     frame.status = Wye.status.SUCCESS
                                     return
 
-                                fileName = lib.__name__+".py"
+                                fileName = "UserLibraries\\"+lib.__name__+".py"
                                 frame.vars.fileName[0] = fileName
-                                # if the file alredy exists, as the user what they want to do
+
+
+                                    # if the file alredy exists, as the user what they want to do
                                 fileExists = os.path.exists(fileName)
                                 frame.vars.doExistsQuery[0] = fileExists
                                 if frame.vars.doExistsQuery[0]:
@@ -3263,6 +3270,11 @@ class WyeUILib(Wye.staticObj):
                                         if not verb.__name__[-3:] == "_rt":
                                             print("WARNING: Verb", verb.__name__,
                                               " not saved to file because it does not have all required attributes")
+
+                        # if the user hasn't specified a file path, put on our default path
+                        if not os.path.dirname(fileName):
+                            fileName = "UserLibraries\\" + fileName
+
                         try:
                             # write the file
                             f = open(fileName, "w")
@@ -3320,6 +3332,10 @@ class WyeUILib(Wye.staticObj):
                     if not ext:
                         #print("Add .py to ", libFilePath)
                         libFilePath += ".py"
+
+                    # if the user hasn't specified a file path, put on our default path
+                    if not os.path.dirname(libFilePath):
+                        libFilePath = "UserLibraries\\" + libFilePath
 
                     # see if file exists
                     if not os.path.exists(libFilePath):
@@ -3409,7 +3425,7 @@ class WyeUILib(Wye.staticObj):
 
 
 
-        # load library from file and start any autoStart verbs in it
+        # Create new library with given name
         class NewLibCallback:
             mode = Wye.mode.SINGLE_CYCLE
             dataType = Wye.dType.STRING
@@ -3669,7 +3685,9 @@ class WyeUILib(Wye.staticObj):
 
                 def start(stack):
                     #print("DelLibVerbCallback start")
-                    return Wye.codeFrame(WyeUILib.EditMainDialog.EditLibCallback.DelLibVerbCallback, stack)
+                    f = Wye.codeFrame(WyeUILib.EditMainDialog.EditLibCallback.DelLibVerbCallback, stack)
+                    f.systemObject = True
+                    return f
 
                 def run(frame):
                     data = frame.eventData
@@ -3739,7 +3757,9 @@ class WyeUILib(Wye.staticObj):
 
                 def start(stack):
                     #print("CreateVerbCallback start")
-                    return Wye.codeFrame(WyeUILib.EditMainDialog.EditLibCallback.CreateVerbCallback, stack)
+                    f = Wye.codeFrame(WyeUILib.EditMainDialog.EditLibCallback.CreateVerbCallback, stack)
+                    f.systemObject = True
+                    return f
 
                 def run(frame):
                     data = frame.eventData
@@ -3972,6 +3992,7 @@ class WyeUILib(Wye.staticObj):
                 'dataType': Wye.dType.NONE,
             }
             f.vars.settingsFrms[0] = {}
+            f.systemObject = True
             return f
 
         def run(frame):
@@ -4581,7 +4602,9 @@ class WyeUILib(Wye.staticObj):
             noneSelected = "<none selected>"
 
             def start(stack):
-                return Wye.codeFrame(WyeUILib.EditVerb.EditVerbCallback, stack)
+                f = Wye.codeFrame(WyeUILib.EditVerb.EditVerbCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -6370,7 +6393,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 #print("EditStreamCallback started")
-                return Wye.codeFrame(WyeUILib.EditVerb.EditStreamCallback, stack)
+                f = Wye.codeFrame(WyeUILib.EditVerb.EditStreamCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -6456,6 +6481,7 @@ class WyeUILib(Wye.staticObj):
             def start(stack):
                 #print("EditCodeCallback started")
                 f = Wye.codeFrame(WyeUILib.EditVerb.EditCodeCallback, stack)
+                f.systemObject = True
                 return f
 
             def run(frame):
@@ -7010,7 +7036,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 #print("EditParamCallback started")
-                return Wye.codeFrame(WyeUILib.EditVerb.EditParamCallback, stack)
+                f = Wye.codeFrame(WyeUILib.EditVerb.EditParamCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -7133,7 +7161,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 #print("EditParamTypeCallback started")
-                return Wye.codeFrame(WyeUILib.EditVerb.EditParamTypeCallback, stack)
+                f = Wye.codeFrame(WyeUILib.EditVerb.EditParamTypeCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 #print("EditParamTypeCallback")
@@ -7164,7 +7194,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 #print("EditVarCallback started")
-                return Wye.codeFrame(WyeUILib.EditVerb.EditVarCallback, stack)
+                f = Wye.codeFrame(WyeUILib.EditVerb.EditVarCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -7397,7 +7429,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 #print("EditCodeSaveLibCallback started")
-                return Wye.codeFrame(WyeUILib.EditVerb.EditCodeSaveLibCallback, stack)
+                f = Wye.codeFrame(WyeUILib.EditVerb.EditCodeSaveLibCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData
@@ -7452,7 +7486,11 @@ class WyeUILib(Wye.staticObj):
                         frame.vars.fileName[0] = fileName
                         frame.vars.libName[0] = libName
 
-                        # if the file alredy exists, as the user what they want to do
+                        # if the user hasn't specified a file path, put on our default path
+                        if not os.path.dirname(fileName):
+                            fileName = "UserLibraries\\" + fileName
+
+                        # if the file alredy exists, ask the user what they want to do
                         fileExists = os.path.exists(fileName)
                         frame.vars.doExistsQuery[0] = fileExists
                         if frame.vars.doExistsQuery[0]:
@@ -7555,6 +7593,11 @@ class WyeUILib(Wye.staticObj):
                         #print("vrbStr\n"+ vrbStr)
 
                         outStr += vrbStr
+
+                        # if the user hasn't specified a file path, put on our default path
+                        if not os.path.dirname(fileName):
+                            fileName = "UserLibraries\\" + fileName
+
                         try:
                             # write the file
                             f = open(fileName, "w")
@@ -8731,7 +8774,9 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 # print("DebugSpecialCallback started")
-                return Wye.codeFrame(WyeUILib.ObjectDebugger.DebugSpecialCallback, stack)
+                f = Wye.codeFrame(WyeUILib.ObjectDebugger.DebugSpecialCallback, stack)
+                f.systemObject = True
+                return f
 
             def run(frame):
                 data = frame.eventData

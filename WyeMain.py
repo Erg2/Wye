@@ -61,14 +61,14 @@ if len(sys.argv) > 1:
 
 # No parameters, load default libs and start default objs
 else:
-    libLoadList.extend(["TestLib.py", "EditLib.py"])
+    libLoadList.extend(["UserLibraries\\TestLib.py", "UserLibraries\\EditLib.py"])
     startObjList = []
 
 # import libraries
 for libFile in libLoadList:
     #print("Load lib '", libFile, "'")
-    libName = libFile.split(".")[0]
-
+    libName = os.path.splitext(os.path.basename(libFile))[0]
+    print("Load ", libName)
 
     #path = libFile
     path = WyeCore.Utils.resourcePath(libFile)[2:]
