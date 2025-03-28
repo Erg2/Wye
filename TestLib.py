@@ -222,12 +222,12 @@ class TestLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
 
-        paramDescr = (("obj", Wye.dType.OBJECT, "Description"),
-                      ("file", Wye.dType.STRING, "Description"),
-                      ("posVec", Wye.dType.INTEGER_LIST, "Description"),
-                      ("scaleVec", Wye.dType.INTEGER_LIST, "Description"),
-                      ("tag", Wye.dType.STRING, "Description"),
-                      ("colorVec", Wye.dType.FLOAT_LIST, "Description"))
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("file", Wye.dType.STRING, Wye.access.REFERENCE),
+                      ("posVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE),
+                      ("scaleVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE),
+                      ("tag", Wye.dType.STRING, Wye.access.REFERENCE),
+                      ("colorVec", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE))
         varDescr = ()
         codeDescr = (
             #(None, "print('test inline code')"),
@@ -253,9 +253,9 @@ class TestLib:
     class clickWiggle:
         mode = Wye.mode.MULTI_CYCLE
         dataType = Wye.dType.NONE
-        paramDescr = (("obj", Wye.dType.OBJECT, "Description"),
-                      ("tag", Wye.dType.STRING, "Description"),
-                      ("axis", Wye.dType.INTEGER, "Description"))
+        paramDescr = (("obj", Wye.dType.OBJECT, Wye.access.REFERENCE),
+                      ("tag", Wye.dType.STRING, Wye.access.REFERENCE),
+                      ("axis", Wye.dType.INTEGER, Wye.access.REFERENCE))
         varDescr = (("rotCt", Wye.dType.INTEGER, 0),
                     ("sound", Wye.dType.OBJECT, None),
                     ("gObj", Wye.dType.OBJECT, None),
@@ -303,108 +303,61 @@ class TestLib:
             #print("post run pc", frame.PC, " rotCt", frame.vars.rotCt[0], " vec", frame.vars.vec[0], " axis",
             #      frame.vars.axis[0], " status", Wye.status.tostring(frame.status))
 
-            # never happenin
-            if frame.vars.rotCt[0] < 5000:
-                global base
-                #print('execute spin, params', frame.params, ' vars', frame.vars)
+            global base
 
-                gObj = frame.params.obj[0]
-                vec = gObj.getHpr()
-                axis = frame.params.axis[0]
-                #print("Current HPR ", vec)
-                match frame.PC:
-                    case 0:
-                        WyeCore.World.setEventCallback("click", frame.params.tag[0], frame)
-                        # frame.vars.sound[0] = base.loader.loadSfx("WyePop.wav")
-                        #frame.vars.sound[0] = Wye.audio3d.loadSfx("WyePew.wav")
-                        #Wye.audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
-                        frame.PC += 1
-                        #print("clickWiggle waiting for event 'click' on tag ", frame.params.tag[0])
-                    case 1:
-                        pass
-                        # do nothing until event occurs
-
-                    case 2:
-                        #frame.vars.sound[0].play()
-                        Wye.midi.playNote(91, 50, 64, 1)
-                        frame.PC += 1
-
-                    case 3:
-                        vec[axis] += 5
-                        #print("spin (pos) obj", gObj, "to", vec)
-                        gObj.setHpr(vec[0], vec[1], vec[2])
-                        if vec[axis] > 45:   # end of swing this way
-                            frame.PC += 1  # go to next state
-
-                    case 4:
-                        vec[axis] -= 5
-                        #print("spin (neg) obj ", gObj, "to", vec)
-                        gObj.setHpr(vec[0], vec[1], vec[2])
-                        if vec[axis] < -45:    # end of swing other way
-                            frame.PC += 1   # go to previous state
-
-                    case 5:
-                        frame.vars.rotCt[0] += 1  # count cycles
-                        if frame.vars.rotCt[0] < 2:  # wiggle this many times, then exit
-                            frame.PC = 3    # go do another wiggle
-                        else:
-                            # finish by coming back to zero
-                            vec[axis] += 5
-                            #print("spin (neg) obj ", gObj, "to", vec)
-                            gObj.setHpr(vec[0], vec[1], vec[2])
-                            if vec[axis] >= 0:    # end of swing other way
-                                #print("clickWiggle: done")
-                                frame.status = Wye.status.SUCCESS
-
-                    # if screw up state number, exit
-                    case _:
-                        frame.status = Wye.status.SUCCESS
-
-
-    # spin object back and forth
-    class spin:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.NONE
-        paramDescr = (("obj", Wye.dType.OBJECT, "Description"),
-                      ("axis", Wye.dType.INTEGER, "Description"))
-        varDescr = (("rotCt", Wye.dType.INTEGER, 0),)
-
-        def start(stack):
-            return Wye.codeFrame(TestLib.spin, stack)
-
-        def run(frame):
             gObj = frame.params.obj[0]
             vec = gObj.getHpr()
             axis = frame.params.axis[0]
             #print("Current HPR ", vec)
             match frame.PC:
                 case 0:
+                    WyeCore.World.setEventCallback("click", frame.params.tag[0], frame)
+                    # frame.vars.sound[0] = base.loader.loadSfx("WyePop.wav")
+                    #frame.vars.sound[0] = Wye.audio3d.loadSfx("WyePew.wav")
+                    #Wye.audio3d.attachSoundToObject(frame.vars.sound[0], frame.params.obj[0])
+                    frame.PC += 1
+                    #print("clickWiggle waiting for event 'click' on tag ", frame.params.tag[0])
+                case 1:
+                    pass
+                    # do nothing until event occurs
+
+                case 2:
+                    #frame.vars.sound[0].play()
+                    Wye.midi.playNote(91, 50, 64, 1)
+                    frame.PC += 1
+
+                case 3:
                     vec[axis] += 5
                     #print("spin (pos) obj", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
-                    if frame.vars.rotCt[0] < 4:  # wiggle this many times, then exit
-                        if vec[axis] > 45:  # end of swing this way
-                            frame.vars.rotCt[0] += 1  # count cycles
-                            frame.PC += 1   # go to next state
-                    else:   # last spin cycle, stop at zero
-                        #print("spin: done")
-                        if vec[axis] >= 0:  # end of swing this way
-                            frame.PC = -1  # undefined case value so will go to default to exit
+                    if vec[axis] > 45:   # end of swing this way
+                        frame.PC += 1  # go to next state
 
-
-                    frame.status = Wye.status.CONTINUE
-
-                case 1:
+                case 4:
                     vec[axis] -= 5
                     #print("spin (neg) obj ", gObj, "to", vec)
                     gObj.setHpr(vec[0], vec[1], vec[2])
                     if vec[axis] < -45:    # end of swing other way
-                        frame.PC -= 1   # go to previous state
+                        frame.PC += 1   # go to previous state
 
-                    frame.status = Wye.status.CONTINUE
+                case 5:
+                    frame.vars.rotCt[0] += 1  # count cycles
+                    if frame.vars.rotCt[0] < 2:  # wiggle this many times, then exit
+                        frame.PC = 3    # go do another wiggle
+                    else:
+                        # finish by coming back to zero
+                        vec[axis] += 5
+                        #print("spin (neg) obj ", gObj, "to", vec)
+                        gObj.setHpr(vec[0], vec[1], vec[2])
+                        if vec[axis] >= 0:    # end of swing other way
+                            #print("clickWiggle: done")
+                            frame.status = Wye.status.SUCCESS
 
+                # if screw up state number, exit
                 case _:
                     frame.status = Wye.status.SUCCESS
+
+
 
     # school of fish chase leaderFish
     class fish:
@@ -1021,10 +974,8 @@ frame.vars.posAngle[0] = angle
         autoStart = False
         dataType = Wye.dType.NONE
         paramDescr = ()
-        varDescr = (("myVar", Wye.dType.INTEGER, 0),)
+        varDescr = ()
         codeDescr = (
-            ("Code", "print('PlaceHolder running!')"),
-            ("Label", "DoNothing"),
         )
 
         def _build(rowRef):

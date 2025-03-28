@@ -1,10 +1,10 @@
 from Wye import Wye
 from WyeCore import WyeCore
-class CirclingFishLib_1:
+class CirclingFishLib:
   def _build():
-    WyeCore.Utils.buildLib(CirclingFishLib_1)
+    WyeCore.Utils.buildLib(CirclingFishLib)
   canSave = True  # all verbs can be saved with the library
-  class CirclingFishLib_1_rt:
+  class CirclingFishLib_rt:
    pass #1
 
   class testParallelFish:
@@ -83,10 +83,10 @@ frame.vars.posAngle[0] = angle
         # print("Build ",testParallelFish)
 
         rowIxRef = [0]
-        return WyeCore.Utils.buildParallelText('CirclingFishLib_1', 'testParallelFish', CirclingFishLib_1.testParallelFish.codeDescr, CirclingFishLib_1.testParallelFish)
+        return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish', CirclingFishLib.testParallelFish.codeDescr, CirclingFishLib.testParallelFish)
 
     def start(stack):
-        return CirclingFishLib_1.CirclingFishLib_1_rt.testParallelFish_start_rt(stack)
+        return CirclingFishLib.CirclingFishLib_rt.testParallelFish_start_rt(stack)
 
     def run(frame):
         # print('Run 'testParallelFish)
@@ -168,10 +168,10 @@ frame.vars.posAngle[0] = angle
         # print("Build ",testParallelFish1)
 
         rowIxRef = [0]
-        return WyeCore.Utils.buildParallelText('CirclingFishLib_1', 'testParallelFish1', CirclingFishLib_1.testParallelFish1.codeDescr, CirclingFishLib_1.testParallelFish1)
+        return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish1', CirclingFishLib.testParallelFish1.codeDescr, CirclingFishLib.testParallelFish1)
 
     def start(stack):
-        return CirclingFishLib_1.CirclingFishLib_1_rt.testParallelFish1_start_rt(stack)
+        return CirclingFishLib.CirclingFishLib_rt.testParallelFish1_start_rt(stack)
 
     def run(frame):
         # print('Run 'testParallelFish1)
@@ -253,10 +253,10 @@ frame.vars.posAngle[0] = angle
         # print("Build ",testParallelFish2)
 
         rowIxRef = [0]
-        return WyeCore.Utils.buildParallelText('CirclingFishLib_1', 'testParallelFish2', CirclingFishLib_1.testParallelFish2.codeDescr, CirclingFishLib_1.testParallelFish2)
+        return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish2', CirclingFishLib.testParallelFish2.codeDescr, CirclingFishLib.testParallelFish2)
 
     def start(stack):
-        return CirclingFishLib_1.CirclingFishLib_1_rt.testParallelFish2_start_rt(stack)
+        return CirclingFishLib.CirclingFishLib_rt.testParallelFish2_start_rt(stack)
 
     def run(frame):
         # print('Run 'testParallelFish2)
@@ -338,10 +338,10 @@ frame.vars.posAngle[0] = angle
         # print("Build ",testParallelFish3)
 
         rowIxRef = [0]
-        return WyeCore.Utils.buildParallelText('CirclingFishLib_1', 'testParallelFish3', CirclingFishLib_1.testParallelFish3.codeDescr, CirclingFishLib_1.testParallelFish3)
+        return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish3', CirclingFishLib.testParallelFish3.codeDescr, CirclingFishLib.testParallelFish3)
 
     def start(stack):
-        return CirclingFishLib_1.CirclingFishLib_1_rt.testParallelFish3_start_rt(stack)
+        return CirclingFishLib.CirclingFishLib_rt.testParallelFish3_start_rt(stack)
 
     def run(frame):
         # print('Run 'testParallelFish3)

@@ -1479,7 +1479,7 @@ class WyeCore(Wye.staticObj):
 
             # no code, make sure fn compiles
             else:
-                codeText += "pass #4\n"
+                codeText += "    pass #4\n"
 
             #print("buildCodeText complete.  codeText=\n"+codeText[0])
             return (codeText, parFnText)
