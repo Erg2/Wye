@@ -4631,11 +4631,19 @@ Overview:
             if name:
                 name = name.strip()
             if not name:
-                name = "TestVerb"
+                WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Verb Name",
+                                                    "Please enter a name in the Name: field",
+                                                    Wye.color.WARNING_COLOR)
+                return
 
             # find library
-            libList = [lib for lib in WyeCore.World.libList]
-            lib = libList[frame.vars.existingLibFrm[0].params.selectedIx[0]]
+            libName = frame.vars.existingLibFrm[0].vars.list[0][frame.vars.existingLibFrm[0].params.selectedIx[0]]
+            if not libName in WyeCore.World.libDict:
+                WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                                                    "Library '"+libName+"' is no longer loaded.  Unable to update verb.",
+                                                    Wye.color.WARNING_COLOR)
+                return
+            lib = WyeCore.World.libDict[libName]
 
             frame.params.retLib[0] = lib  # tell caller where verb went
 
@@ -7748,15 +7756,23 @@ Overview:
                 # print("code\n"+str(frame.vars.newCodeDescr))
 
                 # get verb name
-                name = editFrm.vars.nameFrm[0].params.value[0]
+                name = frame.vars.nameFrm[0].params.value[0]
                 if name:
                     name = name.strip()
                 if not name:
-                    name = "TestVerb"
+                    WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Verb Name",
+                                                        "Please enter a name in the Name: field",
+                                                        Wye.color.WARNING_COLOR)
+                    return
 
-                # existing library
-                libList = [lib for lib in WyeCore.World.libList]
-                lib = libList[editFrm.vars.existingLibFrm[0].params.selectedIx[0]]
+                # find library
+                libName = frame.vars.existingLibFrm[0].vars.list[0][frame.vars.existingLibFrm[0].params.selectedIx[0]]
+                if not libName in WyeCore.World.libDict:
+                    WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                                                        "Library '" + libName + "' is no longer loaded.  Unable to update verb.",
+                                                        Wye.color.WARNING_COLOR)
+                    return
+                lib = WyeCore.World.libDict[libName]
 
                 listFlag = editFrm.vars.listCodeFrm[0].params.value[0]
                 #print("TestCodeCallback: List Code")
@@ -7765,7 +7781,7 @@ Overview:
                                          editFrm.vars.newParamDescr[0],
                                          editFrm.vars.newVarDescr[0],
                                          editFrm.vars.newCodeDescr[0],
-                                         True, listFlag)
+                                         doTest=True, listCode=listFlag)
 
         # Update lib name var
         class EditCodeSaveLibNameCallback:
