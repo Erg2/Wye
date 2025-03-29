@@ -704,7 +704,7 @@ class WyeCore(Wye.staticObj):
                             for evt in evtLst:
                                 frame = evt[0]
                                 data = evt[1]
-                                print("KeyHandler event: inc frame ", frame.verb.__name__, " PC ", frame.PC)
+                                #print("KeyHandler event: inc frame ", frame.verb.__name__, " PC ", frame.PC)
                                 frame.PC += 1
                                 frame.eventData = (wyeID, keyname, data)  # user data
                             delLst.append(wyeID)
