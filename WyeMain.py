@@ -61,7 +61,7 @@ if len(sys.argv) > 1:
 
 # No parameters, load default libs and start default objs
 else:
-    libLoadList.extend(["UserLibraries\\TestLib.py", "UserLibraries\\EditLib.py"])
+    libLoadList.extend(["TestLib.py"])
     startObjList = []
 
 # import libraries

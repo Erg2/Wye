@@ -666,7 +666,13 @@ class WyeCore(Wye.staticObj):
                 self.accept('control-arrow_right-repeat', self.controlKeyFunc, [Wye.ctlKeys.RIGHT])
                 self.accept('control-arrow_left-repeat', self.controlKeyFunc, [Wye.ctlKeys.LEFT])
                 self.accept('arrow_up', self.controlKeyFunc, [Wye.ctlKeys.UP])
+                self.accept('arrow_up-repeat', self.controlKeyFunc, [Wye.ctlKeys.UP])
+                self.accept('control-arrow_up', self.controlKeyFunc, [Wye.ctlKeys.UP])
+                self.accept('control-arrow_up-repeat', self.controlKeyFunc, [Wye.ctlKeys.UP])
                 self.accept('arrow_down', self.controlKeyFunc, [Wye.ctlKeys.DOWN])
+                self.accept('arrow_down-repeat', self.controlKeyFunc, [Wye.ctlKeys.DOWN])
+                self.accept('control-arrow_down', self.controlKeyFunc, [Wye.ctlKeys.DOWN])
+                self.accept('control-arrow_down-repeat', self.controlKeyFunc, [Wye.ctlKeys.DOWN])
                 self.accept('shift_down', self.controlKeyFunc, [Wye.ctlKeys.SHIFT_DOWN])
                 self.accept('shift_up', self.controlKeyFunc, [Wye.ctlKeys.SHIFT_UP])
                 self.accept('ctl_down', self.controlKeyFunc, [Wye.ctlKeys.CTL_DOWN])
@@ -846,9 +852,12 @@ class WyeCore(Wye.staticObj):
             self.pickerEnable = True
 
         # this function is meant to flag an object as being somthing we can pick
-        def makePickable(self, newObj):
-            #print("picker:  set 'pickable' on ", newObj)
-            newObj.setTag('pickable', 'true')
+        def makePickable(self, obj):
+            #print("picker:  set 'pickable' on ", obj)
+            obj.setTag('pickable', 'true')
+
+        def makeNotPickable(self, obj):
+            obj.setTag('pickable', 'false')
 
         # DEBUG test for known tags on object
         def tagDebug(self, obj):
@@ -875,23 +884,31 @@ class WyeCore(Wye.staticObj):
             if self.queue.getNumEntries() > 0:
                 #print("getObjectHit: ", self.queue.getNumEntries(), " entries in picker queue")
                 self.queue.sortEntries()
-                #print("getObjectHit: Queue contains ", self.queue)
-                self.pickedObj = self.queue.getEntry(0).getIntoNodePath()
-                parent = self.pickedObj
                 self.pickedObj = None
-                # go up the path looking for a pickable node
-                while parent != render:
-
-                    if parent.getTag('pickable') == 'true':
-                        #wyeTag = parent.getTag('wyeTag')
-                        #if wyeTag:
-                        #    print("Clicked on pickable object", parent, " with wyeTag", wyeTag)
-                        #else:
-                        #    print("clicked on pickable object", parent)
-                        self.pickedObj = parent
-                        return parent
-                    else:
-                        parent = parent.getParent()
+                for ii in range(self.queue.getNumEntries()):
+                    #print("getObjectHit: Queue contains ", self.queue)
+                    parent = self.queue.getEntry(ii).getIntoNodePath()
+                    #print(" start obj", parent)
+                    # go up the path looking for a pickable node
+                    while parent != render:
+                        # if pickable set false, done with this collision
+                        #print(" obj", parent, " has pickable", parent.hasTag('pickable'), " is pickable", "True" if parent.getTag('pickable') else "False")
+                        if parent.hasTag('pickable'):
+                            if parent.getTag('pickable') == 'true':
+                                #wyeTag = parent.getTag('wyeTag')
+                                #if wyeTag:
+                                #    print("Clicked on pickable object", parent, " with wyeTag", wyeTag)
+                                #else:
+                                #    print("clicked on pickable object", parent)
+                                #print(" picked object", parent)
+                                self.pickedObj = parent
+                                return parent
+                            else:
+                                #print(" pickable=false, skip obj", parent)
+                                break;
+                        else:
+                            parent = parent.getParent()
+            #print(" Nothing picked")
             return None
 
         def getPickedObj(self):
@@ -976,6 +993,16 @@ class WyeCore(Wye.staticObj):
                 _nextsId = 1
                 
             return _nextId
+
+        def userLibPath():
+            if getattr(sys, 'frozen', False):
+                path = os.path.dirname(sys.executable)
+            elif __file__:
+                path = os.path.dirname(__file__)
+
+            path = path.replace("\\","/")
+
+            return path
 
         def resourcePath(relative_path):
             try:

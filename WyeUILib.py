@@ -734,7 +734,7 @@ class WyeUILib(Wye.staticObj):
 
             dlgHeader = dlgFrm.vars.dragObj[0]
             lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=(pos[0], pos[1], pos[2]),
-                                scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0])
+                                scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0], doTag=False)
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
             # update dialog pos to next free space downward
@@ -1295,7 +1295,7 @@ class WyeUILib(Wye.staticObj):
             return frame
 
         def run(frame):
-            print("InputText label", frame.params.label, " value=", frame.params.value)
+            #print("InputText label", frame.params.label, " value=", frame.params.value)
             frame.vars.currVal[0] = frame.params.value[0]
             frame.params.frame[0] = frame  # self referential!
             frame.vars.localCallback[0] = WyeUILib.InputCheckbox.InputCheckboxCallback       # save verb to call
@@ -1547,7 +1547,6 @@ class WyeUILib(Wye.staticObj):
             frame.vars.size[0] = (width, 0, height)       # TODO - width + .5 is hack to space lines nicely, add border spacing to layout
             #print("InputDropdown", frame.params.label[0], " size", frame.vars.size[0])
             #print("InputDropdown", frame.params.label[0], " redisplay size", frame.vars.size[0], " pos", pos, " width", width)
-
 
         def redisplay(frame, dlgFrm, pos):
             #if frame.params.hidden[0]:
@@ -2067,7 +2066,7 @@ class WyeUILib(Wye.staticObj):
         # User clicked on a tag. It might belong to a field in our dialog.
         # Figure out what dialog field it belongs to, if any, and do the appropriate thing
         def doSelect(frame, tag):
-            # print("Dialog doSelect: ", frame.verb, " tag", tag)
+            #print("Dialog doSelect: ", frame.verb, " tag", tag)
             prevSel = frame.vars.currInp[0]      # get current selection
             # if tag is input field in this dialog, select it
             closing = False
@@ -2087,6 +2086,7 @@ class WyeUILib(Wye.staticObj):
             else:
                 for inp in frame.params.inputs[0]:
                     inFrm = inp[0]
+                    #print("Dialog doSelect tag", tag)
                     if not inFrm.params.hidden[0] and inFrm.verb.doSelect(inFrm, frame, tag):
                         # print("Dialog doSelect set currInp", inFrm.verb.__name__)
                         frame.vars.currInp[0] = inFrm
@@ -2294,6 +2294,45 @@ class WyeUILib(Wye.staticObj):
                         inFrm.vars.currInsPt[0] = insPt
                         WyeUILib.Dialog.drawCursor(inFrm)
                         return
+
+                    elif key == Wye.ctlKeys.UP or key == Wye.ctlKeys.DOWN:
+                        dir = 1 if key == Wye.ctlKeys.UP else -1
+                        if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
+                            dir *= 10
+                        if WyeUILib.Dialog._activeInputInteger:
+                            inFrm = WyeUILib.Dialog._activeInputInteger
+                            if isinstance(inFrm.vars.currVal[0], str):
+                                inFrm.vars.currVal[0] = str(int(inFrm.vars.currVal[0]) + dir)
+                            else:
+                                inFrm.vars.currVal[0] += dir
+
+                            txt = str(inFrm.vars.currVal[0])
+                            inWidg = inFrm.vars.gWidget[0]
+                            inWidg.setText(txt)
+                            WyeUILib.Dialog.drawCursor(inFrm)
+
+                            # if the user supplied a callback
+                            if inFrm.vars.callback[0]:
+                                WyeUILib.Dialog.doCallback(inFrm.parentDlg, inFrm, "none")
+
+                        elif WyeUILib.Dialog._activeInputFloat:
+                            inFrm = WyeUILib.Dialog._activeInputFloat
+                            if isinstance(inFrm.vars.currVal[0], str):
+                                try:
+                                    f = float(inFrm.vars.currVal[0])
+                                except:
+                                    f = 0
+                                inFrm.vars.currVal[0] = str(f + dir)
+                            else:
+                                inFrm.vars.currVal[0] += dir
+
+                            txt = str(inFrm.vars.currVal[0])
+                            inWidg = inFrm.vars.gWidget[0]
+                            inWidg.setText(txt)
+                            WyeUILib.Dialog.drawCursor(inFrm)
+
+                            # if the user supplied a callback
+                            WyeUILib.Dialog.doCallback(inFrm.parentDlg, inFrm, "none")
 
                     elif key == Wye.ctlKeys.END:
                         txtLen = len(txt)
@@ -2611,7 +2650,6 @@ class WyeUILib(Wye.staticObj):
         def run(frame):
             match(frame.PC):
                 case 0:
-
                     # create top level edit dialog
                     dlgFrm = WyeUILib.Dialog.start(frame.SP)
                     dlgFrm.params.retVal = frame.vars.dlgStat
@@ -2625,6 +2663,9 @@ class WyeUILib(Wye.staticObj):
                     dlgFrm.params.parent = [None]
                     dlgFrm.params.format = [["NO_CANCEL"]]
                     frame.vars.dlgFrm[0] = dlgFrm
+
+                    # Help
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Wye Help", WyeUILib.MainMenuDialog.HelpCallback)
 
                     # Settings
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Settings", Wye.color.SUBHD_COLOR)
@@ -2735,6 +2776,75 @@ class WyeUILib(Wye.staticObj):
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.mainMenu)
                     WyeCore.World.mainMenu = None
+
+
+        # turn sound on/off
+        class HelpCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("HelpCallback started")
+                return Wye.codeFrame(WyeUILib.MainMenuDialog.HelpCallback, stack)
+
+            def run(frame):
+
+                helpTxt = "Wye Alpha Release V"+Wye.version+" Help\n"
+                helpTxt += '''
+This is an ** ALPHA TEST ** release.  
+Expect it to be as easy to use and reliable as a MS 1.0 release.  You have been warned.
+
+Move:
+    Mouse button 1 down+drag moves fwd/back, turns
+    Shift-Mouse button 1 down+drag tilts up/down and slides sideways
+    Mouse button 2 down+drag slides sideways, up/down
+    Pressing the scroll wheel (middle button) resets the viewpoint to the starting location
+
+Select things:    
+    Mouse button 1 (MB1) selects things
+    Ctrl-Alt-MB1 to bring up the main Wye Settings dialog.  But you know this if you got here.
+    Ctrl-MB1 on an object to edit it
+    Shift-Ctrl-MB1 anywhere to bring up the master edit dialog showing all libraries
+    Alt-click on an object to debug it
+    Shift-Alt-MB1 to bring up the master debug dialog showing all running objects in the system
+
+Dialogs:
+    You can drag a dialog by MB1 down+drag on any gray part and dragging.  
+    Shift-MB1 down+drag up/down will bring the dialog closer/push it farther away
+    Dragging a child dialog brings its parent along.  Ctl-drag will move the child by itself.
+    
+    Text selection can be a bit flaky.  The center of characters like "C" and "O" is most reliable
+    There is no select/copy/paste
+    The mouse just selects text boxes.  You have to move around in text inputs with the arrow keys, 
+    home/end keys, and ctl-arrow keys.
+    Number boxes also accept up/down arrow and scroll-wheel input.  ctl-up/down to go by 10's.
+         
+Overview:
+    Wye will be an IDE for interactive VR characters.
+    This Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
+    When the alpha starts it loads the demo library TestLib.py.  You can also load, edit, and save user defined
+    libraries.  The alpha release ships with several example libraries available from the master edit dialog.
+    
+    The current level of code editing requires a detailed understanding of the underlying engine.  In other words, 
+    editing is not recommended without a tutorial from someone who knows how it works.  In the future, this level
+    of detail will only be available to wizards who enjoy breaking things at the core level.
+   
+    Note that the +/- buttons in the editor provide line-at-a-time copy/paste support.  
+    Also, saving to files is pretty reliable so you can save early/save often   
+    
+    The engine is fairly well protected from crashes, so it should stay running even if it doesn't like your changes 
+    and it probably will keep your changes around so you can keep working on it.  
+    
+    On the minus side, All the helpful UI stuff like undo and and "why didn't that work" debug support that Wye is 
+    intended to provide is not in this release.  Remember: Underlying engine, no flashy features.  
+    You probably want to ask to be on the beta test list...
+    
+    See the release notes for more details on what you can do in this release. 
+'''
+
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt)
 
 
 
@@ -3092,17 +3202,16 @@ class WyeUILib(Wye.staticObj):
                     # build dialog
 
                     # Load lib from file
+                    libPath = WyeCore.Utils.userLibPath() + "/UserLibraries/"
                     loadLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Load Library From:", WyeUILib.EditMainDialog.LoadLibCallback)
-                    libFiles = [f for f in listdir("UserLibraries\\") if isfile(join("UserLibraries\\", f))]
+                    libFiles = [f for f in listdir(libPath) if isfile(join(libPath, f))]
                     libFileNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  User Library", [libFiles], [0],
                                         layout = Wye.layout.ADD_RIGHT)
                     WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Refresh List",
                                     WyeUILib.EditMainDialog.RefreshLibListCallback, (libFileNameFrm, dlgFrm, frame),
                                                              layout = Wye.layout.ADD_RIGHT)
-
                     # pass dropdown frame to button callback
                     loadLibFrm.params.optData = [(libFileNameFrm, dlgFrm, frame)]
-
                     frame.vars.libFileNameFrm[0] = libFileNameFrm
 
                     # New lib
@@ -3192,6 +3301,158 @@ class WyeUILib(Wye.staticObj):
                 WyeUILib.EditMainDialog.activeLibs.pop(lib.__name__)
 
 
+        class SaveLibToFileCallback:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.dType.NONE
+            paramDescr = ()
+            varDescr = (("fileName", Wye.dType.STRING, ""),
+                        ("doExistsQuery", Wye.dType.BOOL, False),
+                        )
+
+            def start(stack):
+                #print("SaveLibToFileCallback started")
+                f = Wye.codeFrame(WyeUILib.EditMainDialog.SaveLibToFileCallback, stack)
+                f.systemObject = True
+                return f
+
+            def run(frame):
+                data = frame.eventData
+                #print("SaveLibToFileCallback data", data)
+                editLnFrm = data[1][0]  # add/del/copy button frame
+                parentFrm = data[1][1]  # parent dialog
+                editVerbFrm = data[1][2] # EditVerb frame
+                btnFrm = data[1][3]     # param line
+                lib = data[1][4]      # the library we're messing with
+
+                # make sure we have the latest version of this library (stored links can ref old copies of lib)
+                lib = WyeCore.World.libDict[lib.__name__]
+
+                match(frame.PC):
+                    case 0:
+                        #print("SaveLibToFileCallback 1")
+                        if hasattr(lib, "systemLib"):
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", "System libraries cannot be saved", Wye.color.WARNING_COLOR)
+                            frame.status = Wye.status.SUCCESS
+                            return
+
+                        fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/"+lib.__name__+".py"
+                        frame.vars.fileName[0] = fileName
+
+                        # if the file alredy exists, as the user what they want to do
+                        fileExists = os.path.exists(fileName)
+                        frame.vars.doExistsQuery[0] = fileExists
+                        if frame.vars.doExistsQuery[0]:
+
+                            title = fileName + " Already Exists"
+                            pos = editLnFrm.vars.position[0]
+                            pos = [pos[0] + .5, pos[1] - .5, pos[2] - .5]
+                            #print("SaveLibToFileCallback: frame", frame, " parentFrm", parentFrm, " fileName", fileName)
+                            askSaveFrm = WyeCore.libs.WyeUIUtilsLib.doAskSaveAsFileAsync(frame, parentFrm,
+                                                        fileName, position=pos, title=title)
+                            frame.SP.append(askSaveFrm)  # push dialog so it runs next cycle
+
+                        frame.PC = 1  # on return from dialog, run save lib case
+                        # print("SaveLibToFileCallback: case 0: save library")
+
+                    case 1: # continue saving library after user responds (if we asked them about overwrite/saveAs)
+                        frame.status = Wye.status.SUCCESS
+                        # if we asked the user about overwrite, get the final filename
+                        if frame.vars.doExistsQuery[0]:
+                            askSaveFrm = frame.SP.pop()
+                            #print("SaveLibToFileCallback: case 1: askSaveFrm", askSaveFrm.verb.__name__,
+                            #      " user status", Wye.status.tostring(askSaveFrm.params.retVal[0]))
+
+                            # if the user cancelled, don't save the lib
+                            if askSaveFrm.params.retVal[0] != Wye.status.SUCCESS:
+                                #print("User cancelled saving library")
+                                return
+
+                            # get the filename
+                            fileName = askSaveFrm.params.fileName[0].strip()
+                            if not fileName:
+                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid File Name", "'"+fileName+"' is not a valid library file name",
+                                                       Wye.color.WARNING_COLOR)
+                                frame.status = Wye.status.SUCCESS
+                                return
+                            frame.vars.fileName[0] = fileName
+
+                        else:
+                            fileName = frame.vars.fileName[0]
+
+                        # force lib name to match file name
+                        libName = os.path.splitext(os.path.basename(fileName))[0]
+                        # print("Save lib", lib.__name__, " as", libName)
+
+                        # create library header text and add text for all its verbs
+                        fileTxt = WyeCore.Utils.createLibString(libName)
+                        for attr in dir(lib):
+                            if attr != "__class__":
+                                verb = getattr(lib, attr)
+                                if inspect.isclass(verb):
+                                    # can only export verbs that have the required data
+                                    if hasattr(verb, "paramDescr") and hasattr(verb, "varDescr") and hasattr(verb, "codeDescr"):
+                                        # capture the flags
+                                        verbSettings = {}
+                                        if hasattr(verb, 'mode'):
+                                            verbSettings['mode'] = verb.mode
+                                        if hasattr(verb, 'cType'):
+                                            verbSettings['cType'] = verb.cType
+                                        if hasattr(verb, 'parTermType'):
+                                            verbSettings['parTermType'] = verb.parTermType
+                                        if hasattr(verb, 'autoStart'):
+                                            verbSettings['autoStart'] = verb.autoStart
+                                        if hasattr(verb, 'dataType'):
+                                            verbSettings['dataType'] = verb.dataType
+
+                                        # gen verb code
+                                        #print("Save verb", verb.__name__, " to library")
+                                        vrbStr = WyeCore.Utils.createVerbString(libName, verb.__name__,
+                                                    verbSettings,  verb.paramDescr,  verb.varDescr,
+                                                    verb.codeDescr, doTest=False, outDent=False)
+
+                                        fileTxt += vrbStr
+                                    else:
+                                        # ignoring generated runtime code is good.  Anything else is a problem
+                                        if not verb.__name__[-3:] == "_rt":
+                                            print("WARNING: Verb", verb.__name__,
+                                              " not saved to file because it does not have all required attributes")
+
+                        # if the user hasn't specified a file path, put on our default path
+                        if not os.path.dirname(fileName):
+                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
+
+                        try:
+                            # write the file
+                            f = open(fileName, "w")
+                            f.write(fileTxt)
+                            f.close()
+                        except Exception as e:
+                            #print("Failed to write library '" + libName + "' to file '" + fileName + "'\n", str(e))
+                            traceback.print_exception(e)
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Failed to write library", "Failed to write library '"+libName+"' to file '"+fileName+"'",
+                                                   Wye.color.WARNING_COLOR)
+                            frame.status = Wye.status.SUCCESS
+                            return
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to "+fileName)
+                        #print("SaveLibToFileCallback case 1: Wrote lib '" + libName + "' to '" + fileName + "'")
+
+
+                    case 2: # return from Del Ok? dialog
+                        delOkFrm = frame.SP.pop()
+                        frame.status = Wye.status.SUCCESS
+                        if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
+                            #print("EditLibLineCallback case 2: del lib "+lib.__name__)
+
+                            # delete the library
+                            libName = lib.__name__
+                            WyeCore.World.libDict.pop(libName)
+                            WyeCore.World.libList.remove(lib)
+
+                            editVerbFrm.verb.update(editVerbFrm, parentFrm)
+                        #else:
+                        #    print("User cancelled delete library")
+
+
         # load library / save library
         class EditLibLineCallback:
             mode = Wye.mode.MULTI_CYCLE
@@ -3232,7 +3493,7 @@ class WyeUILib(Wye.staticObj):
                                     frame.status = Wye.status.SUCCESS
                                     return
 
-                                fileName = "UserLibraries\\"+lib.__name__+".py"
+                                fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/"+lib.__name__+".py"
                                 frame.vars.fileName[0] = fileName
 
                                 # if the file alredy exists, as the user what they want to do
@@ -3328,8 +3589,8 @@ class WyeUILib(Wye.staticObj):
 
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
-                            fileName = "UserLibraries\\" + fileName
-                            #print("Prefix UserLibraries\\ to fileName:", fileName)
+                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
+                            #print("Prefix UserLibraries to fileName:", fileName)
 
                         try:
                             # write the file
@@ -3380,7 +3641,7 @@ class WyeUILib(Wye.staticObj):
                 parentFrm = data[1][1]
                 editFrm = data[1][2]
 
-                libFiles = [f for f in listdir("UserLibraries\\") if isfile(join("UserLibraries\\", f))]
+                libFiles = [f for f in listdir(WyeCore.Utils.userLibPath() + "/UserLibraries/") if isfile(join(WyeCore.Utils.userLibPath() + "/UserLibraries/", f))]
                 btnFrm.verb.setList(btnFrm, libFiles, 0)
 
 
@@ -3413,25 +3674,26 @@ class WyeUILib(Wye.staticObj):
                         #print("Add .py to ", libFilePath)
                         libFilePath += ".py"
 
-                    # if the user hasn't specified a file path, put on our default path
-                    if not os.path.dirname(libFilePath):
-                        libFilePath = "UserLibraries\\" + libFilePath
+                    # force to UserLibraries dir
+                    libPath = WyeCore.Utils.userLibPath() + "/UserLibraries"
+                    libFilePath = libPath + "/" + libFilePath
 
                     # see if file exists
                     if not os.path.exists(libFilePath):
                         WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("File Not Found", "File not found "+libFilePath, Wye.color.ERROR_COLOR)
                         return
 
-                    # path = libFile
-                    path = WyeCore.Utils.resourcePath(libFilePath)[2:]
                     #print("Load library '" + path + "'")
                     try:
-                        #print("Load lib", libName, " from", path)
-                        libModule = SourceFileLoader(libName, path).load_module()
+                        print("Load lib", libName, " from", libPath)
+                        libModule = SourceFileLoader(libName, libFilePath).load_module()
 
+                        print("loaded file", libFilePath)
                         #print("LoadLibCallback: libModule ", libModule, " libName", libName)
                         #print(" libModule", dir(libModule))
                         lib = getattr(libModule, libName)
+
+                        print("loaded lib", lib.__name__)
                         #print("Read library", lib.__name__, " from file")
                         # print("add libClass", libClass, " to libList")
                         newLib = True   # assume this is a new lib
@@ -3451,7 +3713,7 @@ class WyeUILib(Wye.staticObj):
                                 return
 
                         WyeCore.World.libList.append(lib)
-                        # print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
+                        # print("Loaded library ", libName, " from file ", libPath, " into lib class ", libClass)
 
                         # add to known libraries
                         WyeCore.World.libDict[lib.__name__] = lib  # build lib name -> lib lookup dictionary
@@ -3493,7 +3755,7 @@ class WyeUILib(Wye.staticObj):
                             oldBtn.params.optData[0][2] = lib
 
                     except Exception as e:
-                        err = "Failed to read file " + path +"\n"+str(e)
+                        err = "Failed to read file " + libFilePath +"\n"+str(e)
                         traceback.print_exception(e)
                         WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("File Read Failed", err, Wye.color.ERROR_COLOR)
                         return
@@ -3641,9 +3903,17 @@ class WyeUILib(Wye.staticObj):
                 #print("put lib", lib.__name__, "in", WyeUILib.EditMainDialog.activeLibs)
                 WyeUILib.EditMainDialog.activeLibs[lib.__name__] = dlgFrm
 
+                # create new verb
                 createFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  New Verb:", WyeUILib.EditMainDialog.EditLibCallback.CreateVerbCallback)
                 newVerbNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Name:", frame.vars.newVerbName, layout=Wye.layout.ADD_RIGHT)
                 createFrm.params.optData = [(createFrm, newVerbNameFrm, dlgFrm, lib, frame),]
+
+                # save lib to file
+                if not hasattr(lib, "systemLib"):
+                    saveBtn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Save Library To File",
+                            WyeUILib.EditMainDialog.SaveLibToFileCallback)
+                    saveBtn.params.optData = [(saveBtn, dlgFrm, frame, saveBtn, lib)]
+
 
                 WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Select Verb to Edit", color=Wye.color.SUBHD_COLOR)
 
@@ -6515,7 +6785,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.retVal = frame.vars.dlgStat
                         dlgFrm.params.title = ["Edit Stream"]
                         dlgFrm.params.parent = [parentFrm]
-                        dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2]),]
+                        dlgFrm.params.position = [(.5,-.5, -.5 + btnFrm.vars.position[0][2]),]
 
                         # Code
                         codeFrm = WyeUILib.InputText.start(dlgFrm.SP)
@@ -6617,7 +6887,7 @@ class WyeUILib(Wye.staticObj):
 
                         # create dialog
                         dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit Code", parent=parentFrm,
-                                      position=(.5,-.3, -.5 + btnFrm.vars.position[0][2]))
+                                      position=(.5,-.5, -.5 + btnFrm.vars.position[0][2]))
 
                         # op dropdown - callback hide/shows the relevant lines for the op type
                         if op is None:
@@ -7188,7 +7458,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.title = ["Edit Parameter"]
                         dlgFrm.params.parent = [parentFrm]
                         #print("EditParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                        dlgFrm.params.position = [(.5,-.3, -.5 + btnFrm.vars.position[0][2]),]
+                        dlgFrm.params.position = [(.5,-.5, -.5 + btnFrm.vars.position[0][2]),]
 
                         # param name
                         frame.vars.paramName[0] = param[0]
@@ -7334,7 +7604,7 @@ class WyeUILib(Wye.staticObj):
                 match (frame.PC):
                     case 0:
                         # build var dialog
-                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit Variable", parentFrm, (.5,-.3, -.5 + btnFrm.vars.position[0][2]))
+                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit Variable", parentFrm, (.5,-.5, -.5 + btnFrm.vars.position[0][2]))
 
                         # Var name
                         frame.vars.varName[0] = editVerbFrm.vars.newVarDescr[0][varIx][0]
@@ -7604,7 +7874,7 @@ class WyeUILib(Wye.staticObj):
 
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
-                            fileName = "UserLibraries\\" + fileName
+                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
 
                         # if the file alredy exists, ask the user what they want to do
                         fileExists = os.path.exists(fileName)
@@ -7716,7 +7986,7 @@ class WyeUILib(Wye.staticObj):
 
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
-                            fileName = "UserLibraries\\" + fileName
+                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
                         #print("Write to file", fileName)
                         try:
                             # write the file
@@ -8302,18 +8572,21 @@ class WyeUILib(Wye.staticObj):
                             for parDescr in codeDescr:
                                 WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  " + parDescr[0])
 
-                                # find the frame for this stream
-                                chldStk = oFrm.stacks[streamIx]
-                                if len(chldStk) > 0:
-                                    chldFrm = chldStk[0]
-                                    caseIx = str(-1)
-                                else:
-                                    chldFrm = None
-                                    caseIx = 0
+                                try:
+                                    # find the frame for this stream
+                                    chldStk = oFrm.stacks[streamIx]
+                                    if len(chldStk) > 0:
+                                        chldFrm = chldStk[0]
+                                        caseIx = str(-1)
+                                    else:
+                                        chldFrm = None
+                                        caseIx = 0
 
-                                # create stream's code line
-                                WyeUILib.ObjectDebugger.bldDebugCodeLines(parDescr[1], dlgFrm, frame, chldFrm, streamIx)
-                                streamIx += 1
+                                    # create stream's code line
+                                    WyeUILib.ObjectDebugger.bldDebugCodeLines(parDescr[1], dlgFrm, frame, chldFrm, streamIx)
+                                    streamIx += 1
+                                except Exception as e:
+                                    print("ObjectDebugger run case 0 bldDebugCodeLines: parallel verb",oFrm.verb.__name__," has no stack for stream", streamIx)
 
                         # regular boring normal single stream code
                         else:
@@ -8369,20 +8642,20 @@ class WyeUILib(Wye.staticObj):
             tupleLst = None # assume we got nuthin
             # see if we actually have debug data
             dbgVerbFrm = verbFrm
-            print("debug frame", verbFrm.verb.__name__, " streamIx", streamIx)
+            #print("debug frame", verbFrm.verb.__name__, " streamIx", streamIx)
             if hasattr(verbFrm, "parentFrame"): # if this is a parallel stream frame, the parent has the debug data
-                print("frame", verbFrm.verb.__name__, " is stream.  Go up to parent", verbFrm.parentFrame.verb.__name__)
+                #print("frame", verbFrm.verb.__name__, " is stream.  Go up to parent", verbFrm.parentFrame.verb.__name__)
                 dbgVerbFrm = verbFrm.parentFrame
             if hasattr(dbgVerbFrm.verb, "caseCodeDictLst"):
-                print("bldDebugCodeLines verb", dbgVerbFrm.verb.__name__, " caseCodeDictLst len", len(dbgVerbFrm.verb.caseCodeDictLst), " lst", dbgVerbFrm.verb.caseCodeDictLst)
+                #print("bldDebugCodeLines verb", dbgVerbFrm.verb.__name__, " caseCodeDictLst len", len(dbgVerbFrm.verb.caseCodeDictLst), " lst", dbgVerbFrm.verb.caseCodeDictLst)
                 dict = dbgVerbFrm.verb.caseCodeDictLst[streamIx]   # get the case -> row dict for this stream (0 if not parallel)
                 if "0" in dict:     # we're starting at the first case in stream
                     tupleLst = dict["0"]
-                    print("verb", dbgVerbFrm.verb.__name__, " tupleLst for case 0:", tupleLst)
-                else:
-                    print("bldDebugCodeLines verb", dbgVerbFrm.verb.__name__, " caseCodeDictLst entry for case 0")
-            else:
-                print("bldDebugCodeLines verb", dbgVerbFrm.verb.__name__, " has no caseCodeDictLst")
+                    #print("verb", dbgVerbFrm.verb.__name__, " tupleLst for case 0:", tupleLst)
+                #else:
+                #    print("bldDebugCodeLines verb", dbgVerbFrm.verb.__name__, " caseCodeDictLst entry for case 0")
+            #else:
+            #    print("bldDebugCodeLines verb", dbgVerbFrm.verb.__name__, " has no caseCodeDictLst")
             rowIx = 0
             for tuple in codeDescr:
                 # make the dialog row
@@ -8396,7 +8669,7 @@ class WyeUILib(Wye.staticObj):
                 btnFrm.params.color = [Wye.color.DISABLED_COLOR]
                 # highlight currently executing section of code
                 if tupleLst and rowIx in tupleLst:
-                    print(" highlight row", rowIx)
+                    #print(" highlight row", rowIx)
                     btnFrm.params.backgroundColor = [Wye.color.LIGHT_GREEN]
 
                 # fill in text and callback based on code row type
@@ -8657,7 +8930,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.title = ["Debug Parameter"]
                         dlgFrm.params.parent = [parentFrm]
                         # print("DebugParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                        dlgFrm.params.position = [(.5, -.3, -.5 + btnFrm.vars.position[0][2]), ]
+                        dlgFrm.params.position = [(.5, -.5, -.5 + btnFrm.vars.position[0][2]), ]
 
                         # Param name
                         frame.vars.paramName[0] = paramDescr[paramIx][0]
@@ -8757,7 +9030,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.title = ["Debug Variable"]
                         dlgFrm.params.parent = [parentFrm]
                         # print("DebugVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
-                        dlgFrm.params.position = [(.5, -.3, -.5 + btnFrm.vars.position[0][2]), ]
+                        dlgFrm.params.position = [(.5, -.5, -.5 + btnFrm.vars.position[0][2]), ]
 
                         # Var name
                         frame.vars.varName[0] = varDescr[varIx][0]

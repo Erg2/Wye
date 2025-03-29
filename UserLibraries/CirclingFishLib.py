@@ -219,7 +219,7 @@ frame.vars.posAngle[0] = angle
               (None,"[[0, 90, 0]]"),
               (None,"[[.25,.25,.25]]"),
               (None,"frame.vars.objTag"),
-              (None,"[[.9,0.5,0,1]]"),
+              ("Code","[[.1,0.9,0,1]]"),
               ("Var","frame.vars.cleanUpObjs")),
             ("Label","Done"))),
         ("setAngleStream",

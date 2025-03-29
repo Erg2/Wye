@@ -95,8 +95,11 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
+
         def hide(self):
             self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
 
     # create a scaled rectangular prism
     # (primarily used for InputText cursor)
@@ -183,9 +186,11 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
 
         def hide(self):
             self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
 
         def getColor(self):
             return self._path.getColor()
@@ -210,9 +215,11 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
 
         def hide(self):
             self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
 
     # create a scaled surface from a point grid
     # NOTE: this class gets instantiated
@@ -303,9 +310,11 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
 
         def hide(self):
             self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
 
         def setScale(self, val):
             self._path.setScale(val)
@@ -321,11 +330,14 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
 
         def hide(self):
             self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
 
         def setTag(self, tag):
+            WyeCore.picker.makePickable(self._path)  # make selectable
             return self.node.setTag("wyeTag", tag)
 
         def getTag(self):
@@ -339,9 +351,11 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
 
         def hide(self):
             self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
 
     # 3d positioned clickable text
     # There are 3 parts, the text node (shows text, not clickable, the card (background, clickable), and the 3d position
@@ -349,7 +363,7 @@ class Wye3dObjsLib(Wye.staticObj):
     class _3dText:
         global render
 
-        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,0), parent=None, tag=""):
+        def __init__(self, text="", color=(1,1,1,1), pos=(0,0,0), scale=(1,1,1), bg=(0,0,0,0), parent=None, tag="", doTag=True):
             #print("_3dText '"+text+"' at", pos)
             #curframe = inspect.currentframe()
             #callframe = inspect.getouterframes(curframe, 2)
@@ -360,6 +374,7 @@ class Wye3dObjsLib(Wye.staticObj):
             else:
                 self.parent = parent
             self.tag = tag          # if caller supplied, else will auto-gen unique tag
+            self.doTag = doTag      # false if caller doesn't want a tag
             self.color = color
             self.bg = bg
             self.marginL = .1
@@ -450,7 +465,7 @@ class Wye3dObjsLib(Wye.staticObj):
             return self._path.getScale()
 
         def getTag(self):
-            return self.text.name
+            return self.tag
 
         def getText(self):
             return self.text.getText()
@@ -465,8 +480,11 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
+
         def hide(self):
             self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
 
         # rebuild card and path for updated text object
         def _regen3d(self):
@@ -481,8 +499,9 @@ class Wye3dObjsLib(Wye.staticObj):
 
         # internal rtn to gen text object with unique wyeTag name
         def _genTextObj(self, text, color=(1,1,1,1)):
-            if not self.tag:
+            if self.doTag and not self.tag:
                 self.tag = "txt"+str(WyeCore.Utils.getId())
+                #print("_3dTxt", self.dbgTxt, " tag", self.tag, " doTag", self.doTag)
             self.text = TextNode(self.tag)
             if len(text) == 0:
                 text = ' '
@@ -523,9 +542,9 @@ class Wye3dObjsLib(Wye.staticObj):
             # finished gen card
             self._path.reparentTo(self.parent)
 
-
-            WyeCore.picker.makePickable(self._path)         # make selectable
-            self._path.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
+            if self.doTag:
+                WyeCore.picker.makePickable(self._path)         # make selectable
+                self._path.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
             self._path.setPos(pos[0], pos[1], pos[2])
             self._path.setScale(scale)
 
@@ -550,7 +569,9 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def show(self):
             self._path.show()
+            WyeCore.picker.makePickable(self._path)
 
         def hide(self):
             self._path.hide()
-
+            WyeCore.picker.makeNotPickable(self._path)
+            #print("_3tTxt ", self.dbgTxt, " made not pickable. tag 'pickable'=", self._path.getTag('pickable'))
