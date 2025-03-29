@@ -6422,15 +6422,6 @@ Overview:
                         # delete line from codeDescr
                         parentList.pop(ix)
 
-                        # get location of this frame in dialog input list
-                        parentList = WyeCore.Utils.findTupleParent(editVerbFrm.vars.newCodeDescr[0], tuple)
-                        if parentList:
-                            ix = parentList.index(tuple)
-                            # print("found tuple", tuple, " at", ix, " in", parentList)
-                        else:
-                            print("EditCodeLineCallback: failed to find tuple '" + str(tuple) + "' in parent list:\n",
-                                  editVerbFrm.vars.newCodeDescr[0])
-
                         # count the lists (verb params - shown on following rows in dialog) in tuple, including tuple itself
                         count = 1 + WyeCore.Utils.countNestedLists(tuple)
 
