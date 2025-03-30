@@ -62,7 +62,6 @@ class WyeLib:
         def start(stack):
             return Wye.codeFrame(WyeLib.waitClick, stack)
 
-        # TODO - make multi-cycle
         def run(frame):
             match frame.PC:
                 case 0:
@@ -96,7 +95,6 @@ class WyeLib:
         def start(stack):
             return Wye.codeFrame(WyeLib.waitChar, stack)
 
-        # TODO - make multi-cycle
         def run(frame):
             match frame.PC:
                 case 0:
@@ -132,7 +130,6 @@ class WyeLib:
         def start(stack):
             return Wye.codeFrame(WyeLib.waitChar, stack)
 
-        # TODO - make multi-cycle
         def run(frame):
             match frame.PC:
                 case 0:
@@ -490,7 +487,6 @@ class WyeLib:
         def start(stack):
             return Wye.codeFrame(WyeLib.delay, stack)
 
-        # TODO - make multi-cycle
         def run(frame):
             match frame.PC:
                 case 0:

@@ -567,8 +567,8 @@ class Wye:
     class ctlKeys:
         RIGHT = -1
         LEFT = -2
-        UP = -4
         DOWN = -3
+        UP = -4
         CTL_DOWN = -5
         CTL_UP = -6
         SHIFT_DOWN = -7
@@ -576,33 +576,39 @@ class Wye:
         DELETE = -9
         END = -10
         HOME = -11
+        ESCAPE = -12
+        ENTER = -13
 
         ctlList = [
             RIGHT,
             LEFT,
-            UP,
             DOWN,
+            UP,
             CTL_DOWN,
             CTL_UP,
             SHIFT_DOWN,
             SHIFT_UP,
             DELETE,
             END,
-            HOME
+            HOME,
+            ESCAPE,
+            ENTER,
         ]
 
         stringLookup = {
             RIGHT: "RIGHT",
             LEFT: "LEFT",
-            UP: "UP",
             DOWN: "DOWN",
+            UP: "UP",
             CTL_DOWN: "CTL_DOWN",
             CTL_UP: "CTL_UP",
             SHIFT_DOWN: "SHIFT_DOWN",
             SHIFT_UP: "SHIFT_UP",
             DELETE: "DELETE",
             END: "END",
-            HOME: "HOME"
+            HOME: "HOME",
+            ESCAPE: "ESCAPE",
+            ENTER: "ENTER",
         }
 
         def tostring(val):

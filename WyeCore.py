@@ -154,7 +154,6 @@ class WyeCore(Wye.staticObj):
             frame.run(frame)
 
     # Midi output class
-    # todo - finish this
     midiInitialized = False
 
     # midi
@@ -635,7 +634,6 @@ class WyeCore(Wye.staticObj):
         # even if their context has gone away
         # Note that they keep references to any variables up the stack that they need
         # even if those variable's frames have been GC'd
-        # (>> todo need to check that the refs are actually kept!<<)
         def setRepeatEventCallback(eventName, frame, data=None):
             frameID = "frm"+str(WyeCore.Utils.getId()) # get unique id for frame list
             # note: list in repEvtCallbackDict acts as global stack frame as well as
@@ -690,6 +688,8 @@ class WyeCore(Wye.staticObj):
                 self.accept('delete-repeat', self.controlKeyFunc, [Wye.ctlKeys.DELETE])
                 self.accept('home', self.controlKeyFunc, [Wye.ctlKeys.HOME])
                 self.accept('end', self.controlKeyFunc, [Wye.ctlKeys.END])
+                self.accept('escape', self.controlKeyFunc, [Wye.ctlKeys.ESCAPE])
+                self.accept('enter', self.controlKeyFunc, [Wye.ctlKeys.ENTER])
 
             def controlKeyFunc(self, keyID):
                 #print("Control key", keyID)
@@ -883,7 +883,7 @@ class WyeCore(Wye.staticObj):
                 print("'", obj, "' has no known tags")
 
         # this function finds the closest object to the camera that has been hit by our ray
-        # TODO it does not work with billboard nodes. Fails once the billboard rotates too far
+        # Note: it does not work with billboard nodes. Fails once the billboard rotates too far.  So we don't use them
         def getObjectHit(self, mpos):  # mpos is the position of the mouse on the screen
             global render
 
@@ -1638,8 +1638,6 @@ class WyeCore(Wye.staticObj):
             return not WyeCore.focusManager is None
 
         # set the UI focus manager
-        # todo - this really should call a picker method instead of
-        # poking a value directly into the picker
         def setFocusManager(focusManager):
             WyeCore.focusManager = focusManager
 

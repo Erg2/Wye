@@ -1544,7 +1544,7 @@ class WyeUILib(Wye.staticObj):
 
             # update dialog pos to next free space downward
             pos[2] -= height  # update to next position
-            frame.vars.size[0] = (width, 0, height)       # TODO - width + .5 is hack to space lines nicely, add border spacing to layout
+            frame.vars.size[0] = (width, 0, height)
             #print("InputDropdown", frame.params.label[0], " size", frame.vars.size[0])
             #print("InputDropdown", frame.params.label[0], " redisplay size", frame.vars.size[0], " pos", pos, " width", width)
 
@@ -1574,7 +1574,7 @@ class WyeUILib(Wye.staticObj):
                 if not height:
                     height = btn.getHeight()
             pos[2] -= height
-            frame.vars.size[0] = (width, 0, height)      # TODO - width + .5 is hack to space lines nicely, add border spacing to layout
+            frame.vars.size[0] = (width, 0, height)
             #print("InputDropdown", frame.params.label[0], " redisplay size", frame.vars.size[0], " pos", pos, " width", width)
 
             # HACK
@@ -1716,7 +1716,8 @@ class WyeUILib(Wye.staticObj):
                       ("format", Wye.dType.STRING_LIST, Wye.access.REFERENCE, ""), # valid entries: "NO_OK", "NO_CANCEL", "
                       ("headerColor", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, Wye.color.HEADER_COLOR),
                       ("callback", Wye.dType.OBJECT, Wye.access.REFERENCE, None),   # exit callback
-                      ("optData", Wye.dType.ANY, Wye.access.REFERENCE)
+                      ("optData", Wye.dType.ANY, Wye.access.REFERENCE),
+                      ("okOnCr", Wye.dType.BOOL, Wye.access.REFERENCE, False),
                       ) # 5+ variable length list of input control frames
                       # input widgets go here (Input fields, Buttons, and who knows what all cool stuff that may come
 
@@ -2011,6 +2012,8 @@ class WyeUILib(Wye.staticObj):
             frame.vars.bgndGObj[0].removeNode()
             frame.vars.outlineGObj[0].removeNode()
             frame.verb.genBackground(frame)
+            frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
+            frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
             frame.doingDisplay = False
 
         def doCallback(frame, inFrm, tag, doUserCallback=False):
@@ -2232,6 +2235,27 @@ class WyeUILib(Wye.staticObj):
         # update InputText/InputInteger on key event
         def doKey(frame, key):
             #print("Dialog doKey: key", key)
+
+            # exit on escape
+            if key == Wye.ctlKeys.ESCAPE:
+                if "NO_CANCEL" in frame.params.format[0]:   # if dlg not showing Cancel, do OK
+                    tag = frame.vars.okTags[0][0]
+                else:
+                    tag = frame.vars.canTags[0][0]
+                # force exit
+                frame.verb.doSelect(frame, tag)
+                return
+
+            if key == Wye.ctlKeys.ENTER:
+                if frame.params.okOnCr[0]:
+                    if "NO_OK" in frame.params.format[0]:   # if dlg not showing OK, do Cancel
+                        tag = frame.vars.canTags[0][0]
+                    else:
+                        tag = frame.vars.okTags[0][0]
+                    # force exit
+                    frame.verb.doSelect(frame, tag)
+                    return
+
             # if we have an input with focus
             inFrm = frame.vars.currInp[0]
             if not inFrm is None:
@@ -2670,40 +2694,16 @@ class WyeUILib(Wye.staticObj):
                     # Settings
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Settings", Wye.color.SUBHD_COLOR)
 
-                    sndChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  3D Sound On", [Wye.soundOn], WyeUILib.MainMenuDialog.SoundCheckCallback)
-                    sndChkFrm.params.optData = [sndChkFrm]
-
-                    codeChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  List Compiled Code", [WyeCore.debugListCode],
-                                        WyeUILib.MainMenuDialog.ListCodeCallback)
-                    codeChkFrm.params.optData = [codeChkFrm]
-
-
-                    devChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Dev prints in IDE", [Wye.devPrint],
-                                        WyeUILib.MainMenuDialog.ListDevCodeCallback)
-                    devChkFrm.params.optData = [devChkFrm]
-
                     verChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Show Wye Version", [True],
                                         WyeUILib.MainMenuDialog.VerCheckCallback)
                     verChkFrm.params.optData = [verChkFrm]
 
-                    copyBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Show Copy Paste List",
+                    copyBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Open Copy Paste Dialog",
                                         WyeUILib.MainMenuDialog.CopyPasteCallback)
                     copyBtnFrm.params.optData = [copyBtnFrm]
 
-                    #
-                    # system debug
-                    #
-                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Diagnostics")
-
-                    verboseChkFrm = WyeUILib.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([verboseChkFrm])
-                    verboseChkFrm.params.frame = [None]
-                    verboseChkFrm.params.parent = [None]
-                    verboseChkFrm.params.value = [False]
-                    verboseChkFrm.params.label = ["  Toggle verbose message display"]
-                    verboseChkFrm.params.callback = [WyeUILib.MainMenuDialog.VerboseCheckCallback]  # button callback
-                    verboseChkFrm.params.optData = [verboseChkFrm]
-                    verboseChkFrm.verb.run(verboseChkFrm)
+                    sndChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  3D Sound On", [Wye.soundOn], WyeUILib.MainMenuDialog.SoundCheckCallback)
+                    sndChkFrm.params.optData = [sndChkFrm]
 
                     #
                     # Test
@@ -2764,6 +2764,26 @@ class WyeUILib(Wye.staticObj):
                     # fill in midFrm callback data now that ins, note frames created
                     midFrm.params.optData = [(midInsFrm, midNoteFrm, midVolFrm, midLenFrm)]  # button row, dialog frame
                     midFrm.verb.run(midFrm)
+
+
+                    #
+                    # system debug
+                    #
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Internal Diagnostics")
+
+
+                    verboseChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Toggle verbose system message display", [0],
+                                                                               WyeUILib.MainMenuDialog.VerboseCheckCallback)
+                    verboseChkFrm.params.optData = [verboseChkFrm]
+
+                    codeChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  List Compiled Code", [WyeCore.debugListCode],
+                                        WyeUILib.MainMenuDialog.ListCodeCallback)
+                    codeChkFrm.params.optData = [codeChkFrm]
+
+                    devChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Show print()'s in IDE", [Wye.devPrint],
+                                        WyeUILib.MainMenuDialog.ListDevCodeCallback)
+                    devChkFrm.params.optData = [devChkFrm]
+
 
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
 
@@ -3701,12 +3721,11 @@ Overview:
                         if libName in WyeCore.World.libDict:
                             #print("Lib", libName, " already loaded.  Delete old and add new")
                             oldLib = WyeCore.World.libDict[libName]
+                            # don't allow overwrite of system lib
                             if not hasattr(oldLib, "systemLib"):
                                 oldLibIx = WyeCore.World.libList.index(oldLib)
                                 WyeCore.World.libList.remove(oldLib)
                                 newLib = False
-                            # don't allow overwrite of system lib
-                            # todo - read text file, if invalid name give user option to have us generate a versioned one and load that
                             else:
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", libName + " is a system library.  Overwriting not allowed",
                                                     Wye.color.ERROR_COLOR)
@@ -6887,6 +6906,7 @@ Overview:
                         # create dialog
                         dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit Code", parent=parentFrm,
                                       position=(.5,-.5, -.5 + btnFrm.vars.position[0][2]))
+                        dlgFrm.params.okOnCr = [True]
 
                         # op dropdown - callback hide/shows the relevant lines for the op type
                         if op is None:
@@ -8535,10 +8555,7 @@ Overview:
 
                     # else no params
                     else:
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [WyeUILib.EditVerb.lineOpList],
-                                      [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False, padding=(.5,.5,.05,.05))
-                        lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no parameters>", layout=Wye.layout.ADD_RIGHT)
-                        editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
+                        WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no parameters>", layout=Wye.layout.ADD_RIGHT)
 
                     # vars
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Variables:", color=Wye.color.SUBHD_COLOR)
@@ -8557,13 +8574,9 @@ Overview:
                             attrIx += 1
 
 
-                    # else nothing to do here
+                    # else this space intentionally left blank
                     else:
-                        # todo - make this work
-                        editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [WyeUILib.EditVerb.lineOpList],
-                                      [0], WyeUILib.EditVerb.EditParamLineCallback, showText=False, padding=(.5,.5,.05,.05))
-                        lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no variables>")
-                        editLnFrm.params.optData = [(editLnFrm, dlgFrm, lblFrm, None)]
+                        WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no variables>")
 
                     # build dialog frame params list of input frames
                     lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Wye Code:", color = Wye.color.SUBHD_COLOR)
@@ -8574,35 +8587,37 @@ Overview:
                         oFrm = objFrm
                     if hasattr(oFrm.verb, "codeDescr"):
                         codeDescr = oFrm.verb.codeDescr
+                        if len(codeDescr) > 0:
+                            # if debugging parallel code, show all the streams
+                            if oFrm.verb.mode == Wye.mode.PARALLEL:
+                                #print("verb", oFrm.verb.__name__," has", len(codeDescr), " streams")
+                                streamIx = 0
+                                # loop through the stream code showing first level code lines
+                                for parDescr in codeDescr:
+                                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  " + parDescr[0])
 
-                        # if debugging parallel code, show all the streams
-                        if oFrm.verb.mode == Wye.mode.PARALLEL:
-                            #print("verb", oFrm.verb.__name__," has", len(codeDescr), " streams")
-                            streamIx = 0
-                            # loop through the stream code showing first level code lines
-                            for parDescr in codeDescr:
-                                WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  " + parDescr[0])
+                                    try:
+                                        # find the frame for this stream
+                                        chldStk = oFrm.stacks[streamIx]
+                                        if len(chldStk) > 0:
+                                            chldFrm = chldStk[0]
+                                            caseIx = str(-1)
+                                        else:
+                                            chldFrm = None
+                                            caseIx = 0
 
-                                try:
-                                    # find the frame for this stream
-                                    chldStk = oFrm.stacks[streamIx]
-                                    if len(chldStk) > 0:
-                                        chldFrm = chldStk[0]
-                                        caseIx = str(-1)
-                                    else:
-                                        chldFrm = None
-                                        caseIx = 0
+                                        # create stream's code line
+                                        WyeUILib.ObjectDebugger.bldDebugCodeLines(parDescr[1], dlgFrm, frame, chldFrm, streamIx)
+                                        streamIx += 1
+                                    except Exception as e:
+                                        print("ObjectDebugger run case 0 bldDebugCodeLines: parallel verb",oFrm.verb.__name__," has no stack for stream", streamIx)
 
-                                    # create stream's code line
-                                    WyeUILib.ObjectDebugger.bldDebugCodeLines(parDescr[1], dlgFrm, frame, chldFrm, streamIx)
-                                    streamIx += 1
-                                except Exception as e:
-                                    print("ObjectDebugger run case 0 bldDebugCodeLines: parallel verb",oFrm.verb.__name__," has no stack for stream", streamIx)
-
-                        # regular boring normal single stream code
+                            # regular boring normal single stream code
+                            else:
+                                # create first level code lines
+                                WyeUILib.ObjectDebugger.bldDebugCodeLines(codeDescr, dlgFrm, frame, oFrm, 0)
                         else:
-                            # create first level code lines
-                            WyeUILib.ObjectDebugger.bldDebugCodeLines(codeDescr, dlgFrm, frame, oFrm, 0)
+                            WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no code>")
 
                     WyeUILib.ObjectDebugger.activeObjs[objFrm] = dlgFrm
 
