@@ -620,25 +620,27 @@ class Wye:
 
     # UI text color
     class color:
-        TEXT_COLOR = (.8, .8, .8, 1)
-        SELECTED_COLOR = (0, 1, 0, 1)
-        SELECTED_BG_COLOR = (.25, .75, .25, 1)
-        LABEL_COLOR = (1, 1, .5, 1)
-        BACKGROUND_COLOR = (.4, .4, .4, .1)
-        BACKGROUND_COLOR_SEL = (.3, .3, .3, .1)
-        OUTLINE_COLOR = (.5, .5, .5, 1)
-        OUTLINE_COLOR_SEL = (.1, .1, .1, 1)
-        HEADER_COLOR = (1, 1, 1, 1)
-        CONTROL_COLOR = (1, 1, 1, 1)
-        CURSOR_COLOR = (0, 1, 0, 1)
-        SUBHD_COLOR = (.9, .9, .9, 1)
-        DISABLED_COLOR = (.6, .6, .6, 1)
-        TRUE_COLOR = (0, 1, 0, 1)
-        FALSE_COLOR = (.1, .1, .1, 1)
-        NORMAL_COLOR = (.8, .8, .8, 1)
-        WARNING_COLOR = (1, 1, 0, 1)
-        ERROR_COLOR = (1, 0, 0, 1)
-        TRANSPARENT = (0,0,0,0)
+        ACTIVE_COLOR = (1, 1, .5, 1)                # something for the user to click on
+        SELECTED_COLOR = (0, 1, 0, 1)               # Text box active
+        SELECTED_BG_COLOR = (.25, .75, .25, 1)      # highlight dialog row
+        LABEL_COLOR = (.8, .8, .8, 1)               # informational
+        BACKGROUND_COLOR = (.4, .4, .4, .1)         # dialog background
+        BACKGROUND_COLOR_SEL = (.3, .3, .3, .1)     # selected dialog background
+        OUTLINE_COLOR = (.5, .5, .5, 1)             # dialog outline
+        OUTLINE_COLOR_SEL = (.1, .1, .1, 1)         # dialog outline selected
+        HEADER_COLOR = (1, 1, 1, 1)                 # dialog header
+        CONTROL_COLOR = (1, 1, 1, 1)                # dialog controls (OK, Cancel)
+        CURSOR_COLOR = (0, 1, 0, 1)                 # text cursor
+        SUBHD_COLOR = (.9, .9, .9, 1)               # dialog subhead
+        DISABLED_COLOR = (.6, .6, .6, 1)            # disabled input
+        TRUE_COLOR = (0, 1, 0, 1)                   # checkbox true
+        FALSE_COLOR = (.1, .1, .1, 1)               # checkbox false
+        NORMAL_COLOR = (.8, .8, .8, 1)              # informational, not currently selected
+        WARNING_COLOR = (1, 1, 0, 1)                # warning
+        ERROR_COLOR = (1, 0, 0, 1)                  # error
+        TRANSPARENT = (0,0,0,0)                     # not visible
+        BREAKPOINT = (.5,0,0,1)                     # breakpoint highlight
+        HIGHLIGHT = (0,.5,0,1)                      # execution code row highlight
         LIGHT_YELLOW = (.5,.5,0,1)
         LIGHT_RED = (.5,0,0,1)
         LIGHT_GREEN = (0,.5,0,1)

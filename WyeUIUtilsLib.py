@@ -152,7 +152,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         return frm
 
     # Note: valueRef is a list with the value in it.  It can the name of a param or var
-    def doInputText(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputText(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR, textColor=Wye.color.ACTIVE_COLOR,
                     backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0,
                     hidden=False):
         frm = WyeUILib.InputText.start(dlgFrm.SP)
@@ -164,6 +164,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.label = [label]
         frm.params.layout = [layout]
         frm.params.color = [color]
+        frm.params.textColor = [textColor]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
         frm.params.fixedWidth = [fixedWidth]
@@ -172,7 +173,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputInteger(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputInteger(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR, textColor=Wye.color.ACTIVE_COLOR,
                        backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0,
                        hidden=False):
         frm = WyeUILib.InputInteger.start(dlgFrm.SP)
@@ -184,6 +185,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.label = [label]
         frm.params.layout = [layout]
         frm.params.color = [color]
+        frm.params.textColor = [textColor]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
         frm.params.fixedWidth = [fixedWidth]
@@ -193,7 +195,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         return frm
 
 
-    def doInputFloat(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputFloat(dlgFrm, label, valurRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR, textColor=Wye.color.ACTIVE_COLOR,
                      backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0,
                      hidden=False):
         frm = WyeUILib.InputFloat.start(dlgFrm.SP)
@@ -205,6 +207,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         frm.params.label = [label]
         frm.params.layout = [layout]
         frm.params.color = [color]
+        frm.params.textColor = [textColor]
         frm.params.backgroundColor = [backgroundColor]
         frm.params.padding = [padding]
         frm.params.fixedWidth = [fixedWidth]
@@ -213,7 +216,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputButton(dlgFrm, label, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputButton(dlgFrm, label, callback=None, optData=None, color=Wye.color.ACTIVE_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0,
                      hidden=False):
         frm = WyeUILib.InputButton.start(dlgFrm.SP)
@@ -232,7 +235,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         dlgFrm.params.inputs[0].append([frm])
         return frm
 
-    def doInputCheckbox(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
+    def doInputCheckbox(dlgFrm, label, valueRef, callback=None, optData=None, color=Wye.color.ACTIVE_COLOR,
                       backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL, radioGroup=None,
                       selectedRadio=0, padding=(0,0,0,0), fixedWidth=0, hidden=False):
         frm = WyeUILib.InputCheckbox.start(dlgFrm.SP)
@@ -256,7 +259,7 @@ class WyeUIUtilsLib(Wye.staticObj):
 
     # note: dropdownListRef is a list of strings
     def doInputDropdown(dlgFrm, label, dropdownListRef, selectionIxRef, callback=None, optData=None, color=Wye.color.LABEL_COLOR,
-                      textColor=Wye.color.TEXT_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL,
+                      textColor=Wye.color.ACTIVE_COLOR, backgroundColor=Wye.color.TRANSPARENT, layout=Wye.layout.VERTICAL,
                         showText=True, showLabel=True, padding=(0,0,0,0), fixedWidth=0, hidden=False):
         frm = WyeUILib.InputDropdown.start(dlgFrm.SP)
         frm.params.frame = [None]  # return value
