@@ -9,6 +9,8 @@ from panda3d.core import *
 from direct.showbase.DirectObject import DirectObject
 #from pandac.PandaModules import *
 #from panda3d.core import loadPrcFileData
+
+
 import traceback
 
 
@@ -26,6 +28,8 @@ startObjList = []           # list of lib objs from command line to load on star
 # to derive from ShowBase to access all the Panda3d runstime stuff
 class WorldRunner(ShowBase):
     def __init__(self):
+        #ConfigVariableBool('fullscreen').setValue(1)
+
         ShowBase.__init__(self)     # Init Panda3d
         taskMgr.add(WyeCore.World.worldRun)
         WyeCore.base = self      # world needs this to do panda3d stuff
@@ -41,9 +45,15 @@ class WorldRunner(ShowBase):
 # main program, set up and run the world
 
 #print("Start")
+#loadPrcFileData("", "fullscreen 1")  # Set to 1 for fullscreen
+#loadPrcFileData("", "win-origin 10 10")
+#loadPrcFileData("", "win-fixed-size 0")
+
 loadPrcFileData('', 'win-size 1200 800')           # set size of window
 loadPrcFileData('', 'show-frame-rate-meter #t')    # turn on frame rate display
 loadPrcFileData('', 'window-title Wye V'+Wye.version)
+
+#ConfigVariableBool('fullscreen').setValue(1)
 
 
 # if the user supplied a list of libList and or start objs

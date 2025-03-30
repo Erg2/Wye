@@ -111,7 +111,7 @@ class WyeUILib(Wye.staticObj):
                         # position in front of other dialogs
                         point = NodePath("point")
                         point.reparentTo(render)
-                        point.setPos(base.camera, (2, 7, 0))
+                        point.setPos(base.camera, Wye.UI.NOTIFICATION_OFFSET)
                         pos = point.getPos()
                         point.removeNode()
                         dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Copy/Paste List", position=pos, formatLst=["NO_CANCEL"])
@@ -4627,7 +4627,7 @@ Overview:
             frame.vars.newVerbSettings[0]['dataType'] = dataType
 
             # get verb name
-            name = frame.vars.nameFrm[0].params.value[0]
+            name = frame.vars.nameFrm[0].vars.currVal[0]
             if name:
                 name = name.strip()
             if not name:
@@ -4635,7 +4635,6 @@ Overview:
                                                     "Please enter a name in the Name: field",
                                                     Wye.color.WARNING_COLOR)
                 return
-
             # find library
             libName = frame.vars.existingLibFrm[0].vars.list[0][frame.vars.existingLibFrm[0].params.selectedIx[0]]
             if not libName in WyeCore.World.libDict:
@@ -4649,6 +4648,7 @@ Overview:
 
             disableAuto = frame.vars.disaAutoFrm[0].params.value[0]
 
+            print("Update verb named", name, " in lib", lib.__name__)
             WyeCore.Utils.createVerb(lib, name,
                                      frame.vars.newVerbSettings[0],
                                      frame.vars.newParamDescr[0],
@@ -6459,7 +6459,7 @@ Overview:
                     case 4:
                         # get line from cutList
                         cutData = WyeCore.World.cutPasteManager.getSelected()
-                        print("paste code before: cutData", cutData)
+                        #print("paste code before: cutData", cutData)
                         if not cutData or cutData[0] != "Code":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
                                "Please select a 'Code' row from Copy/Paste List", Wye.color.WARNING_COLOR)
@@ -7756,7 +7756,7 @@ Overview:
                 # print("code\n"+str(frame.vars.newCodeDescr))
 
                 # get verb name
-                name = frame.vars.nameFrm[0].params.value[0]
+                name = editFrm.vars.nameFrm[0].params.value[0]
                 if name:
                     name = name.strip()
                 if not name:
@@ -7766,7 +7766,7 @@ Overview:
                     return
 
                 # find library
-                libName = frame.vars.existingLibFrm[0].vars.list[0][frame.vars.existingLibFrm[0].params.selectedIx[0]]
+                libName = editFrm.vars.existingLibFrm[0].vars.list[0][editFrm.vars.existingLibFrm[0].params.selectedIx[0]]
                 if not libName in WyeCore.World.libDict:
                     WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
                                                         "Library '" + libName + "' is no longer loaded.  Unable to update verb.",
@@ -8122,13 +8122,17 @@ Overview:
                         label = indent + "  "+prefix+" " + str(attrIx[0]) + " depth " + str(offset) + ":" + objFrm.verb.__name__
                     else:
                         label = indent + "                depth " + str(offset) + ":" + objFrm.verb.__name__
-                    if hasattr(stack[0], "systemObject"):
-                        bg = Wye.color.LIGHT_YELLOW
-                    elif hasattr(stack[0], "doBreakPt"):
+
+                    if hasattr(stack[0], "doBreakPt"):
                         bg = Wye.color.LIGHT_RED
                     else:
                         bg = Wye.color.TRANSPARENT
-                    btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, label, WyeUILib.DebugMain.DebugFrameCallback, backgroundColor=bg)
+                    if hasattr(stack[0], "systemObject"):
+                        color = Wye.color.TEXT_COLOR
+                        btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, label, color=color, backgroundColor=bg)
+                    else:
+                        color = Wye.color.LABEL_COLOR
+                        btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, label, WyeUILib.DebugMain.DebugFrameCallback, color=color, backgroundColor=bg)
                     btnFrm.params.layout = [Wye.layout.ADD_RIGHT]
                     btnFrm.params.optData = [(rowIx[0], btnFrm, dlgFrm, objFrm, frame)]   # button row, row frame, dialog frame, obj frame
                     frame.vars.rows[0].append(btnFrm)         # save ref to input so can delete it later

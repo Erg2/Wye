@@ -302,6 +302,15 @@ class WyeCore(Wye.staticObj):
                 # print("worldRunner: World Init")
                 WyeCore.worldInitialized = True  # Only do this once
 
+                # window size
+                xSize = base.pipe.getDisplayWidth()
+                ySize = base.pipe.getDisplayHeight()
+                props = WindowProperties()
+                props.setSize(xSize, ySize-100)
+                props.setOrigin(1,50)
+                #props.setFixedSize(1)
+                base.win.requestProperties(props)
+
                 # Lighting
                 WyeCore.World.dlight = DirectionalLight('dlight')
                 WyeCore.World.dlight.setColor((1, 1, 1, 1))  # (0.8, 0.8, 0.5, 1))
