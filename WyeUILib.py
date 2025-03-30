@@ -4469,12 +4469,22 @@ Overview:
             libName = verb.library.__name__
             verbName = verb.__name__
             lib = WyeCore.World.libDict[libName]
-            if lib != verb.library:
-                print("EditVerb lib", lib.__name__, " has been updated.  Using most recent")
+            #if lib != verb.library:
+            #    print("EditVerb lib", lib.__name__, " has been updated.  Using most recent")
+
+            # if user deleted verb from lib, nevermind
+            if not hasattr(lib, verbName):
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Verb Not Found", "Verb "+verbName+" no longer defined in thsi library",
+                                                         Wye.color.WARNING_COLOR)
+                frame.status = Wye.status.SUCCESS
+                return
+
+
             verb = getattr(lib, verbName)
             if verb != frame.params.verb[0]:
                 print("EditVerb verb", verbName, " has been updated. using most recent")
                 frame.params.verb[0] = verb
+
             match(frame.PC):
                 case 0:
                     #print("EditVerb run case 0: edit", verb.__name__)
