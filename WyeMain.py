@@ -1,25 +1,19 @@
 # Building up direct compiled version of Wye
-
 # consolidating compiled code into one block
+#
+# license: We don't need no stinking license
+# This is prototype code.  If it blows up your nuclear reactor, that is your dumb fault.
+#
+
 
 from direct.showbase.ShowBase import ShowBase
 from direct.task.TaskManagerGlobal import taskMgr   # needed to run world task in sync with panda3d
-from importlib.machinery import SourceFileLoader    # to load libList from files
 from panda3d.core import *
-from direct.showbase.DirectObject import DirectObject
-#from pandac.PandaModules import *
-#from panda3d.core import loadPrcFileData
-
-
-import traceback
-
-
+#from direct.showbase.DirectObject import DirectObject
+#import traceback
 from WyeCore import WyeCore
 from Wye import Wye
-import sys, os
-
-libLoadList = ["WyeLib.py", "WyeUILib.py", "WyeUIUtilsLib.py", "Wye3dObjsLib.py"] # list of lib files to load on start.  libList on cmd line added to it
-startObjList = []           # list of lib objs from command line to load on start
+import sys
 
 
 ############# run the world
@@ -27,10 +21,31 @@ startObjList = []           # list of lib objs from command line to load on star
 # Note: Wye's static class structure means we need this instantiated class
 # to derive from ShowBase to access all the Panda3d runstime stuff
 class WorldRunner(ShowBase):
+    global base
+    global render
+
     def __init__(self):
         #ConfigVariableBool('fullscreen').setValue(1)
 
         ShowBase.__init__(self)     # Init Panda3d
+
+        # set screen size
+        xSize = base.pipe.getDisplayWidth()
+        ySize = base.pipe.getDisplayHeight()
+        props = WindowProperties()
+
+        #props.setSize(xSize, ySize)            # full screen
+        props.setSize(xSize, ySize - 100)       # maximize window
+        props.setOrigin(1, 40)                  # offset to show top bar of max window
+
+        props.setFixedSize(1)
+        base.win.requestProperties(props)
+
+        myFog = Fog("Fog Name")
+        myFog.setColor(0, 0, 0)
+        myFog.setExpDensity(0.001)
+        base.render.setFog(myFog)
+
         taskMgr.add(WyeCore.World.worldRun)
         WyeCore.base = self      # world needs this to do panda3d stuff
 
@@ -40,6 +55,7 @@ class WorldRunner(ShowBase):
         #props = WindowProperties()
         #props.setTitle("Wye V" + version)
         #WyeCore.base.win.requestProperties(props)
+
 
 
 # main program, set up and run the world
@@ -64,45 +80,13 @@ if len(sys.argv) > 1:
         match sw:
             case "-l":
                 #print("cmd line lib ", val)
-                libLoadList.append(val)
-            case "-o":
-                #print("cmd line start obj ", val)
-                startObjList.append(val)
+                WyeCore.libLoadList.append(val)
 
 # No parameters, load default libs and start default objs
 else:
-    libLoadList.extend(["TestLib.py"])
-    startObjList = []
+    WyeCore.libLoadList.extend(["TestLib.py"])
 
-# import libraries
-for libFile in libLoadList:
-    #print("Load lib '", libFile, "'")
-    libName = os.path.splitext(os.path.basename(libFile))[0]
-    #print("Load ", libName)
 
-    #path = libFile
-    path = WyeCore.Utils.resourcePath(libFile)[2:]
-    #print("Load library '" + path + "'")
-    try:
-        libModule = SourceFileLoader(libName, path).load_module()
-        # print("libModule ", libModule)
-        libClass = getattr(libModule, libName)
-        #print("add libClass", libClass, " to libList")
-        WyeCore.World.libList.append(libClass)
-        #print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
-    except:
-    #    pass    # if fail to load module, keep going
-        print("Failed to load class ", libName, " From file ", path)
-        ex = sys.exception()
-        traceback.print_exception(ex)
-
-#print("Known libraries:", WyeCore.World.libList)
-
-# load starting objects
-WyeCore.World.startObjs.extend(startObjList)
-
-#print("Loaded libList:", WyeCore.World.libList)
-#print("start objs:", WyeCore.World.startObjs)
 
 pandaRunner = WorldRunner()
 #print("Started, now run")

@@ -7,6 +7,75 @@ class TestLib:
   class TestLib_rt:
    pass #1
 
+  class UpdateCallback:
+      mode = Wye.mode.SINGLE_CYCLE
+      dataType = Wye.dType.STRING
+      paramDescr = ()
+      varDescr = (("count", Wye.dType.INTEGER, 0),)
+
+      def start(stack):
+          return Wye.codeFrame(TestLib.UpdateCallback, stack)
+
+      def run(frame):
+          # print("UpdateCallback data=", frame.eventData, " verb", frame.eventData[1].verb.__name__)
+
+          frm = frame.eventData[1]
+          ctlFrm = frame.eventData[2]
+          dlgFrm = ctlFrm.parentDlg
+          # print("dlgFrame", dlgFrm)
+          # print("UpdateCallback dlg verb", dlgFrm.verb.__name__, " dlg title ", dlgFrm.params.title[0])
+          # print("Update x", int(dlgFrm.vars.XAngle[0]), " y", int(dlgFrm.vars.YAngle[0]), " z", int(dlgFrm.vars.ZAngle[0]))
+
+          # inputs don't update parent variables until "OK" - which makes "Cancel" work correctly
+          # so have to pull out the temp values from the input controls
+          # Do some hackery to get to the pop up dialog's inputs' local variables
+          # print("dlgFrm", dlgFrm.params.title)
+          try:
+              x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])
+          except:
+              x = 0.
+          try:
+              y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])
+          except:
+              y = 0.
+          try:
+              z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])
+          except:
+              z = 0.
+          frm.vars.target[0].vars.gObj[0].setHpr(x, y, z)
+
+          WyeCore.World.dlightPath.setHpr(x, y, z)
+
+  class ResetCallback:
+      mode = Wye.mode.SINGLE_CYCLE
+      dataType = Wye.dType.STRING
+      paramDescr = ()
+      varDescr = (("count", Wye.dType.INTEGER, 0),)
+
+      def start(stack):
+          return Wye.codeFrame(TestLib.ResetCallback, stack)
+
+      def run(frame):
+          frm = frame.eventData[1]
+          ctlFrm = frame.eventData[2]
+          dlgFrm = ctlFrm.parentDlg
+
+          x = Wye.startLightAngle[0]
+          y = Wye.startLightAngle[1]
+          z = Wye.startLightAngle[2]
+
+          dlgFrm.params.inputs[0][0][0].vars.currVal[0] = x
+          dlgFrm.params.inputs[0][1][0].vars.currVal[0] = y
+          dlgFrm.params.inputs[0][2][0].vars.currVal[0] = z
+
+          dlgFrm.params.inputs[0][0][0].verb.update(dlgFrm.params.inputs[0][0][0])
+          dlgFrm.params.inputs[0][1][0].verb.update(dlgFrm.params.inputs[0][1][0])
+          dlgFrm.params.inputs[0][2][0].verb.update(dlgFrm.params.inputs[0][2][0])
+
+          frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))
+
+          WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))
+
   class MyTestVerb:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = True

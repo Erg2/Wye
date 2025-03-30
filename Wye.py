@@ -1,12 +1,13 @@
-
 # Wye globals
 
 # static Wye object (not instantiated)
 # contains constants (static classes)
 #    structures (regular classes)
 #    and factories (lib, obj)
-
-import copy
+#
+# license: We don't need no stinking license
+# This is prototype code.  If it blows up your nuclear reactor, that is your dumb fault.
+#
 
 # Wye container class that holds Wye classes
 class Wye:

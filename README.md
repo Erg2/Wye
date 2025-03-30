@@ -2,8 +2,17 @@
 Wye in-3d character implementation language
 (currently only works on monitor, not in HMD)
 
-# Engine requires at least one library and start object on command line.  Ex:
-python WyeMain.py -l TestLib.py -o TestLib.TestLib.testObj -o TestLib.TestLib.testObj2
+# prebuilt exe
+The prebuilt Windows .exe runs the default library TestLib.py.  
+User defined libraries are in the UserLibraries subdirectory in the same location as the .EXE
+See the example library zip file
 
-# PyInstaller dist - works
+# Running from Python
+python WyeMain.py
+WyeMain accepts user defined libraries on the command line as: -l yourlib.py
+If there is a library on the command line, the default TestLib.py will not be loaded.
+
+# PyInstaller distribution build
+Tested for Windows 11
+
 pyinstaller Wye_V0.9.exe.spec

@@ -46,54 +46,64 @@ class WyeUIUtilsLib(Wye.staticObj):
     # Helper functions for building dialogs
 
     # put up independently running popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
-    def doPopUpDialog(titleText, mainText, headerColor=Wye.color.HEADER_COLOR, color=Wye.color.NORMAL_COLOR, formatLst=["NO_CANCEL"],
-                           ):
+    def doPopUpDialog(titleText, mainText, headerColor=Wye.color.HEADER_COLOR, color=Wye.color.NORMAL_COLOR,
+                      formatLst=["NO_CANCEL"], parent=None, position=(0,0,0), okOnCr=True):
         global base
         global render
-        #print("doPopUpDialog title", titleText, " text", mainText, " color", color)
+        #print("doPopUpDialog title", titleText, " text", mainText, " color", color, " parent", parent)
 
-        # position in front of other dialogs
-        point = NodePath("point")
-        point.reparentTo(render)
-        point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
-        pos = point.getPos()
-        point.removeNode()
+        if parent:
+            pos = position
+        else:
+            # position in front of other dialogs
+            point = NodePath("point")
+            point.reparentTo(render)
+            point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
+            pos = point.getPos()
+            point.removeNode()
 
-        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=None, position=pos, formatLst=formatLst, headerColor=headerColor)
+        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=parent, position=pos, formatLst=formatLst, headerColor=headerColor, okOnCr=okOnCr)
         WyeUIUtilsLib.doInputLabel(dlgFrm, mainText, color)
         dlgFrm.systemObject = True      # Show warnings even if system paused
         dlgFrm.verb.run(dlgFrm)
         WyeCore.World.startActiveFrame(dlgFrm)
-#        dlgFrm.vars.bgndGObj[0].setColor(color)
+
 
     # create and return popup dialog box with given color (see Wye.color.NORMAL_COLOR, WARNING_COLOR, ERROR_COLOR
     def doPopUpDialogAsync(frame, titleText, mainText, headerColor=Wye.color.HEADER_COLOR, color=Wye.color.NORMAL_COLOR,
-                           formatLst=["NO_CANCEL",]):
+                           formatLst=["NO_CANCEL",], parent=None, position=(0,0,0), okOnCr=True):
         global base
         global render
         # print("doPopUpDialog title", titleText, " text", mainText, " color", color)
 
-        # position in front of other dialogs
-        point = NodePath("point")
-        point.reparentTo(render)
-        point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
-        pos = point.getPos()
-        point.removeNode()
+        if parent:
+            pos = position
+        else:
+            # position in front of other dialogs
+            point = NodePath("point")
+            point.reparentTo(render)
+            point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
+            pos = point.getPos()
+            point.removeNode()
 
-        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=None, position=pos, formatLst=formatLst, headerColor=headerColor)
+        dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=parent, position=pos, formatLst=formatLst, headerColor=headerColor, okOnCr=okOnCr)
         WyeUIUtilsLib.doInputLabel(dlgFrm, mainText, color=color)
         dlgFrm.systemObject = True  # Show warnings even if system paused
-        dlgFrm.verb.run(dlgFrm)
+        if parent:
+            dlgFrm.SP = frame.SP
+        #dlgFrm.verb.run(dlgFrm)
         return dlgFrm
 
     # create and return file save/overwrite dialog box
-    def doAskSaveAsFileAsync(frame, parent, fileName, position=(0,0,0), fileType=".py", title="Save As", retValRef=[Wye.status.CONTINUE]):
+    def doAskSaveAsFileAsync(frame, parent, fileName, position=(0,0,0), fileType=".py", title="Save As",
+                             retValRef=[Wye.status.CONTINUE], okOnCr=True):
         askSaveFrm = WyeUILib.AskSaveAsFile.start(frame.SP)
         askSaveFrm.params.retVal = retValRef
         askSaveFrm.params.fileName = [fileName]
         askSaveFrm.params.fileType = [fileType]
         askSaveFrm.params.title = [title]
         askSaveFrm.params.parent = [parent]
+        askSaveFrm.params.okOnCr = [okOnCr]
         if not parent and position == (0,0,0):
             point = NodePath("point")
             point.reparentTo(render)
@@ -104,7 +114,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         return askSaveFrm
 
     # dialog.  If no position supplied, puts in front of viewpoint
-    def doDialog(title, parent=None, position=None, formatLst=[""], headerColor=Wye.color.HEADER_COLOR):
+    def doDialog(title, parent=None, position=None, formatLst=[""], headerColor=Wye.color.HEADER_COLOR, okOnCr=False):
         if parent:
             stack = parent.SP
         else:
@@ -122,6 +132,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         dlgFrm.params.parent = [parent]
         dlgFrm.params.format = [formatLst]
         dlgFrm.params.headerColor = [headerColor]
+        dlgFrm.params.okOnCr = [okOnCr]
         return dlgFrm
 
     def doInputLabel(dlgFrm, label, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT,

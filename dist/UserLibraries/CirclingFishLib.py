@@ -37,7 +37,7 @@ class CirclingFishLib:
             ("Label","DelayOneFrame"),
             ("Code","WyeCore.libs.WyeLib.setObjMaterialColor.setColor(frame.vars.gObj[0], (1,0,0,1))"),
             ("Label","DelayOneFrame"),
-            ("Code","#< your code goes here>"))),
+            ("Code","#<your code here>"))),
         ("loaderStream",
           (
             ("Var=","frame.vars.cleanUpObjs[0] = []"),
@@ -122,7 +122,7 @@ frame.vars.posAngle[0] = angle
             ("Label","DelayOneFrame"),
             ("Code","WyeCore.libs.WyeLib.setObjMaterialColor.setColor(frame.vars.gObj[0], (1,0,0,1))"),
             ("Label","DelayOneFrame"),
-            ("Code","#< your code goes here>"))),
+            ("Code","#<your code here>"))),
         ("loaderStream",
           (
             ("Var=","frame.vars.cleanUpObjs[0] = []"),
@@ -207,7 +207,7 @@ frame.vars.posAngle[0] = angle
             ("Label","DelayOneFrame"),
             ("Code","WyeCore.libs.WyeLib.setObjMaterialColor.setColor(frame.vars.gObj[0], (0,0,1,1))"),
             ("Label","DelayOneFrame"),
-            ("Code","#< your code goes here>"))),
+            ("Code","#<your code here>"))),
         ("loaderStream",
           (
             ("Var=","frame.vars.cleanUpObjs[0] = []"),
@@ -292,7 +292,7 @@ frame.vars.posAngle[0] = angle
             ("Label","DelayOneFrame"),
             ("Code","WyeCore.libs.WyeLib.setObjMaterialColor.setColor(frame.vars.gObj[0], (1,0,1,1))"),
             ("Label","DelayOneFrame"),
-            ("Code","#< your code goes here>"))),
+            ("Code","#<your code here>"))),
         ("loaderStream",
           (
             ("Var=","frame.vars.cleanUpObjs[0] = []"),

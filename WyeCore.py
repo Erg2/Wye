@@ -1,9 +1,10 @@
 # Wye Core
 # static single class lib
+
 #
 # license: We don't need no stinking license
+# This is prototype code.  If it blows up your nuclear reactor, that is your dumb fault.
 #
-from direct.showbase.MessengerGlobal import messenger
 
 from Wye import Wye
 import inspect      # for debugging
@@ -16,6 +17,7 @@ import math
 import pygame.midi
 import time
 import traceback
+from importlib.machinery import SourceFileLoader    # to load library from file
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -103,6 +105,8 @@ class WyeCore(Wye.staticObj):
     lastIsNothingToRun = False  # Debug: used to print "nothing to do" only on transition to nothing to do
 
     versionText = None
+
+    libLoadList = ["WyeLib.py", "WyeUILib.py", "WyeUIUtilsLib.py", "Wye3dObjsLib.py"]  # list of lib files to load on start.  libList on cmd line added to it
 
     class libs:
         pass
@@ -252,7 +256,7 @@ class WyeCore(Wye.staticObj):
         pasteMenu = None            # no pasteMenu running
         objEditor = None            # editor of Wye objects
         mainMenu = None             # no main menu currently being displayed
-        cutPasteManager = None       # cut/paste manager goes here
+        copyPasteManager = None       # cut/paste manager goes here
         mouseCallbacks = []         # any function wanting mouse events
                                     #   Control seems to jam mouse events,
                                     #   (neither mouse nor control-mouse gets called)
@@ -301,14 +305,27 @@ class WyeCore(Wye.staticObj):
                 # print("worldRunner: World Init")
                 WyeCore.worldInitialized = True  # Only do this once
 
-                # window size
-                xSize = base.pipe.getDisplayWidth()
-                ySize = base.pipe.getDisplayHeight()
-                props = WindowProperties()
-                props.setSize(xSize, ySize-100)
-                props.setOrigin(1,50)
-                #props.setFixedSize(1)
-                base.win.requestProperties(props)
+                # import libraries
+                for libFile in WyeCore.libLoadList:
+                    # print("Load lib '", libFile, "'")
+                    libName = os.path.splitext(os.path.basename(libFile))[0]
+                    # print("Load ", libName)
+
+                    # path = libFile
+                    path = WyeCore.Utils.resourcePath(libFile)[2:]
+                    # print("Load library '" + path + "'")
+                    try:
+                        libModule = SourceFileLoader(libName, path).load_module()
+                        # print("libModule ", libModule)
+                        libClass = getattr(libModule, libName)
+                        # print("add libClass", libClass, " to libList")
+                        WyeCore.World.libList.append(libClass)
+                        # print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
+                    except:
+                        #    pass    # if fail to load module, keep going
+                        print("Failed to load class ", libName, " From file ", path)
+                        ex = sys.exception()
+                        traceback.print_exception(ex)
 
                 # Lighting
                 WyeCore.World.dlight = DirectionalLight('dlight')
@@ -325,14 +342,14 @@ class WyeCore(Wye.staticObj):
                 base.render.setFog(myFog)
 
                 ####### Test 3d text
-
+#
                 text = TextNode('node name')
                 #text.setWordwrap(7.0)
                 text.setText("Welcome to\nWye " + Wye.version)
                 text.setTextColor(1, 1, 1, 1)
                 text.setAlign(TextNode.ACenter)
                 # text.setFrameAsMargin(0.2, 0.2, 0.1, 0.1)
-
+#
                 text.setCardColor(0, 0, 0, 1)
                 text.setCardAsMargin(.1, .2, .1, .1)  # extend beyond edge of text (-x, +x, -y, +y)
                 text.setCardDecal(True)
@@ -421,7 +438,7 @@ class WyeCore(Wye.staticObj):
                 WyeCore.World.objEditor = WyeCore.libs.WyeUILib.ObjEditCtl()
 
                 # set up cut/paste manager
-                WyeCore.World.cutPasteManager = WyeCore.libs.WyeUILib.CutPasteManager()
+                WyeCore.World.copyPasteManager = WyeCore.libs.WyeUILib.CopyPasteManager()
 
                 # WyeCore.picker.makePickable(_3dText)
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
@@ -1005,9 +1022,9 @@ class WyeCore(Wye.staticObj):
 
         def userLibPath():
             if getattr(sys, 'frozen', False):
-                path = os.path.dirname(sys.executable)
+                path = os.path.dirname(sys.executable) + "/UserLibraries/"
             elif __file__:
-                path = os.path.dirname(__file__)
+                path = os.path.dirname(__file__) + "/UserLibraries/"
 
             path = path.replace("\\","/")
 

@@ -4,12 +4,11 @@
 
 from Wye import Wye
 from WyeCore import WyeCore
-#import inspect      # for debugging
 from panda3d.core import *
 from panda3d.core import LVector3f
 import traceback
 import math
-import sys, os
+import os
 from importlib.machinery import SourceFileLoader    # to load library from file
 from functools import partial
 from direct.showbase.DirectObject import DirectObject
@@ -31,7 +30,7 @@ class WyeUILib(Wye.staticObj):
 
     # instantiated class to manage cut-paste list
     # todo - rethink this as std Wye object
-    class CutPasteManager:
+    class CopyPasteManager:
         def __init__(self):
             self.cutList = []   # cut data goes here
             self.maxLen = 10    # max number of cutList entries
@@ -44,7 +43,7 @@ class WyeUILib(Wye.staticObj):
                 self.cutList.pop(0)
             self.cutList.append(rec)
 
-            #print("CutPasteManager: added", rec, "\n  to", self.cutList)
+            #print("CopyPasteManager: added", rec, "\n  to", self.cutList)
             self.show()
             # There are sequencing issues setting background of row first time - do this way, or do some debugging...
             if len(self.cutList) > 1:
@@ -54,17 +53,17 @@ class WyeUILib(Wye.staticObj):
 
         def setSelected(self, row):
             if row in self.cutList:
-                #print("CutPasteManager set selected row", row)
+                #print("CopyPasteManager set selected row", row)
                 self.selectedRow = row
 
                 if self.displayObj:
                     ix = self.cutList.index(row)
-                    #print("CutPasteManager setSelected: highlight row", ix, " out of ", len(self.cutList), " cutList rows")
+                    #print("CopyPasteManager setSelected: highlight row", ix, " out of ", len(self.cutList), " cutList rows")
                     #print("   display rows:", len(self.displayObj.vars.dlgFrm[0].params.inputs[0]))
                     self.displayObj.verb.highlightRow(self.displayObj, ix)
 
             else:
-                print("CutPasteManager setSelected ERROR: selected row not in cutList")
+                print("CopyPasteManager setSelected ERROR: selected row not in cutList")
 
 
         def getSelected(self):
@@ -72,16 +71,20 @@ class WyeUILib(Wye.staticObj):
 
         def show(self):
             if self.displayObj:
-                #print("CutPasteManager dialog already showing, bring to front and update")
+                print("CopyPasteManager dialog already showing, bring to front and update")
                 self.displayObj.verb.redisplay(self.displayObj)
-                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, (2, 7, 0))
+                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
                 self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
             else:
-                #print("CutPasteManager: open dialog")
-                self.displayObj = WyeCore.World.startActiveObject(WyeUILib.CutPasteManager.CutPasteDisplay)
+                print("CopyPasteManager: open dialog")
+                self.displayObj = WyeCore.World.startActiveObject(WyeUILib.CopyPasteManager.CutPasteDisplay)
                 # todo - rethink this when cvt cut/paste to Wye obj
                 # Need object graphics to exist 'cause need to set highlight
+
                 self.displayObj.verb.run(self.displayObj)
+                self.displayObj.vars.dlgFrm[0].verb.run(self.displayObj.vars.dlgFrm[0])
+                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
+                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
 
         class CutPasteDisplay:
             mode = Wye.mode.MULTI_CYCLE
@@ -98,7 +101,7 @@ class WyeUILib(Wye.staticObj):
 
             def start(stack):
                 #print("CutPasteDisplay: Start")
-                f = Wye.codeFrame(WyeUILib.CutPasteManager.CutPasteDisplay, stack)  # not stopped by breakAll or debugger debugger
+                f = Wye.codeFrame(WyeUILib.CopyPasteManager.CutPasteDisplay, stack)  # not stopped by breakAll or debugger debugger
                 f.systemObject = True
                 f.vars.rows[0] = []
                 return f
@@ -115,7 +118,7 @@ class WyeUILib(Wye.staticObj):
                         pos = point.getPos()
                         point.removeNode()
                         dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Copy/Paste List", position=pos, formatLst=["NO_CANCEL"])
-                        WyeUILib.CutPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
+                        WyeUILib.CopyPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
 
                         frame.vars.dlgFrm[0] = dlgFrm
 
@@ -128,7 +131,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                         frame.status = Wye.status.SUCCESS  # done
                         WyeCore.World.stopActiveObject(frame)
-                        WyeCore.World.cutPasteManager.displayObj = None
+                        WyeCore.World.copyPasteManager.displayObj = None
 
             def highlightRow(frame, ix):
                 #print("CutPastDisplay highlightRow: old row", frame.vars.currRowIx[0])
@@ -147,18 +150,18 @@ class WyeUILib(Wye.staticObj):
                     print("CutPasteDisplay highlightRow", ix," out of range 0.."+str(len(frame.vars.dlgFrm[0].params.inputs[0])))
 
             def displayRows(frame, dlgFrm):
-                #print("CutPasteDisplay displayRows: display", len(WyeCore.World.cutPasteManager.cutList), " rows")
+                #print("CutPasteDisplay displayRows: display", len(WyeCore.World.copyPasteManager.cutList), " rows")
                 ix = 0
-                for row in WyeCore.World.cutPasteManager.cutList:
+                for row in WyeCore.World.copyPasteManager.cutList:
                     # todo - pretty print text
                     if ix == frame.vars.currRowIx[0]:
                         btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, row[0]+": "+str(row[1]),
-                                                                       WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
+                                                                       WyeUILib.CopyPasteManager.CutPasteDisplay.RowCallback,
                                                                        [row], backgroundColor=Wye.color.SELECTED_BG_COLOR)
                         #print("CutPastDisplay displayRows: highlight", ix)
                     else:
                         btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, row[0]+": "+str(row[1]),
-                                                                   WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback,
+                                                                   WyeUILib.CopyPasteManager.CutPasteDisplay.RowCallback,
                                                                    [row], backgroundColor=Wye.color.TRANSPARENT)
                     frame.vars.rows[0].append(btn)
                     ix += 1
@@ -180,7 +183,7 @@ class WyeUILib(Wye.staticObj):
                 frame.vars.rows[0].clear()
 
                 # make new rows
-                WyeUILib.CutPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
+                WyeUILib.CopyPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
 
                 # generate display elements for rows (correct pos calc by redisplay, below)
                 pos = [0, 0, 0]
@@ -200,7 +203,7 @@ class WyeUILib(Wye.staticObj):
 
                 def start(stack):
                     # print("RowCallback started")
-                    return Wye.codeFrame(WyeUILib.CutPasteManager.CutPasteDisplay.RowCallback, stack)
+                    return Wye.codeFrame(WyeUILib.CopyPasteManager.CutPasteDisplay.RowCallback, stack)
 
                 def run(frame):
                     data = frame.eventData
@@ -209,7 +212,7 @@ class WyeUILib(Wye.staticObj):
                     #parentFrm = data[1][1]
                     #editFrm = data[1][2]
 
-                    WyeCore.World.cutPasteManager.setSelected(row)
+                    WyeCore.World.copyPasteManager.setSelected(row)
 
     # note: this is an instantiated class
     # This does more than camera control, it also triggers debugger and editor
@@ -672,16 +675,20 @@ class WyeUILib(Wye.staticObj):
                         key = key.upper()
                     # pass key to next lowest (?) in every dialog hierarchy
                     # key will be handled by the one that currently has focus
-                    for hier in WyeUILib.FocusManager._dialogHierarchies:
-                        if len(hier) > 0:
-                            frm = hier[-1]
-                            #print("FocusManager doKey", frm, " ,", key)
-                            if hasattr(frm, "parentDlg") and not frm.parentDlg is None:
-                                if frm.parentDlg.verb.doKey(frm, key):
-                                    return True
-                            else:
-                                if frm.verb.doKey(frm, key):
-                                    return True
+                    if WyeUILib.FocusManager._activeDialog:
+                        if WyeUILib.FocusManager._activeDialog.verb.doKey(WyeUILib.FocusManager._activeDialog, key):
+                            return True
+                    else:
+                        for hier in WyeUILib.FocusManager._dialogHierarchies:
+                            if len(hier) > 0:
+                                frm = hier[-1]
+                                #print("FocusManager doKey", frm, " ,", key)
+                                if hasattr(frm, "parentDlg") and not frm.parentDlg is None:
+                                    if frm.parentDlg.verb.doKey(frm, key):
+                                        return True
+                                else:
+                                    if frm.verb.doKey(frm, key):
+                                        return True
 
                     return False # if get this far, didn't use the character
 
@@ -1784,6 +1791,10 @@ class WyeUILib(Wye.staticObj):
                     frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
                     frame.vars.dragObj[0] = dlgHeader        # save graphic for parenting sub dialogs
 
+                    # if only OK or only Cancel -> support <cr> to exit
+                    if "NO_OK" in frame.params.format[0] or "NO_CANCEL" in frame.params.format[0]:
+                        frame.params.okOnCr[0] = True
+
                     # if big dialog, put ok/can at top too
                     nInputs = len(frame.params.inputs[0])
                     if nInputs > 4 or ("FORCE_TOP_CTLS" in frame.params.format[0]):
@@ -2012,8 +2023,9 @@ class WyeUILib(Wye.staticObj):
             frame.vars.bgndGObj[0].removeNode()
             frame.vars.outlineGObj[0].removeNode()
             frame.verb.genBackground(frame)
-            frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
-            frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
+            # figure out how to tell if we are the currently selected dlg
+            #frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
+            #frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
             frame.doingDisplay = False
 
         def doCallback(frame, inFrm, tag, doUserCallback=False):
@@ -2582,7 +2594,8 @@ class WyeUILib(Wye.staticObj):
                       ("fileType", Wye.dType.STRING, Wye.access.REFERENCE, ".py"),
                       ("title", Wye.dType.STRING, Wye.access.REFERENCE, "Save As"),
                       ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE, None),
-                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, (0,0,0))
+                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, (0,0,0)),
+                      ("okOnCr", Wye.dType.BOOL, Wye.access.REFERENCE, False)
                       )
         varDescr = (("newFileName", Wye.dType.STRING, None),
                     ("newFile", Wye.dType.BOOL, True),
@@ -2602,13 +2615,17 @@ class WyeUILib(Wye.staticObj):
                 case 0:
                     #print("AskSaveAsFile run case 0: fileName", frame.params.fileName[0])
                     filePath = frame.params.fileName[0].strip()
+
                     fileName, ext = os.path.splitext(os.path.basename(filePath))
                     #print("AskSaveAsFile: fileName", fileName, " ext", ext)
-
+                    path = os.path.dirname(filePath)
                     # generate unique name
-                    ii = 1
-                    while os.path.exists(fileName + "_" + str(ii)+ frame.params.fileType[0]):
+                    ii = 0
+                    testFile = filePath
+                    while os.path.exists(testFile):
+                        #print("AskSaveAsFile filename ", fileName, " exists.  Try next")
                         ii += 1
+                        testFile = path + "/" + fileName + "_" + str(ii)+ frame.params.fileType[0]
                     frame.vars.newFileName[0] = fileName + "_" + str(ii) + frame.params.fileType[0]
 
                     if not frame.params.parent[0]:
@@ -2621,7 +2638,7 @@ class WyeUILib(Wye.staticObj):
                     else:
                         pos = frame.params.position[0]
 
-                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog(frame.params.title[0], parent=frame.params.parent[0], position=pos)
+                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog(frame.params.title[0], parent=frame.params.parent[0], position=pos, okOnCr=frame.params.okOnCr[0])
                     WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Save  New", frame.vars.newFile, radioGroup="newRad")
                     WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "File Name:", frame.vars.newFileName, layout=Wye.layout.ADD_RIGHT)
                     WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Overwrite "+frame.params.fileName[0], [False], radioGroup="newRad")
@@ -2660,7 +2677,9 @@ class WyeUILib(Wye.staticObj):
         paramDescr = ()
         varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
                     ("dlgFrm", Wye.dType.OBJECT, None),
-                    ("listCode", Wye.dType.BOOL, False)
+                    ("listCode", Wye.dType.BOOL, False),
+                    ("scrnSizeFrm", Wye.dType.OBJECT, None), 
+                    ("exitBtnFrm", Wye.dType.OBJECT, None),
                     )
 
         # global list of libs being edited
@@ -2689,7 +2708,7 @@ class WyeUILib(Wye.staticObj):
                     frame.vars.dlgFrm[0] = dlgFrm
 
                     # Help
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Wye Help", WyeUILib.MainMenuDialog.HelpCallback)
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Wye Help", WyeUILib.MainMenuDialog.HelpCallback)
 
                     # Settings
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Settings", Wye.color.SUBHD_COLOR)
@@ -2705,57 +2724,35 @@ class WyeUILib(Wye.staticObj):
                     sndChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  3D Sound On", [Wye.soundOn], WyeUILib.MainMenuDialog.SoundCheckCallback)
                     sndChkFrm.params.optData = [sndChkFrm]
 
+                    # screen size
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  Set Window Size", color=Wye.color.NORMAL_COLOR)
+                    frame.vars.scrnSizeFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "    Full Screen", [0],
+                                       WyeUILib.MainMenuDialog.SetScrnCallback, (frame), radioGroup="winRad")
+                    WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "    Maximize Window", [1],
+                                       WyeUILib.MainMenuDialog.SetScrnCallback, (frame), radioGroup="winRad")
+                    WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "    Small Window", [0],
+                                        WyeUILib.MainMenuDialog.SetScrnCallback, (frame), radioGroup="winRad")
+
                     #
                     # Test
                     #
 
-                    testLblFrm = WyeUILib.InputLabel.start(dlgFrm.SP)
-                    testLblFrm.params.frame = [None]  # return value
-                    testLblFrm.params.parent = [None]
-                    testLblFrm.params.label = ["Test"]
-                    testLblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    WyeUILib.InputLabel.run(testLblFrm)
-                    dlgFrm.params.inputs[0].append([testLblFrm])
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Test", color=Wye.color.SUBHD_COLOR)
 
-                    obj2ChkFrm = WyeUILib.InputCheckbox.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([obj2ChkFrm])
-                    obj2ChkFrm.params.frame = [None]
-                    obj2ChkFrm.params.parent = [None]
-                    obj2ChkFrm.params.value = [True]
-                    obj2ChkFrm.params.label = ["  Show Test Fish"]
-                    obj2ChkFrm.params.callback = [WyeUILib.MainMenuDialog.AngleFishCheckCallback]  # button callback
+                    obj2ChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Show Test Fish", [True],
+                                                                     WyeUILib.MainMenuDialog.AngleFishCheckCallback)
                     obj2ChkFrm.params.optData = [obj2ChkFrm]
-                    obj2ChkFrm.verb.run(obj2ChkFrm)
 
-                    btnFrm = WyeUILib.InputButton.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([btnFrm])
-                    btnFrm.params.frame = [None]
-                    btnFrm.params.parent = [None]
-                    btnFrm.params.label = ["  Test Button"]
-                    btnFrm.params.callback = [WyeUILib.MainMenuDialog.TestButtonCallback]  # button callback
-                    #btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, verb)]  # button row, dialog frame
-                    WyeUILib.InputButton.run(btnFrm)
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Test Button",
+                                                                       WyeUILib.MainMenuDialog.TestButtonCallback)
 
-                    btnFrm = WyeUILib.InputButton.start(dlgFrm.SP)
-                    dlgFrm.params.inputs[0].append([btnFrm])
-                    btnFrm.params.frame = [None]
-                    btnFrm.params.parent = [None]
-                    btnFrm.params.label = ["  Test Create Lib"]
-                    btnFrm.params.callback = [WyeUILib.MainMenuDialog.TestCreateLibCallback]  # button callback
-                    btnFrm.params.optData = [(frame,)]  # button row, dialog frame
-                    WyeUILib.InputButton.run(btnFrm)
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Test Create Lib",
+                                                             WyeUILib.MainMenuDialog.TestCreateLibCallback, (frame,))
 
                     WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "   Display Code", frame.vars.listCode, layout=Wye.layout.ADD_RIGHT)
 
                     # midi test
-                    midFrm = WyeUILib.InputButton.start(dlgFrm.SP)
-                    midFrm.params.frame = [None]
-                    midFrm.params.parent = [None]
-                    midFrm.params.label = ["  Test Midi: "]
-                    midFrm.params.callback = [WyeUILib.MainMenuDialog.TestMidiCallback]  # button callback
-                    # opt data and run below, after ins and note frames created
-                    dlgFrm.params.inputs[0].append([midFrm])
-
+                    midFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Test Midi: ", WyeUILib.MainMenuDialog.TestMidiCallback)
                     midInsFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Instrument:", [64], layout=Wye.layout.ADD_RIGHT)
                     midNoteFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Note:", [64], layout=Wye.layout.ADD_RIGHT)
                     midVolFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Vol:", [64], layout=Wye.layout.ADD_RIGHT)
@@ -2763,13 +2760,12 @@ class WyeUILib(Wye.staticObj):
 
                     # fill in midFrm callback data now that ins, note frames created
                     midFrm.params.optData = [(midInsFrm, midNoteFrm, midVolFrm, midLenFrm)]  # button row, dialog frame
-                    midFrm.verb.run(midFrm)
 
 
                     #
                     # system debug
                     #
-                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Internal Diagnostics")
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Internal Diagnostics", color=Wye.color.SUBHD_COLOR)
 
 
                     verboseChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Toggle verbose system message display", [0],
@@ -2785,8 +2781,13 @@ class WyeUILib(Wye.staticObj):
                     devChkFrm.params.optData = [devChkFrm]
 
 
-                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
+                    # exit
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Exit", color=Wye.color.SUBHD_COLOR)
+                    frame.vars.exitBtnFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Exit Wye",  WyeUILib.MainMenuDialog.ExitCallback)
+                    frame.vars.exitBtnFrm[0].params.optData = [(frame.vars.exitBtnFrm[0],dlgFrm)]
 
+
+                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
                     frame.PC += 1  # on return from dialog, run next case
 
                 case 1:
@@ -2814,7 +2815,7 @@ class WyeUILib(Wye.staticObj):
                 helpTxt = "Wye Alpha Release V"+Wye.version+" Help\n"
                 helpTxt += '''
 This is an ** ALPHA TEST ** release.  
-Expect it to be as easy to use and reliable as a MS 1.0 release.  You have been warned.
+Expect it to be as reliable and easy to use as an MS 1.0 product release.  You have been warned.
 
 Move:
     Mouse button 1 down+drag moves fwd/back, turns
@@ -2831,16 +2832,21 @@ Select things:
     Shift-Alt-MB1 to bring up the master debug dialog showing all running objects in the system
 
 Dialogs:
-    You can drag a dialog by MB1 down+drag on any gray part and dragging.  
-    Shift-MB1 down+drag up/down will bring the dialog closer/push it farther away
+    You can drag a dialog by MB1 down on any gray part and dragging.  
+    Shift-MB1 down then drag up/down will move the dialog closer/farther away
     Dragging a child dialog brings its parent along.  Ctl-drag will move the child by itself.
     
-    Text selection can be a bit flaky.  The center of characters like "C" and "O" is most reliable
-    There is no select/copy/paste
-    The mouse just selects text boxes.  You have to move around in text inputs with the arrow keys, 
+    Clicking on text can be a bit hit or miss.  The center of characters like "C" and "O" is most reliable
+    
+    There is no select/copy/paste of text.
+    The text cursor always starts at the beginning of the text box.  You have to move with the arrow keys, 
     home/end keys, and ctl-arrow keys.
-    Number boxes also accept up/down arrow and scroll-wheel input.  ctl-up/down to go by 10's.
-         
+    
+    Number boxes increment/decrement on up/down arrow and scroll-wheel input.  ctl-up/down to go by 10's.
+    
+    Cancel (or the Escape key) will close a dialog without saving.
+    Ok (or Enter) will close any dialog that has just an OK button. (information/warning dialogs)
+    
 Overview:
     Wye will be an IDE for interactive VR characters.
     This Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
@@ -2864,8 +2870,85 @@ Overview:
     See the release notes for more details on what you can do in this release. 
 '''
 
-                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt)
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "OK_ONLY"])
 
+
+        # turn sound on/off
+        class ExitCallback:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("count", Wye.dType.INTEGER, 0),)
+
+            def start(stack):
+                # print("        class ExitCallback: start")
+                f = Wye.codeFrame(WyeUILib.MainMenuDialog.ExitCallback, stack)
+                f.systemObject = True
+                return f
+
+            def run(frame):
+                data = frame.eventData
+                #print("ExitCallback data", data)
+                exitBtnFrm = data[1][0]
+                dlgFrm = data[1][1]
+
+                #print("ExitCallback: dlgFrm", dlgFrm.verb.__name__, " ", dlgFrm.params.title[0])
+
+                match (frame.PC):
+                    case 0:  # Delete library op
+                        # delete verb ok?
+                        # print("EditLibLineCallback: case 0: delete verb", verb.__name__, " from", lib.__name__)
+                        pos = (1, -.5, 2 + exitBtnFrm.vars.position[0][2])
+                        delOkFrm = WyeCore.libs.WyeUIUtilsLib.doPopUpDialogAsync(frame, "Exit", "Exit Wye?",
+                                                                                 formatLst=[""], parent=dlgFrm, position=pos, okOnCr=True)
+                        frame.SP.append(delOkFrm)  # push dialog so it runs next cycle
+                        frame.PC += 1  # on return from dialog, run del ok case
+
+                    case 1:  # return from Del Ok? dialog
+                        delOkFrm = frame.SP.pop()
+                        #print("delOkFrm retVal", delOkFrm.params.retVal[0])
+                        frame.status = Wye.status.SUCCESS
+                        if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
+                            exit(1)
+
+
+
+        # turn sound on/off
+        class SetScrnCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("SetScrnCallback started")
+                return Wye.codeFrame(WyeUILib.MainMenuDialog.SetScrnCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                mainMenugFrm = data[1]
+
+                ix = mainMenugFrm.vars.scrnSizeFrm[0].params.selectedRadio[0]
+
+                # screen size
+                xSize = base.pipe.getDisplayWidth()
+                ySize = base.pipe.getDisplayHeight()
+                props = WindowProperties()
+
+                # set size
+                match(ix):
+                    case 0:     # full screen
+                        props.setSize(xSize, ySize)
+                        props.setOrigin(0, 0)
+                    case 1:     # max window
+                        props.setSize(xSize, ySize - 100)
+                        props.setOrigin(1, 50)
+                    case 2:     # small window
+                        props.setSize(1200, 800)
+                        props.setOrigin(1, 50)
+
+                props.setFixedSize(1)
+                base.win.requestProperties(props)
 
 
         # turn sound on/off
@@ -2905,6 +2988,7 @@ Overview:
                 WyeCore.debugListCode = rowFrm.vars.currVal[0]
                 #("List Code On", WyeCore.debugListCode)
 
+
         # turn compile code listing
         class ListDevCodeCallback:
             mode = Wye.mode.SINGLE_CYCLE
@@ -2923,6 +3007,7 @@ Overview:
                 Wye.devPrint = rowFrm.vars.currVal[0]
                 #("List Code On", WyeCore.debugListCode)
 
+
         # show/hide version in world
         class VerCheckCallback:
             mode = Wye.mode.SINGLE_CYCLE
@@ -2933,7 +3018,6 @@ Overview:
             def start(stack):
                 # print("VerCheckCallback started")
                 return Wye.codeFrame(WyeUILib.MainMenuDialog.VerCheckCallback, stack)
-
 
             def run(frame):
                 data = frame.eventData
@@ -2955,11 +3039,10 @@ Overview:
                 # print("CopyPasteCallback started")
                 return Wye.codeFrame(WyeUILib.MainMenuDialog.CopyPasteCallback, stack)
 
-
             def run(frame):
                 data = frame.eventData
                 rowFrm = data[1]
-                WyeCore.World.cutPasteManager.show()
+                WyeCore.World.copyPasteManager.show()
 
         #
         # diagnostic callbacks
@@ -2975,7 +3058,6 @@ Overview:
             def start(stack):
                 # print("VerboseCheckCallback started")
                 return Wye.codeFrame(WyeUILib.MainMenuDialog.VerboseCheckCallback, stack)
-
 
             def run(frame):
                 data = frame.eventData
@@ -3222,7 +3304,7 @@ Overview:
                     # build dialog
 
                     # Load lib from file
-                    libPath = WyeCore.Utils.userLibPath() + "/UserLibraries/"
+                    libPath = WyeCore.Utils.userLibPath()
                     loadLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Load Library From:", WyeUILib.EditMainDialog.LoadLibCallback)
                     libFiles = [f for f in listdir(libPath) if isfile(join(libPath, f))]
                     libFileNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  User Library", [libFiles], [0],
@@ -3355,7 +3437,7 @@ Overview:
                             frame.status = Wye.status.SUCCESS
                             return
 
-                        fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/"+lib.__name__+".py"
+                        fileName = WyeCore.Utils.userLibPath()+lib.__name__+".py"
                         frame.vars.fileName[0] = fileName
 
                         # if the file alredy exists, as the user what they want to do
@@ -3434,12 +3516,14 @@ Overview:
                                     else:
                                         # ignoring generated runtime code is good.  Anything else is a problem
                                         if not verb.__name__[-3:] == "_rt":
-                                            print("WARNING: Verb", verb.__name__,
-                                              " not saved to file because it does not have all required attributes")
+                                            msg = "WARNING: Cannot save library "+lib.__name__ +" because Verb "+ verb.__name__+" does not have all required attributes"
+                                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg, Wye.color.WARNING_COLOR)
+                                            frame.status = Wye.status.SUCCESS
+                                            return
 
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
-                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
+                            fileName = WyeCore.Utils.userLibPath() + fileName
 
                         try:
                             # write the file
@@ -3513,7 +3597,7 @@ Overview:
                                     frame.status = Wye.status.SUCCESS
                                     return
 
-                                fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/"+lib.__name__+".py"
+                                fileName = WyeCore.Utils.userLibPath()+lib.__name__+".py"
                                 frame.vars.fileName[0] = fileName
 
                                 # if the file alredy exists, as the user what they want to do
@@ -3604,12 +3688,14 @@ Overview:
                                     else:
                                         # ignoring generated runtime code is good.  Anything else is a problem
                                         if not verb.__name__[-3:] == "_rt":
-                                            print("WARNING: Verb", verb.__name__,
-                                              " not saved to file because it does not have all required attributes")
+                                            msg = "WARNING: Cannot save library "+lib.__name__ +" because Verb "+ verb.__name__+" does not have all required attributes"
+                                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg, Wye.color.WARNING_COLOR)
+                                            frame.status = Wye.status.SUCCESS
+                                            return
 
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
-                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
+                            fileName = WyeCore.Utils.userLibPath() + fileName
                             #print("Prefix UserLibraries to fileName:", fileName)
 
                         try:
@@ -3661,7 +3747,7 @@ Overview:
                 parentFrm = data[1][1]
                 editFrm = data[1][2]
 
-                libFiles = [f for f in listdir(WyeCore.Utils.userLibPath() + "/UserLibraries/") if isfile(join(WyeCore.Utils.userLibPath() + "/UserLibraries/", f))]
+                libFiles = [f for f in listdir(WyeCore.Utils.userLibPath()) if isfile(join(WyeCore.Utils.userLibPath(), f))]
                 btnFrm.verb.setList(btnFrm, libFiles, 0)
 
 
@@ -3695,7 +3781,7 @@ Overview:
                         libFilePath += ".py"
 
                     # force to UserLibraries dir
-                    libPath = WyeCore.Utils.userLibPath() + "/UserLibraries"
+                    libPath = WyeCore.Utils.userLibPath()
                     libFilePath = libPath + "/" + libFilePath
 
                     # see if file exists
@@ -3705,7 +3791,7 @@ Overview:
 
                     #print("Load library '" + path + "'")
                     try:
-                        print("Load lib", libName, " from", libPath)
+                        #print("Load lib", libName, " from", libPath)
                         libModule = SourceFileLoader(libName, libFilePath).load_module()
 
                         print("loaded file", libFilePath)
@@ -3713,7 +3799,7 @@ Overview:
                         #print(" libModule", dir(libModule))
                         lib = getattr(libModule, libName)
 
-                        print("loaded lib", lib.__name__)
+                        #print("loaded lib", lib.__name__)
                         #print("Read library", lib.__name__, " from file")
                         # print("add libClass", libClass, " to libList")
                         newLib = True   # assume this is a new lib
@@ -4786,7 +4872,7 @@ Overview:
                     paramIx = 0
                     for paramTuple in tuple[1:]:
                         if paramIx < len(verb.paramDescr):
-                            prefix = "(param:" + verb.paramDescr[paramIx][0] + ") "
+                            prefix = "(param: " + verb.paramDescr[paramIx][0] + ") "
                         else:
                             prefix = "(param: <no parameter>) "
                         WyeUILib.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, dlgFrm, rowLst, prefix)
@@ -5233,7 +5319,7 @@ Overview:
 
                     # paste line
                     case 1:
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         #print("paste param before: cutData", cutData)
                         if not cutData or cutData[0] != "Parameter":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
@@ -5350,7 +5436,7 @@ Overview:
                         ix = editVerbFrm.vars.newParamDescr[0].index(param)
                         copyRec = ("Parameter", (Wye.listCopy(editVerbFrm.vars.newParamDescr[0][ix])))
                         #print("EditParamLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
 
                     # cut Line
@@ -5359,7 +5445,7 @@ Overview:
                         ix = editVerbFrm.vars.newParamDescr[0].index(param)
                         copyRec = ("Parameter", (Wye.listCopy(editVerbFrm.vars.newParamDescr[0][ix])))
                         #print("EditParamLineCallback cut: copyRec", copyRec)
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
                         # find row in dlg
                         rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
@@ -5388,7 +5474,7 @@ Overview:
 
                     # paste line before
                     case 4:
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         #print("paste param before: cutData", cutData)
                         if not cutData or cutData[0] != "Parameter":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
@@ -5531,7 +5617,7 @@ Overview:
 
                     # paste first line
                     case 1:
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         #print("paste var before: cutData", cutData)
                         if not cutData or cutData[0] != "Variable":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
@@ -5649,7 +5735,7 @@ Overview:
                         # copy var descr
                         ix = editVerbFrm.vars.newVarDescr[0].index(var)
                         copyRec = ("Variable", (Wye.listCopy(editVerbFrm.vars.newVarDescr[0][ix])))
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
 
                 # cut Line
@@ -5660,7 +5746,7 @@ Overview:
                         # copy var descr
                         ix = editVerbFrm.vars.newVarDescr[0].index(var)
                         copyRec = ("Variable", (Wye.listCopy(editVerbFrm.vars.newVarDescr[0][ix])))
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
                         # find row in dlg
                         rIx = WyeCore.Utils.refListFind(parentFrm.params.inputs[0], editLnFrm)
@@ -5693,7 +5779,7 @@ Overview:
                         #WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Not Implemented", "Not implemented yet", Wye.color.WARNING_COLOR)
                         #pass
 
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         print("paste param before: cutData", cutData)
                         if not cutData or cutData[0] != "Variable":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
@@ -5813,7 +5899,7 @@ Overview:
                 opIx = editLnFrm.params.selectedIx[0]
                 #print("EditStreamLineCallback: op", WyeUILib.EditVerb.lineOpList[opIx])
 
-                newData = ["NewStream", [["Code", "#< your code goes here>"],]]
+                newData = ["NewStream", [["Code", "#<your code here>"],]]
 
                 match (opIx):
                     # move line up
@@ -5919,7 +6005,7 @@ Overview:
 
                         copyRec = ("Stream", (Wye.listCopy(parentList[ix])))
                         #print("EditStreamLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
 
                     # cut Line
@@ -5940,7 +6026,7 @@ Overview:
 
                         copyRec = ("Stream", (Wye.listCopy(parentList[ix])))
                         # print("EditStreamLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
                         # delete from codeDescr
                         parentList.pop(ix)
@@ -5972,7 +6058,7 @@ Overview:
                     # paste line before
                     case 4:
                         # get line from cutList
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         #print("paste code before: cutData", cutData)
                         if not cutData or cutData[0] != "Stream":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
@@ -6218,7 +6304,7 @@ Overview:
                         # print("EditNoCodeLineCallback: Insert first line")
                         # get location of this frame in dialog input list
 
-                        newData = ["Code", "#< your code goes here>"]
+                        newData = ["Code", "#<your code here>"]
 
                         parentList.insert(0, newData)
                         # create new dialog row for this code line
@@ -6248,7 +6334,7 @@ Overview:
                     # paste first line
                     case 1:
                         # get line from cutList
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         if not cutData or cutData[0] != "Code":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
                                "Please select a 'Code' row from Copy/Paste List", Wye.color.WARNING_COLOR)
@@ -6309,7 +6395,7 @@ Overview:
                 # get selectedIx
                 opIx = editLnFrm.params.selectedIx[0]
 
-                newData = ["Code", "#< your code goes here>"]
+                newData = ["Code", "#<your code here>"]
                 #"0 Move line up",
                 #"1 Add line before",
                 #"2 Copy line",
@@ -6424,7 +6510,7 @@ Overview:
 
                         copyRec = ("Code", (Wye.listCopy(parentList[ix])))
                         #print("EditCodeLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
                     # cut Line
                     case 3:
@@ -6444,7 +6530,7 @@ Overview:
 
                         copyRec = ("Code", (Wye.listCopy(parentList[ix])))
                         # print("EditCodeLineCallback copy: copyRec", copyRec)
-                        WyeCore.World.cutPasteManager.add(copyRec)
+                        WyeCore.World.copyPasteManager.add(copyRec)
 
                         # delete line from codeDescr
                         parentList.pop(ix)
@@ -6477,7 +6563,7 @@ Overview:
                     # paste line before
                     case 4:
                         # get line from cutList
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         #print("paste code before: cutData", cutData)
                         if not cutData or cutData[0] != "Code":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
@@ -6699,7 +6785,7 @@ Overview:
                     case 0:
                         # print("EditNoStreamLineCallback: Insert over")
 
-                        newData = ["NewStream", [["Code", "#< your code goes here>"], ]]
+                        newData = ["NewStream", [["Code", "#<your code here>"], ]]
 
 
                         # print("EditStreamLineCallback: insert tuple", newData, "into\n ", parentList)
@@ -6730,7 +6816,7 @@ Overview:
                     # Paste line over
                     case 1:
                         # get line from cutList
-                        cutData = WyeCore.World.cutPasteManager.getSelected()
+                        cutData = WyeCore.World.copyPasteManager.getSelected()
                         #print("paste code before: cutData", cutData)
                         if not cutData or cutData[0] != "Stream":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
@@ -7167,7 +7253,7 @@ Overview:
                                         newTxt = libTxt + "." + vbTxt
                                         newTuple.append("WyeCore.libs."+newTxt)
                                         for param in newVerb.paramDescr:
-                                            pTuple = ["Expr", "0 # <your param value here>"]
+                                            pTuple = ["Expr", "0 # <put parameter here>"]
                                             newTuple.append(pTuple)
 
                                 case 1:     # Var=
@@ -7901,7 +7987,7 @@ Overview:
 
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
-                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
+                            fileName = WyeCore.Utils.userLibPath() + fileName
 
                         # if the file alredy exists, ask the user what they want to do
                         fileExists = os.path.exists(fileName)
@@ -7995,8 +8081,11 @@ Overview:
                                             else:
                                                 # ignoring generated runtime code is good.  Anything else is a problem
                                                 if not verb.__name__[-3:] == "_rt":
-                                                    print("WARNING: Verb", verb.__name__,
-                                                      " not saved to file because it does not have all required attributes")
+                                                    msg = "WARNING: Cannot save library " + lib.__name__ + " because Verb " + verb.__name__ + " does not have all required attributes"
+                                                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg,
+                                                                                             Wye.color.WARNING_COLOR)
+                                                    frame.status = Wye.status.SUCCESS
+                                                    return
                                         #else:
                                         #    print("copying from lib", lib.__name__, " skip verb", verb.__name__)
 
@@ -8013,7 +8102,7 @@ Overview:
 
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
-                            fileName = WyeCore.Utils.userLibPath() + "/UserLibraries/" + fileName
+                            fileName = WyeCore.Utils.userLibPath() + fileName
                         #print("Write to file", fileName)
                         try:
                             # write the file
@@ -8795,8 +8884,12 @@ Overview:
                                 if caseStr in dict:
                                     rowLst = dict[caseStr]
                                     for rowIx in rowLst:
-                                        btnFrm = frame.vars.codeInpLst[0][rowIx + rowBase]
-                                        btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.LIGHT_GREEN)
+                                        try:
+                                            btnFrm = frame.vars.codeInpLst[0][rowIx + rowBase]
+                                            btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.LIGHT_GREEN)
+                                        except:
+                                            # TODO - figure out why rowIx not reliable
+                                            pass
                         # inc to next stream's dialog rows
                         rowBase += len(dbgFrm.verb.codeDescr[streamIx]) + 1
                 # single stream
@@ -8812,8 +8905,12 @@ Overview:
                             #print(" rowLst for case", caseStr," ", rowLst)
                             for rowIx in rowLst:
                                 #print(" highlight row", rowIx)
-                                btnFrm = frame.vars.codeInpLst[0][rowIx]
-                                btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.LIGHT_GREEN)
+                                try:
+                                    btnFrm = frame.vars.codeInpLst[0][rowIx]
+                                    btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.LIGHT_GREEN)
+                                except:
+                                    # TODO - figure out why rowIx not reliable
+                                    pass
             #else:
             #    print("ObjectDebugger refresh: verb", objFrm.verb.__name_, " has no caseCodeDictLst")
 
