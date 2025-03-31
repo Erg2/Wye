@@ -15,10 +15,22 @@ class FunFIshLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
-        ("newVar","A",None),
+        ("tCount","I",0),
+        ("nSegs","I",0),
+        ("body","O",None),
+        ("t1","OL","None"),
+        ("tag",Wye.dType.STRING,""),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
         ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        ("Var=","frame.vars.t1[0] = []"),
+        ("Code","frame.vars.body[0] = Wye3dObjsLib._ball(.5, [0,0,0]) #"),
+        ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.body[0]._path) #"),
+        ("Label","buildTentacle"),
+        ("Code","frame.vars.t1[0].append([Wye3dObjsLib._ball(.5-(frame.vars.tCount[0] * .1), [0,0,0 - frame.vars.tCount[0]])]) #"),
+        ("WyeCore.libs.WyeLib.makePickable", (None, "frame.vars.tag"), (None, "frame.vars.t1[0][frame.vars.tCount[0]]")),
+        ("Var=","frame.vars.tCount[0] += 1 #"),
+        ("IfGoTo","frame.vars.tCount[0] < frame.vars.nSegs[0]","buildTentacle"),
         ("WyeLib.noop",
           ("Code","0")))
 

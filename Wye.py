@@ -24,7 +24,7 @@ class Wye:
 
     dragging = False
 
-    version = "0.9.0"         # change save/open lib directory
+    version = "0.9.1"         # change save/open lib directory
 
     devPrint = False       # We're running in the Python debugger and want to see messages in text
 

@@ -8,7 +8,7 @@ from panda3d.core import *
 from panda3d.core import LVector3f
 import traceback
 import math
-import os
+import os, sys
 from importlib.machinery import SourceFileLoader    # to load library from file
 from functools import partial
 from direct.showbase.DirectObject import DirectObject
@@ -504,7 +504,14 @@ class WyeUILib(Wye.staticObj):
                         point.reparentTo(render)
                         dlgPos = newPos - self.dragOffset
                         point.setPos(dlgPos)
-                        objPath.setPos(point, LVector3f(0,0,0))
+                        try:
+                            objPath.setPos(point, LVector3f(0,0,0))
+                        except:
+                            print("dialog drag: object deleted from under us")
+                            Wye.dragging = False
+                            WyeUILib.dragFrame = None
+                            return
+
                         point.removeNode()
 
                         # update dialog's stored position
@@ -2925,7 +2932,7 @@ Overview:
                         #print("delOkFrm retVal", delOkFrm.params.retVal[0])
                         frame.status = Wye.status.SUCCESS
                         if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
-                            exit(1)
+                            sys.exit(1)
 
 
 
@@ -7204,7 +7211,7 @@ Overview:
 
                         # IfGoTo
 
-                        frame.vars.ifExprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [tupleTxt], hidden=True, layout=Wye.layout.ADD_RIGHT)
+                        frame.vars.ifExprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "             #", [tupleTxt], hidden=True, layout=Wye.layout.ADD_RIGHT)
                         if len(tuple) > 2:
                             lblStr = str(tuple[2])
                         else:
