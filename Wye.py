@@ -20,6 +20,7 @@ class Wye:
     breakList = []          # list of frames to break on
     midi = None
     midiLastIns = 0
+    windowSize = 1          # 0 full frame, 1 max window, 2 small window
 
     dragging = False
 
@@ -104,6 +105,28 @@ class Wye:
 
 
     # Constants
+    class winSize:
+        FULL_SCREEN = 0
+        MAX_WINDOW = 1
+        SMALL_WINDOW = 2
+
+        valList = [
+            FULL_SCREEN,
+            MAX_WINDOW,
+            SMALL_WINDOW
+        ]
+
+        stringLookup = {
+            FULL_SCREEN: "FULL_SCREEN",
+            MAX_WINDOW: "MAX_WINDOW",
+            SMALL_WINDOW: "SMALL_WINDOW"
+        }
+
+        def tostring(val):
+            if val in Wye.winSize.stringLookup:
+                return Wye.winSize.stringLookup[val]
+            else:
+                return "--unknown value " + str(val) + "--"
 
     class UI:
         DIALOG_OFFSET = 25      # how far from viewpoint dialogs pop up
@@ -579,6 +602,7 @@ class Wye:
         HOME = -11
         ESCAPE = -12
         ENTER = -13
+        F11 = -14
 
         ctlList = [
             RIGHT,
@@ -594,6 +618,7 @@ class Wye:
             HOME,
             ESCAPE,
             ENTER,
+            F11,
         ]
 
         stringLookup = {
@@ -610,6 +635,7 @@ class Wye:
             HOME: "HOME",
             ESCAPE: "ESCAPE",
             ENTER: "ENTER",
+            F11: "F11"
         }
 
         def tostring(val):

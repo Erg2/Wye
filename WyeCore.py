@@ -411,6 +411,13 @@ class WyeCore(Wye.staticObj):
                     #print("Build", lib)
                     lib._build()  # build all Wye code segments in code words
 
+                # start focus manager for UI
+                if hasattr(WyeCore.libs, "WyeUILib"):
+                    #print("Set up focus manager")
+                    WyeCore.Utils.setFocusManager(WyeCore.libs.WyeUILib.FocusManager)
+                    #print("FocusManager create MouseHandler")
+                    WyeCore.libs.WyeUILib.FocusManager._mouseHandler = WyeCore.libs.WyeUILib.FocusManager.MouseHandler()
+
                 # parse starting object names and find the objects in the known libraries
                 # print("worldRunner:  start ", len(world.startObjs), " objs")
                 for objStr in WyeCore.World.startObjs:
@@ -707,6 +714,7 @@ class WyeCore(Wye.staticObj):
                 self.accept('end', self.controlKeyFunc, [Wye.ctlKeys.END])
                 self.accept('escape', self.controlKeyFunc, [Wye.ctlKeys.ESCAPE])
                 self.accept('enter', self.controlKeyFunc, [Wye.ctlKeys.ENTER])
+                self.accept("f11", self.controlKeyFunc, [Wye.ctlKeys.F11])
 
             def controlKeyFunc(self, keyID):
                 #print("Control key", keyID)
@@ -1044,6 +1052,29 @@ class WyeCore(Wye.staticObj):
 
             #print("  return path '"+ path+"'")
             return path
+
+        def setScreenSize(size):
+            Wye.windowSize = size
+
+            # screen size
+            xSize = base.pipe.getDisplayWidth()
+            ySize = base.pipe.getDisplayHeight()
+            props = WindowProperties()
+
+            # set size
+            match (size):
+                case Wye.winSize.FULL_SCREEN:  # full screen
+                    props.setSize(xSize, ySize)
+                    props.setOrigin(0, 0)
+                case Wye.winSize.MAX_WINDOW:  # max window
+                    props.setSize(xSize, ySize - 100)
+                    props.setOrigin(1, 50)
+                case Wye.winSize.SMALL_WINDOW:  # small window
+                    props.setSize(1200, 800)
+                    props.setOrigin(1, 50)
+
+            props.setFixedSize(1)
+            base.win.requestProperties(props)
 
         # slerp between quats. Return q at time t
         def slerp(q1, q2, t):
@@ -1601,7 +1632,7 @@ class WyeCore(Wye.staticObj):
                             parFnStr += parStr
 
                         # if this class is an object that should be added to the world's active object list
-                        if hasattr(vrb, "autoStart") and vrb.autoStart:
+                        if hasattr(vrb, "autoStart") and vrb.autoStart and len(vrb.paramDescr) == 0:
                             classStr = libName + "." + libName + "." + vrb.__name__
                             #print("buildLib autoStart: ", classStr)
                             WyeCore.World.startObjs.append(classStr)
@@ -2021,7 +2052,7 @@ except Exception as e:
                 # if verb has autostart, do it, unless blocked by caller
                 if doAutoStart:
                     vrbStr += "if hasattr(WyeCore.libs."+vrbLib.__name__+"."+name+", 'autoStart'):\n"
-                    vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart:\n"
+                    vrbStr += "    if WyeCore.libs."+vrbLib.__name__+"."+name+".autoStart and len(WyeCore.libs."+vrbLib.__name__+"."+name+".paramDescr) == 0:\n"
                     #vrbStr += "        print('autoStart "+name+"')\n"
                     vrbStr += "        WyeCore.World.startActiveObject(WyeCore.libs."+vrbLib.__name__+"."+name+")\n"
 

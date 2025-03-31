@@ -7,6 +7,34 @@ class FunFIshLib:
   class FunFIshLib_rt:
    pass #1
 
+  class Jelly:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = True
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        (
+        ("newVar","A",None),
+        ("cleanUpObjs","OL",None))
+    codeDescr =        (
+        ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        ("WyeLib.noop",
+          ("Code","0")))
+
+    def _build(rowRef):
+        # print("Build ",Jelly)
+
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('Jelly', FunFIshLib.Jelly.codeDescr, FunFIshLib.Jelly, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(FunFIshLib.Jelly, stack)
+
+    def run(frame):
+        # print('Run 'Jelly)
+        FunFIshLib.FunFIshLib_rt.Jelly_run_rt(frame)
+
   class parallelWanderFish:
     mode = Wye.mode.PARALLEL
     autoStart = True
