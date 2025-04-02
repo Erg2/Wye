@@ -278,6 +278,8 @@ class TestLib:
     dataType = Wye.dType.NONE
     paramDescr =        ()
     varDescr =        (
+        ("followDist","F",2),
+        ("leaderName", Wye.dType.STRING, "leaderFish"),
         ("fishes","OL",None),
         ("fishTags","SL",None),
         ("position","FL",
@@ -286,7 +288,6 @@ class TestLib:
           (0.0,0.0,-0.02)),
         ("angle","FL",
           (0.0,90.0,0.0)),
-        ("followDist","F",2),
         ("target","O",None),
         ("tgtDist","F",0),
         ("count","I",0),
@@ -315,7 +316,7 @@ class TestLib:
         ("IfGoTo","frame.vars.count[0] < frame.vars.nFish[0]","MakeFish"),
         ("WyeCore.libs.WyeLib.setEqual",
           ("Var","frame.vars.target"),
-          ("Expr","[WyeCore.World.findActiveObj('leaderFish')]")),
+          ("Expr","[WyeCore.World.findActiveObj(frame.vars.leaderName[0])]")),
         ("Var=","frame.vars.count[0] = 0"),
         ("Var=","frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),
         ("Label","SwimLoop"),
@@ -544,18 +545,16 @@ for ii in range(len(frame.vars.bubbles[0])):
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
+        ("tgtPos", "FL", (0, 25, 0)),
+        ("posStep","F",0.04),
         ("fish","O",None),
         ("fishTag","S",""),
-        ("tgtPos","FL",
-          (0,25,0)),
         ("tgtDist","F",1.0),
-        ("posStep","F",0.04),
         ("dAngleX","F",0.5),
         ("dAngleY","F",0.5),
         ("dAngleZ","F",0.5),
         ("sound","O",None),
-        ("position","FL",
-          (0,0,0)),
+        ("position","FL",(0,0,0)),
         ("prevState","I",0),
         ("startQ","O",None),
         ("endQ","O",None),
@@ -595,7 +594,9 @@ for ii in range(len(frame.vars.bubbles[0])):
   
 fish = frame.vars.fish[0]
 fishPos = fish.getPos()
-tgtPos = frame.vars.tgtPos[0]
+
+from panda3d.core import LPoint3f
+tgtPos = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])
 # stay in local area
 dist = (frame.vars.fish[0].getPos() - tgtPos).length()
 

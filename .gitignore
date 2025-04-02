@@ -9,7 +9,6 @@ build/
 *.tif
 *.png
 *.jpg
-*.spec
 *.avi
 *.csv
 *.cfg

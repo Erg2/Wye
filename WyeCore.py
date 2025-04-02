@@ -1053,7 +1053,7 @@ class WyeCore(Wye.staticObj):
             #print("  return path '"+ path+"'")
             return path
 
-        def register3dObj(obj, frame):
+        #def register3dObj(obj, frame):
 
 
         def setScreenSize(size):
