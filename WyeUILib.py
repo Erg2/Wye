@@ -194,6 +194,7 @@ class WyeUILib(Wye.staticObj):
                 dlgFrm.vars.currInp[0] = None  # we just deleted it, so clear it
                 dlgFrm.verb.redisplay(dlgFrm)  # redisplay the dialog
 
+
             # make this the current cut/paste selection
             class RowCallback:
                 mode = Wye.mode.SINGLE_CYCLE
@@ -549,6 +550,8 @@ class WyeUILib(Wye.staticObj):
         _activeDialog = None
         _mouseHandler = None
 
+        _activatingDialog = False
+
         # note: this is an instantiated class
         class MouseHandler(DirectObject):
             def __init__(self):
@@ -609,12 +612,27 @@ class WyeUILib(Wye.staticObj):
                 else:
                     print("Error: WyeUILib FocusManager openDialog - did not find parent dialog", parentDlg, " in", WyeUILib.FocusManager._dialogHierarchies)
 
-            # if there's an active dialog, deactivate it and activate this one
-            if not WyeUILib.FocusManager._activeDialog is None:
+            #print("FocusManager openDialog activate dialog", dialogFrame.params.title[0])
+            WyeUILib.FocusManager.activateDialog(dialogFrame, True)
+
+        # manage currently active dialog
+        def activateDialog(dialogFrame, setActive):
+            if WyeUILib.FocusManager._activatingDialog:     # prevent loops
+                #print("FocusManager already activating")
+                return
+            WyeUILib.FocusManager._activatingDialog = True
+
+            # if there's already an active dialog, deactivate it
+            if WyeUILib.FocusManager._activeDialog:
+                #print("FocusManager activateDialog: deactivate", WyeUILib.FocusManager._activeDialog.params.title[0])
                 WyeUILib.Dialog.activateDialog(WyeUILib.FocusManager._activeDialog, False)
 
+            #print("FocusManager activateDialog", dialogFrame.params.title[0])
+            # make this the currently active dialog
+            WyeUILib.FocusManager._activeDialog = dialogFrame
             WyeUILib.Dialog.activateDialog(dialogFrame, True)
             #print("FocusManager openDialog", WyeUILib.FocusManager._dialogHierarchies)
+            WyeUILib.FocusManager._activatingDialog = False
 
 
         # Remove the given dialog from the display hierarchy
@@ -629,9 +647,11 @@ class WyeUILib(Wye.staticObj):
             #print("FocusManager closeDialog complete: hierarchies", WyeUILib.FocusManager._dialogHierarchies)
             if dialogFrame == WyeUILib.FocusManager._activeDialog:
                 if len(hier) > 0:
-                    WyeUILib.Dialog.activateDialog(hier[-1], True)
+                    #print("FocusManager closeDialog activate next dialog up hierarchy", hier[-1].params.title[0])
+                    WyeUILib.FocusManager.activateDialog(hier[-1], True)
                 else:
                     WyeUILib.FocusManager._activeDialog = None
+
 
         # User clicked on object, it might be a dialog field.
         # call each leaf dialog to see if tag belongs to it.
@@ -1778,6 +1798,8 @@ class WyeUILib(Wye.staticObj):
             frame.vars.inpTags[0] = {}          # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []      # clicked button(s) being "flashed" (so user sees they were clicked)
             frame.vars.radBtnDict[0] = {}  # dictionary of radio button groups in this dialog
+            frame.active = False                # we're not the active dialog
+            frame.activating = False            # we're not in the process of activating/deactivating
 
             # If there isn't a text input cursor, make it
             if WyeUILib.Dialog._cursor is None:
@@ -1884,6 +1906,7 @@ class WyeUILib(Wye.staticObj):
                                     newX = inFrm.vars.position[0][0] + inFrm.params.fixedWidth[0] + inFrm.params.padding[0][1]
                                 else:
                                     newX = inFrm.vars.position[0][0] + inFrm.vars.size[0][0] + inFrm.params.padding[0][1]
+                                padZNext = inFrm.params.padding[0][3]
                                 #print("Display", inFrm.verb.__name__, " ", inFrm.params.label[0], " pos"inFrm.)
                         else:
                             print("Dialog: Error. Unknown input verb", inFrm.verb.__name__)
@@ -2014,7 +2037,7 @@ class WyeUILib(Wye.staticObj):
                             prevZ = pos[2]
 
                             inFrm.verb.redisplay(inFrm, frame, pos)  # displays label, updates pos
-
+                            padZNext = inFrm.params.padding[0][3]
                         # calc the pos plus width in case next is ADD_RIGHT
                         if inFrm.params.fixedWidth[0]:
                             #print("Dialog redisplay fixedWidth", inFrm.params.label[0], " ", inFrm.params.fixedWidth[0])
@@ -2048,9 +2071,10 @@ class WyeUILib(Wye.staticObj):
             frame.vars.bgndGObj[0].removeNode()
             frame.vars.outlineGObj[0].removeNode()
             frame.verb.genBackground(frame)
-            # figure out how to tell if we are the currently selected dlg
-            #frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
-            #frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
+            # if we are the currently selected dlg
+            if frame.active:
+                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
+                frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
             frame.doingDisplay = False
 
         def doCallback(frame, inFrm, tag, doUserCallback=False):
@@ -2119,11 +2143,13 @@ class WyeUILib(Wye.staticObj):
                 if not Wye.dragging:
                     Wye.dragging = True
                     WyeUILib.dragFrame = frame
-
+                    WyeUILib.FocusManager.activateDialog(frame, True)
                     retStat = True  # used up the tag
 
             # for all inputs check to see if they want the tag
             else:
+                # if we are currently selected, make a note of it
+                currSel = frame.active
                 for inp in frame.params.inputs[0]:
                     inFrm = inp[0]
                     #print("Dialog doSelect tag", tag)
@@ -2131,7 +2157,9 @@ class WyeUILib(Wye.staticObj):
                         # print("Dialog doSelect set currInp", inFrm.verb.__name__)
                         frame.vars.currInp[0] = inFrm
                         retStat = True
-
+                        # if we weren't already selected, select ourselves
+                        if not currSel:
+                            WyeUILib.Dialog.activateDialog(frame, True)
 
             # if clicked on OK or Cancel
             if not retStat:
@@ -2166,6 +2194,9 @@ class WyeUILib(Wye.staticObj):
                     # Done with dialog
                     WyeUILib.Dialog.closeDialog(frame)
                     WyeUILib.Dialog.doCallback(frame, frame, tag)
+                    if WyeUILib.dragFrame == frame:
+                        WyeUILib.dragFrame = None
+
 
                     closing = True
                     #print("Closing dialog.  Status", frame.status)
@@ -2202,32 +2233,44 @@ class WyeUILib(Wye.staticObj):
                 # print("del ctl ", wdg.text.name)
                 wdg.removeNode()
 
+            # not dragging any more
+            if WyeUILib.dragFrame == frame:
+                Wye.dragging = False
+                WyeUILib.dragFrame = None
+
         # do select-related operations that cannot be done when elements of dialog are executing
         # (i.e. if a line gets deleted, do it after the line has finished execting its callback
         # so we don't crash)
-        # setOn - true if something in dialog used the
         def postSelect(frame):
-            # Something in dialog used the tag, highlight the dialog
-            WyeUILib.Dialog.activateDialog(frame, True)
+            pass
 
 
-        # manage selected/unselected look of dialog
+        # manage selected/unselected dialog
         def activateDialog(frame, setOn):
+            if frame.activating:    # avoid endless loops
+                #print("Dialog activateDialog already activating")
+                return
+            frame.activating = True
+            #print("DIalog activateDialog:", frame.params.title[0], " ", setOn)
             if setOn:
-                # if there's already an active dialog, deactivate it
-                if WyeUILib.FocusManager._activeDialog:
-                    WyeUILib.Dialog.activateDialog(WyeUILib.FocusManager._activeDialog, False)
-                # make this the currently active dialog
-                WyeUILib.FocusManager._activeDialog = frame
                 frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
                 frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
+
                 #print("Dialog '"+frame.params.title[0]+ "' Selected")
+                frame.active = True
 
             else:
-                pass
+
                 frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR)
                 frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR)
+                frame.active = False
                 #print("Dialog '"+frame.params.title[0]+ "' Unselected")
+
+            # make sure system knows
+            #print("Dialog activateDialog tell FocusManager", frame.params.title[0], " ", setOn)
+            WyeUILib.FocusManager.activateDialog(frame, setOn)
+            frame.activating = False
+
 
         # inc/dec InputInteger on wheel event
         def doWheel(dir):
@@ -2439,6 +2482,8 @@ class WyeUILib(Wye.staticObj):
                         txt = '0'
                     inFrm.vars.currVal[0] = txt
 
+                    inFrm.parentDlg.verb.redisplay(inFrm.parentDlg)
+
                     # if the user supplied a callback
                     # note: callback can change currVal and result will be displayed
                     WyeUILib.Dialog.doCallback(inFrm.parentDlg, inFrm, "none")
@@ -2489,6 +2534,8 @@ class WyeUILib(Wye.staticObj):
             frame.vars.canTags[0] = []         # tags for Cancel buttons
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
+            frame.active = False                # we're not the active dialog
+            frame.activating = False            # we're not in the process of activating/deactivating
 
             return frame
 
@@ -7211,7 +7258,7 @@ Overview:
 
                         # IfGoTo
 
-                        frame.vars.ifExprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "             #", [tupleTxt], hidden=True, layout=Wye.layout.ADD_RIGHT)
+                        frame.vars.ifExprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [tupleTxt], hidden=True, layout=Wye.layout.ADD_RIGHT)
                         if len(tuple) > 2:
                             lblStr = str(tuple[2])
                         else:

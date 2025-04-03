@@ -666,7 +666,7 @@ class Wye:
         ERROR_COLOR = (1, 0, 0, 1)                  # error
         TRANSPARENT = (0,0,0,0)                     # not visible
         BREAKPOINT = (.5,0,0,1)                     # breakpoint highlight
-        HIGHLIGHT = (0,.5,0,1)                      # execution code row highlight
+        HIGHLIGHT = (.5,.1,.1,1)                      # execution code row highlight
         LIGHT_YELLOW = (.5,.5,0,1)
         LIGHT_RED = (.5,0,0,1)
         LIGHT_GREEN = (0,.5,0,1)

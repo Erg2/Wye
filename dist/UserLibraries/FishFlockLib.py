@@ -15,6 +15,8 @@ class FishFlockLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
+        ("followDist","F",2),
+        ("leaderName","S","leaderFish2"),
         ("fishes","OL",None),
         ("fishTags","SL",None),
         ("position","FL",
@@ -23,7 +25,6 @@ class FishFlockLib:
           (0.0,0.0,-0.02)),
         ("angle","FL",
           (0.0,90.0,0.0)),
-        ("followDist","F",2),
         ("target","O",None),
         ("tgtDist","F",0),
         ("count","I",0),
@@ -52,7 +53,7 @@ class FishFlockLib:
         ("IfGoTo","frame.vars.count[0] < frame.vars.nFish[0]","MakeFish"),
         ("WyeCore.libs.WyeLib.setEqual",
           ("Var","frame.vars.target"),
-          ("Expr","[WyeCore.World.findActiveObj('leaderFish2')]")),
+          ("Expr","[WyeCore.World.findActiveObj(frame.vars.leaderName[0])]")),
         ("Var=","frame.vars.count[0] = 0"),
         ("Var=","frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),
         ("Label","SwimLoop"),
@@ -110,6 +111,8 @@ class FishFlockLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
+        ("followDist","F",2),
+        ("leaderName","S","leaderFish3"),
         ("fishes","OL",None),
         ("fishTags","SL",None),
         ("position","FL",
@@ -118,7 +121,6 @@ class FishFlockLib:
           (0.0,0.0,-0.02)),
         ("angle","FL",
           (0.0,90.0,0.0)),
-        ("followDist","F",2),
         ("target","O",None),
         ("tgtDist","F",0),
         ("count","I",0),
@@ -147,7 +149,7 @@ class FishFlockLib:
         ("IfGoTo","frame.vars.count[0] < frame.vars.nFish[0]","MakeFish"),
         ("WyeCore.libs.WyeLib.setEqual",
           ("Var","frame.vars.target"),
-          ("Expr","[WyeCore.World.findActiveObj('leaderFish3')]")),
+          ("Expr","[WyeCore.World.findActiveObj(frame.vars.leaderName[0])]")),
         ("Var=","frame.vars.count[0] = 0"),
         ("Var=","frame.vars.objAhead[0] = frame.vars.target[0].vars.fish[0]"),
         ("Label","SwimLoop"),
@@ -205,10 +207,10 @@ class FishFlockLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
-        ("fish","O",None),
-        ("fishTag","S",""),
         ("tgtPos","FL",
           (20.0,20.0,0.0)),
+        ("fish","O",None),
+        ("fishTag","S",""),
         ("tgtDist","F",1.0),
         ("posStep","F",0.04),
         ("dAngleX","F",0.5),
@@ -256,7 +258,9 @@ class FishFlockLib:
   
 fish = frame.vars.fish[0]
 fishPos = fish.getPos()
-tgtPos = frame.vars.tgtPos[0]
+
+from panda3d.core import LPoint3f
+tgtPos = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])
 # stay in local area
 dist = (frame.vars.fish[0].getPos() - tgtPos).length()
 
@@ -386,10 +390,10 @@ else:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
-        ("fish","O",None),
-        ("fishTag","S",""),
         ("tgtPos","FL",
           (-20.0,20.0,0.0)),
+        ("fish","O",None),
+        ("fishTag","S",""),
         ("tgtDist","F",1.0),
         ("posStep","F",0.04),
         ("dAngleX","F",0.5),
@@ -437,7 +441,9 @@ else:
   
 fish = frame.vars.fish[0]
 fishPos = fish.getPos()
-tgtPos = frame.vars.tgtPos[0]
+
+from panda3d.core import LPoint3f
+tgtPos = LPoint3f(frame.vars.tgtPos[0][0],frame.vars.tgtPos[0][1],frame.vars.tgtPos[0][2])
 # stay in local area
 dist = (frame.vars.fish[0].getPos() - tgtPos).length()
 
