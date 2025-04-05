@@ -492,13 +492,14 @@ class WyeCore(Wye.staticObj):
 
                         # if world paused, only run critical code and code being debugged
                         if Wye.breakAll:
-                            if not hasattr(stack[0], "systemObject") and not hasattr(stack[0], "breakpt"):
-                                #print("breakAll don't exec", stack[0].verb.__name__)
+                            if not hasattr(stack[0], "systemObject") and stack[0].breakCt == 0:
+                                #print("breakAll don't exec stack[0]", stack[0].verb.__name__, " obj", frame.verb.__name__, " stack[0].breakpt", stack[0].breakpt)
                                 #if stack[0].verb.__name__ == "Dialog":
                                 #    print("  ", stack[0].params.title[0])
                                 continue
                         if frame.status == Wye.status.CONTINUE:
                             try:
+                                #print("Run ", frame.verb.__name__)
                                 if Wye.debugOn:
                                     Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC))
                                 else:
@@ -811,8 +812,8 @@ class WyeCore(Wye.staticObj):
                         evtFrame = evt[0][-1]
                         # if world paused, only run critical code or code being debugged
                         if Wye.breakAll:
-                            if not hasattr(evt[0][0], "systemObject") and not hasattr(evt[0][0], "breakpt"):
-                                #print("repEvt breakAll don't exec", evt[0][0].verb.__name__)
+                            if not hasattr(evt[0][0], "systemObject") and evt[0][0].breakCt == 0:
+                                #print("repEvt breakAll don't exec", evt[0][0].verb.__name__, " evt breakpt", evt[0][0].breakpt)
                                 #if evt[0][0].verb.__name__ == "Dialog":
                                 #    print("  ", evt[0][0].params.title[0])
                                 continue
@@ -828,7 +829,7 @@ class WyeCore(Wye.staticObj):
                                 if Wye.debugOn:
                                     Wye.debug(evtFrame, "RepeatEvent run:"+ evtFrame.verb.__name__+ " evt data "+ str(evtFrame.eventData))
                                 else:
-                                    #print("run", evtFrame.verb.__name__)
+                                    print("run", evtFrame.verb.__name__)
                                     evtFrame.verb.run(evtFrame)
                             except Exception as e:
                                 print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))

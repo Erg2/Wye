@@ -60,7 +60,7 @@ class Wye:
         if Wye.trace:
             print("trace frame", frame.verb.__name__, ":", msg)
         # break here
-        if frame.breakpt:
+        if frame.breakpt and frame.breakCt >= 0:
             # prevent SINGLE frames from completing without having run 'cause
             # their status is SUCCESS by default
             #print("debug: breakpoint on", frame.verb.__name__, " at", msg)

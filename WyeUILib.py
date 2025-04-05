@@ -8765,6 +8765,7 @@ Overview:
                 chkFrm = data[1][0]
                 Wye.breakAll = chkFrm.params.value[0]
 
+
         # Toggle world pause flag Wye.breakAll
         class RefreshCallback:
             mode = Wye.mode.SINGLE_CYCLE
@@ -9699,13 +9700,14 @@ Overview:
                 objFrm = data[1][1]
                 dbgFrm = data[1][2]
 
-                debugOn = not rowFrm.vars.currVal[0]  # debugOn = not run
+                debugOn = rowFrm.vars.currVal[0]  # debugOn = not run
                 if objFrm.verb is WyeCore.ParallelStream:
                     objFrm.parentFrame.breakpt = debugOn
                     # if we're not the bottom of the stack, debug on that too
                     if objFrm.parentFrame.SP[-1] != objFrm.parentFrame:
                         objFrm.parentFrame.SP[-1].breakpt = debugOn
                     # and flag the top of the stack
+                    objFrm.parentFrame.SP[0].breakCt = -1 if debugOn else 0
                     objFrm.parentFrame.SP[0].breakpt = True
                     # print("Breakpoint on parallel parent", objFrm.parentFrame.verb.__name__, " is", debugOn)
                 else:
@@ -9714,52 +9716,8 @@ Overview:
                     if objFrm.SP[-1] != objFrm:
                         objFrm.SP[-1].breakpt = debugOn
                     # print("Breakpoint on", objFrm.verb.__name__, " is", debugOn)
+                    objFrm.SP[0].breakCt = -1 if debugOn else 0
                     objFrm.SP[0].breakpt = True
-
-                # flag top of stack
-                if debugOn:
-                    if objFrm.verb is WyeCore.ParallelStream:
-                        objFrm.parentFrame.SP[0].breakpt = False
-                    else:
-                        objFrm.SP[0].breakpt = False
-                else:
-                    if objFrm.verb is WyeCore.ParallelStream:
-                        objFrm.parentFrame.SP[0].breakpt = True
-                    else:
-                        objFrm.SP[0].breakpt = True
-
 
                 WyeUILib.ObjectDebugger.update(dbgFrm)
 
-
-
-    class AskSaveAsFile:
-        mode = Wye.mode.MULTI_CYCLE
-        dataType = Wye.dType.STRING
-        autoStart = False
-        paramDescr = (("retVal", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.status.CONTINUE),
-                      ("fileName", Wye.dType.STRING, Wye.access.REFERENCE, ""),
-                      ("fileType", Wye.dType.STRING, Wye.access.REFERENCE, ".py"),
-                      ("title", Wye.dType.STRING, Wye.access.REFERENCE, "Save As"),
-                      ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE, None),
-                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, (0,0,0)),
-                      ("okOnCr", Wye.dType.BOOL, Wye.access.REFERENCE, False)
-                      )
-        varDescr = (("newFileName", Wye.dType.STRING, None),
-                    ("newFile", Wye.dType.BOOL, True),
-                    ("overWriteQuery", Wye.dType.BOOL, False)
-                    )
-
-        # global list of libs being edited
-        activeFrames = {}
-
-        def start(stack):
-            f = Wye.codeFrame(WyeUILib.AskSaveAsFile, stack)
-            f.systemObject = True         # not stopped by breakAll or debugger
-            return f
-
-        def run(frame):
-            match(frame.PC):
-                case 0:
-                    #print("AskSaveAsFile run case 0: fileName", frame.params.fileName[0])
-                    filePath = frame.params.fileName[0].strip()
