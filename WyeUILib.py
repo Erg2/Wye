@@ -9045,8 +9045,7 @@ Overview:
                         if objFrm.verb is WyeCore.ParallelStream:
                             objFrm.parentFrame.breakpt = False
                             objFrm.parentFrame.SP[-1].breakpt = False   # if wasn't bottom of stack and there was break there too,
-                            if hasattr(objFrm.parentFrame.SP[0], "breakpt"):
-                                delattr(objFrm.parentFrame.SP[0], "breakpt")
+                            objFrm.parentFrame.SP[0].breakpt = False
 
                             #print("ObjectDebugger remove breakpt on", objFrm.parentFrame.verb.__name__," reduce debugOn to", Wye.debugOn)
                             if hasattr(objFrm.parentFrame, "prevStatus"):
@@ -9056,8 +9055,7 @@ Overview:
                         else:
                             objFrm.breakpt = False
                             objFrm.SP[-1].breakpt = False   # if wasn't bottom of stack and there was break there too,
-                            if hasattr(objFrm.SP[0], "breakpt"):
-                                delattr(objFrm.SP[0], "breakpt")
+                            objFrm.SP[0].breakpt = False
                             #print("ObjectDebugger remove breakpt on", objFrm.verb.__name__," reduce debugOn to", Wye.debugOn)
                             if hasattr(objFrm, "prevStatus"):
                                 objFrm.status = objFrm.prevStatus
@@ -9721,11 +9719,9 @@ Overview:
                 # flag top of stack
                 if debugOn:
                     if objFrm.verb is WyeCore.ParallelStream:
-                        if hasattr(objFrm.parentFrame.SP[0], "breakpt"):
-                            delattr(objFrm.parentFrame.SP[0], "breakpt")
+                        objFrm.parentFrame.SP[0].breakpt = False
                     else:
-                        if hasattr(objFrm.SP[0], "breakpt"):
-                            delattr(objFrm.SP[0], "breakpt")
+                        objFrm.SP[0].breakpt = False
                 else:
                     if objFrm.verb is WyeCore.ParallelStream:
                         objFrm.parentFrame.SP[0].breakpt = True
@@ -9735,3 +9731,35 @@ Overview:
 
                 WyeUILib.ObjectDebugger.update(dbgFrm)
 
+
+
+    class AskSaveAsFile:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        autoStart = False
+        paramDescr = (("retVal", Wye.dType.INTEGER, Wye.access.REFERENCE, Wye.status.CONTINUE),
+                      ("fileName", Wye.dType.STRING, Wye.access.REFERENCE, ""),
+                      ("fileType", Wye.dType.STRING, Wye.access.REFERENCE, ".py"),
+                      ("title", Wye.dType.STRING, Wye.access.REFERENCE, "Save As"),
+                      ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE, None),
+                      ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, (0,0,0)),
+                      ("okOnCr", Wye.dType.BOOL, Wye.access.REFERENCE, False)
+                      )
+        varDescr = (("newFileName", Wye.dType.STRING, None),
+                    ("newFile", Wye.dType.BOOL, True),
+                    ("overWriteQuery", Wye.dType.BOOL, False)
+                    )
+
+        # global list of libs being edited
+        activeFrames = {}
+
+        def start(stack):
+            f = Wye.codeFrame(WyeUILib.AskSaveAsFile, stack)
+            f.systemObject = True         # not stopped by breakAll or debugger
+            return f
+
+        def run(frame):
+            match(frame.PC):
+                case 0:
+                    #print("AskSaveAsFile run case 0: fileName", frame.params.fileName[0])
+                    filePath = frame.params.fileName[0].strip()
