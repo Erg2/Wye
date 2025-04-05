@@ -8,6 +8,7 @@
 # license: We don't need no stinking license
 # This is prototype code.  If it blows up your nuclear reactor, that is your dumb fault.
 #
+from panda3d.core import WindowProperties
 
 # Wye container class that holds Wye classes
 class Wye:
@@ -33,6 +34,8 @@ class Wye:
     startLightAngle = (45, -65, 0)
 
     def setScreenSize(size):
+        global base
+
         Wye.windowSize = size
 
         # screen size

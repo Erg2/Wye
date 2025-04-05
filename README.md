@@ -4,7 +4,7 @@ Wye in-3d character implementation language
 
 # prebuilt exe
 The prebuilt Windows .exe runs the default library TestLib.py.  
-User defined libraries are in the UserLibraries subdirectory in the same location as the .EXE
+User defined libraries are in the WyeUserLibraries subdirectory in the same location as the .EXE
 See the example library zip file
 
 # Running from Python

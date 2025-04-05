@@ -1053,9 +1053,9 @@ class WyeCore(Wye.staticObj):
 
         def userLibPath():
             if getattr(sys, 'frozen', False):
-                path = os.path.dirname(sys.executable) + "/UserLibraries/"
+                path = os.path.dirname(sys.executable) + "/WyeUserLibraries/"
             elif __file__:
-                path = os.path.dirname(__file__) + "/UserLibraries/"
+                path = os.path.dirname(__file__) + "/WyeUserLibraries/"
 
             path = path.replace("\\","/")
 

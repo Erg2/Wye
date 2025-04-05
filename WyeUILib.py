@@ -3985,7 +3985,7 @@ Overview:
                         # if the user hasn't specified a file path, put on our default path
                         if not os.path.dirname(fileName):
                             fileName = WyeCore.Utils.userLibPath() + fileName
-                            #print("Prefix UserLibraries to fileName:", fileName)
+                            #print("Prefix WyeUserLibraries to fileName:", fileName)
 
                         try:
                             # write the file
@@ -4069,7 +4069,7 @@ Overview:
                         #print("Add .py to ", libFilePath)
                         libFilePath += ".py"
 
-                    # force to UserLibraries dir
+                    # force to WyeUserLibraries dir
                     libPath = WyeCore.Utils.userLibPath()
                     libFilePath = libPath + "/" + libFilePath
 
