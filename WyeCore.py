@@ -108,6 +108,10 @@ class WyeCore(Wye.staticObj):
 
     libLoadList = ["WyeLib.py", "WyeUILib.py", "WyeUIUtilsLib.py", "Wye3dObjsLib.py"]  # list of lib files to load on start.  libList on cmd line added to it
 
+    HUD = None      # HUD dialog, if any
+    winWidth = 0        # updated on resize
+    winHeight = 0
+
     class libs:
         pass
 
@@ -451,6 +455,9 @@ class WyeCore(Wye.staticObj):
                 # tag = "wyeTag" + str(WyeCore.Utils.getId())  # generate unique tag for object
                 # _3dText.setTag("wyeTag", tag)
 
+                # start HUD
+                WyeCore.HUD = WyeCore.World.startActiveObject(WyeCore.libs.WyeUILib.MainHUDDialog)
+
                 #print("worldRunner done World Init")
 
             # run
@@ -485,7 +492,7 @@ class WyeCore(Wye.staticObj):
 
                         # if world paused, only run critical code and code being debugged
                         if Wye.breakAll:
-                            if not hasattr(stack[0], "systemObject") and not hasattr(stack[0], "doBreakPt"):
+                            if not hasattr(stack[0], "systemObject") and not hasattr(stack[0], "breakpt"):
                                 #print("breakAll don't exec", stack[0].verb.__name__)
                                 #if stack[0].verb.__name__ == "Dialog":
                                 #    print("  ", stack[0].params.title[0])
@@ -574,6 +581,7 @@ class WyeCore(Wye.staticObj):
         # (required when caller needs to pass params to the object)
         def startActiveFrame(frame):
             WyeCore.World.objStacks.append(frame.SP)  # put obj's stack on exec list
+            #print("startActiveFrame stacks", len(WyeCore.World.objStacks), " ", [stack[0].verb.__name__ for stack in WyeCore.World.objStacks])
             return frame
 
         # Queue frame to be removed from active object list at end of this display cycle
@@ -715,6 +723,21 @@ class WyeCore(Wye.staticObj):
                 self.accept('escape', self.controlKeyFunc, [Wye.ctlKeys.ESCAPE])
                 self.accept('enter', self.controlKeyFunc, [Wye.ctlKeys.ENTER])
                 self.accept("f11", self.controlKeyFunc, [Wye.ctlKeys.F11])
+                self.accept("window-event", self.resize)
+
+
+            def resize(self, dummy):
+                if WyeCore.HUD and WyeCore.HUD.vars.dlgFrm[0]:
+                    width = base.win.getProperties().getXSize()
+                    height = base.win.getProperties().getYSize()
+                    if width != WyeCore.winWidth or height != WyeCore.winHeight:
+                        rat = width/height
+                        pos = [-6 * rat, Wye.UI.NOTIFICATION_OFFSET, 5.8]
+                        #print("Set HUD pos", pos, " win size", width, height)
+                        #print("HUD", WyeCore.HUD.verb.__name__, " params", dir(WyeCore.HUD.params))
+                        WyeCore.HUD.vars.dlgFrm[0].params.position[0] = pos
+                        WyeCore.winWidth = width
+                        WyeCore.winHeight = height
 
             def controlKeyFunc(self, keyID):
                 #print("Control key", keyID)
@@ -788,7 +811,7 @@ class WyeCore(Wye.staticObj):
                         evtFrame = evt[0][-1]
                         # if world paused, only run critical code or code being debugged
                         if Wye.breakAll:
-                            if not hasattr(evt[0][0], "systemObject") and not hasattr(evt[0][0], "doBreakPt"):
+                            if not hasattr(evt[0][0], "systemObject") and not hasattr(evt[0][0], "breakpt"):
                                 #print("repEvt breakAll don't exec", evt[0][0].verb.__name__)
                                 #if evt[0][0].verb.__name__ == "Dialog":
                                 #    print("  ", evt[0][0].params.title[0])
@@ -949,7 +972,6 @@ class WyeCore(Wye.staticObj):
             return self.pickedObj
 
         # Wye object selection dispatcher
-        # (Panda3d mouse click callback)
         # Check for object hit - check hit obj has obj tag - check for event for given obj tag
         def objSelectEvent(self):
             status = False
@@ -960,7 +982,7 @@ class WyeCore(Wye.staticObj):
                     #print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
-                        # if there's a user input focus manager, call it
+                        # if there's an object editor
                         if WyeCore.World.objEditor:
                             status = WyeCore.World.objEditor.tagClicked(wyeID)
                             #if status:
@@ -1076,8 +1098,9 @@ class WyeCore(Wye.staticObj):
                     props.setSize(1200, 800)
                     props.setOrigin(1, 50)
 
-            props.setFixedSize(1)
+            #props.setFixedSize(1)
             base.win.requestProperties(props)
+
 
         # slerp between quats. Return q at time t
         def slerp(q1, q2, t):

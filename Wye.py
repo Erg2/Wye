@@ -32,6 +32,29 @@ class Wye:
 
     startLightAngle = (45, -65, 0)
 
+    def setScreenSize(size):
+        Wye.windowSize = size
+
+        # screen size
+        xSize = base.pipe.getDisplayWidth()
+        ySize = base.pipe.getDisplayHeight()
+        props = WindowProperties()
+
+        # set size
+        match (size):
+            case Wye.winSize.FULL_SCREEN:  # full screen
+                props.setSize(xSize, ySize)
+                props.setOrigin(0, 0)
+            case Wye.winSize.MAX_WINDOW:  # max window
+                props.setSize(xSize, ySize - 100)
+                props.setOrigin(1, 50)
+            case Wye.winSize.SMALL_WINDOW:  # small window
+                props.setSize(1200, 800)
+                props.setOrigin(1, 50)
+
+        # props.setFixedSize(1)
+        base.win.requestProperties(props)
+
     # if debugging is on, check for what to do on run()
     def debug(frame, msg):
         if Wye.trace:

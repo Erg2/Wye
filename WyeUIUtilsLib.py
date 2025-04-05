@@ -126,14 +126,33 @@ class WyeUIUtilsLib(Wye.staticObj):
             point = NodePath("point")
             point.reparentTo(render)
             point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET, 0))
-            pos = point.getPos()
+            position = point.getPos()
             point.removeNode()
+
         dlgFrm.params.position = [(position[0], position[1], position[2]), ]
         dlgFrm.params.parent = [parent]
         dlgFrm.params.format = [formatLst]
         dlgFrm.params.headerColor = [headerColor]
         dlgFrm.params.okOnCr = [okOnCr]
         return dlgFrm
+
+
+    # dialog.  If no position supplied, puts in front of viewpoint
+    def doHUDDialog(title, parent=None, position=(0,0,0), formatLst=[""], headerColor=Wye.color.HEADER_COLOR, okOnCr=False):
+        if parent:
+            stack = parent.SP
+        else:
+            stack = []
+        dlgFrm = WyeUILib.HUDDialog.start(stack)
+        dlgFrm.params.retVal = [None]           # used in Wye code, not important for inline code
+        dlgFrm.params.title = [title]
+        dlgFrm.params.position = [[position[0], position[1], position[2]],]
+        dlgFrm.params.parent = [parent]
+        dlgFrm.params.format = [formatLst]
+        dlgFrm.params.headerColor = [headerColor]
+        dlgFrm.params.okOnCr = [okOnCr]
+        return dlgFrm
+
 
     def doInputLabel(dlgFrm, label, color=Wye.color.LABEL_COLOR, backgroundColor=Wye.color.TRANSPARENT,
                      layout=Wye.layout.VERTICAL, padding=(0,0,0,0), fixedWidth=0, hidden=False):

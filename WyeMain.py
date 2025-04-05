@@ -30,27 +30,8 @@ class WorldRunner(ShowBase):
         ShowBase.__init__(self)     # Init Panda3d
 
         # set screen size
-        xSize = base.pipe.getDisplayWidth()
-        ySize = base.pipe.getDisplayHeight()
-        props = WindowProperties()
+        WyeCore.Utils.setScreenSize(Wye.windowSize)
 
-        #print("Start windowsize", Wye.windowSize)
-        match (Wye.windowSize):
-            case Wye.winSize.FULL_SCREEN:  # full screen
-                #print("start full screen")
-                props.setSize(xSize, ySize)
-                props.setOrigin(0, 0)
-            case Wye.winSize.MAX_WINDOW:  # max window
-                #print("start max window")
-                props.setSize(xSize, ySize - 100)
-                props.setOrigin(1, 50)
-            case Wye.winSize.SMALL_WINDOW:  # small window
-                #print("start small window")
-                props.setSize(1200, 800)
-                props.setOrigin(1, 50)
-
-        props.setFixedSize(1)
-        base.win.requestProperties(props)
 
         myFog = Fog("Fog Name")
         myFog.setColor(0, 0, 0)
