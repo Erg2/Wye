@@ -3,85 +3,10 @@ from WyeCore import WyeCore
 class TestLib:
   def _build():
     WyeCore.Utils.buildLib(TestLib)
-  canSave = False  # cannot save callbacks
+  canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
   class TestLib_rt:
    pass #1
-
-  class UpdateCallback:
-      mode = Wye.mode.SINGLE_CYCLE
-      dataType = Wye.dType.NONE
-      paramDescr = ()
-      varDescr = ()
-      codeDescr=(
-          ("Code", "frm = frame.eventData[1]"),
-          ("Code", "ctlFrm = frame.eventData[2]"),
-          ("Code", "dlgFrm = ctlFrm.parentDlg"),
-          ("Code", "try:"),
-          ("Code", "    x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])"),
-          ("Code", "except:"),
-          ("Code", "    x = 0."),
-          ("Code", "try:"),
-          ("Code", "    y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])"),
-          ("Code", "except:"),
-          ("Code", "    y = 0."),
-          ("Code", "try:"),
-          ("Code", "    z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])"),
-          ("Code", "except:"),
-          ("Code", "    z = 0."),
-          ("Code", "frm.vars.target[0].vars.gObj[0].setHpr(x, y, z)"),
-          ("Code", "WyeCore.World.dlightPath.setHpr(x, y, z)"),
-      )
-
-      def _build(rowRef):
-          rowIxRef = [0]
-          return WyeCore.Utils.buildCodeText('UpdateCallback', TestLib.UpdateCallback.codeDescr, TestLib.UpdateCallback, rowIxRef)
-
-      def start(stack):
-          return Wye.codeFrame(TestLib.UpdateCallback, stack)
-
-      def run(frame):
-          # print('Run 'UpdateCallback)
-          TestLib.TestLib_rt.UpdateCallback_run_rt(frame)
-
-  class ResetCallback:
-      mode = Wye.mode.SINGLE_CYCLE
-      dataType = Wye.dType.NONE
-      paramDescr = ()
-      varDescr = ()
-
-      codeDescr=(
-          ("Code", "frm = frame.eventData[1]"),
-          ("Code", "ctlFrm = frame.eventData[2]"),
-          ("Code", "dlgFrm = ctlFrm.parentDlg"),
-          ("Code", "x = Wye.startLightAngle[0]"),
-          ("Code", "y = Wye.startLightAngle[1]"),
-          ("Code", "z = Wye.startLightAngle[2]"),
-          ("Code", "dlgFrm.params.inputs[0][0][0].vars.currVal[0] = x"),
-          ("Code", "dlgFrm.params.inputs[0][1][0].vars.currVal[0] = y"),
-          ("Code", "dlgFrm.params.inputs[0][2][0].vars.currVal[0] = z"),
-          ("Code", "dlgFrm.params.inputs[0][0][0].verb.update(dlgFrm.params.inputs[0][0][0])"),
-          ("Code", "dlgFrm.params.inputs[0][1][0].verb.update(dlgFrm.params.inputs[0][1][0])"),
-          ("Code", "dlgFrm.params.inputs[0][2][0].verb.update(dlgFrm.params.inputs[0][2][0])"),
-          ("Code", "frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))"),
-          ("Code", "WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))"),
-          ("Code", ""),
-          ("Code", ""),
-          ("Code", ""),
-          ("Code", ""),
-      )
-
-      def _build(rowRef):
-          rowIxRef = [0]
-          return WyeCore.Utils.buildCodeText('ResetCallback', TestLib.ResetCallback.codeDescr, TestLib.ResetCallback, rowIxRef)
-
-      def start(stack):
-          return Wye.codeFrame(TestLib.ResetCallback, stack)
-
-      def run(frame):
-          # print('Run 'UpdateCallback)
-          TestLib.TestLib_rt.ResetCallback_run_rt(frame)
-
 
   class MyTestVerb:
     mode = Wye.mode.MULTI_CYCLE
@@ -139,7 +64,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",MyTestVerb)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('MyTestVerb', TestLib.MyTestVerb.codeDescr, TestLib.MyTestVerb, rowIxRef)
 
@@ -160,7 +84,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",PlaceHolder)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('PlaceHolder', TestLib.PlaceHolder.codeDescr, TestLib.PlaceHolder, rowIxRef)
 
@@ -170,6 +93,79 @@ class TestLib:
     def run(frame):
         # print('Run 'PlaceHolder)
         TestLib.TestLib_rt.PlaceHolder_run_rt(frame)
+
+  class ResetCallback:
+    mode = Wye.mode.SINGLE_CYCLE
+    dataType = Wye.dType.NONE
+    paramDescr =        ()
+    varDescr =        ()
+    codeDescr =        (
+        ("Code","frm = frame.eventData[1]"),
+        ("Code","ctlFrm = frame.eventData[2]"),
+        ("Code","dlgFrm = ctlFrm.parentDlg"),
+        ("Code","x = Wye.startLightAngle[0]"),
+        ("Code","y = Wye.startLightAngle[1]"),
+        ("Code","z = Wye.startLightAngle[2]"),
+        ("Code","dlgFrm.params.inputs[0][0][0].vars.currVal[0] = x"),
+        ("Code","dlgFrm.params.inputs[0][1][0].vars.currVal[0] = y"),
+        ("Code","dlgFrm.params.inputs[0][2][0].vars.currVal[0] = z"),
+        ("Code","dlgFrm.params.inputs[0][0][0].verb.update(dlgFrm.params.inputs[0][0][0])"),
+        ("Code","dlgFrm.params.inputs[0][1][0].verb.update(dlgFrm.params.inputs[0][1][0])"),
+        ("Code","dlgFrm.params.inputs[0][2][0].verb.update(dlgFrm.params.inputs[0][2][0])"),
+        ("Code","frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))"),
+        ("Code","WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))"),
+        ("Code",""),
+        ("Code",""),
+        ("Code",""),
+        ("Code",""))
+
+    def _build(rowRef):
+        # print("Build ",ResetCallback)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('ResetCallback', TestLib.ResetCallback.codeDescr, TestLib.ResetCallback, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(TestLib.ResetCallback, stack)
+
+    def run(frame):
+        # print('Run 'ResetCallback)
+        TestLib.TestLib_rt.ResetCallback_run_rt(frame)
+
+  class UpdateCallback:
+    mode = Wye.mode.SINGLE_CYCLE
+    dataType = Wye.dType.NONE
+    paramDescr =        ()
+    varDescr =        ()
+    codeDescr =        (
+        ("Code","frm = frame.eventData[1]"),
+        ("Code","ctlFrm = frame.eventData[2]"),
+        ("Code","dlgFrm = ctlFrm.parentDlg"),
+        ("Code","try:"),
+        ("Code","    x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])"),
+        ("Code","except:"),
+        ("Code","    x = 0."),
+        ("Code","try:"),
+        ("Code","    y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])"),
+        ("Code","except:"),
+        ("Code","    y = 0."),
+        ("Code","try:"),
+        ("Code","    z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])"),
+        ("Code","except:"),
+        ("Code","    z = 0."),
+        ("Code","frm.vars.target[0].vars.gObj[0].setHpr(x, y, z)"),
+        ("Code","WyeCore.World.dlightPath.setHpr(x, y, z)"))
+
+    def _build(rowRef):
+        # print("Build ",UpdateCallback)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('UpdateCallback', TestLib.UpdateCallback.codeDescr, TestLib.UpdateCallback, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(TestLib.UpdateCallback, stack)
+
+    def run(frame):
+        # print('Run 'UpdateCallback)
+        TestLib.TestLib_rt.UpdateCallback_run_rt(frame)
 
   class angleFish:
     mode = Wye.mode.MULTI_CYCLE
@@ -213,7 +209,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",angleFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('angleFish', TestLib.angleFish.codeDescr, TestLib.angleFish, rowIxRef)
 
@@ -268,7 +263,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",clickWiggle)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('clickWiggle', TestLib.clickWiggle.codeDescr, TestLib.clickWiggle, rowIxRef)
 
@@ -286,7 +280,7 @@ class TestLib:
     paramDescr =        ()
     varDescr =        (
         ("followDist","F",2),
-        ("leaderName", Wye.dType.STRING, "leaderFish"),
+        ("leaderName","S","leaderFish"),
         ("fishes","OL",None),
         ("fishTags","SL",None),
         ("position","FL",
@@ -362,7 +356,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",fish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('fish', TestLib.fish.codeDescr, TestLib.fish, rowIxRef)
 
@@ -533,7 +526,6 @@ for ii in range(len(frame.vars.bubbles[0])):
 
     def _build(rowRef):
         # print("Build ",ground)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('ground', TestLib.ground.codeDescr, TestLib.ground, rowIxRef)
 
@@ -552,7 +544,8 @@ for ii in range(len(frame.vars.bubbles[0])):
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
-        ("tgtPos", "FL", (0, 25, 0)),
+        ("tgtPos","FL",
+          (0,25,0)),
         ("posStep","F",0.04),
         ("fish","O",None),
         ("fishTag","S",""),
@@ -561,7 +554,8 @@ for ii in range(len(frame.vars.bubbles[0])):
         ("dAngleY","F",0.5),
         ("dAngleZ","F",0.5),
         ("sound","O",None),
-        ("position","FL",(0,0,0)),
+        ("position","FL",
+          (0,0,0)),
         ("prevState","I",0),
         ("startQ","O",None),
         ("endQ","O",None),
@@ -714,7 +708,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",leaderFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildParallelText('TestLib', 'leaderFish', TestLib.leaderFish.codeDescr, TestLib.leaderFish)
 
@@ -723,6 +716,74 @@ else:
 
     def run(frame):
         # print('Run 'leaderFish)
+        frame.runParallel()
+
+  class parallelFish:
+    mode = Wye.mode.PARALLEL
+    autoStart = True
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.OBJECT
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        (
+        ("gObj","O",None),
+        ("objTag","S",""),
+        ("sound","O",None),
+        ("position","FL",
+          (3,2,-1)),
+        ("dPos","FL",
+          (0.0,0.0,0.03)),
+        ("posAngle","F",4.712388),
+        ("dAngleDeg","FL",
+          (0.0,0.0,0.5)),
+        ("dAngleRad","F",-0.0087266462),
+        ("cleanUpObjs","OL",None))
+    codeDescr =        (
+        ("loaderStream",
+          (
+            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            ("WyeCore.libs.WyeLib.loadObject",
+              (None,"[frame]"),
+              (None,"frame.vars.gObj"),
+              (None,"['fish1a.glb']"),
+              (None,"frame.vars.position"),
+              (None,"[[0, 90, 0]]"),
+              (None,"[[.25,.25,.25]]"),
+              (None,"frame.vars.objTag"),
+              (None,"[[.9,0.5,0,1]]"),
+              ("Var","frame.vars.cleanUpObjs")),
+            ("Label","Done"))),
+        ("setAngleStream",
+          (
+            ("Label","Repeat"),
+            ("WyeCore.libs.WyeLib.setObjRelAngle",
+              (None,"frame.vars.gObj"),
+              (None,"frame.vars.dAngleDeg")),
+            ("GoTo","Repeat"))),
+        ("setPositionStream",
+          (
+            ("Label","Repeat"),
+            ("Code","import math #"),
+            ("Code","angle = frame.vars.posAngle[0] #"),
+            ("Code","ctrPos = frame.vars.position[0] #"),
+            ("Code","x = ctrPos[0] + math.sin(angle)#"),
+            ("Code","y = ctrPos[1] + math.cos(angle)#"),
+            ("Code","frame.vars.gObj[0].setPos(x,y,ctrPos[2]) #"),
+            ("Code","angle += frame.vars.dAngleRad[0] #"),
+            ("Code","angle=angle%(math.pi*2) #"),
+            ("Code","frame.vars.posAngle[0]=angle #"),
+            ("GoTo","Repeat"))))
+
+    def _build(rowRef):
+        # print("Build ",parallelFish)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildParallelText('TestLib', 'parallelFish', TestLib.parallelFish.codeDescr, TestLib.parallelFish)
+
+    def start(stack):
+        return TestLib.TestLib_rt.parallelFish_start_rt(stack)
+
+    def run(frame):
+        # print('Run 'parallelFish)
         frame.runParallel()
 
   class showFishDialog:
@@ -791,7 +852,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",showFishDialog)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('showFishDialog', TestLib.showFishDialog.codeDescr, TestLib.showFishDialog, rowIxRef)
 
@@ -830,7 +890,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",testLoader)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('testLoader', TestLib.testLoader.codeDescr, TestLib.testLoader, rowIxRef)
 
@@ -895,7 +954,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",testObj3)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('testObj3', TestLib.testObj3.codeDescr, TestLib.testObj3, rowIxRef)
 
@@ -958,7 +1016,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",testObj3b)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('testObj3b', TestLib.testObj3b.codeDescr, TestLib.testObj3b, rowIxRef)
 
@@ -1021,7 +1078,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",testObj3c)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('testObj3c', TestLib.testObj3c.codeDescr, TestLib.testObj3c, rowIxRef)
 
@@ -1031,72 +1087,3 @@ else:
     def run(frame):
         # print('Run 'testObj3c)
         TestLib.TestLib_rt.testObj3c_run_rt(frame)
-
-  class parallelFish:
-    mode = Wye.mode.PARALLEL
-    autoStart = True
-    dataType = Wye.dType.NONE
-    cType = Wye.cType.OBJECT
-    parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (3,2,-1)),
-        ("dPos","FL",
-          (0.0,0.0,0.03)),
-        ("posAngle","F",4.712388),
-        ("dAngleDeg","FL",
-          (0.0,0.0,0.5)),
-        ("dAngleRad","F",-0.0087266462),
-        ("cleanUpObjs","OL",None))
-    codeDescr =        (
-        ("loaderStream",
-          (
-            ("Var=","frame.vars.cleanUpObjs[0] = []"),
-            ("WyeCore.libs.WyeLib.loadObject",
-              (None,"[frame]"),
-              (None,"frame.vars.gObj"),
-              (None,"['fish1a.glb']"),
-              (None,"frame.vars.position"),
-              (None,"[[0, 90, 0]]"),
-              (None,"[[.25,.25,.25]]"),
-              (None,"frame.vars.objTag"),
-              (None,"[[.9,0.5,0,1]]"),
-              ("Var","frame.vars.cleanUpObjs")),
-            ("Label","Done"))),
-        ("setAngleStream",
-          (
-            ("Label","Repeat"),
-            ("WyeCore.libs.WyeLib.setObjRelAngle",
-              (None,"frame.vars.gObj"),
-              (None,"frame.vars.dAngleDeg")),
-            ("GoTo","Repeat"))),
-        ("setPositionStream",
-          (
-            ("Label","Repeat"),
-            ("Code","import math #"),
-            ("Code","angle = frame.vars.posAngle[0] #"),
-            ("Code","ctrPos = frame.vars.position[0] #"),
-            ("Code","x = ctrPos[0] + math.sin(angle)#"),
-            ("Code","y = ctrPos[1] + math.cos(angle)#"),
-            ("Code","frame.vars.gObj[0].setPos(x,y,ctrPos[2]) #"),
-            ("Code","angle += frame.vars.dAngleRad[0] #"),
-            ("Code","angle=angle%(math.pi*2) #"),
-            ("Code","frame.vars.posAngle[0]=angle #"),
-            ("GoTo","Repeat"))))
-
-    def _build(rowRef):
-        # print("Build ",parallelFish)
-
-        rowIxRef = [0]
-        return WyeCore.Utils.buildParallelText('TestLib', 'parallelFish', TestLib.parallelFish.codeDescr, TestLib.parallelFish)
-
-    def start(stack):
-        return TestLib.TestLib_rt.parallelFish_start_rt(stack)
-
-    def run(frame):
-        # print('Run 'parallelFish)
-        frame.runParallel()
