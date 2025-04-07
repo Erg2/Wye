@@ -21,7 +21,7 @@ class Wye:
     breakList = []          # list of frames to break on
     midi = None
     midiLastIns = 0
-    windowSize = 2          # 0 full frame, 1 max window, 2 small window
+    windowSize = 1          # 0 full frame, 1 max window, 2 small window
 
     dragging = False
 
@@ -629,6 +629,9 @@ class Wye:
         ESCAPE = -12
         ENTER = -13
         F11 = -14
+        CTL_H = -15
+        CTL_P = -16
+        CTL_W = -17
 
         ctlList = [
             RIGHT,
@@ -645,6 +648,9 @@ class Wye:
             ESCAPE,
             ENTER,
             F11,
+            CTL_H,
+            CTL_P,
+            CTL_W,
         ]
 
         stringLookup = {
@@ -661,7 +667,10 @@ class Wye:
             HOME: "HOME",
             ESCAPE: "ESCAPE",
             ENTER: "ENTER",
-            F11: "F11"
+            F11: "F11",
+            CTL_H: "CTL_H",
+            CTL_P: "CTL_P",
+            CTL_W: "CTL_W",
         }
 
         def tostring(val):

@@ -514,7 +514,13 @@ class WyeCore(Wye.staticObj):
                     if base.mouseWatcherNode.hasMouse():
                         x = base.mouseWatcherNode.getMouseX()
                         y = base.mouseWatcherNode.getMouseY()
-                        WyeCore.World.mouseHandler.mouseMove(x,y)
+                        mb1 = base.mouseWatcherNode.isButtonDown(MouseButton.one())
+                        mb2 = base.mouseWatcherNode.isButtonDown(MouseButton.two())
+                        mb3 = base.mouseWatcherNode.isButtonDown(MouseButton.three())
+                        shift = base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.shift())
+                        ctrl = base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control())
+                        alt = base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt())
+                        WyeCore.World.mouseHandler.mouseMove(x,y, mb1, mb2, mb3, shift, ctrl, alt)
 
                 # debug
                 stackNum = 0
@@ -604,16 +610,18 @@ class WyeCore(Wye.staticObj):
                 # if active object completed, remove the stack it is on from run list
                 if len(WyeCore.World.objKillList) > 0:
                     for frame in WyeCore.World.objKillList:
-                        origFrame = frame
-                        # if in parallel exec frame, go up to top parent
-                        if len(frame.SP) > 0:
-                            while frame.SP[0].verb.__name__ == "ParallelStream":
-                                frame = frame.SP[0].parentFrame
-                        if frame.SP in WyeCore.World.objStacks:
-                            WyeCore.World.objStacks.remove(frame.SP)
-                        # DEBUG
-                        #else:
-                        #    print("StopActiveObject: frame", origFrame.verb.__name__, " not on World exec list")
+                        if frame:  # if it still exists
+                            #origFrame = frame
+                            # if in parallel exec frame, go up to top parent
+                            if len(frame.SP) > 0:
+                                while frame.SP[0].verb.__name__ == "ParallelStream":
+                                    frame = frame.SP[0].parentFrame
+                            if frame:  # if it still exists
+                                if frame.SP in WyeCore.World.objStacks:
+                                    WyeCore.World.objStacks.remove(frame.SP)
+                                # DEBUG
+                                #else:
+                                #    print("StopActiveObject: frame", origFrame.verb.__name__, " not on World exec list")
                     WyeCore.World.objKillList.clear()
 
             return Task.cont  # tell panda3d we want to run next frame too
@@ -623,19 +631,25 @@ class WyeCore(Wye.staticObj):
         def startActiveObject(obj):
             stk = []            # create stack to run object on
             frame = obj.start(stk)  # start the object and get its stack frame
-            stk.append(frame)       # put obj frame on its stack
-            # frame.params = [[0], ]  # place to put return param
-            WyeCore.World.objStacks.insert(0,stk)  # put obj's stack on list and put obj's frame on the stack
+            if frame.verb.mode == Wye.mode.SINGLE_CYCLE:
+                frame.verb.run(frame)
+            else:
+                stk.append(frame)       # put obj frame on its stack
+                # frame.params = [[0], ]  # place to put return param
+                WyeCore.World.objStacks.insert(0,stk)  # put obj's stack on list and put obj's frame on the stack
             return frame
 
         # Put object instance frame on active list
         # caller already created stack and started the object
         # (required when caller needs to pass params to the object)
         def startActiveFrame(frame):
-            # make sure frame is on its own stack
-            if len(frame.SP) == 0 or not frame.SP[-1] == frame:
-                frame.SP.append(frame)
-            WyeCore.World.objStacks.append(frame.SP)  # put obj's stack on exec list
+            if frame.verb.mode == Wye.mode.SINGLE_CYCLE:
+                frame.verb.run(frame)
+            else:
+                # make sure frame is on its own stack
+                if len(frame.SP) == 0 or not frame.SP[-1] == frame:
+                    frame.SP.append(frame)
+                WyeCore.World.objStacks.append(frame.SP)  # put obj's stack on exec list
             #print("startActiveFrame: put", frame.verb.__name__, " ", frame.params.title[0] if frame.verb == WyeCore.libs.WyeUILib.Dialog else " ", " ", id(frame), " stack on objStacks")
             #print("startActiveFrame stacks", len(WyeCore.World.objStacks), " ", [stack[0].verb.__name__+" "+str(id(stack[0])) for stack in WyeCore.World.objStacks])
             return frame
@@ -781,6 +795,9 @@ class WyeCore(Wye.staticObj):
                 self.accept('enter', self.controlKeyFunc, [Wye.ctlKeys.ENTER])
                 self.accept("f11", self.controlKeyFunc, [Wye.ctlKeys.F11])
                 self.accept("window-event", self.resize)
+                self.accept("control-w", self.controlKeyFunc, [Wye.ctlKeys.CTL_W])
+                self.accept("control-h", self.controlKeyFunc, [Wye.ctlKeys.CTL_H])
+                self.accept("control-p", self.controlKeyFunc, [Wye.ctlKeys.CTL_P])
 
 
             def resize(self, dummy):
@@ -797,6 +814,7 @@ class WyeCore(Wye.staticObj):
                         WyeCore.winHeight = height
 
             def controlKeyFunc(self, keyID):
+                #print("controlKeyFunc key", Wye.ctlKeys.tostring(keyID))
                 # external callbacks
                 # If callback(s) return True, don't process any further
                 usedCtlKey = False
@@ -1895,7 +1913,7 @@ class WyeCore(Wye.staticObj):
     def _build(rowRef):
         # print("Build ",'''
             vrbStr += name + ")\n"
-            vrbStr += "\n        rowIxRef = [0]\n"
+            vrbStr += "        rowIxRef = [0]\n"
             if verbSettings['mode'] == Wye.mode.PARALLEL:
                 vrbStr += "        return WyeCore.Utils.buildParallelText('"
                 if doTest:
@@ -2039,6 +2057,7 @@ cdStr = "class tmp:\\n" + cdStr + "\\n"
 try:
     # compile the verb's runtime code
     code = compile(parStr, "<string>", "exec")
+    print("verb's code contains\\n", dir(code))
     #print("createVerb: Compiled verb runtime successfully")
 '''
             else:

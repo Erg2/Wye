@@ -175,7 +175,7 @@ class TestLib:
         ("objTag","S","objTag"),
         ("sound","O",None),
         ("position","FL",
-          (-3,2,2.5)),
+          (-2,2,2.5)),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
         ("Var=","frame.vars.cleanUpObjs[0] = []"),

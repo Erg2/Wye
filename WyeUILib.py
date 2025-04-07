@@ -279,7 +279,7 @@ class WyeUILib(Wye.staticObj):
 
             self.pos = [0,0]        # filled in with most recent mouse position
 
-        def mouseMove(self, x, y):
+        def mouseMove(self, x, y, mb1, mb2, mb3, shift, ctrl, alt):
             global base
             global render
 
@@ -297,7 +297,7 @@ class WyeUILib(Wye.staticObj):
             self.alttReleased = False
 
             # get mouse buttons and mouse-down start pos
-            if base.mouseWatcherNode.isButtonDown(MouseButton.one()):
+            if mb1:
                 if not self.m1Down:
                     self.m1Down = True
                     self.m1DownPos = [x, y]     # use list to allow modification while zooming dialog
@@ -305,7 +305,7 @@ class WyeUILib(Wye.staticObj):
                     self.m1Pressed = True
             else:
                 self.m1Down = False
-            if base.mouseWatcherNode.isButtonDown(MouseButton.two()):
+            if mb2:
                 if not self.m2Down:
                     self.m2Down = True
                     self.m2DownPos = (x, y)
@@ -313,7 +313,7 @@ class WyeUILib(Wye.staticObj):
                     self.m2Pressed = True
             else:
                 self.m2Down = False
-            if base.mouseWatcherNode.isButtonDown(MouseButton.three()):
+            if mb3:
                 if not self.m3Down:
                     self.m3Down = True
                     self.m3DownPos = (x, y)
@@ -328,7 +328,7 @@ class WyeUILib(Wye.staticObj):
                     callback()
 
             # get shift key
-            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.shift()):
+            if shift:
                 if not self.shift:
                     self.shift = True
                     self.shiftPressed = True
@@ -336,7 +336,7 @@ class WyeUILib(Wye.staticObj):
                 if self.shift:
                     self.shiftReleased = True
                 self.shift = False
-            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.alt()):
+            if alt:
                 if not self.alt:
                     self.alt = True
                     self.altPressed = True
@@ -344,7 +344,7 @@ class WyeUILib(Wye.staticObj):
                 if self.alt:
                     self.altReleased = True
                 self.alt = False
-            if base.mouseWatcherNode.getModifierButtons().isDown(KeyboardButton.control()):
+            if ctrl:
                 if not self.ctl:
                     self.ctl = True
                     self.ctlPressed = True
@@ -755,6 +755,17 @@ class WyeUILib(Wye.staticObj):
                 case Wye.ctlKeys.F11:       # cycle through window sizes
                     Wye.windowSize = (Wye.windowSize + 1) % 3
                     WyeCore.Utils.setScreenSize(Wye.windowSize)
+                    return True
+                case Wye.ctlKeys.CTL_H:       # show help
+                    helpFrm = WyeCore.libs.WyeUILib.HelpDialog.start([])
+                    helpFrm.verb.run(helpFrm)
+                    return True
+                case Wye.ctlKeys.CTL_P:       # show copy/paste
+                    WyeCore.World.copyPasteManager.show()
+                    return True
+                case Wye.ctlKeys.CTL_W:       # show copy/paste
+                    if not WyeCore.HUD:
+                        WyeCore.HUD = WyeCore.World.startActiveObject(WyeCore.libs.WyeUILib.MainHUDDialog)
                     return True
                 # any other key
                 case _:
@@ -1390,6 +1401,7 @@ class WyeUILib(Wye.staticObj):
                     ("currVal", Wye.dType.STRING, ""),                    # current string value
                     ("currInsPt", Wye.dType.INTEGER, 0),                  # text insertion point
                     ("gWidget", Wye.dType.OBJECT, None),                  # stashed graphic widget
+                    ("labelGWidget", Wye.dType.OBJECT, None),
                     ("localCallback", Wye.dType.OBJECT, None),            # local verb to call to toggle check value
                     ("localOptData", Wye.dType.ANY, None),
                     ("radioGroupList", Wye.dType.OBJECT, None),
@@ -1420,6 +1432,7 @@ class WyeUILib(Wye.staticObj):
             lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
                                 scale=(1, 1, 1), parent=dlgPath, bg=frame.params.backgroundColor[0])
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
+            frame.vars.labelGWidget[0] = lbl
             # add tag, input index to dictionary
             frame.vars.tags[0].append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
             # offset 3d input field right past end of 3d label
@@ -1505,13 +1518,13 @@ class WyeUILib(Wye.staticObj):
                 frame.vars.currVal[0] = isOn
                 frame.params.value[0] = isOn
                 frame.vars.gWidget[0].setColor(Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
+                #print("InputCheckbox setValue", isOn, " color", Wye.color.TRUE_COLOR if isOn else Wye.color.FALSE_COLOR)
 
         def setColor(frame, color):
-            frame.vars.gWidgetStack[0][0].setColor(color)
-            frame.vars.gWidget[0].setColor(color)
+            frame.vars.labelGWidget[0].setColor(color)
 
         def setBackgroundColor(frame, color):
-            frame.vars.gWidget[0].setBackgroundColor(color)
+            frame.vars.labelGWidget[0].setBackgroundColor(color)
 
         def setCurrentPos(frame, index):
             frame.vars.currPos[0] = index       # TODO needs validating!
@@ -1525,6 +1538,7 @@ class WyeUILib(Wye.staticObj):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.show()
             frame.params.hidden[0]=False
+
 
         # User clicked input, generate the DropDown
         class InputCheckboxCallback:
@@ -1977,7 +1991,7 @@ class WyeUILib(Wye.staticObj):
             # top ok/cancel
             # if big dialog, put ok/can at top too
             nInputs = len(frame.params.inputs[0])
-            if nInputs > 4 or ("FORCE_TOP_CTLS" in frame.params.format[0]):
+            if (not ("NO_TOP_CTLS" in frame.params.format[0])) and (nInputs > 4 or ("FORCE_TOP_CTLS" in frame.params.format[0])):
                 pos = [frame.vars.titleGObj[0].getWidth() + 1, 0, 0]
 
                 if not (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
@@ -2470,8 +2484,13 @@ class WyeUILib(Wye.staticObj):
 
             # exit on escape
             if key == Wye.ctlKeys.ESCAPE:
-                if "NO_CANCEL" in frame.params.format[0]:   # if dlg not showing Cancel, do OK
-                    tag = frame.vars.okTags[0][0]
+                if "NO_CANCEL" in frame.params.format[0]:   # if dlg not showing Cancel, do OK unless not allowed
+                    # have OK, if okOnCr, emulate OK click
+                    if frame.params.okOnCr[0]:
+                        tag = frame.vars.okTags[0][0]
+                    else:
+                        return
+                # have Cancel, emulate cancel click
                 else:
                     tag = frame.vars.canTags[0][0]
                 # force exit
@@ -2930,7 +2949,7 @@ class WyeUILib(Wye.staticObj):
                     filePath = frame.params.fileName[0].strip()
 
                     fileName, ext = os.path.splitext(os.path.basename(filePath))
-                    #print("AskSaveAsFile: fileName", fileName, " ext", ext)
+                    #print("AskSaveAsFile: basename", os.path.basename(filePath), " fileName", fileName, " ext", ext)
                     path = os.path.dirname(filePath)
                     # generate unique name
                     ii = 0
@@ -2954,7 +2973,8 @@ class WyeUILib(Wye.staticObj):
                     dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog(frame.params.title[0], parent=frame.params.parent[0], position=pos, okOnCr=frame.params.okOnCr[0])
                     WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Save  New", frame.vars.newFile, radioGroup="newRad")
                     WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "File Name:", frame.vars.newFileName, layout=Wye.layout.ADD_RIGHT)
-                    WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Overwrite "+frame.params.fileName[0], [False], radioGroup="newRad")
+                    WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Overwrite ", [False], radioGroup="newRad")
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, os.path.basename(frame.params.fileName[0]), layout=Wye.layout.ADD_RIGHT)
                     frame.SP.append(dlgFrm)     # push dialog so it runs next cycle
 
                     frame.PC += 1               # on return from dialog, run next case
@@ -3004,30 +3024,28 @@ class WyeUILib(Wye.staticObj):
                     #print("Create HUD")
 
 
-                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doHUDDialog("Wye HUD", position=(-11.3, Wye.UI.NOTIFICATION_OFFSET, 5.8))
-                    dlgFrm.params.format = [["NO_CANCEL"]]
-
+                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doHUDDialog("Wye HUD                         (Ctrl-W)", position=(-11.3, Wye.UI.NOTIFICATION_OFFSET, 5.8))
+                    dlgFrm.params.format = [["NO_CANCEL", "NO_TOP_CTLS"]]
                     frame.vars.dlgFrm[0] = dlgFrm
 
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Wye Help",
-                                                             WyeCore.libs.WyeUILib.MainMenuDialog.HelpCallback)
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Wye Help                         (Ctrl-H)",
+                                                             WyeCore.libs.WyeUILib.HelpDialog)
 
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Main Dialog",
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Copy/Paste List   (Ctrl-P)",
+                                                             WyeCore.libs.WyeUILib.MainMenuDialog.CopyPasteCallback)
+
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Main Menu   (Ctrl-Alt-Click)",
                                                              WyeCore.libs.WyeUILib.MainHUDDialog.HUDMainDlgCallback)
 
-
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Debugger Dialog",
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Debugger     (Alt-Shift-Click)",
                                                              WyeCore.libs.WyeUILib.MainHUDDialog.HUDDbgDlgCallback)
 
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Libraries Dialog",
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Libraries       (Ctrl-Shift-Click)",
                                                              WyeCore.libs.WyeUILib.MainHUDDialog.HUDMainLibDlgCallback)
 
-                    # NOTE: Re-using MainMenuDialog's ExitCallback!!!!
                     exitBtn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Exit Wye",
                                                              WyeCore.libs.WyeUILib.MainMenuDialog.ExitCallback)
                     exitBtn.params.optData = [(exitBtn, dlgFrm),]
-
-
 
 
                     frame.SP.append(dlgFrm)
@@ -3075,7 +3093,7 @@ class WyeUILib(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                print("HUDDbgDlgCallback run: data", data)
+                #print("HUDDbgDlgCallback run: data", data)
                 if not WyeCore.World.debugger:
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeUILib.DebugMain)
                 else:
@@ -3145,7 +3163,7 @@ class WyeUILib(Wye.staticObj):
                     frame.vars.dlgFrm[0] = dlgFrm
 
                     # Help
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Wye Help", WyeUILib.MainMenuDialog.HelpCallback)
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Wye Help (Ctrl-H)", WyeUILib.HelpDialog)
 
                     # Settings
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Settings", Wye.color.SUBHD_COLOR)
@@ -3154,11 +3172,11 @@ class WyeUILib(Wye.staticObj):
                                         WyeUILib.MainMenuDialog.VerCheckCallback)
                     verChkFrm.params.optData = [verChkFrm]
 
-                    copyBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Open Copy Paste Dialog",
+                    copyBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Open Copy/Paste Dialog (Ctrl-P)",
                                         WyeUILib.MainMenuDialog.CopyPasteCallback)
                     copyBtnFrm.params.optData = [copyBtnFrm]
 
-                    copyBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Open HUD Dialog",
+                    copyBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Open HUD Dialog (Ctrl-W)",
                                         WyeUILib.MainMenuDialog.HudCallback)
                     #copyBtnFrm.params.optData = [copyBtnFrm]
 
@@ -3166,7 +3184,7 @@ class WyeUILib(Wye.staticObj):
                     sndChkFrm.params.optData = [sndChkFrm]
 
                     # screen size
-                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  Set Window Size", color=Wye.color.NORMAL_COLOR)
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  Set Window Size (F11)", color=Wye.color.NORMAL_COLOR)
                     frame.vars.scrnSizeFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "    Full Screen", [Wye.windowSize == 0],
                                        WyeUILib.MainMenuDialog.SetScrnCallback, (frame), radioGroup="winRad")
                     WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "    Maximize Window", [Wye.windowSize == 1],
@@ -3236,87 +3254,8 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.stopActiveObject(WyeCore.World.mainMenu)
                     WyeCore.World.mainMenu = None
 
-        # HACK - also called from MainHUDDialog
-        # turn sound on/off
-        class HelpCallback:
-            mode = Wye.mode.SINGLE_CYCLE
-            dataType = Wye.dType.STRING
-            paramDescr = ()
-            varDescr = ()
-
-            def start(stack):
-                # print("HelpCallback started")
-                return Wye.codeFrame(WyeUILib.MainMenuDialog.HelpCallback, stack)
-
-            def run(frame):
-
-                helpTxt = "Wye Alpha Release V"+Wye.version+" Help\n"
-                helpTxt += '''
-This is an ** ALPHA TEST ** release.  
-Expect it to be as reliable and easy to use as an MS 1.0 product release.  You have been warned.
-
-Move:
-    Mouse button 1 down+drag moves fwd/back, turns
-    Shift-Mouse button 1 down+drag tilts up/down and slides sideways
-    Mouse button 2 down+drag slides sideways, up/down
-    Pressing the scroll wheel (middle button) resets the viewpoint to the starting location
-
-Select things:    
-    Mouse button 1 (MB1) selects things
-    Ctrl-Alt-MB1 to bring up the main Wye Settings dialog.  But you know this if you got here.
-    Ctrl-MB1 on an object to edit it
-    Shift-Ctrl-MB1 anywhere to bring up the master edit dialog showing all libraries
-    Alt-click on an object to debug it
-    Shift-Alt-MB1 to bring up the master debug dialog showing all running objects in the system
-
-Dialogs:
-    You can drag a dialog by MB1 down on any gray part and dragging.  
-    Shift-MB1 down then drag up/down will move the dialog closer/farther away
-    Dragging a child dialog brings its parent along.  Ctl-drag will move the child by itself.
-    
-    Clicking on text can be a bit hit or miss.  The center of characters like "C" and "O" is most reliable
-    
-    Any control in Yellow is clickable.  
-    
-    Text in Green with a cursor is the currently selected text input
-    
-    There is no select/copy/paste of text.
-    The text cursor always starts at the beginning of the text box.  You have to move with the arrow keys, 
-    home/end keys, and ctl-arrow keys.
-    
-    Number boxes increment/decrement on up/down arrow and scroll-wheel input.  ctl-up/down to go by 10's.
-    
-    Cancel (or the Escape key) will close a dialog without saving.
-    Ok (or Enter) will close any dialog that has just an OK button. (information/warning dialogs)
-    
-Overview:
-    Wye will be an IDE for interactive VR characters.
-    This Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
-    When the alpha starts it loads the demo library TestLib.py.  You can also load, edit, and save user defined
-    libraries.  The alpha release ships with several example libraries available from the master edit dialog.
-    
-    The current level of code editing requires a detailed understanding of the underlying engine.  In other words, 
-    editing is not recommended without a tutorial from someone who knows how it works.  In the future, this level
-    of detail will only be available to wizards who enjoy breaking things at the core level.
-   
-    Note that the +/- buttons in the editor provide line-at-a-time copy/paste support.  
-    Also, saving to files is pretty reliable so you can save early/save often   
-    
-    The engine is fairly well protected from crashes, so it should stay running even if it doesn't like your changes 
-    and it probably will keep your changes around so you can keep working on it.  
-    
-    On the minus side, All the helpful UI stuff like undo and and "why didn't that work" debug support that Wye is 
-    intended to provide is not in this release.  Remember: Underlying engine, no flashy features.  
-    You probably want to ask to be on the beta test list...
-    
-    See the release notes for more details on what you can do in this release. 
-'''
-
-                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "OK_ONLY"])
-
 
         # Exit, are you sure?
-        # NOTE: ALSO CALLED FROM MainHUDDialog (Hack, Cough)
         class ExitCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
@@ -3482,8 +3421,8 @@ Overview:
                 return Wye.codeFrame(WyeUILib.MainMenuDialog.CopyPasteCallback, stack)
 
             def run(frame):
-                data = frame.eventData
-                rowFrm = data[1]
+                #data = frame.eventData
+                #rowFrm = data[1]
                 WyeCore.World.copyPasteManager.show()
 
 
@@ -3601,7 +3540,7 @@ Overview:
                 # libTpl += "    def test():\n        print('Hi from "+name+" " + str(WyeCore.Utils.getId())+"')\n"
                 vertSettings = {
                     'mode': Wye.mode.MULTI_CYCLE,
-                    'autoStart': True,
+                    'autoStart': False,
                     'dataType': Wye.dType.NONE
                 }
 
@@ -3769,9 +3708,9 @@ Overview:
 
                     # Load lib from file
                     libPath = WyeCore.Utils.userLibPath()
-                    loadLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Load Library From:", WyeUILib.EditMainDialog.LoadLibCallback)
+                    loadLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Load Library File:", WyeUILib.EditMainDialog.LoadLibCallback)
                     libFiles = [f for f in listdir(WyeCore.Utils.userLibPath()) if isfile(join(WyeCore.Utils.userLibPath(), f))]
-                    libFileNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  User Library", [libFiles], [0],
+                    libFileNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "  WyeUserLibraries /", [libFiles], [0],
                                         preDropCallback=WyeUILib.EditMainDialog.RefreshLibListCallback, layout = Wye.layout.ADD_RIGHT)
 
                     # pass dropdown frame to button callback
@@ -4006,7 +3945,8 @@ Overview:
                                                    Wye.color.WARNING_COLOR)
                             frame.status = Wye.status.SUCCESS
                             return
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to "+fileName)
+
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to WyeUserLibraries/"+os.path.basename(fileName))
                         #print("SaveLibToFileCallback case 1: Wrote lib '" + libName + "' to '" + fileName + "'")
 
 
@@ -4183,7 +4123,7 @@ Overview:
                         # mark lib as saved
                         lib.modified = False
 
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to "+fileName)
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to WyeUserLibraries/"+os.path.basename(fileName))
                         #print("EditLibLineCallback case 1: Wrote lib '" + libName + "' to '" + fileName + "'")
 
 
@@ -4498,18 +4438,19 @@ Overview:
                 WyeUILib.EditMainDialog.activeLibs[lib.__name__] = dlgFrm
 
                 # create new verb
-                createFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Create New Verb:", WyeUILib.EditMainDialog.EditLibCallback.CreateVerbCallback)
-                newVerbNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Name:", frame.vars.newVerbName, layout=Wye.layout.ADD_RIGHT)
-                createFrm.params.optData = [(createFrm, newVerbNameFrm, dlgFrm, lib, frame),]
+                if hasattr(lib, "systemLib"):
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Verb List", color=Wye.color.SUBHD_COLOR)
+                else:
+                    createFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Create New Verb:", WyeUILib.EditMainDialog.EditLibCallback.CreateVerbCallback)
+                    newVerbNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Name:", frame.vars.newVerbName, layout=Wye.layout.ADD_RIGHT)
+                    createFrm.params.optData = [(createFrm, newVerbNameFrm, dlgFrm, lib, frame),]
 
-                # save lib to file
-                if not hasattr(lib, "systemLib"):
+                    # save lib to file
                     saveBtn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Save Library To File",
                             WyeUILib.EditMainDialog.SaveLibToFileCallback)
                     saveBtn.params.optData = [(saveBtn, dlgFrm, frame, saveBtn, lib)]
 
-
-                WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Select Verb to Edit", color=Wye.color.SUBHD_COLOR)
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Select Verb to Edit", color=Wye.color.SUBHD_COLOR)
 
                 # create a row for each verb in the library
                 WyeUILib.EditMainDialog.EditLibCallback.listVerbs(frame, dlgFrm)
@@ -8640,7 +8581,7 @@ Overview:
 
                         lib.modified = False        # lib's been saved
 
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+verbName+" to "+fileName)
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+verbName+" to WyeUserLibraries/"+os.path.basename(fileName))
                         #print("EditCodeSaveLibCallback: Wrote verb ", verbName, " to library file", libFileName)
 
 
@@ -9875,11 +9816,12 @@ Overview:
                         else:
                             if not objFrm.breakpt:  # make sure the brake is on
                                 objFrm.breakpt = True
-                                chkBxFrm.verb.setValue(chkBxFrm, False)
                             if objFrm.SP[-1] != objFrm:
                                 objFrm.SP[-1].breakpt = False           # step at parent object level
-
                         objFrm.breakCt += 1  # step object once
+
+                        chkBxFrm.verb.setValue(chkBxFrm, False)
+
                         # print("DebugStepCallback increment breakCt to", objFrm.breakCt," on objFrm", objFrm.verb.__name__)
                         frame.PC += 1
 
@@ -9933,3 +9875,81 @@ Overview:
 
                 WyeUILib.ObjectDebugger.update(dbgFrm)
 
+    # Put up Wye Help
+    class HelpDialog:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = ()
+
+        def start(stack):
+            # print("HelpDialog started")
+            return Wye.codeFrame(WyeUILib.HelpDialog, stack)
+
+        def run(frame):
+            helpTxt = "Wye Alpha Release V" + Wye.version + " Help\n"
+            helpTxt += '''
+This is an ** ALPHA TEST ** release.  
+Expect it to be as reliable and easy to use as an MS 1.0 product release.  You have been warned.
+
+Help:
+    Ctrl-H to bring up this help dialog.
+
+Move:
+    Mouse button 1 down+drag moves fwd/back, turns
+    Shift-Mouse button 1 down+drag tilts up/down and slides sideways
+    Mouse button 2 down+drag slides sideways, up/down
+    Pressing the scroll wheel (middle button) resets the viewpoint to the starting location
+
+Select things:    
+    Mouse button 1 (MB1) selects things
+    Ctrl-Alt-MB1 to bring up the main Wye Settings dialog.  But you know this if you got here.
+    Ctrl-MB1 on an object to edit it
+    Ctrl-Shift-MB1 anywhere to bring up the master edit dialog showing all libraries
+    Alt-click on an object to debug it
+    Alt-Shift-MB1 to bring up the master debug dialog showing all running objects in the system
+
+Dialogs:
+    You can drag a dialog by MB1 down on any gray part and dragging.  
+    Shift-MB1 down then drag up/down will move the dialog closer/farther away
+    Dragging a child dialog brings its parent along.  Ctl-drag will move the child by itself.
+
+    Clicking on text can be a bit hit or miss.  The center of characters like "C" and "O" is most reliable
+
+    Any control in Yellow is clickable.  
+
+    Text in Green with a cursor is the currently selected text input
+
+    The +/- buttons in the editor provide line-at-a-time copy/paste support.  
+    Other than thst, there is no select/copy/paste of text.
+    The text cursor always starts at the beginning of the text box.  Move the cursor with the arrow keys, 
+    home/end keys, and ctl-arrow keys.
+
+    Number boxes increment/decrement on up/down arrow and scroll-wheel input.  ctl-up/down to go by 10's.
+
+    Cancel (or the Escape key) will close a dialog without saving.
+    Ok (or Enter) will close any dialog that has just an OK button. (information/warning dialogs)
+
+Overview:
+    Wye will be an IDE for interactive VR characters.
+    This Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
+    When the alpha starts it loads the demo library TestLib.py.  You can also load, edit, and save user defined
+    libraries.  The alpha release ships with several example libraries available from the master edit dialog.
+
+    The current level of code editing requires a detailed understanding of the underlying engine.  In other words, 
+    editing is not recommended without a tutorial from someone who knows how it works.  In the future, this level
+    of detail will only be available to wizards who enjoy breaking things at the core level.
+
+    Also, saving to files is pretty reliable so you can save early/save often   
+
+    The engine is fairly well protected from crashes, so it should stay running even if it doesn't like your changes 
+    and it probably will keep your changes around so you can keep working on it.  
+
+    On the minus side, All the helpful UI stuff like undo and and "why didn't that work" debug support that Wye is 
+    intended to provide is not in this release.  Remember: Underlying engine, no flashy features.  
+    You probably want to ask to be on the beta test list...
+
+    See the release notes for more details on what you can do in this release. 
+'''
+
+            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "NO_CANCEL"])

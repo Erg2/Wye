@@ -5,7 +5,6 @@ class RecordPlaybackLib:
     WyeCore.Utils.buildLib(RecordPlaybackLib)
   canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
-
   class RecordPlaybackLib_rt:
    pass #1
 
@@ -24,7 +23,6 @@ class RecordPlaybackLib:
 
     def _build(rowRef):
         # print("Build ",ClickMouse)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('ClickMouse', RecordPlaybackLib.ClickMouse.codeDescr, RecordPlaybackLib.ClickMouse, rowIxRef)
 
@@ -57,7 +55,6 @@ class RecordPlaybackLib:
 
     def _build(rowRef):
         # print("Build ",DoMouseMove)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('DoMouseMove', RecordPlaybackLib.DoMouseMove.codeDescr, RecordPlaybackLib.DoMouseMove, rowIxRef)
 
@@ -82,7 +79,6 @@ class RecordPlaybackLib:
 
     def _build(rowRef):
         # print("Build ",DoMouseWheel)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('DoMouseWheel', RecordPlaybackLib.DoMouseWheel.codeDescr, RecordPlaybackLib.DoMouseWheel, rowIxRef)
 
@@ -95,7 +91,7 @@ class RecordPlaybackLib:
 
   class MouseDisplay:
     mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
+    autoStart = False
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
@@ -123,7 +119,6 @@ class RecordPlaybackLib:
 
     def _build(rowRef):
         # print("Build ",MouseDisplay)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('MouseDisplay', RecordPlaybackLib.MouseDisplay.codeDescr, RecordPlaybackLib.MouseDisplay, rowIxRef)
 
@@ -150,7 +145,6 @@ class RecordPlaybackLib:
 
     def _build(rowRef):
         # print("Build ",MoveCameraToPosHpr)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('MoveCameraToPosHpr', RecordPlaybackLib.MoveCameraToPosHpr.codeDescr, RecordPlaybackLib.MoveCameraToPosHpr, rowIxRef)
 
@@ -160,6 +154,38 @@ class RecordPlaybackLib:
     def run(frame):
         # print('Run 'MoveCameraToPosHpr)
         RecordPlaybackLib.RecordPlaybackLib_rt.MoveCameraToPosHpr_run_rt(frame)
+
+  class RecordDialog:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = True
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        (
+        ("newVar","A",None),)
+    codeDescr =        (
+        ("Code","pass #"),
+        ("Code","#"),
+        ("Code","#"),
+        ("Code","#"),
+        ("Code","#"),
+        ("Code","#"),
+        ("Code","#"),
+        ("Code","#"),
+        ("Code","#"))
+
+    def _build(rowRef):
+        # print("Build ",RecordDialog)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('RecordDialog', RecordPlaybackLib.RecordDialog.codeDescr, RecordPlaybackLib.RecordDialog, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.RecordDialog, stack)
+
+    def run(frame):
+        # print('Run 'RecordDialog)
+        RecordPlaybackLib.RecordPlaybackLib_rt.RecordDialog_run_rt(frame)
 
   class SendControlKey:
     mode = Wye.mode.SINGLE_CYCLE
@@ -175,7 +201,6 @@ class RecordPlaybackLib:
 
     def _build(rowRef):
         # print("Build ",SendControlKey)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('SendControlKey', RecordPlaybackLib.SendControlKey.codeDescr, RecordPlaybackLib.SendControlKey, rowIxRef)
 
@@ -200,7 +225,6 @@ class RecordPlaybackLib:
 
     def _build(rowRef):
         # print("Build ",SendKey)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('SendKey', RecordPlaybackLib.SendKey.codeDescr, RecordPlaybackLib.SendKey, rowIxRef)
 
