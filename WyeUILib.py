@@ -93,6 +93,12 @@ class WyeUILib(Wye.staticObj):
                 self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
                 self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
+        def clear(self):
+            self.cutList = []   # cut data goes here
+            self.selectedRow = None   # nothing on list yet
+            self.show()
+
+
         class CutPasteDisplay:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.NONE
@@ -125,6 +131,9 @@ class WyeUILib(Wye.staticObj):
                         pos = point.getPos()
                         point.removeNode()
                         dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Copy/Paste List", position=pos, formatLst=["NO_CANCEL"])
+
+                        WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Clear List", WyeUILib.CopyPasteManager.CutPasteDisplay.clearCallback)
+
                         WyeUILib.CopyPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
 
                         frame.vars.dlgFrm[0] = dlgFrm
@@ -221,6 +230,25 @@ class WyeUILib(Wye.staticObj):
                     #editFrm = data[1][2]
 
                     WyeCore.World.copyPasteManager.setSelected(row)
+
+
+            # make this the current cut/paste selection
+            class clearCallback:
+                mode = Wye.mode.SINGLE_CYCLE
+                dataType = Wye.dType.STRING
+                paramDescr = ()
+                varDescr = ()
+
+                def start(stack):
+                    # print("RowCallback started")
+                    return Wye.codeFrame(WyeUILib.CopyPasteManager.CutPasteDisplay.clearCallback, stack)
+
+                def run(frame):
+                    data = frame.eventData
+                    #print("CutPasteDisplay RowCallback: data=", data)
+                    WyeCore.World.copyPasteManager.clear()
+
+
 
     # note: this is an instantiated class
     # This does more than camera control, it also triggers debugger and editor
@@ -4168,7 +4196,7 @@ Overview:
                             # if lib open in editor, close it
                             if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
                                 libDlg = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
-                                # force close by faking an OK 
+                                # force close by faking an OK
                                 libDlg.verb.doSelect(libDlg, libDlg.vars.okTags[0][0])
 
                             # delete the library
