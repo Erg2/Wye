@@ -4,6 +4,8 @@ class CirclingFishLib:
   def _build():
     WyeCore.Utils.buildLib(CirclingFishLib)
   canSave = True  # all verbs can be saved with the library
+  modified = False  # no changes
+
   class CirclingFishLib_rt:
    pass #1
 

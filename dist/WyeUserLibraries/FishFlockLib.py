@@ -4,6 +4,8 @@ class FishFlockLib:
   def _build():
     WyeCore.Utils.buildLib(FishFlockLib)
   canSave = True  # all verbs can be saved with the library
+  modified = False  # no changes
+
   class FishFlockLib_rt:
    pass #1
 

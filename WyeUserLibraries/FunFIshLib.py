@@ -4,6 +4,8 @@ class FunFIshLib:
   def _build():
     WyeCore.Utils.buildLib(FunFIshLib)
   canSave = True  # all verbs can be saved with the library
+  modified = False  # no changes
+
   class FunFIshLib_rt:
    pass #1
 

@@ -4,6 +4,8 @@ class MyFlashingFishLib:
   def _build():
     WyeCore.Utils.buildLib(MyFlashingFishLib)
   canSave = True  # all verbs can be saved with the library
+  modified = False  # no changes
+
   class MyFlashingFishLib_rt:
    pass #1
 

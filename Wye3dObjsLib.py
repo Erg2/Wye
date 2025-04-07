@@ -34,6 +34,8 @@ import inspect
 # 3d UI element library
 class Wye3dObjsLib(Wye.staticObj):
     systemLib = True        # prevent overwriting
+    modified = False  # no changes
+    canSave = False
 
     # Build run_rt methods on each class in library
     def _build():
@@ -85,7 +87,7 @@ class Wye3dObjsLib(Wye.staticObj):
             return self._path.getScale()
 
         def getTag(self):
-            return self.node.getTag()
+            return self.node.getTag('wyeTag')
 
         def getHeight(self):
             return self.radius
@@ -208,7 +210,7 @@ class Wye3dObjsLib(Wye.staticObj):
             return self.size[2]
 
         def getTag(self):
-            return self.node.getTag()
+            return self.node.getTag('wyeTag')
 
         def getWidth(self):
             return self.size[0]
@@ -341,7 +343,7 @@ class Wye3dObjsLib(Wye.staticObj):
             return self.node.setTag("wyeTag", tag)
 
         def getTag(self):
-            return self.node.getTag()
+            return self.node.getTag('wyeTag')
 
         def setColor(self, val):
             self._path.setColor(val)
@@ -492,10 +494,10 @@ class Wye3dObjsLib(Wye.staticObj):
             color = self._path.getColor()
             pos = self._path.getPos()
             scale = self._path.getScale()
-            if self.bg[3] > 0:
-                self._genCardObj(bg)                     # generate new card obj for updated text object
-            self._path.detachNode()            # detach 3d node path from old card
-            self._gen3dTextObj(pos, scale, color, self._path)     # make new 3d node path to new card
+            if self.bg[3] > 0:                              # if alpha not transparent
+                self._genCardObj(bg)                            # generate new background card obj for updated text object
+            self._path.detachNode()                         # detach 3d node path from old card
+            self._gen3dTextObj(pos, scale, color, False)    # make new 3d node path to new card
 
         # internal rtn to gen text object with unique wyeTag name
         def _genTextObj(self, text, color=(1,1,1,1)):
@@ -513,7 +515,7 @@ class Wye3dObjsLib(Wye.staticObj):
         def _genCardObj(self, bg=(0,0,0,0)):
             #print("initial txtNode frame ", self.text.getFrameActual())
             self.card = CardMaker("Txt Card")
-            self.card.set_color(bg[0], bg[1], bg[2], bg[3])    # DEBUG color
+            self.card.set_color(bg[0], bg[1], bg[2], bg[3])    # set background color
             self.gFrame = self.text.getFrameActual()
             if self.gFrame[1] == 0:      # if empty frame
                 self.gFrame[1] = 1
@@ -528,9 +530,12 @@ class Wye3dObjsLib(Wye.staticObj):
 
         # internal rtn to generate 3d (path) object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), color=(0,0,0,1), genNodePath = True):
+            genNodePath = True
             if genNodePath:
+                #print("_gen3dTextObj make new node path for", self.dbgTxt)
                 self._path = NodePath(self.text.generate())
             else:
+                #print("_gen3dTextObj keep old node path for", self.dbgTxt)
                 self._path.attachNewNode(self.text.generate())
             if self.bg[3] > 0:      # if visible background color, gen background card
                 if genNodePath:

@@ -30,10 +30,40 @@ from importlib.machinery import SourceFileLoader    # to load library from file
 Wye Overview
 
 libraries and words in them are static
-All refs to a lib or word within a lib or word have to be 3rd person (lib.word.xxx) rather than self.
-because there is no instantiated class so there is no self.
-All context (local variables, parameters passed in, and PC (which is used by multi-pass word) is in the 
+All refs to a lib or word within a lib or word have to be 3rd person through the core's list of known libraries
+(WyeCore.libs.lib.word.xxx) rather than self.  Since there is no instantiated class, there is no self.  
+Note that frame.verb.xxx works nicely as shorthand.
+All context (local variables, parameters passed in, and PC (which is used by multi-pass word) is on the 
 stack frame that is returned by word.start.
+
+Structure of a word:
+    The library verb that defines the word has
+        Settings: like Wye.mode.SINGLE for a verb that operates in a single display cycle or Wye.mode.MULTI_CYCLE
+        for a verb that is run on each cycle until it reaches a termination condition and returns SUCCESS or FAIL, or
+        Wye.mode.PARALLEL which has multiple streams of MULTI_CYCLE running in sort-of parallel. (done manually in 
+        succession, not in separate parallel threads)
+        
+        ParamDescr: defines the parameters that are passed to the verb when it is run.  When a verb is called, each 
+        parameter value is attached to the verb's instance frame as a parameter attribute.  
+        For example, if the verb has a parameter called "passedValue" it would be on the verb instance's frame as 
+        frame.parameter.passedValue[0]. Note that the value is in a single element list so it can be passed by 
+        reference as a parameter to a lower-level verb.
+        
+        VarDescr: defines the per-instance variables that are passed to the verb when it is run.  Each variable value
+        is attached to the verb's instance frame as a variable attribute, such as frame.vars.myVariable[0].  Again, the 
+        value is stored in a single element list so it can be passed by reference to a lower-level verb.
+        
+        CodeDescr: contains the Wye code description of the verb's runtime code.  This is compiled when the verb's 
+        library is loaded into Wye.
+        
+        Start: Each verb has a start function that creates the verb-specific frame.  One of the critical start functions
+        is initializing any list variables in the frame with their unique lists.  The start function is passed the
+        stack that the instance of the verb will use if it calls lower-level verbs.  When start returns to the caller, 
+        the caller will fill in the values in the parameters section of the frame before calling the verb's run function.
+        
+        Run: Each verb has a run function that is called when the verb is executed.  The run function is passed the
+        frame.  All the verb's runtime context is stored in the frame.  No runtime changes are made to the verb in the
+        library.
 
 Basic concept for executing a word in a library:
     wordFrame =  word.start(stack)
@@ -43,14 +73,14 @@ Basic concept for executing a word in a library:
         if a word uses local variables the word's frame.vars is built automatically from the
         word's varDescr.  
 
-        Each variable is a separate list so it can be passed to another word in that word's 
+        Pass-by-referene: Each variable is a separate list so it can be passed to another word in that word's 
         stackframe.params and the var can be updated by that word.
         All vars are filled in with initial values by the frame on instantiation.
-        example: wordFrame.vars = [[0],[1],["two"]]
+        example: wordFrame.vars.one[0] = "one", and wordFrame.vars.twoList[0] = [2, 2, 2]
     wordFrame.params.append( [p1], .. )
         If the word being called requires any params passed in, the caller has to set them up.
         Each parameter is wrapped in a list so that its value can be changed
-        functions return their value in the first parameter
+        functions return their value in the first parameter.  For example the caller would init frame.params.p1[0] to "one".
     word.run(wordFrame)
         If the word is a function, the return value is in the first parameter
 
@@ -60,25 +90,26 @@ Compiling
 
     If there is a codeDescr = (..wye-code..) then the code will be translated to Python.
 
-    Wye code is in nested tuples in the form ("lib.word", (..param..), (..param..)) where the param list can be
-    zero or more params.  Note that a tuple or list with just one entry must end with a comma (entry,) or python will 
-    optimize the tuple or list away.
-    (..param..) can be either (None, a-constant) or ("lib.word", (..param..)) to recurse to a function that will
-    supply the parameter.
+    Wye code is in nested tuples in the form ("operator", (..param..), (..param..)) where the param list can be
+    zero or more params which are recursively tuples.  Note that a tuple or list with just one entry must end with 
+    a comma (entry,) or python will optimize the tuple or list away.
+    (..param..) can be either ("Code", a-constant) or ("lib.word", (..param..)) to recurse to a function that will
+    supply the parameter.  (gross over-simplification, expand later to cover expressions, if then expressions, loops, 
+    etc.)
 
     The Python output is put in a string under code.
 
     All code attributes found in classes in the library are compiled to methods under the dynamically created 
     class libName_rt.  Each word's runtime is def'd as wordName_run_rt.  
 
-    The word itself has a run method that calls libName_rt.wordName_run_rt(frame)
+    The word itself has a run method that calls libName_rt.wordName_run_rt(frame).  Words that have parallel streams 
+    have multiple run methods, one per stream.
 
-    Note: there is the risk that the string holding the
-    Python code will get too long (the internal limit is not clearly defined).  If that happens then the compile loop
-    could compile each word's code individually, but that would be much slower.  Or it could process words in chunks
-    that are small enough to fit within the string limit.
+    Note: there is the risk that the string holding the Python code will get too long (the internal limit is not clearly 
+    defined).  If that happens then the compile loop could compile each word's code individually, but that would be much 
+    slower.  Or it could process words in chunks that are small enough to fit within the string limit.
 
-    Note: a runtime optimization would be to reparent the rt attributes back to each word so there was no indirection
+    Note: a runtime optimization would be to reparent the rt methods back to each word so there was no indirection
     on the call.
 '''
 
@@ -111,6 +142,12 @@ class WyeCore(Wye.staticObj):
     HUD = None      # HUD dialog, if any
     winWidth = 0        # updated on resize
     winHeight = 0
+
+    # interaction recording callbacks
+    keyCallbacks = []
+    controlKeyCallbacks = []
+    mouseMoveCallbacks = []
+    mouseWheelCallbacks = []
 
     class libs:
         pass
@@ -482,6 +519,7 @@ class WyeCore(Wye.staticObj):
                 # debug
                 stackNum = 0
                 ranNothing = True  # pessimist
+                clearStackList = False      # no empty stacks found so far
                 for stack in WyeCore.World.objStacks:
                     sLen = len(stack)
                     if sLen > 0:  # if there's something on the stack
@@ -543,7 +581,20 @@ class WyeCore(Wye.staticObj):
                             else:  # no parent frame, do the dirty work ourselves
                                 # print("worldRunner: done with top frame on stack.  Clean up stack")
                                 stack.remove(frame)
+                    else:
+                        clearStackList = True
+
                     stackNum += 1
+
+                if clearStackList:
+                    ii = 0
+                    while ii < len(WyeCore.World.objStacks):
+                        if len(WyeCore.World.objStacks[ii]) == 0:
+                            WyeCore.World.objStacks.pop(ii)
+                        else:
+                            ii += 1
+
+
                 if ranNothing:
                     # print("ranNothing ", ranNothing, " and WyeCore.lastIsNothingToRun", WyeCore.lastIsNothingToRun)
                     if not WyeCore.lastIsNothingToRun:
@@ -581,8 +632,12 @@ class WyeCore(Wye.staticObj):
         # caller already created stack and started the object
         # (required when caller needs to pass params to the object)
         def startActiveFrame(frame):
+            # make sure frame is on its own stack
+            if len(frame.SP) == 0 or not frame.SP[-1] == frame:
+                frame.SP.append(frame)
             WyeCore.World.objStacks.append(frame.SP)  # put obj's stack on exec list
-            #print("startActiveFrame stacks", len(WyeCore.World.objStacks), " ", [stack[0].verb.__name__ for stack in WyeCore.World.objStacks])
+            #print("startActiveFrame: put", frame.verb.__name__, " ", frame.params.title[0] if frame.verb == WyeCore.libs.WyeUILib.Dialog else " ", " ", id(frame), " stack on objStacks")
+            #print("startActiveFrame stacks", len(WyeCore.World.objStacks), " ", [stack[0].verb.__name__+" "+str(id(stack[0])) for stack in WyeCore.World.objStacks])
             return frame
 
         # Queue frame to be removed from active object list at end of this display cycle
@@ -691,6 +746,7 @@ class WyeCore(Wye.staticObj):
                       "' in WyeCore.World.repeatEventCallbackDict")
 
         # key event dispatcher
+        # Instantiated class
         # (panda3d key event callback)
         class KeyHandler(DirectObject):
             def __init__(self):
@@ -741,11 +797,29 @@ class WyeCore(Wye.staticObj):
                         WyeCore.winHeight = height
 
             def controlKeyFunc(self, keyID):
+                # external callbacks
+                # If callback(s) return True, don't process any further
+                usedCtlKey = False
+                if len(WyeCore.controlKeyCallbacks) > 0:
+                    for callback in WyeCore.controlKeyCallbacks:
+                        usedCtlKey = usedCtlKey or callback(self)
+                if usedCtlKey:
+                    return
+
                 #print("Control key", keyID)
                 if WyeCore.focusManager:
                     WyeCore.focusManager.doKey(keyID)
 
             def keyFunc(self, keyname):
+                # external callbacks
+                # If callback(s) return True, don't process any further
+                usedKey = False
+                if len(WyeCore.keyCallbacks) > 0:
+                    for callback in WyeCore.keyCallbacks:
+                        usedKey = usedKey or callback(self)
+                if usedKey:
+                    return
+
                 #print("KeyHandler: key=", keyname, "=", ord(keyname))
                 # if there's a dialog focus manager running
                 focusStatus = False
@@ -829,7 +903,7 @@ class WyeCore(Wye.staticObj):
                                 if Wye.debugOn:
                                     Wye.debug(evtFrame, "RepeatEvent run:"+ evtFrame.verb.__name__+ " evt data "+ str(evtFrame.eventData))
                                 else:
-                                    print("run", evtFrame.verb.__name__)
+                                    #print("run", evtFrame.verb.__name__)
                                     evtFrame.verb.run(evtFrame)
                             except Exception as e:
                                 print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
@@ -1735,6 +1809,7 @@ class WyeCore(Wye.staticObj):
             libTpl = "from Wye import Wye\nfrom WyeCore import WyeCore\n"
             libTpl += "class "+name+":\n  def _build():\n    WyeCore.Utils.buildLib("+name+")\n"
             libTpl += "  canSave = True  # all verbs can be saved with the library\n"
+            libTpl += "  modified = False  # no changes\n"
             libTpl += "  class "+name+"_rt:\n   pass #1\n"
             return libTpl
 
@@ -2068,8 +2143,8 @@ except Exception as e:
         WyeCore.World.listing += ('%2d ' % lnIx) + ln + '\\n'
         lnIx += 1
 '''
+                vrbStr += "    WyeCore.World.compileErrorTitle = \"Build: Compile '"+name+"' Runtime Python Failed\""
                 vrbStr += '''
-    WyeCore.World.compileErrorTitle = "Build: Compile '"+name+"' Runtime Python Failed"
     WyeCore.World.compileErrorText = "Error\\n" + str(e) + "\\n\\nListing:\\n" + WyeCore.World.listing
     WyeCore.Utils.displayError()
 
@@ -2166,16 +2241,24 @@ except Exception as e:
                 #    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Build: "+name+" Python Code:", WyeCore.World.listing, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
 
 
-            #if doTest:
+            #if it built with no errors
             if WyeCore.World.noBuildErrors:
                 if Wye.devPrint:
                     print(name, vrbLib.__name__ + "." + name, " compiled successfully")
 
                 title = "Build Success"
+                # if show listing
                 if listCode or WyeCore.debugListCode:
                     msg = name + " " + vrbLib.__name__ + "." + name + " built successfully\n" + WyeCore.World.listing
                     WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, formatLst=["NO_CANCEL", "FORCE_TOP_CTLS"])
+                # if doTest
                 elif doTest:
                     msg = name + " " + vrbLib.__name__ + "." + name + " built successfully"
                     WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg)
 
+                # if it built, return pointer to it
+                if not doTest:
+                    if hasattr(vrbLib, name):
+                        return getattr(vrbLib, name)
+                    else:
+                        return None

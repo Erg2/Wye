@@ -3,7 +3,8 @@ from WyeCore import WyeCore
 class TestLib:
   def _build():
     WyeCore.Utils.buildLib(TestLib)
-  canSave = True  # all verbs can be saved with the library
+  canSave = False  # cannot save callbacks
+  modified = False  # no changes
   class TestLib_rt:
    pass #1
 

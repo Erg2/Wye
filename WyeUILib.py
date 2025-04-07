@@ -17,10 +17,17 @@ from os import listdir
 from os.path import isfile, join
 import inspect
 
+## DEBUG - useful code snippet - show caller of curr fun
+#curframe = inspect.currentframe()
+#calframe = inspect.getouterframes(curframe, 2)
+#print('Dialog redisplay: called from:', calframe[1][3])
+
 
 # 3d UI library (generatic dialogs, parts of dialogs, and the Wye UI dialogs)
 class WyeUILib(Wye.staticObj):
     systemLib = True        # prevent overwriting
+    modified = False  # no changes
+    canSave = False
 
     dragFrame = None    # not currently dragging anything
 
@@ -73,8 +80,8 @@ class WyeUILib(Wye.staticObj):
             if self.displayObj:
                 #print("CopyPasteManager dialog already showing, bring to front and update")
                 self.displayObj.verb.redisplay(self.displayObj)
-                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
-                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
+                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
             else:
                 #print("CopyPasteManager: open dialog")
                 self.displayObj = WyeCore.World.startActiveObject(WyeUILib.CopyPasteManager.CutPasteDisplay)
@@ -83,8 +90,8 @@ class WyeUILib(Wye.staticObj):
 
                 self.displayObj.verb.run(self.displayObj)
                 self.displayObj.vars.dlgFrm[0].verb.run(self.displayObj.vars.dlgFrm[0])
-                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
-                self.displayObj.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
+                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
         class CutPasteDisplay:
             mode = Wye.mode.MULTI_CYCLE
@@ -242,11 +249,13 @@ class WyeUILib(Wye.staticObj):
             self.speed = .25
             self.rotRate = .5
 
+            self.pos = [0,0]        # filled in with most recent mouse position
 
         def mouseMove(self, x, y):
             global base
             global render
 
+            self.pos = [x,y]
             self.m1Pressed = False  # edge
             self.m2Pressed = False
             self.m3Pressed = False
@@ -316,13 +325,23 @@ class WyeUILib(Wye.staticObj):
                     self.ctlReleased = True
                 self.ctl = False
 
+            # external callbacks
+            # If callback(s) return True, don't process any further
+            usedMouse = False
+            if len(WyeCore.mouseMoveCallbacks) > 0:
+                for callback in WyeCore.mouseMoveCallbacks:
+                    usedMouse = usedMouse or callback(self)
+            if usedMouse:
+                return
+
+            # hotkey dialogs
             if self.m1Pressed and self.ctl and self.alt:
                 if not WyeCore.World.mainMenu:
                     WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeUILib.MainMenuDialog)
                 else:
                     #print("Already have Wye Main Menu", WyeCore.World.mainMenu.verb.__name__)
-                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
-                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
             # if don't have the main edit menu and the user wants it, start it
             elif self.m1Pressed and self.shift and self.ctl:
@@ -331,8 +350,8 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.editMenu.eventData = ("", (0))
                 else:
                     #print("Already have editor")
-                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
-                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
             # if don't have the main debug menu and the user wants it, start it
             elif self.m1Pressed and self.shift and self.alt:
@@ -340,8 +359,8 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeUILib.DebugMain)
                 else:
                     #print("Already have debugger")
-                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
-                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
             elif self.m1Pressed and WyeCore.picker.objSelectEvent():
                 # if picker used event then everything already done in picker, nothing more to do here
@@ -433,7 +452,7 @@ class WyeUILib(Wye.staticObj):
                     else:               # otherwise, drag whole dialog stack
                         dragFrame = self.topDragFrame
 
-                    objPath = dragFrame.vars.dragObj[0]._path
+                    objPath = dragFrame.vars.dragPath[0]
                     fwd = render.getRelativeVector(objPath, (0, -1, 0))
                     pos = objPath.getPos(render)    # sub dialogs pos rel to parent.  Get pos rel to world
                     if not self.ctl:    # don't change angle if dragging just lowest level dialog
@@ -441,7 +460,7 @@ class WyeUILib(Wye.staticObj):
                     self.objPlane = LPlanef(fwd, pos)
                     self.dragStartPos = pos
 
-                    #frame.vars.dragObj[0]._path.wrtReparentTo(base.camera)
+                    #frame.vars.dragPath[0].wrtReparentTo(base.camera)
 
                     mpos = LPoint2f(x,y)
                     newPos = Point3(0,0,0)
@@ -461,10 +480,13 @@ class WyeUILib(Wye.staticObj):
                     # get mouse pos
                     mpos = LPoint2f(x,y)
 
-                    # HUD disloags are special case 'cause motion is rel camera, not rel to world
-                    if WyeUILib.dragFrame.verb == WyeUILib.HUDDialog:
-                        WyeUILib.dragFrame.params.position[0][0] += (mpos[0] - self.m1DownPos[0]) * 11
-                        WyeUILib.dragFrame.params.position[0][2] += (mpos[1] - self.m1DownPos[1]) * 6.2
+                    # HUD dialogs are special case 'cause motion is rel camera, not rel to world
+                    frm = WyeUILib.dragFrame
+                    while frm.params.parent[0]:
+                        frm = frm.params.parent[0]  # find top dialog to get wld HPR
+                    if frm.verb == WyeUILib.HUDDialog:
+                        frm.params.position[0][0] += (mpos[0] - self.m1DownPos[0]) * 11
+                        frm.params.position[0][2] += (mpos[1] - self.m1DownPos[1]) * 6.2
                         #print("drag HUD pos", WyeUILib.dragFrame.params.position[0])
                         self.m1DownPos = mpos
                         return
@@ -475,7 +497,7 @@ class WyeUILib(Wye.staticObj):
                     else:               # otherwise, drag whole dialog stack
                         dragFrame = self.topDragFrame
 
-                    objPath = dragFrame.vars.dragObj[0]._path
+                    objPath = dragFrame.vars.dragPath[0]
 
 
                     # on shift, mouse up/down moves plane far/near
@@ -553,7 +575,6 @@ class WyeUILib(Wye.staticObj):
     class FocusManager:
 
         _dialogHierarchies = []          # list of open dialog hierarchies (dialog frame lists)
-        #_mouseHandler = None
 
         _shiftDown = False
         _ctlDown = False
@@ -581,6 +602,11 @@ class WyeUILib(Wye.staticObj):
 
             # if there's an active dialog, pass it mousewheel events
             def mouseWheel(self, dir):
+                # external callbacks
+                if len(WyeCore.mouseWheelCallbacks) > 0:
+                    for callback in WyeCore.mouseWheelCallbacks:
+                        callback(self)
+
                 #print("mouseWheel", dir)
                 if WyeUILib.FocusManager._activeDialog:
                     #print("MouseHandler: mouseWheel", dir)
@@ -772,9 +798,9 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg = dlgFrm        # in case input added to dialog dynamically (so not filled in by Dialog.run)
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            dlgPath = dlgFrm.vars.dragPath[0]
             lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=(pos[0], pos[1], pos[2]),
-                                scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0], doTag=False)
+                                scale=(1, 1, 1), parent=dlgPath, bg=frame.params.backgroundColor[0], doTag=False)
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
             # update dialog pos to next free space downward
@@ -805,6 +831,8 @@ class WyeUILib(Wye.staticObj):
 
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
+            frame.params.label[0] = text
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def setColor(frame, color):
             frame.vars.gWidgetStack[0][0].setColor(color)
@@ -869,10 +897,10 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg = dlgFrm        # in case input added to dialog dynamically (so not filled in by Dialog.run)
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            dlgPath = dlgFrm.vars.dragPath[0]
 
             lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0])
+                                scale=(1, 1, 1), parent=dlgPath, bg=frame.params.backgroundColor[0])
 
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
@@ -930,6 +958,8 @@ class WyeUILib(Wye.staticObj):
 
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
+            frame.params.label[0] = text
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def setValue(frame, text):
             frame.vars.gWidget[0].setText(text)
@@ -997,10 +1027,10 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg = dlgFrm        # in case input added to dialog dynamically (so not filled in by Dialog.run)
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            dlgPath = dlgFrm.vars.dragPath[0]
 
             lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0])
+                                scale=(1, 1, 1), parent=dlgPath, bg=frame.params.backgroundColor[0])
 
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
@@ -1052,6 +1082,8 @@ class WyeUILib(Wye.staticObj):
 
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
+            frame.params.label[0] = text
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def setValue(frame, int):
             frame.vars.gWidget[1].setText(str(int))
@@ -1116,10 +1148,10 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg = dlgFrm        # in case input added to dialog dynamically (so not filled in by Dialog.run)
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            dlgPath = dlgFrm.vars.dragPath[0]
 
             lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0])
+                                scale=(1, 1, 1), parent=dlgPath, bg=frame.params.backgroundColor[0])
 
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
 
@@ -1171,6 +1203,8 @@ class WyeUILib(Wye.staticObj):
 
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
+            frame.params.label[0] = text
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def setValue(frame, val):
             frame.vars.gWidget[1].setText(str(val))
@@ -1236,11 +1270,11 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg = dlgFrm        # in case input added to dialog dynamically (so not filled in by Dialog.run)
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            dlgPath = dlgFrm.vars.dragPath[0]
             #print("InputButton display: label", frame.params.label)
             btn = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0],
                     bg=frame.params.backgroundColor[0], pos=(pos[0], pos[1], pos[2]), scale=(1, 1, 1),
-                    parent=dlgHeader.getNodePath())
+                    parent=dlgPath)
             frame.vars.gWidgetStack[0].append(btn)  # save for deleting on dialog close
             frame.vars.gWidget[0] = btn  # stash graphic obj in input's frame
             frame.vars.tags[0].append(btn.getTag())
@@ -1282,6 +1316,7 @@ class WyeUILib(Wye.staticObj):
         def setLabel(frame, text):
             frame.vars.gWidget[0].setText(text)
             frame.params.label[0] = text
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def setColor(frame, color):
             frame.vars.gWidget[0].setColor(color)
@@ -1351,11 +1386,11 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg = dlgFrm        # in case input added to dialog dynamically (so not filled in by Dialog.run)
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            dlgPath = dlgFrm.vars.dragPath[0]
 
             # label
             lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=tuple(pos),
-                                scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0])
+                                scale=(1, 1, 1), parent=dlgPath, bg=frame.params.backgroundColor[0])
             frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
             # add tag, input index to dictionary
             frame.vars.tags[0].append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
@@ -1420,6 +1455,8 @@ class WyeUILib(Wye.staticObj):
 
         def setLabel(frame, text):
             frame.vars.gWidgetStack[0][0].setText(text)
+            frame.params.label[0] = text
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         # for checkbox, set on/off
         # for checkbox part of radioGroup, only do on
@@ -1558,12 +1595,12 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg = dlgFrm        # in case input added to dialog dynamically (so not filled in by Dialog.run)
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
-            dlgHeader = dlgFrm.vars.dragObj[0]
+            dlgPath = dlgFrm.vars.dragPath[0]
             width = 0
             height = 0
             if frame.params.showLabel[0]:
                 lbl = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0], pos=(pos[0], pos[1], pos[2]),
-                                    scale=(1, 1, 1), parent=dlgHeader.getNodePath(), bg=frame.params.backgroundColor[0])
+                                    scale=(1, 1, 1), parent=dlgPath, bg=frame.params.backgroundColor[0])
                 frame.vars.gWidgetStack[0].append(lbl)  # save graphic widget for deleting on close
                 frame.vars.lWidget[0] = lbl
                 # add tag, input index to dictionary
@@ -1577,13 +1614,13 @@ class WyeUILib(Wye.staticObj):
                     width += .5
                 # offset 3d input field right past end of 3d label
                 if frame.vars.lWidget[0]:
-                    txtParent = frame.vars.lWidget[0]
+                    txtParent = frame.vars.lWidget[0].getNodePath()
                     txtPos = (width, 0, 0)
                 else:
-                    txtParent = dlgHeader
+                    txtParent = dlgPath
                     txtPos = (pos[0], pos[1], pos[2])
                 btn = WyeCore.libs.Wye3dObjsLib._3dText(frame.vars.list[0][frame.params.selectedIx[0]], frame.params.textColor[0],
-                                    pos=txtPos, scale=(1, 1, 1), parent=txtParent.getNodePath(), bg=frame.params.backgroundColor[0])
+                                    pos=txtPos, scale=(1, 1, 1), parent=txtParent, bg=frame.params.backgroundColor[0])
                 #btn.setColor(Wye.color.ACTIVE_COLOR)
                 # print("    Dialog inWdg", btn)
                 frame.vars.tags[0].append(btn.getTag())  # save tag for doSelect
@@ -1658,6 +1695,8 @@ class WyeUILib(Wye.staticObj):
         def setLabel(frame, text):
             if frame.vars.lWidget[0]:
                 frame.vars.lWidget[0].setText(text)
+            frame.params.label[0] = text
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def setValue(frame, index):
             # todo Range check index!
@@ -1783,6 +1822,7 @@ class WyeUILib(Wye.staticObj):
                       # input widgets go here (Input fields, Buttons, and who knows what all cool stuff that may come
 
         varDescr = (("position", Wye.dType.FLOAT_LIST, (0,0,0)),            # pos copy  *** REQUIRED ***
+                    ("titleGObj", Wye.dType.OBJECT, None),                  # title 3dText object
                     ("dlgWidgets", Wye.dType.OBJECT_LIST, None),            # standard dialog widgets
                     ("okTags", Wye.dType.STRING_LIST, None),                # OK widget tags
                     ("canTags", Wye.dType.STRING_LIST, None),               # Cancel widget tags
@@ -1790,8 +1830,8 @@ class WyeUILib(Wye.staticObj):
                     ("currInp", Wye.dType.OBJECT, None),                    # current focus widget, if any
                     ("radBtnDict", Wye.dType.OBJECT_LIST, None),  # radio button group dictionary
                     ("clickedBtns", Wye.dType.OBJECT_LIST, None),           # list of buttons that need to be unclicked
-                    ("dragObj", Wye.dType.OBJECT, None),                    # path to top graphic obj *** REF'D BY CHILDREN ***
-                    ("topTag", Wye.dType.STRING, ""),                       # Wye tag for top object (used for dragging)
+                    ("dragPath", Wye.dType.OBJECT, None),                    # path to top graphic obj *** REF'D BY CHILDREN ***
+                    ("topTags", Wye.dType.STRING_LIST, None),                       # Wye tag for top object (used for dragging)
                     ("bgndGObj", Wye.dType.OBJECT, None),                   # background card
                     ("outlineGObj", Wye.dType.OBJECT, None),                # background outline card
                     )
@@ -1809,6 +1849,8 @@ class WyeUILib(Wye.staticObj):
             frame.vars.inpTags[0] = {}          # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []      # clicked button(s) being "flashed" (so user sees they were clicked)
             frame.vars.radBtnDict[0] = {}  # dictionary of radio button groups in this dialog
+            frame.vars.topTags[0] = []
+
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
 
@@ -1823,6 +1865,7 @@ class WyeUILib(Wye.staticObj):
         def run(frame):
             match frame.PC:
                 case 0:     # Start up case - set up all the fields
+                  try:
                     #print("Dialog run: frame", frame.verb.__name__, " params", frame.paramsToStringV())
                     frame.params.retVal[0] = Wye.status.CONTINUE        # return value: 0 running, 1 OK, 2 Cancel
                     parent = frame.params.parent[0]
@@ -1840,62 +1883,79 @@ class WyeUILib(Wye.staticObj):
 
                     frame.verb.display(frame)
 
-                        
-                    # done setup, go to next case to process events
-                    frame.PC += 1
-
                     # make a background for entire dialog
-                    WyeUILib.Dialog.genBackground(frame)
+                    WyeUILib.Dialog.genBackground(frame, Wye.color.BACKGROUND_COLOR, Wye.color.OUTLINE_COLOR)
 
                     # Add dialog to known dialogs
                     WyeUILib.FocusManager.openDialog(frame, parent)        # pass parent, if any
 
+                    # done setup, go to next case to process events
+                    frame.PC += 1
+
+                  except Exception as e:
+                      print("dialog", frame.params.title[0], "run case 0 failed", str(e))
+                      traceback.print_exception(e)
+                      sys.exit(1)
                 case 1:
+                    #print("Dialog '", frame.params.title[0], "' case 1")
                     # do click-flash count down and end-flash color reset for buttons user clicked
                     delLst = []
                     # decrement flash count.  if zero, turn off button highlight
                     for btnFrm in frame.vars.clickedBtns[0]:
-                        #print("button", btnFrm.verb.__name__, " count ", btnFrm.vars.clickCount[0])
+                        #print("button flash", btnFrm.verb.__name__, " count ", btnFrm.vars.clickCount[0])
                         btnFrm.vars.clickCount[0] -= 1
                         if btnFrm.vars.clickCount[0] <= 0:
                             delLst.append(btnFrm)
+                            #print("button flash", btnFrm.verb.__name__, " done. Set color back to ", btnFrm.params.color[0])
                             btnFrm.vars.gWidget[0].setColor(btnFrm.params.color[0])
                     # remove any buttons whose count is finished
                     for btnFrm in delLst:
                         #print("Dialog run: Remove clicked btn frame", btnFrm.verb.__name__)
                         frame.vars.clickedBtns[0].remove(btnFrm)
 
-
+        # create and display Dialog graphic entaties
         def display(frame):
-
             parent = frame.params.parent[0]
-            # top ok/cancel
-            if parent is None:
-                # print("  params.inputs", frame.params.inputs)
-                dlgHeader = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0],
-                                                              color=(frame.params.headerColor[0]),
-                                                              pos=frame.params.position[0], scale=(.2, .2, .2))
-                # dlgHeader = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(1,1,1))
-                dlgHeader.setHpr(base.camera, 0, 1, 0)
-            else:
-                dlgHeader = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0],
-                                                              color=(frame.params.headerColor[0]),
-                                                              pos=frame.params.position[0],
-                                                              scale=(1, 1, 1),
-                                                              parent=parent.vars.dragObj[0].getNodePath())
-            frame.vars.topTag[0] = dlgHeader.getTag()  # save tag for drag checking
-            frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
-            frame.vars.dragObj[0] = dlgHeader  # save graphic for parenting sub dialogs
 
+            dlgPath = NodePath("point")
+            frame.vars.dragPath[0] = dlgPath
+            frame.vars.dlgWidgets[0].append(dlgPath)  # save graphic for dialog delete
+            WyeCore.picker.makePickable(dlgPath)
+            tag = "txt" + str(WyeCore.Utils.getId())
+            dlgPath.setTag("wyeTag", tag)
+            frame.vars.topTags[0].append(dlgPath.getTag('wyeTag'))
+
+            if parent is None:
+                #print("Dialog parent to render")
+                dlgPath.reparentTo(render)
+                dlgPath.setScale(.2, .2, .2)
+                dlgPath.setHpr(base.camera, 0, 1, 0)
+            else:
+                dlgPath.reparentTo(parent.vars.dragPath[0])
+
+            dlgPath.setPos(frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2])
+
+            frame.vars.titleGObj[0] = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0],
+                                                              color=(frame.params.headerColor[0]),
+                                                              pos=(0,0,0),
+                                                              scale=(1, 1, 1),
+                                                              parent=dlgPath)
+
+            #frame.vars.topTags[0].append(frame.vars.titleGObj[0].getTag('wyeTag'))  # save tag for drag checking
+            frame.vars.topTags[0].append(frame.vars.titleGObj[0].getTag())
+            frame.vars.topTags[0].append(frame.vars.dragPath[0].getTag('wyeTag'))
+            frame.vars.dlgWidgets[0].append(frame.vars.titleGObj[0])  # save graphic for dialog delete
+
+            # top ok/cancel
             # if big dialog, put ok/can at top too
             nInputs = len(frame.params.inputs[0])
             if nInputs > 4 or ("FORCE_TOP_CTLS" in frame.params.format[0]):
-                pos = [dlgHeader.getWidth() + 2, 0, 0]
+                pos = [frame.vars.titleGObj[0].getWidth() + 1, 0, 0]
 
                 if not (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
                     txt = WyeCore.libs.Wye3dObjsLib._3dText("[ OK ]", color=(Wye.color.CONTROL_COLOR), pos=tuple(pos),
                                                             scale=(1, 1, 1),
-                                                            parent=dlgHeader.getNodePath())
+                                                            parent=dlgPath)
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.okTags[0].append(txt.getTag())
                     pos[0] += txt.getWidth()  # shove Cancel to the right of OK
@@ -1904,13 +1964,13 @@ class WyeUILib(Wye.staticObj):
                     # print("Dialog Cancel btn at", pos)
                     txt = WyeCore.libs.Wye3dObjsLib._3dText("[ Cancel ]", color=(Wye.color.CONTROL_COLOR),
                                                             pos=tuple(pos), scale=(1, 1, 1),
-                                                            parent=dlgHeader.getNodePath())
+                                                            parent=dlgPath)
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.canTags[0].append(txt.getTag())
 
             # print("Dialog run: params.position",frame.params.position[0])
             # row position rel to parent, not global
-            pos = [0, 0, 0 - dlgHeader.getHeight()]  # [x for x in frame.params.position[0]]    # copy position
+            pos = [0, 0, 0 - frame.vars.titleGObj[0].getHeight()]  # [x for x in frame.params.position[0]]    # copy position
 
             # do user inputs
             # Note that input returns its frame as parameter value
@@ -1967,7 +2027,7 @@ class WyeUILib(Wye.staticObj):
             if not (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
                 txt = WyeCore.libs.Wye3dObjsLib._3dText("[ OK ]", color=(Wye.color.CONTROL_COLOR), pos=tuple(pos),
                                                         scale=(1, 1, 1),
-                                                        parent=dlgHeader.getNodePath())
+                                                        parent=dlgPath)
                 frame.vars.dlgWidgets[0].append(txt)
                 frame.vars.okTags[0].append(txt.getTag())
                 pos[0] += txt.getWidth()  # shove Cancel to the right of OK
@@ -1976,20 +2036,31 @@ class WyeUILib(Wye.staticObj):
             if not (haveOk and frame.params.format[0] and "NO_CANCEL" in frame.params.format[0]):
                 txt = WyeCore.libs.Wye3dObjsLib._3dText("[ Cancel ]", color=(Wye.color.CONTROL_COLOR), pos=tuple(pos),
                                                         scale=(1, 1, 1),
-                                                        parent=dlgHeader.getNodePath())
+                                                        parent=dlgPath)
                 frame.vars.dlgWidgets[0].append(txt)
                 frame.vars.canTags[0].append(txt.getTag())
 
+        def genBackground(frame, bgndColor, outlineColor):
+            #print("Dialog genBackground: '",frame.params.title[0])
+            #curframe = inspect.currentframe()
+            #calframe = inspect.getouterframes(curframe, 2)
+            #print('  called from:', calframe[1][3])
 
-        def genBackground(frame):
+            # if have prev nodes, fix that
+            if frame.vars.bgndGObj[0]:
+                frame.vars.bgndGObj[0].removeNode()
+                frame.vars.outlineGObj[0].removeNode()
+
             if frame.params.parent[0] is None:
                 scMult = 5
             else:
                 scMult = 1
-            dlgNodePath = frame.vars.dragObj[0].getNodePath()
+            dlgNodePath = frame.vars.dragPath[0]
             # dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
             dlgBounds = dlgNodePath.getTightBounds()
             card = CardMaker("Dlg Bgnd")
+            #print("genBackground", frame.params.title[0], " ", bgndColor, " ", outlineColor)
+            #card.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
             gFrame = LVecBase4f(0, 0, 0, 0)
             # print("gFrame", gFrame)
             ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
@@ -2005,11 +2076,12 @@ class WyeUILib(Wye.staticObj):
             cardPath = NodePath(card.generate())
             cardPath.reparentTo(dlgNodePath)
             cardPath.setPos((-.5, .1, 1.2 - ht))
-            cardPath.setColor(Wye.color.BACKGROUND_COLOR)
+            cardPath.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
             frame.vars.bgndGObj[0] = cardPath
 
             # background outline
             oCard = CardMaker("Dlg Bgnd Outline")
+            #oCard.setColor(outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3])
             # print("gFrame", gFrame)
             gFrame[0] = -.1  # marginL
             gFrame[1] = wd + .3  # marginR
@@ -2020,7 +2092,7 @@ class WyeUILib(Wye.staticObj):
             oCardPath = NodePath(oCard.generate())
             oCardPath.reparentTo(dlgNodePath)
             oCardPath.setPos((-.6, .2, 1.1 - ht))
-            oCardPath.setColor(Wye.color.OUTLINE_COLOR)
+            oCardPath.setColor(outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3])
             frame.vars.outlineGObj[0] = oCardPath
 
         # dialog's input list changed, update all row positions
@@ -2028,9 +2100,32 @@ class WyeUILib(Wye.staticObj):
             if hasattr(frame, "doingDisplay") and frame.doingDisplay:
                 return
             #print("Dialog '"+frame.params.title[0]+"' redisplay")
+            #curframe = inspect.currentframe()
+            #calframe = inspect.getouterframes(curframe, 2)
+            #print('  called from:', calframe[1][3])
+
             frame.doingDisplay = True
+
+            # update Ok/Cancel positions
+            pos = [frame.vars.titleGObj[0].getWidth() + 1, 0, 0]
+            #print("ok pos", pos)
+            # if have ok then cancel will be 4th from beginning
+            if (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
+                okIx = 0
+            else:
+                okIx = 1
+            # if have ok button, position it
+            if not (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
+                #print("Dialog redisplay: okIx", okIx, " put", frame.vars.dlgWidgets[0][okIx].dbgTxt, " at", pos)
+                frame.vars.dlgWidgets[0][2].setPos(pos[0], pos[1], pos[2])        # Ok
+                pos[0] += 2.5  # shove Cancel to the right of OK
+                haveOk = True
+            if not (haveOk and frame.params.format[0] and "NO_CANCEL" in frame.params.format[0]):
+                frame.vars.dlgWidgets[0][2+okIx].setPos(pos[0], pos[1], pos[2])
+
+
             # readjust the position for all the inputs
-            pos = LVecBase3f(0, 0, 0 - frame.vars.dragObj[0].getHeight())
+            pos = LVecBase3f(0, 0, 0 - frame.vars.titleGObj[0].getHeight())
             nInputs = len(frame.params.inputs[0])
             #print("redisplay", nInputs, " lines of dialog")
 
@@ -2095,14 +2190,18 @@ class WyeUILib(Wye.staticObj):
                 frame.vars.dlgWidgets[0][-1].setPos(pos)
 
             # update background
-            frame.vars.bgndGObj[0].removeNode()
-            frame.vars.outlineGObj[0].removeNode()
-            frame.verb.genBackground(frame)
+
             # if we are the currently selected dlg
             if frame.active:
-                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
-                frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
+                bg = Wye.color.BACKGROUND_COLOR_SEL
+                out = Wye.color.OUTLINE_COLOR_SEL
+            else:
+                bg = Wye.color.BACKGROUND_COLOR
+                out = Wye.color.OUTLINE_COLOR
+
+            frame.verb.genBackground(frame, bg, out)
             frame.doingDisplay = False
+
 
         def doCallback(frame, inFrm, tag, doUserCallback=False):
             # Unless caller overrides with doUserCallback, look for vars.localCallback first
@@ -2166,7 +2265,7 @@ class WyeUILib(Wye.staticObj):
             retStat = False     # haven't used the tag (yet)
 
             # if clicked header for dragging
-            if tag == frame.vars.topTag[0]:
+            if tag in frame.vars.topTags[0]:
                 if not Wye.dragging:
                     Wye.dragging = True
                     WyeUILib.dragFrame = frame
@@ -2198,7 +2297,7 @@ class WyeUILib(Wye.staticObj):
 
                 # else if OK button
                 elif tag in frame.vars.okTags[0]:
-                    print("Dialog", frame.params.title[0], " OK Button pressed")
+                    #print("Dialog", frame.params.title[0], " OK Button pressed")
                     nInputs = (len(frame.params.inputs[0]))
                     #print("dialog ok: nInputs",nInputs," inputs",frame.params.inputs[0])
                     for ii in range(nInputs):
@@ -2274,24 +2373,22 @@ class WyeUILib(Wye.staticObj):
 
         # manage selected/unselected dialog
         def activateDialog(frame, setOn):
+            #print("activateDialog", frame.params.title[0], " setOn", setOn)
             if frame.activating:    # avoid endless loops
                 #print("Dialog activateDialog already activating")
                 return
             frame.activating = True
             #print("DIalog activateDialog:", frame.params.title[0], " ", setOn)
+            frame.active = setOn
             if setOn:
-                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR_SEL)
-                frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR_SEL)
-
-                #print("Dialog '"+frame.params.title[0]+ "' Selected")
-                frame.active = True
-
+                bg = Wye.color.BACKGROUND_COLOR_SEL
+                out = Wye.color.OUTLINE_COLOR_SEL
             else:
+                bg = Wye.color.BACKGROUND_COLOR
+                out = Wye.color.OUTLINE_COLOR
 
-                frame.vars.bgndGObj[0].setColor(Wye.color.BACKGROUND_COLOR)
-                frame.vars.outlineGObj[0].setColor(Wye.color.OUTLINE_COLOR)
-                frame.active = False
-                #print("Dialog '"+frame.params.title[0]+ "' Unselected")
+            frame.vars.bgndGObj[0].setColor(bg[0], bg[1], bg[2], bg[3])
+            frame.vars.outlineGObj[0].setColor(out[0], out[1], out[2], out[3])
 
             # make sure system knows
             #print("Dialog activateDialog tell FocusManager", frame.params.title[0], " ", setOn)
@@ -2354,7 +2451,7 @@ class WyeUILib(Wye.staticObj):
                 return
 
             if key == Wye.ctlKeys.ENTER:
-                print("OK to dialog", frame.params.title[0], " okOnCr", frame.params.okOnCr[0])
+                #print("OK to dialog", frame.params.title[0], " okOnCr", frame.params.okOnCr[0])
                 if frame.params.okOnCr[0]:
                     if "NO_OK" in frame.params.format[0]:   # if dlg not showing OK, do Cancel
                         tag = frame.vars.canTags[0][0]
@@ -2548,8 +2645,13 @@ class WyeUILib(Wye.staticObj):
             if WyeUILib.Dialog._cursor:
                 WyeUILib.Dialog._cursor.hide()
 
+        def setTitle(frame, title):
+            frame.params.title[0] = title
+            frame.vars.titleGObj[0].setText(title)
+
         def setPos(frame, pos):
-            frame.vars.dragObj[0]._path.setPos(pos[0], pos[1], pos[2])
+            frame.vars.dragPath[0].setPos(pos[0], pos[1], pos[2])
+            frame.params.position[0] = [pos[0], pos[1], pos[2]]
 
     # dropdown menu
     # subclass of Dialog so FocusManager can handle focus properly
@@ -2562,6 +2664,8 @@ class WyeUILib(Wye.staticObj):
             frame.vars.canTags[0] = []         # tags for Cancel buttons
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
+            frame.vars.topTags[0] = []
+
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
 
@@ -2576,29 +2680,45 @@ class WyeUILib(Wye.staticObj):
                     frame.vars.position[0] = (frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2])  # save display position
 
                     # handle scale and parent obj, if any
-                    if parent is None:
-                        dlgHeader = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(.2, .2, .2))
-                        #dlgHeader = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0], scale=(1,1,1))
-                    else:
-                        #print("dropdown parent", parent.verb.__name__)
-                        dlgHeader = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0], color=(Wye.color.HEADER_COLOR), pos=frame.params.position[0],
-                                                  scale=(1,1,1), parent=parent.vars.dragObj[0].getNodePath())
+                    dlgPath = NodePath("point")
+                    frame.vars.dragPath[0] = dlgPath
+                    frame.vars.dlgWidgets[0].append(dlgPath)  # save graphic for dialog delete
+                    WyeCore.picker.makePickable(dlgPath)
+                    tag = "txt" + str(WyeCore.Utils.getId())
+                    dlgPath.setTag("wyeTag", tag)
+                    frame.vars.topTags[0].append(dlgPath.getTag('wyeTag'))
 
-                    frame.vars.topTag[0] = dlgHeader.getTag()   # save tag for drag checking
-                    frame.vars.dlgWidgets[0].append(dlgHeader)  # save graphic for dialog delete
-                    frame.vars.dragObj[0] = dlgHeader        # save graphic for parenting sub dialogs
+                    if parent is None:
+                        #print("Dialog parent to render")
+                        dlgPath.reparentTo(render)
+                        dlgPath.setScale(.2, .2, .2)
+                        dlgPath.setHpr(base.camera, 0, 1, 0)
+                    else:
+                        #print("Dialog parent to parent")
+                        dlgPath.reparentTo(parent.vars.dragPath[0])
+                    dlgPath.setPos(frame.params.position[0][0], frame.params.position[0][1],
+                                   frame.params.position[0][2])
+
+                    frame.vars.titleGObj[0] = WyeCore.libs.Wye3dObjsLib._3dText(text=frame.params.title[0],
+                                                                                color=(frame.params.headerColor[0]),
+                                                                                pos=(0,0,0),
+                                                                                scale=(1, 1, 1),
+                                                                                parent=dlgPath)
+
+                    frame.vars.topTags[0].append(frame.vars.titleGObj[0].getTag())  # save tag for drag checking
+                    frame.vars.dlgWidgets[0].append(frame.vars.titleGObj[0])  # save graphic for dialog delete
 
                     # if big dialog, put ok/can at top too
                     nInputs = len(frame.params.inputs[0])
                     if nInputs > 6:
-                        pos = [dlgHeader.getWidth() + 2, 0, 0]
+                        pos = [frame.vars.titleGObj[0].getWidth() + 2, 0, 0]
                         txt = WyeCore.libs.Wye3dObjsLib._3dText("[ Cancel ]", color=(Wye.color.CONTROL_COLOR), pos=tuple(pos), scale=(1, 1, 1),
-                                            parent=dlgHeader.getNodePath())
+                                            parent=dlgPath)
                         frame.vars.dlgWidgets[0].append(txt)
                         frame.vars.canTags[0].append(txt.getTag())
 
 
-                    pos = [0, 0, -dlgHeader.getHeight()]  # [x for x in frame.params.position[0]]    # copy position
+                    pos = [0, 0, -frame.vars.titleGObj[0].getHeight()]  # [x for x in frame.params.position[0]]    # copy position
 
                     # do user inputs
                     # Note that input returns its frame as parameter value
@@ -2619,47 +2739,51 @@ class WyeUILib(Wye.staticObj):
 
                     #print("Dialog Cancel btn at", pos)
                     txt = WyeCore.libs.Wye3dObjsLib._3dText("[ Cancel ]", color=(Wye.color.HEADER_COLOR), pos=tuple(pos),
-                                        scale=(1,1,1), parent=dlgHeader.getNodePath())
+                                        scale=(1,1,1), parent=dlgPath)
                     frame.vars.dlgWidgets[0].append(txt)
                     frame.vars.canTags[0].append(txt.getTag())
+                    try:
+                        # make a background for entire DropDown
+                        if parent is None:
+                            scMult = 5  # no parent, everything has been scaled by .2
+                        else:
+                            scMult = 1  # have parent, already scaled by parent
+                        dlgNodePath = dlgPath
+                        dlgBounds = dlgNodePath.getTightBounds()
+                        card = CardMaker("Dlg Bgnd")
+                        gFrame = LVecBase4f(0, 0, 0, 0)
+                        # print("gFrame", gFrame)
+                        ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
+                        wd = (dlgBounds[1][0] - dlgBounds[0][0]) * scMult + 1
+                        gFrame[0] = 0  # marginL
+                        gFrame[1] = wd  # marginR
+                        gFrame[2] = 0  # marginB
+                        gFrame[3] = ht  # marginT
+                        # print("initial adjusted gFrame", gFrame)
+                        card.setFrame(gFrame)
+                        cardPath = NodePath(card.generate())
+                        cardPath.reparentTo(dlgNodePath)
+                        cardPath.setPos((-.5, .1, 1.2 - ht))
+                        cardPath.setColor(Wye.color.BACKGROUND_COLOR)
+                        frame.vars.bgndGObj[0] = cardPath
+                        # background outline
+                        oCard = CardMaker("Dlg Bgnd Outline")
+                        # print("gFrame", gFrame)
+                        gFrame[0] = -.1    # marginL
+                        gFrame[1] = wd+.3  # marginR
+                        gFrame[2] = -.1    # marginB
+                        gFrame[3] = ht+.3  # marginT
+                        # print("initial adjusted gFrame", gFrame)
+                        oCard.setFrame(gFrame)
+                        oCardPath = NodePath(oCard.generate())
+                        oCardPath.reparentTo(dlgNodePath)
+                        oCardPath.setPos((-.6, .2, 1.1 - ht))
+                        oCardPath.setColor(Wye.color.OUTLINE_COLOR)
+                        frame.vars.outlineGObj[0] = oCardPath
+                    except Exception as e:
+                        print("Failed to do dialog cards '" + frame.params.title[0] + "' \n", str(e))
+                        traceback.print_exception(e)
 
-                    # make a background for entire DropDown
-                    if parent is None:
-                        scMult = 5  # no parent, everything has been scaled by .2
-                    else:
-                        scMult = 1  # have parent, already scaled by parent
-                    dlgNodePath = dlgHeader.getNodePath()
-                    dlgBounds = dlgNodePath.getTightBounds()
-                    card = CardMaker("Dlg Bgnd")
-                    gFrame = LVecBase4f(0, 0, 0, 0)
-                    # print("gFrame", gFrame)
-                    ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
-                    wd = (dlgBounds[1][0] - dlgBounds[0][0]) * scMult + 1
-                    gFrame[0] = 0  # marginL
-                    gFrame[1] = wd  # marginR
-                    gFrame[2] = 0  # marginB
-                    gFrame[3] = ht  # marginT
-                    # print("initial adjusted gFrame", gFrame)
-                    card.setFrame(gFrame)
-                    cardPath = NodePath(card.generate())
-                    cardPath.reparentTo(dlgNodePath)
-                    cardPath.setPos((-.5, .1, 1.2 - ht))
-                    cardPath.setColor(Wye.color.BACKGROUND_COLOR)
-                    frame.vars.bgndGObj[0] = cardPath
-                    # background outline
-                    oCard = CardMaker("Dlg Bgnd Outline")
-                    # print("gFrame", gFrame)
-                    gFrame[0] = -.1    # marginL
-                    gFrame[1] = wd+.3  # marginR
-                    gFrame[2] = -.1    # marginB
-                    gFrame[3] = ht+.3  # marginT
-                    # print("initial adjusted gFrame", gFrame)
-                    oCard.setFrame(gFrame)
-                    oCardPath = NodePath(oCard.generate())
-                    oCardPath.reparentTo(dlgNodePath)
-                    oCardPath.setPos((-.6, .2, 1.1 - ht))
-                    oCardPath.setColor(Wye.color.OUTLINE_COLOR)
-                    frame.vars.outlineGObj[0] = oCardPath
                     WyeUILib.FocusManager.openDialog(frame, parent)  # pass parent, if any
 
                     frame.params.retVal[0] = -1     # default to cancelled
@@ -2696,6 +2820,8 @@ class WyeUILib(Wye.staticObj):
             frame.vars.canTags[0] = []         # tags for Cancel buttons
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
             frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
+            frame.vars.topTags[0] = []
+
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
             return frame
@@ -2716,7 +2842,7 @@ class WyeUILib(Wye.staticObj):
                     frame.params.position[0] = [-6 * rat, Wye.UI.NOTIFICATION_OFFSET, 5.8]
 
                     # make a background for entire dialog
-                    WyeUILib.Dialog.genBackground(frame)
+                    WyeUILib.Dialog.genBackground(frame, Wye.color.BACKGROUND_COLOR, Wye.color.OUTLINE_COLOR)
 
                     # Add dialog to known dialogs
                     WyeUILib.FocusManager.openDialog(frame, parent)        # pass parent, if any
@@ -2726,8 +2852,8 @@ class WyeUILib(Wye.staticObj):
                     frame.PC += 1
 
                 case 1:
-                    frame.vars.dragObj[0].setPos(base.camera, frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2])
-                    frame.vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                    frame.vars.dragPath[0].setPos(base.camera, frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2])
+                    frame.vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
                     # do click-flash count down and end-flash color reset for buttons user clicked
                     delLst = []
@@ -2855,6 +2981,8 @@ class WyeUILib(Wye.staticObj):
 
                     frame.vars.dlgFrm[0] = dlgFrm
 
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Wye Help",
+                                                             WyeCore.libs.WyeUILib.MainMenuDialog.HelpCallback)
 
                     WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Main Dialog",
                                                              WyeCore.libs.WyeUILib.MainHUDDialog.HUDMainDlgCallback)
@@ -2866,9 +2994,12 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Libraries Dialog",
                                                              WyeCore.libs.WyeUILib.MainHUDDialog.HUDMainLibDlgCallback)
 
+                    # NOTE: Re-using MainMenuDialog's ExitCallback!!!!
+                    exitBtn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Exit Wye",
+                                                             WyeCore.libs.WyeUILib.MainMenuDialog.ExitCallback)
+                    exitBtn.params.optData = [(exitBtn, dlgFrm),]
 
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Wye Help",
-                                                             WyeCore.libs.WyeUILib.MainMenuDialog.HelpCallback)
+
 
 
                     frame.SP.append(dlgFrm)
@@ -2894,14 +3025,14 @@ class WyeUILib(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                print("HUDMainDlgCallback run: data", data)
+                #print("HUDMainDlgCallback run: data", data)
 
                 if not WyeCore.World.mainMenu:
                     WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeUILib.MainMenuDialog)
                 else:
                     #print("Already have Wye Main Menu", WyeCore.World.mainMenu.verb.__name__)
-                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
-                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
         class HUDDbgDlgCallback:
@@ -2921,8 +3052,8 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeUILib.DebugMain)
                 else:
                     #print("Already have debugger")
-                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
-                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
         class HUDMainLibDlgCallback:
@@ -2937,14 +3068,14 @@ class WyeUILib(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
-                print("HUDMainDlgCallback run: data", data)
+                #print("HUDMainLibDlgCallback run: data", data)
                 if not WyeCore.World.editMenu:
                     WyeCore.World.editMenu = WyeCore.World.startActiveObject(WyeUILib.EditMainDialog)
                     WyeCore.World.editMenu.eventData = ("", (0))
                 else:
                     #print("Already have editor")
-                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragObj[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
-                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
     # Wye main menu - user settings n stuff
@@ -3156,7 +3287,8 @@ Overview:
                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "OK_ONLY"])
 
 
-        # turn sound on/off
+        # Exit, are you sure?
+        # NOTE: ALSO CALLED FROM MainHUDDialog (Hack, Cough)
         class ExitCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
@@ -3178,11 +3310,25 @@ Overview:
                 #print("ExitCallback: dlgFrm", dlgFrm.verb.__name__, " ", dlgFrm.params.title[0])
 
                 match (frame.PC):
-                    case 0:  # Delete library op
-                        # delete verb ok?
-                        # print("EditLibLineCallback: case 0: delete verb", verb.__name__, " from", lib.__name__)
+                    case 0:
+                        # check for any edited libraries
+                        changedLibCt = 0  # assume no modified libs
+                        changedLib = None
+                        for lib in WyeCore.World.libList:
+                            if lib.modified and lib.canSave:
+                                changedLibCt += 1
+                                changedLib = lib
+
+                        # set "are you sure?" message appropriately
+                        if changedLibCt == 0:
+                            msg = "Exit Wye?"
+                        elif changedLibCt == 1:
+                            msg = "Unsaved library '"+changedLib.__name__+"'.\nExit Wye without saving?"
+                        else:
+                            msg = str(changedLibCt)+" Unsaved libraries.\nExit Wye without saving?"
+
                         pos = (1, -.5, 2 + exitBtnFrm.vars.position[0][2])
-                        delOkFrm = WyeCore.libs.WyeUIUtilsLib.doPopUpDialogAsync(frame, "Exit", "Exit Wye?",
+                        delOkFrm = WyeCore.libs.WyeUIUtilsLib.doPopUpDialogAsync(frame, "Exit",msg,
                                                                                  formatLst=[""], parent=dlgFrm, position=pos, okOnCr=True)
                         frame.SP.append(delOkFrm)  # push dialog so it runs next cycle
                         frame.PC += 1  # on return from dialog, run del ok case
@@ -3637,11 +3783,15 @@ Overview:
             else:
                 editLnFrm = WyeCore.libs.WyeUIUtilsLib.doInputDropdown(dlgFrm, "+/-", [["Save To File", "Delete Library"]], [0],
                                                                        WyeUILib.EditMainDialog.EditLibLineCallback,
-                                                                       showText=False, padding=(.5,.5,.05,.05), color=Wye.color.ACTIVE_COLOR)
+                                                                       showText=False, padding=(.5,0,0,0), color=Wye.color.ACTIVE_COLOR)
                 frame.vars.libRows[0].append(editLnFrm)
 
             # make the dialog row
-            btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " " + lib.__name__, WyeUILib.EditMainDialog.EditLibCallback,
+            if lib.modified:
+                libName = " * " + lib.__name__
+            else:
+                libName = "    " + lib.__name__
+            btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, libName, WyeUILib.EditMainDialog.EditLibCallback,
                                                               layout=Wye.layout.ADD_RIGHT)
             frame.vars.libRows[0].append(btnFrm)
             btnFrm.params.optData = [[btnFrm, dlgFrm, lib]]  # button row, row frame, dialog frame, obj frame
@@ -3757,6 +3907,8 @@ Overview:
                             if askSaveFrm.params.retVal[0] != Wye.status.SUCCESS:
                                 #print("User cancelled saving library")
                                 return
+
+                            lib.modified = False        # it's been saved
 
                             # get the filename
                             fileName = askSaveFrm.params.fileName[0].strip()
@@ -3999,6 +4151,10 @@ Overview:
                                                    Wye.color.WARNING_COLOR)
                             frame.status = Wye.status.SUCCESS
                             return
+
+                        # mark lib as saved
+                        lib.modified = False
+
                         WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to "+fileName)
                         #print("EditLibLineCallback case 1: Wrote lib '" + libName + "' to '" + fileName + "'")
 
@@ -4009,12 +4165,19 @@ Overview:
                         if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
                             #print("EditLibLineCallback case 2: del lib "+lib.__name__)
 
+                            # if lib open in editor, close it
+                            if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
+                                libDlg = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
+                                # force close by faking an OK 
+                                libDlg.verb.doSelect(libDlg, libDlg.vars.okTags[0][0])
+
                             # delete the library
                             libName = lib.__name__
                             WyeCore.World.libDict.pop(libName)
                             WyeCore.World.libList.remove(lib)
 
                             editVerbFrm.verb.update(editVerbFrm, parentFrm)
+
                         #else:
                         #    print("User cancelled delete library")
 
@@ -4212,7 +4375,7 @@ Overview:
                 # show new library
                 if newLib:
                     # puts two inputs in dialog (todo - find better way to get just-added rows)
-                    WyeUILib.EditMainDialog.listLib(editFrm, parentFrm, lib)
+                    editFrm.verb.listLib(editFrm, parentFrm, lib)
                     b1 = editFrm.vars.libRows[0][-2]
                     b2 = editFrm.vars.libRows[0][-1]
 
@@ -4245,6 +4408,7 @@ Overview:
             def start(stack):
                 # print("EditLibCallback started")
                 f = Wye.codeFrame(WyeUILib.EditMainDialog.EditLibCallback, stack)
+                f.modified = False
                 f.vars.rows[0] = []
                 return f
 
@@ -4265,7 +4429,7 @@ Overview:
                     # bring lib to front
                     dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
                     #print("bring dlg", dlgFrm.params.title, " to front")
-                    path = dlgFrm.vars.dragObj[0]._path
+                    path = dlgFrm.vars.dragPath[0]
                     path.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET - .5, 0))
                     path.setHpr(base.camera, 0, 1, 0)
                     return
@@ -4282,15 +4446,19 @@ Overview:
                 objPos = (2, -.5, objOffset)
                 point = NodePath("point")
                 point.reparentTo(render)
-                point.setPos(parentDlgFrm.vars.dragObj[0]._path, objPos)
+                point.setPos(parentDlgFrm.vars.dragPath[0], objPos)
                 pos = point.getPos()
                 point.removeNode()
 
                 stk = []
                 dlgFrm = WyeUILib.Dialog.start(stk)
+                if lib.modified:
+                    libLabel = "Library '" + lib.__name__ +"' *modified*"
+                else:
+                    libLabel = "Library '" + lib.__name__ +"'"
 
                 dlgFrm.params.retVal = frame.vars.vrbStat
-                dlgFrm.params.title = ["Library '" + lib.__name__ +"'"]
+                dlgFrm.params.title = [libLabel]
                 dlgFrm.params.position = [[pos[0], pos[1], pos[2]],]
                 dlgFrm.params.parent = [None]
                 dlgFrm.params.format = [["NO_CANCEL",]]
@@ -4319,8 +4487,8 @@ Overview:
                 WyeUILib.EditMainDialog.EditLibCallback.listVerbs(frame, dlgFrm)
 
                 # launch lib as stand alone dlg so can have multiple libs open at once
-                stk.append(dlgFrm)
-                dlgFrm.verb.run(dlgFrm)
+                #stk.append(dlgFrm)
+                #dlgFrm.verb.run(dlgFrm)
                 WyeCore.World.startActiveFrame(dlgFrm)
 
                 # Hack to point back to this frame for updating
@@ -4337,7 +4505,7 @@ Overview:
                             # can only start verbs that don't require data
                             if hasattr(verb, "paramDescr") and len(verb.paramDescr) == 0:
                                 prefFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Start",
-                                          WyeUILib.EditMainDialog.EditLibCallback.StartLibVerbCallback, (verb,))
+                                          frame.verb.StartLibVerbCallback, (verb,))
                             else:
                                 prefFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "        .")
                             frame.vars.rows[0].append(prefFrm)
@@ -4345,7 +4513,7 @@ Overview:
                             # can only delete verbs if not a system library
                             if not hasattr(lib, "systemLib"):
                                 delFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, " Del",
-                                          WyeUILib.EditMainDialog.EditLibCallback.DelLibVerbCallback, (verb,),
+                                          frame.verb.DelLibVerbCallback, (verb,),
                                                     layout=Wye.layout.ADD_RIGHT)
                                 frame.vars.rows[0].append(delFrm)
 
@@ -4353,7 +4521,7 @@ Overview:
                             if hasattr(verb, "codeDescr"):
                                 # print("lib", lib.__name__, " verb", verb.__name__)
                                 btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  " + verb.__name__,
-                                                             WyeUILib.EditMainDialog.EditLibCallback.EditlibraryVerbCallback,
+                                                             frame.verb.EditlibraryVerbCallback,
                                                              layout=Wye.layout.ADD_RIGHT)
                                 btnFrm.params.optData = [(btnFrm, dlgFrm, verb)]  # button data - offset to button
                                 frame.vars.rows[0].append(btnFrm)
@@ -4367,6 +4535,10 @@ Overview:
 
             # delete all verb rows and redo them
             def update(frame, dlgFrm):
+                # make sure we have the latest lib
+                lib = WyeCore.World.libDict[frame.vars.lib[0].__name__]
+                frame.vars.lib[0] = lib
+
                 # delete all dialog lib verb inputs
                 delCt = 0
                 for bFrmRef in frame.vars.rows[0]:
@@ -4378,12 +4550,16 @@ Overview:
                 frame.vars.rows[0].clear()  # old inputs gone
 
                 # rebuild dialog lib verb list
-                WyeUILib.EditMainDialog.EditLibCallback.listVerbs(frame, dlgFrm)
+                frame.verb.listVerbs(frame, dlgFrm)
                 # update display
                 for frm in frame.vars.rows[0]:
                     pos = [0, 0, 0]
                     frm.verb.display(frm, dlgFrm, pos)
+
+                if lib.modified:
+                    dlgFrm.verb.setTitle(dlgFrm, "Library '" + lib.__name__ +"' *modified*")
                 dlgFrm.verb.redisplay(dlgFrm)
+
 
             # edit verb in lib
             class EditlibraryVerbCallback:
@@ -4410,7 +4586,7 @@ Overview:
                     objPos = (2, -.5, objOffset)
                     point = NodePath("point")
                     point.reparentTo(render)
-                    point.setPos(dlgFrm.vars.dragObj[0]._path, objPos)
+                    point.setPos(dlgFrm.vars.dragPath[0], objPos)
                     pos = point.getPos()
                     point.removeNode()
 
@@ -4420,9 +4596,11 @@ Overview:
                     edFrm.params.verb = [verb]
                     edFrm.params.parent = [None]
                     edFrm.params.position = [(pos[0], pos[1], pos[2]),]
-                    stk.append(edFrm)
-                    edFrm.verb.run(edFrm)
+                    #stk.append(edFrm)
+                    #edFrm.verb.run(edFrm)
                     WyeCore.World.startActiveFrame(edFrm)
+
+
 
             # Delete verb
             class DelLibVerbCallback:
@@ -4469,10 +4647,16 @@ Overview:
                                 WyeCore.World.libDict[lib.__name__] = lib
                                 setattr(WyeCore.libs, lib.__name__, lib)
 
+                                lib.modified = True
+
                                 # if there's an edit dialog showing this library, refresh it
                                 if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
                                     dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
                                     dlgFrm.motherFrame.verb.update(dlgFrm.motherFrame, dlgFrm)
+
+                                # if there's a lib list
+                                if WyeCore.World.editMenu:
+                                    WyeCore.World.editMenu.verb.update(WyeCore.World.editMenu, WyeCore.World.editMenu.vars.dlgFrm[0])
                             #else:
                             #    print("User cancelled delete verb")
 
@@ -4498,7 +4682,7 @@ Overview:
             # edit verb in lib
             # May create new verb in same or new lib
             class CreateVerbCallback:
-                mode = Wye.mode.MULTI_CYCLE
+                mode = Wye.mode.SINGLE_CYCLE
                 dataType = Wye.dType.STRING
                 paramDescr = ()
                 varDescr = (("verbName", Wye.dType.INTEGER, 0),)
@@ -4520,67 +4704,62 @@ Overview:
 
                     editLibFrm = data[1][4]
 
-                    match(frame.PC):
-                        case 0:
+                    # build a default verb
+                    vertSettings = {
+                        'mode': Wye.mode.MULTI_CYCLE,
+                        'autoStart': True,
+                        'dataType': Wye.dType.NONE
+                    }
 
-                            # build a default verb
-                            vertSettings = {
-                                'mode': Wye.mode.MULTI_CYCLE,
-                                'autoStart': True,
-                                'dataType': Wye.dType.NONE
-                            }
+                    paramDescr = () # no params so can be started from library
 
-                            paramDescr = () # no params so can be started from library
+                    varDescr = (("newVar", Wye.dType.ANY, None),)
 
-                            varDescr = (("newVar", Wye.dType.ANY, None),)
+                    codeDescr = (("WyeLib.noop", ("Code", "0")),)
 
-                            codeDescr = (("WyeLib.noop", ("Code", "0")),)
+                    frame.vars.verbName[0] = verbNmFrm.vars.currVal[0].strip()
 
-                            frame.vars.verbName[0] = verbNmFrm.vars.currVal[0].strip()
+                    if not frame.vars.verbName[0]:
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Name Required", "Please enter a name for the new verb",
+                                            Wye.color.WARNING_COLOR)
+                        frame.status = Wye.status.SUCCESS
+                        return
 
-                            if not frame.vars.verbName[0]:
-                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Name Required", "Please enter a name for the new verb",
-                                                    Wye.color.WARNING_COLOR)
-                                frame.status = Wye.status.SUCCESS
-                                return
+                    if hasattr(lib, frame.vars.verbName[0]):
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Unique Name Required", "'"+frame.vars.verbName[0]+"' already in library. Please enter a unique name",
+                                            Wye.color.WARNING_COLOR)
+                        frame.status = Wye.status.SUCCESS
+                        return
 
-                            if hasattr(lib, frame.vars.verbName[0]):
-                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Unique Name Required", "'"+frame.vars.verbName[0]+"' already in library. Please enter a unique name",
-                                                    Wye.color.WARNING_COLOR)
-                                frame.status = Wye.status.SUCCESS
-                                return
+                    verb = WyeCore.Utils.createVerb(lib, frame.vars.verbName[0], vertSettings, paramDescr, varDescr, codeDescr)
 
-                            WyeCore.Utils.createVerb(lib, frame.vars.verbName[0], vertSettings, paramDescr, varDescr, codeDescr)
+                    if not verb:
+                        frame.status = Wye.status.SUCCESS  # done
+                        return
 
-                            verb = getattr(lib, frame.vars.verbName[0])
+                    lib.modified = True
 
-                            # open object editor
-                            edFrm = WyeUILib.EditVerb.start(frame.SP)
-                            edFrm.params.verb = [verb]
-                            edFrm.params.parent = [dlgFrm]
-                            edFrm.params.position = [(.5, -1.3, -.5 + btnFrm.vars.position[0][2]),]
+                    # open object editor
+                    # fire up object editor with given frame
+                    # print("ObjEditorCtl: Create ObjEditor")
+                    edFrm = WyeCore.World.startActiveObject(WyeUILib.EditVerb)
+                    point = NodePath("point")
+                    point.reparentTo(render)
+                    point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET-.5, 0))
+                    pos = point.getPos()
+                    point.removeNode()
+                    edFrm.params.position = [(pos[0], pos[1], pos[2]), ]
+                    edFrm.params.parent = [None]
+                    edFrm.params.verb = [verb]
 
-                            frame.SP.append(edFrm)
-                            frame.PC += 1
+                    # display new verb in lib list
+                    editLibFrm.verb.update(editLibFrm, dlgFrm)
 
-                        case 1:
-                            edFrm = frame.SP.pop()  # remove dialog frame from stack
-                            frame.status = Wye.status.SUCCESS  # done
+                    # if there's a lib list
+                    if WyeCore.World.editMenu:
+                        WyeCore.World.editMenu.verb.update(WyeCore.World.editMenu,
+                                                           WyeCore.World.editMenu.vars.dlgFrm[0])
 
-                            # if we should throw out the verb created above
-                            # a) user cancelled b) user changed verb name and created that c) user put verb in diff lib
-                            if edFrm.params.retVal[0] != Wye.status.SUCCESS or \
-                                edFrm.vars.nameFrm[0].vars.currVal[0] != verbNmFrm.vars.currVal[0] or \
-                                    (edFrm.params.retLib[0] and (edFrm.params.retLib[0].__name__ != lib.__name__)):
-
-                                # delete the verb created above from the lib
-                                delattr(lib, frame.vars.verbName[0])
-
-                            # on success, redisplay lib
-                            if edFrm.params.retVal[0] == Wye.status.SUCCESS:
-                                editLibFrm.verb.update(editLibFrm, dlgFrm)
-
-                            #print("EditlibraryVerbCallback case 1: popped frame", edFrm.verb.__name__)
 
 
 
@@ -4648,8 +4827,8 @@ Overview:
                     dbgFrm.params.position = [[pos[0], pos[1], pos[2]],]
 
                     # put object frame on active list
-                    stk.append(dbgFrm)
-                    dbgFrm.verb.run(dbgFrm)
+                    #stk.append(dbgFrm)
+                    #dbgFrm.verb.run(dbgFrm)
                     WyeCore.World.startActiveFrame(dbgFrm)
                     #print("ObjEditorCtl: Fill in ObjEditor objFrm param")
 
@@ -4776,7 +4955,7 @@ Overview:
 
             verb = getattr(lib, verbName)
             if verb != frame.params.verb[0]:
-                print("EditVerb verb", verbName, " has been updated. using most recent")
+                #print("EditVerb verb", verbName, " has been updated. using most recent")
                 frame.params.verb[0] = verb
 
             match(frame.PC):
@@ -4791,8 +4970,8 @@ Overview:
 
                         # bring lib in front of user
                         frm = WyeUILib.EditVerb.activeVerbs[verb]
-                        frm.vars.dragObj[0].setPos(base.camera, 0, Wye.UI.DIALOG_OFFSET, 0)
-                        frm.vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                        frm.vars.dragPath[0].setPos(base.camera, 0, Wye.UI.DIALOG_OFFSET, 0)
+                        frm.vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
                         frame.status = Wye.status.FAIL
                         return
@@ -5070,13 +5249,16 @@ Overview:
             # push updated lib back to system
             WyeCore.World.libDict[lib.__name__] = lib
             setattr(WyeCore.libs, lib.__name__, lib)
+            lib.modified = True
 
             # if there's an edit dialog showing this library, refresh it
             if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
                 dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
                 dlgFrm.motherFrame.verb.update(dlgFrm.motherFrame, dlgFrm)
 
-
+            # if there's a lib list
+            if WyeCore.World.editMenu:
+                WyeCore.World.editMenu.verb.update(WyeCore.World.editMenu, WyeCore.World.editMenu.vars.dlgFrm[0])
 
         # build a parallel stream code entry
         # stream header plus recursively displayed code
@@ -6412,7 +6594,7 @@ Overview:
                             ix += 1
                             rowFrmRef[0].verb.display(rowFrmRef[0], parentFrm, pos)
 
-                            # update position of all fields
+                        # update position of all fields
                         parentFrm.verb.redisplay(parentFrm)
 
 
@@ -6916,7 +7098,7 @@ Overview:
                             ix += 1
                             rowFrmRef[0].verb.display(rowFrmRef[0], parentFrm, pos)
 
-                            # update position of all fields
+                        # update position of all fields
                         parentFrm.verb.redisplay(parentFrm)
 
 
@@ -7156,7 +7338,7 @@ Overview:
                             rIx += 1
                             rowFrmRef[0].verb.display(rowFrmRef[0], parentFrm, pos)
 
-                            # update position of all fields
+                        # update position of all fields
                         parentFrm.verb.redisplay(parentFrm)
 
 
@@ -8428,6 +8610,8 @@ Overview:
                             frame.status = Wye.status.SUCCESS
                             return
 
+                        lib.modified = False        # lib's been saved
+
                         WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+verbName+" to "+fileName)
                         #print("EditCodeSaveLibCallback: Wrote verb ", verbName, " to library file", libFileName)
 
@@ -8670,7 +8854,7 @@ Overview:
                 objPos = (2, -.5, objOffset)
                 point = NodePath("point")
                 point.reparentTo(render)
-                point.setPos(parentDlg.vars.dragObj[0]._path, objPos)
+                point.setPos(parentDlg.vars.dragPath[0], objPos)
                 pos = point.getPos()
                 point.removeNode()
 
@@ -8681,8 +8865,8 @@ Overview:
                 dbgFrm.params.objFrm = [objFrm]
                 dbgFrm.params.position = [[pos[0], pos[1], pos[2]],]
                 dbgFrm.params.parent = [None]
-                stk.append(dbgFrm)
-                dbgFrm.verb.run(dbgFrm)
+                #stk.append(dbgFrm)
+                #dbgFrm.verb.run(dbgFrm)
                 WyeCore.World.startActiveFrame(dbgFrm)
 
         # User selected an object, open its frame in the debugger
@@ -8829,7 +9013,7 @@ Overview:
                         frame.status = Wye.status.FAIL
 
                         dlgFrm = WyeUILib.ObjectDebugger.activeObjs[objFrm]
-                        path = dlgFrm.vars.dragObj[0]._path
+                        path = dlgFrm.vars.dragPath[0]
                         path.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET - .5, 0))
                         path.setHpr(base.camera, 0, 1, 0)
                         return
@@ -8843,8 +9027,8 @@ Overview:
 
                         ## bring lib in front of user
                         #frm = WyeUILib.ObjectDebugger.activeObjs[objFrm]
-                        #frm.vars.dragObj[0].setPos(base.camera, 0, Wye.UI.DIALOG_OFFSET, 0)
-                        #frm.vars.dragObj[0].setHpr(base.camera, 0, 1, 0)
+                        #frm.vars.dragPath[0].setPos(base.camera, 0, Wye.UI.DIALOG_OFFSET, 0)
+                        #frm.vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
                     # if it's a systemObject (immune from Wye.breakAll) don't debug it

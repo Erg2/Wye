@@ -35,6 +35,8 @@ import inspect
 # 3d UI element library
 class WyeUIUtilsLib(Wye.staticObj):
     systemLib = True        # prevent overwriting
+    modified = False  # no changes
+    canSave = False
 
     # Build run_rt methods on each class in library
     def _build():
@@ -65,7 +67,8 @@ class WyeUIUtilsLib(Wye.staticObj):
         dlgFrm = WyeUIUtilsLib.doDialog(titleText, parent=parent, position=pos, formatLst=formatLst, headerColor=headerColor, okOnCr=okOnCr)
         WyeUIUtilsLib.doInputLabel(dlgFrm, mainText, color)
         dlgFrm.systemObject = True      # Show warnings even if system paused
-        dlgFrm.verb.run(dlgFrm)
+        #dlgFrm.SP.append(dlgFrm)
+        #dlgFrm.verb.run(dlgFrm)
         WyeCore.World.startActiveFrame(dlgFrm)
 
 

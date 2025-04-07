@@ -21,7 +21,7 @@ class Wye:
     breakList = []          # list of frames to break on
     midi = None
     midiLastIns = 0
-    windowSize = 1          # 0 full frame, 1 max window, 2 small window
+    windowSize = 2          # 0 full frame, 1 max window, 2 small window
 
     dragging = False
 
@@ -676,9 +676,9 @@ class Wye:
         SELECTED_COLOR = (0, 1, 0, 1)               # Text box active
         SELECTED_BG_COLOR = (.25, .75, .25, 1)      # highlight dialog row
         LABEL_COLOR = (.8, .8, .8, 1)               # informational
-        BACKGROUND_COLOR = (.4, .4, .4, .1)         # dialog background
-        BACKGROUND_COLOR_SEL = (.3, .3, .3, .1)     # selected dialog background
-        OUTLINE_COLOR = (.5, .5, .5, 1)             # dialog outline
+        BACKGROUND_COLOR = (.6, .6, .6, 1)         # dialog background
+        BACKGROUND_COLOR_SEL = (.9, .9, .9, 1)     # selected dialog background
+        OUTLINE_COLOR = (1, 1, 1, 1)             # dialog outline
         OUTLINE_COLOR_SEL = (.1, .1, .1, 1)         # dialog outline selected
         HEADER_COLOR = (1, 1, 1, 1)                 # dialog header
         CONTROL_COLOR = (1, 1, 1, 1)                # dialog controls (OK, Cancel)

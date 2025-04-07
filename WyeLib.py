@@ -15,8 +15,9 @@ from direct.showbase.DirectObject import DirectObject
 
 
 class WyeLib:
-
     systemLib = True        # prevent overwriting
+    modified = False  # no changes
+    canSave = False
 
     # Build run_rt methods on each class
     def _build():
