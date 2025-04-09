@@ -511,7 +511,7 @@ class WyeCore(Wye.staticObj):
                 # # END DEBUG
 
                 if WyeCore.World.mouseHandler:
-                    if base.mouseWatcherNode.hasMouse():
+                    if not Wye.UITest and base.mouseWatcherNode.hasMouse():
                         x = base.mouseWatcherNode.getMouseX()
                         y = base.mouseWatcherNode.getMouseY()
                         mb1 = base.mouseWatcherNode.isButtonDown(MouseButton.one())
@@ -793,6 +793,7 @@ class WyeCore(Wye.staticObj):
                 self.accept('end', self.controlKeyFunc, [Wye.ctlKeys.END])
                 self.accept('escape', self.controlKeyFunc, [Wye.ctlKeys.ESCAPE])
                 self.accept('enter', self.controlKeyFunc, [Wye.ctlKeys.ENTER])
+                self.accept("f1", self.controlKeyFunc, [Wye.ctlKeys.F1])
                 self.accept("f11", self.controlKeyFunc, [Wye.ctlKeys.F11])
                 self.accept("window-event", self.resize)
                 self.accept("control-w", self.controlKeyFunc, [Wye.ctlKeys.CTL_W])
@@ -806,7 +807,10 @@ class WyeCore(Wye.staticObj):
                     height = base.win.getProperties().getYSize()
                     if width != WyeCore.winWidth or height != WyeCore.winHeight:
                         rat = width/height
-                        pos = [-6 * rat, Wye.UI.NOTIFICATION_OFFSET, 5.8]
+                        if rat >= 1:
+                            pos = [-6 * rat, Wye.UI.NOTIFICATION_OFFSET, 5.8]
+                        else:
+                            pos = [-6, Wye.UI.NOTIFICATION_OFFSET, 5.85 * 1/rat]
                         #print("Set HUD pos", pos, " win size", width, height)
                         #print("HUD", WyeCore.HUD.verb.__name__, " params", dir(WyeCore.HUD.params))
                         WyeCore.HUD.vars.dlgFrm[0].params.position[0] = pos
@@ -1028,6 +1032,8 @@ class WyeCore(Wye.staticObj):
         def getObjectHit(self, mpos):  # mpos is the position of the mouse on the screen
             global render
 
+            #print("getObjectHit check mpos", mpos)
+
             self.pickedObj = None  # don't have an obj yet
             self.pickerRay.setFromLens(WyeCore.base.camNode, mpos.getX(), mpos.getY())
             self.picker.traverse(render)
@@ -1045,7 +1051,7 @@ class WyeCore(Wye.staticObj):
                         #print(" obj", parent, " has pickable", parent.hasTag('pickable'), " is pickable", "True" if parent.getTag('pickable') else "False")
                         if parent.hasTag('pickable'):
                             if parent.getTag('pickable') == 'true':
-                                #wyeTag = parent.getTag('wyeTag')
+                                wyeTag = parent.getTag('wyeTag')
                                 #if wyeTag:
                                 #    print("Clicked on pickable object", parent, " with wyeTag", wyeTag)
                                 #else:
@@ -1066,10 +1072,10 @@ class WyeCore(Wye.staticObj):
 
         # Wye object selection dispatcher
         # Check for object hit - check hit obj has obj tag - check for event for given obj tag
-        def objSelectEvent(self):
+        def objSelectEvent(self, x, y):
             status = False
             if self.pickerEnable:
-                self.getObjectHit(WyeCore.base.mouseWatcherNode.getMouse())
+                self.getObjectHit(LPoint2f(x,y))
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
                     #print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
@@ -1479,9 +1485,9 @@ class WyeCore(Wye.staticObj):
                             #print("WyeCore parseWyeTuple MULTI_CYCLE verb '"+ wyeTuple[0]+"'")
                             eff = "f"+str(fNum)         # eff is the name of the current frame.  fNum keeps frame names unique in nested code
                             # put local frames on the parent frame as attributes to keep local scope across display cycles
-                            codeText += "    if not hasattr(frame,'" + eff + "'):\n"
-                            #codeText += "     print('create frame attr "+eff+"')\n"
-                            codeText += "     setattr(frame,'" + eff + "',None)\n"
+                            #codeText += "    if not hasattr(frame,'" + eff + "'):\n"
+                            ##codeText += "     print('create frame attr "+eff+"')\n"
+                            #codeText += "     setattr(frame,'" + eff + "',None)\n"
                             codeText += "    frame."+eff+" = " + wyeTuple[0] + ".start(frame.SP)\n"
                             #print("parseWyeTuple MULTI|PARA: 1 codeText =", codeText[0], " wyeTuple", wyeTuple)
                             if len(wyeTuple) > 1:

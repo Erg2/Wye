@@ -27,6 +27,7 @@ class Wye:
 
     version = "0.9.1"         # change save/open lib directory
 
+    UITest = False          # True enables UI test mode which disables normal mouse input
     devPrint = False       # We're running in the Python debugger and want to see messages in text
 
     startPos = (0, -10, 0)      # initial camera position
@@ -628,10 +629,11 @@ class Wye:
         HOME = -11
         ESCAPE = -12
         ENTER = -13
-        F11 = -14
-        CTL_H = -15
-        CTL_P = -16
-        CTL_W = -17
+        F1 = -14
+        F11 = -15
+        CTL_H = -16
+        CTL_P = -17
+        CTL_W = -18
 
         ctlList = [
             RIGHT,
@@ -647,6 +649,7 @@ class Wye:
             HOME,
             ESCAPE,
             ENTER,
+            F1,
             F11,
             CTL_H,
             CTL_P,
@@ -667,6 +670,7 @@ class Wye:
             HOME: "HOME",
             ESCAPE: "ESCAPE",
             ENTER: "ENTER",
+            F1: "F1",
             F11: "F11",
             CTL_H: "CTL_H",
             CTL_P: "CTL_P",

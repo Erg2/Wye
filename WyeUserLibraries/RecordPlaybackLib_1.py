@@ -1,11 +1,11 @@
 from Wye import Wye
 from WyeCore import WyeCore
-class RecordPlaybackLib:
+class RecordPlaybackLib_1:
   def _build():
-    WyeCore.Utils.buildLib(RecordPlaybackLib)
+    WyeCore.Utils.buildLib(RecordPlaybackLib_1)
   canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
-  class RecordPlaybackLib_rt:
+  class RecordPlaybackLib_1_rt:
    pass #1
 
   class ClickMouse:
@@ -22,31 +22,27 @@ class RecordPlaybackLib:
         ("position","FL",1))
     varDescr =        ()
     codeDescr =        (
-        ("Code","#Clear mouse"),
-        ("Code","WyeCore.World.mouseHandler.mouseMove(0,0, 0, 0, 0, 0, 0, 0)"),
         ("Code","x = frame.params.position[0][0] #"),
         ("Code","y = frame.params.position[0][1] #"),
-        ("Code","#print('ClickMouse', frame.params.MBtn[0] )"),
-        ("Code","mb1 = True if frame.params.MBtn[0] == 1 else False #"),
-        ("Code","mb2 = True if frame.params.MBtn[0] == 2 else False #"),
-        ("Code","mb3 = True if frame.params.MBtn[0] == 3 else False #"),
+        ("Code","mb1 = True if frame.params.MBtn == 1 else False #"),
+        ("Code","mb2 = True if frame.params.MBtn == 2 else False #"),
+        ("Code","mb3 = True if frame.params.MBtn == 3 else False #"),
         ("Code","shift = frame.params.shift[0] #"),
         ("Code","alt = frame.params.alt[0] #"),
         ("Code","ctl = frame.params.ctrl[0] #"),
-        ("Code","WyeCore.World.mouseHandler.mouseMove(x,y, mb1, mb2, mb3, shift, ctl, alt)"),
-        ("Code","WyeCore.World.mouseHandler.mouseMove(0,0, 0, 0, 0, 0, 0, 0)"))
+        ("Code","WyeCore.World.mouseHandler.mouseMove(x,y, mb1, mb2, mb3, shift, ctl, alt)"))
 
     def _build(rowRef):
         # print("Build ",ClickMouse)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('ClickMouse', RecordPlaybackLib.ClickMouse.codeDescr, RecordPlaybackLib.ClickMouse, rowIxRef)
+        return WyeCore.Utils.buildCodeText('ClickMouse', RecordPlaybackLib_1.ClickMouse.codeDescr, RecordPlaybackLib_1.ClickMouse, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.ClickMouse, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.ClickMouse, stack)
 
     def run(frame):
         # print('Run 'ClickMouse)
-        RecordPlaybackLib.RecordPlaybackLib_rt.ClickMouse_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.ClickMouse_run_rt(frame)
 
   class Delay:
     mode = Wye.mode.MULTI_CYCLE
@@ -59,24 +55,22 @@ class RecordPlaybackLib:
     varDescr =        (
         ("frameCt","I",0),)
     codeDescr =        (
-        ("Label","Loop"),
         ("IfGoTo","frame.vars.frameCt[0] >= frame.params.nFrames[0]","Done"),
         ("Var=","frame.vars.frameCt[0] += 1"),
-        ("GoTo","Loop"),
         ("Label","Done"),
         ("Code","frame.status = Wye.status.SUCCESS #<your code here>"))
 
     def _build(rowRef):
         # print("Build ",Delay)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('Delay', RecordPlaybackLib.Delay.codeDescr, RecordPlaybackLib.Delay, rowIxRef)
+        return WyeCore.Utils.buildCodeText('Delay', RecordPlaybackLib_1.Delay.codeDescr, RecordPlaybackLib_1.Delay, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.Delay, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.Delay, stack)
 
     def run(frame):
         # print('Run 'Delay)
-        RecordPlaybackLib.RecordPlaybackLib_rt.Delay_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.Delay_run_rt(frame)
 
   class DoMouseMove:
     mode = Wye.mode.MULTI_CYCLE
@@ -115,14 +109,14 @@ class RecordPlaybackLib:
     def _build(rowRef):
         # print("Build ",DoMouseMove)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('DoMouseMove', RecordPlaybackLib.DoMouseMove.codeDescr, RecordPlaybackLib.DoMouseMove, rowIxRef)
+        return WyeCore.Utils.buildCodeText('DoMouseMove', RecordPlaybackLib_1.DoMouseMove.codeDescr, RecordPlaybackLib_1.DoMouseMove, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.DoMouseMove, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.DoMouseMove, stack)
 
     def run(frame):
         # print('Run 'DoMouseMove)
-        RecordPlaybackLib.RecordPlaybackLib_rt.DoMouseMove_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.DoMouseMove_run_rt(frame)
 
   class DoMouseWheel:
     mode = Wye.mode.SINGLE_CYCLE
@@ -139,14 +133,14 @@ class RecordPlaybackLib:
     def _build(rowRef):
         # print("Build ",DoMouseWheel)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('DoMouseWheel', RecordPlaybackLib.DoMouseWheel.codeDescr, RecordPlaybackLib.DoMouseWheel, rowIxRef)
+        return WyeCore.Utils.buildCodeText('DoMouseWheel', RecordPlaybackLib_1.DoMouseWheel.codeDescr, RecordPlaybackLib_1.DoMouseWheel, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.DoMouseWheel, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.DoMouseWheel, stack)
 
     def run(frame):
         # print('Run 'DoMouseWheel)
-        RecordPlaybackLib.RecordPlaybackLib_rt.DoMouseWheel_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.DoMouseWheel_run_rt(frame)
 
   class MouseDisplay:
     mode = Wye.mode.MULTI_CYCLE
@@ -192,14 +186,14 @@ class RecordPlaybackLib:
     def _build(rowRef):
         # print("Build ",MouseDisplay)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('MouseDisplay', RecordPlaybackLib.MouseDisplay.codeDescr, RecordPlaybackLib.MouseDisplay, rowIxRef)
+        return WyeCore.Utils.buildCodeText('MouseDisplay', RecordPlaybackLib_1.MouseDisplay.codeDescr, RecordPlaybackLib_1.MouseDisplay, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.MouseDisplay, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.MouseDisplay, stack)
 
     def run(frame):
         # print('Run 'MouseDisplay)
-        RecordPlaybackLib.RecordPlaybackLib_rt.MouseDisplay_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.MouseDisplay_run_rt(frame)
 
   class MoveCameraToPosHpr:
     mode = Wye.mode.SINGLE_CYCLE
@@ -218,14 +212,14 @@ class RecordPlaybackLib:
     def _build(rowRef):
         # print("Build ",MoveCameraToPosHpr)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('MoveCameraToPosHpr', RecordPlaybackLib.MoveCameraToPosHpr.codeDescr, RecordPlaybackLib.MoveCameraToPosHpr, rowIxRef)
+        return WyeCore.Utils.buildCodeText('MoveCameraToPosHpr', RecordPlaybackLib_1.MoveCameraToPosHpr.codeDescr, RecordPlaybackLib_1.MoveCameraToPosHpr, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.MoveCameraToPosHpr, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.MoveCameraToPosHpr, stack)
 
     def run(frame):
         # print('Run 'MoveCameraToPosHpr)
-        RecordPlaybackLib.RecordPlaybackLib_rt.MoveCameraToPosHpr_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.MoveCameraToPosHpr_run_rt(frame)
 
   class RecordDialog:
     mode = Wye.mode.MULTI_CYCLE
@@ -250,14 +244,14 @@ class RecordPlaybackLib:
     def _build(rowRef):
         # print("Build ",RecordDialog)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('RecordDialog', RecordPlaybackLib.RecordDialog.codeDescr, RecordPlaybackLib.RecordDialog, rowIxRef)
+        return WyeCore.Utils.buildCodeText('RecordDialog', RecordPlaybackLib_1.RecordDialog.codeDescr, RecordPlaybackLib_1.RecordDialog, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.RecordDialog, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.RecordDialog, stack)
 
     def run(frame):
         # print('Run 'RecordDialog)
-        RecordPlaybackLib.RecordPlaybackLib_rt.RecordDialog_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.RecordDialog_run_rt(frame)
 
   class SendControlKey:
     mode = Wye.mode.SINGLE_CYCLE
@@ -274,14 +268,14 @@ class RecordPlaybackLib:
     def _build(rowRef):
         # print("Build ",SendControlKey)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('SendControlKey', RecordPlaybackLib.SendControlKey.codeDescr, RecordPlaybackLib.SendControlKey, rowIxRef)
+        return WyeCore.Utils.buildCodeText('SendControlKey', RecordPlaybackLib_1.SendControlKey.codeDescr, RecordPlaybackLib_1.SendControlKey, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.SendControlKey, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.SendControlKey, stack)
 
     def run(frame):
         # print('Run 'SendControlKey)
-        RecordPlaybackLib.RecordPlaybackLib_rt.SendControlKey_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.SendControlKey_run_rt(frame)
 
   class SendKey:
     mode = Wye.mode.SINGLE_CYCLE
@@ -298,14 +292,14 @@ class RecordPlaybackLib:
     def _build(rowRef):
         # print("Build ",SendKey)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('SendKey', RecordPlaybackLib.SendKey.codeDescr, RecordPlaybackLib.SendKey, rowIxRef)
+        return WyeCore.Utils.buildCodeText('SendKey', RecordPlaybackLib_1.SendKey.codeDescr, RecordPlaybackLib_1.SendKey, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.SendKey, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.SendKey, stack)
 
     def run(frame):
         # print('Run 'SendKey)
-        RecordPlaybackLib.RecordPlaybackLib_rt.SendKey_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.SendKey_run_rt(frame)
 
   class Test1:
     mode = Wye.mode.MULTI_CYCLE
@@ -317,59 +311,24 @@ class RecordPlaybackLib:
     varDescr =        (
         ("count","I",0),)
     codeDescr =        (
-        ("Code","print('Move the mouse around - should be reported in mouseMove')"),
-        ("WyeCore.libs.RecordPlaybackLib.Delay",
-          ("Expr","[60] # <put parameter here>")),
-        ("Label","Start"),
-        ("Code","Wye.UITest = True #disable normal mouse handling"),
-        ("Code","print('now mouse move should not call moveMouse')"),
         ("WyeCore.libs.RecordPlaybackLib.MoveCameraToPosHpr",
-          ("Expr","[[0, -20, 0]] #pos"),
+          ("Expr","[[0, 0, 0]] #pos"),
           ("Expr","[[0,0,0]] # HPR")),
-        ("Label","OneCycle"),
-        ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'before delay', position=[0,0,1])"),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop2', 'after delay', position=[0,0,-1])"),
-        ("Code","#print('>>>>>>>>> do click M1, ctrl, alt for WyeMainMenu') "),
-        ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
-          ("Expr","[1] # <put parameter here>"),
-          ("Expr","[0] # <put parameter here>"),
-          ("Expr","[1] # <put parameter here>"),
-          ("Expr","[1] # <put parameter here>"),
-          ("Expr","[(0,0,0)] # <put parameter here>")),
-        ("WyeCore.libs.RecordPlaybackLib.Delay",
-          ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('>>>>>>>>>> do click m1 at .1349, -.4146 for Show Test Fish') "),
-        ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
-          ("Expr","[1] # <put parameter here>"),
-          ("Expr","[0] # <put parameter here>"),
-          ("Expr","[0] # <put parameter here>"),
-          ("Expr","[0] # <put parameter here>"),
-          ("Expr","[(0.1349,-0.4146)] #Show Test Fish")),
-        ("WyeCore.libs.RecordPlaybackLib.Delay",
-          ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('>>>>>>> do m1 at .1510, .0117 for Wye Main Menu OK') "),
-        ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
-          ("Expr","[1] # <put parameter here>"),
-          ("Expr","[0] # <put parameter here>"),
-          ("Expr","[0] # <put parameter here>"),
-          ("Expr","[0] # <put parameter here>"),
-          ("Expr","[(0.1510,0.0117)] #Close Main Menu")),
-        ("Code","#<your code here>"),
-        ("Label","Done"),
-        ("Code","frame.status = Wye.status.SUCCESS #<your code here>"),
-        ("Code","Wye.UITest = False #enable normal mouse handling"),
-        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Test Complete', 'Finished Test', position=[0,0,1])"))
+        ("WyeCore.libs.RecordPlaybackLib.MoveCameraToPosHpr",
+          ("Expr","[[0, -10, 0]] #pos"),
+          ("Expr","[[0,0,0]] # HPR")),
+        ("Code","frame.status = Wye.status.SUCCESS #<your code here>"))
 
     def _build(rowRef):
         # print("Build ",Test1)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('Test1', RecordPlaybackLib.Test1.codeDescr, RecordPlaybackLib.Test1, rowIxRef)
+        return WyeCore.Utils.buildCodeText('Test1', RecordPlaybackLib_1.Test1.codeDescr, RecordPlaybackLib_1.Test1, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.Test1, stack)
+        return Wye.codeFrame(RecordPlaybackLib_1.Test1, stack)
 
     def run(frame):
         # print('Run 'Test1)
-        RecordPlaybackLib.RecordPlaybackLib_rt.Test1_run_rt(frame)
+        RecordPlaybackLib_1.RecordPlaybackLib_1_rt.Test1_run_rt(frame)

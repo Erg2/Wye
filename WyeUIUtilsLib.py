@@ -54,7 +54,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         global render
         #print("doPopUpDialog title", titleText, " text", mainText, " color", color, " parent", parent)
 
-        if parent:
+        if parent or position[0] != 0 or position[1] != 0 or position[2] != 0:
             pos = position
         else:
             # position in front of other dialogs

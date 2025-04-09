@@ -263,7 +263,7 @@ class TestLib:
         ("Code","#print('vec back to zero', frame.vars.vec[0], ' status', Wye.status.tostring(frame.status))"),
         ("IfGoTo","frame.vars.vec[0][frame.vars.axis[0]] < 0","WaitClick4"),
         ("Label","WaitClick5"),
-        ("Code","print('After idGoTo', frame.vars.vec[0], ' status', Wye.status.tostring(frame.status))"),
+        ("Code","#print('After idGoTo', frame.vars.vec[0], ' status', Wye.status.tostring(frame.status))"),
         ("Code","frame.status = Wye.status.SUCCESS"))
 
     def _build(rowRef):

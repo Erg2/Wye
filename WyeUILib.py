@@ -74,6 +74,7 @@ class WyeUILib(Wye.staticObj):
 
 
         def getSelected(self):
+            #print('copyPasteManager selected row:', self.selectedRow)
             return self.selectedRow
 
         def show(self):
@@ -84,7 +85,7 @@ class WyeUILib(Wye.staticObj):
                 self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
             else:
                 #print("CopyPasteManager: open dialog")
-                self.displayObj = WyeCore.World.startActiveObject(WyeUILib.CopyPasteManager.CutPasteDisplay)
+                self.displayObj = WyeCore.World.startActiveObject(WyeUILib.CopyPasteManager.CopyPasteDisplay)
                 # todo - rethink this when cvt cut/paste to Wye obj
                 # Need object graphics to exist 'cause need to set highlight
 
@@ -99,7 +100,7 @@ class WyeUILib(Wye.staticObj):
             self.show()
 
 
-        class CutPasteDisplay:
+        class CopyPasteDisplay:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.NONE
             autoStart = False
@@ -113,14 +114,14 @@ class WyeUILib(Wye.staticObj):
             activeFrames = {}
 
             def start(stack):
-                #print("CutPasteDisplay: Start")
-                f = Wye.codeFrame(WyeUILib.CopyPasteManager.CutPasteDisplay, stack)  # not stopped by breakAll or debugger debugger
+                #print("CopyPasteDisplay: Start")
+                f = Wye.codeFrame(WyeUILib.CopyPasteManager.CopyPasteDisplay, stack)  # not stopped by breakAll or debugger debugger
                 f.systemObject = True
                 f.vars.rows[0] = []
                 return f
 
             def run(frame):
-                #print("CutPasteDisplay: run")
+                #print("CopyPasteDisplay: run")
                 match (frame.PC):
                     case 0:
                         #print("CutPasteDiaplay: run case 0:")
@@ -132,9 +133,9 @@ class WyeUILib(Wye.staticObj):
                         point.removeNode()
                         dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Copy/Paste List", position=pos, formatLst=["NO_CANCEL"])
 
-                        WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Clear List", WyeUILib.CopyPasteManager.CutPasteDisplay.clearCallback)
+                        WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Clear List", WyeUILib.CopyPasteManager.CopyPasteDisplay.clearCallback)
 
-                        WyeUILib.CopyPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
+                        WyeUILib.CopyPasteManager.CopyPasteDisplay.displayRows(frame, dlgFrm)
 
                         frame.vars.dlgFrm[0] = dlgFrm
 
@@ -154,30 +155,30 @@ class WyeUILib(Wye.staticObj):
 
                 if ix != frame.vars.currRowIx[0]:
                     #print("CutPastDisplay highlightRow: unhighlight", frame.vars.currRowIx[0])
-                    oldRowFrm = frame.vars.dlgFrm[0].params.inputs[0][frame.vars.currRowIx[0]][0]
+                    oldRowFrm = frame.vars.dlgFrm[0].params.inputs[0][frame.vars.currRowIx[0]+1][0]
                     oldRowFrm.verb.setBackgroundColor(oldRowFrm, Wye.color.TRANSPARENT)
                 #print("CutPastDisplay highlightRow: highlight", ix)
-                if ix >=  0 and ix < len(frame.vars.dlgFrm[0].params.inputs[0]):
-                    newRowFrm = frame.vars.dlgFrm[0].params.inputs[0][ix][0]
+                if ix >=  0 and ix < len(frame.vars.dlgFrm[0].params.inputs[0])-1:
+                    newRowFrm = frame.vars.dlgFrm[0].params.inputs[0][ix+1][0]
                     #print("  row", newRowFrm.params.label[0])
                     newRowFrm.verb.setBackgroundColor(newRowFrm, Wye.color.SELECTED_BG_COLOR)
                     frame.vars.currRowIx[0] = ix
                 else:
-                    print("CutPasteDisplay highlightRow", ix," out of range 0.."+str(len(frame.vars.dlgFrm[0].params.inputs[0])))
+                    print("CopyPasteDisplay highlightRow", ix," out of range 0.."+str(len(frame.vars.dlgFrm[0].params.inputs[0])))
 
             def displayRows(frame, dlgFrm):
-                #print("CutPasteDisplay displayRows: display", len(WyeCore.World.copyPasteManager.cutList), " rows")
+                #print("CopyPasteDisplay displayRows: display", len(WyeCore.World.copyPasteManager.cutList), " rows")
                 ix = 0
                 for row in WyeCore.World.copyPasteManager.cutList:
                     # todo - pretty print text
                     if ix == frame.vars.currRowIx[0]:
                         btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, row[0]+": "+str(row[1]),
-                                                                       WyeUILib.CopyPasteManager.CutPasteDisplay.RowCallback,
+                                                                       WyeUILib.CopyPasteManager.CopyPasteDisplay.RowCallback,
                                                                        [row], backgroundColor=Wye.color.SELECTED_BG_COLOR)
                         #print("CutPastDisplay displayRows: highlight", ix)
                     else:
                         btn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, row[0]+": "+str(row[1]),
-                                                                   WyeUILib.CopyPasteManager.CutPasteDisplay.RowCallback,
+                                                                   WyeUILib.CopyPasteManager.CopyPasteDisplay.RowCallback,
                                                                    [row], backgroundColor=Wye.color.TRANSPARENT)
                     frame.vars.rows[0].append(btn)
                     ix += 1
@@ -187,7 +188,7 @@ class WyeUILib(Wye.staticObj):
                 dlgFrm = frame.vars.dlgFrm[0]
 
                 # remove current rows
-                #print("CutPasteDisplay redisplay: remove", len(frame.vars.rows[0]), " rows")
+                #print("CopyPasteDisplay redisplay: remove", len(frame.vars.rows[0]), " rows")
                 for frmRef in frame.vars.rows[0]:
                     inpIx = WyeCore.Utils.refListFind(dlgFrm.params.inputs[0], frmRef)
                     #print(" remove row", inpIx)
@@ -199,7 +200,7 @@ class WyeUILib(Wye.staticObj):
                 frame.vars.rows[0].clear()
 
                 # make new rows
-                WyeUILib.CopyPasteManager.CutPasteDisplay.displayRows(frame, dlgFrm)
+                WyeUILib.CopyPasteManager.CopyPasteDisplay.displayRows(frame, dlgFrm)
 
                 # generate display elements for rows (correct pos calc by redisplay, below)
                 pos = [0, 0, 0]
@@ -220,11 +221,11 @@ class WyeUILib(Wye.staticObj):
 
                 def start(stack):
                     # print("RowCallback started")
-                    return Wye.codeFrame(WyeUILib.CopyPasteManager.CutPasteDisplay.RowCallback, stack)
+                    return Wye.codeFrame(WyeUILib.CopyPasteManager.CopyPasteDisplay.RowCallback, stack)
 
                 def run(frame):
                     data = frame.eventData
-                    #print("CutPasteDisplay RowCallback: data=", data)
+                    #print("CopyPasteDisplay RowCallback: data=", data)
                     row = data[1][0]
                     #parentFrm = data[1][1]
                     #editFrm = data[1][2]
@@ -241,11 +242,11 @@ class WyeUILib(Wye.staticObj):
 
                 def start(stack):
                     # print("RowCallback started")
-                    return Wye.codeFrame(WyeUILib.CopyPasteManager.CutPasteDisplay.clearCallback, stack)
+                    return Wye.codeFrame(WyeUILib.CopyPasteManager.CopyPasteDisplay.clearCallback, stack)
 
                 def run(frame):
                     data = frame.eventData
-                    #print("CutPasteDisplay RowCallback: data=", data)
+                    #print("CopyPasteDisplay RowCallback: data=", data)
                     WyeCore.World.copyPasteManager.clear()
 
 
@@ -280,6 +281,8 @@ class WyeUILib(Wye.staticObj):
             self.pos = [0,0]        # filled in with most recent mouse position
 
         def mouseMove(self, x, y, mb1, mb2, mb3, shift, ctrl, alt):
+            #if Wye.UITest:
+            #    print("Test mouseMove x,y", x, ",", y, 'mb', mb1, "", mb2, "", mb3, " shift", shift, " ctrl", ctrl, " alt", alt)
             global base
             global render
 
@@ -353,6 +356,9 @@ class WyeUILib(Wye.staticObj):
                     self.ctlReleased = True
                 self.ctl = False
 
+            #if Wye.UITest:
+            #    print("mouseMove self.m1Pressed", self.m1Pressed," self.ctl",self.ctl," self.alt",self.alt)
+
             # external callbacks
             # If callback(s) return True, don't process any further
             usedMouse = False
@@ -390,7 +396,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
-            elif self.m1Pressed and WyeCore.picker.objSelectEvent():
+            elif self.m1Pressed and WyeCore.picker.objSelectEvent(x, y):
                 # if picker used event then everything already done in picker, nothing more to do here
                 pass
 
@@ -751,6 +757,9 @@ class WyeUILib(Wye.staticObj):
                     return True
                 case Wye.ctlKeys.SHIFT_UP:
                     WyeUILib.FocusManager._shiftDown = True
+                    return True
+                case Wye.ctlKeys.F1:        # cycle through window sizes
+                    Wye.UIText = False      # stop test mode (re-enable normal mouse handling)
                     return True
                 case Wye.ctlKeys.F11:       # cycle through window sizes
                     Wye.windowSize = (Wye.windowSize + 1) % 3
@@ -2162,6 +2171,8 @@ class WyeUILib(Wye.staticObj):
                 frame.vars.dlgWidgets[0][2].setPos(pos[0], pos[1], pos[2])        # Ok
                 pos[0] += 2.5  # shove Cancel to the right of OK
                 haveOk = True
+            else:
+                haveOk = False
             if not (haveOk and frame.params.format[0] and "NO_CANCEL" in frame.params.format[0]):
                 frame.vars.dlgWidgets[0][2+okIx].setPos(pos[0], pos[1], pos[2])
 
@@ -3058,7 +3069,7 @@ class WyeUILib(Wye.staticObj):
                     frame.status = Wye.status.SUCCESS  # we always succeed
                     WyeCore.HUD = None
 
-
+        # open or bring to front the Wye main menu dialog
         class HUDMainDlgCallback:
             mode = Wye.mode.SINGLE_CYCLE
             autoStart = False
@@ -3080,7 +3091,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
                     WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
-
+        # open or bring to front the main Debugger dialog
         class HUDDbgDlgCallback:
             mode = Wye.mode.SINGLE_CYCLE
             autoStart = False
@@ -3102,6 +3113,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
+        # open or bring to front the Wye Libaraies dialog
         class HUDMainLibDlgCallback:
             mode = Wye.mode.SINGLE_CYCLE
             autoStart = False
@@ -3198,7 +3210,9 @@ class WyeUILib(Wye.staticObj):
 
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Test", color=Wye.color.SUBHD_COLOR)
 
-                    obj2ChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Show Test Fish", [True],
+                    angleFish = WyeCore.World.findActiveObj('angleFish')
+                    visible = not angleFish.vars.gObj[0].isHidden()
+                    obj2ChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Show Test Fish", [visible],
                                                                      WyeUILib.MainMenuDialog.AngleFishCheckCallback)
                     obj2ChkFrm.params.optData = [obj2ChkFrm]
 
@@ -3864,6 +3878,9 @@ class WyeUILib(Wye.staticObj):
 
                     case 1: # continue saving library after user responds (if we asked them about overwrite/saveAs)
                         frame.status = Wye.status.SUCCESS
+                        pos = editLnFrm.vars.position[0]
+                        pos = [pos[0] + .5, pos[1] - .5, pos[2] - .5]
+
                         # if we asked the user about overwrite, get the final filename
                         if frame.vars.doExistsQuery[0]:
                             askSaveFrm = frame.SP.pop()
@@ -3876,12 +3893,20 @@ class WyeUILib(Wye.staticObj):
                                 return
 
                             lib.modified = False        # it's been saved
+                            if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
+                                dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
+                                dlgFrm.motherFrame.verb.update(dlgFrm.motherFrame, dlgFrm)
+
+                            # if there's a lib list
+                            if WyeCore.World.editMenu:
+                                WyeCore.World.editMenu.verb.update(WyeCore.World.editMenu,
+                                                                   WyeCore.World.editMenu.vars.dlgFrm[0])
 
                             # get the filename
                             fileName = askSaveFrm.params.fileName[0].strip()
                             if not fileName:
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid File Name", "'"+fileName+"' is not a valid library file name",
-                                                       Wye.color.WARNING_COLOR)
+                                                       Wye.color.WARNING_COLOR, parent=parentFrm, position=pos)
                                 frame.status = Wye.status.SUCCESS
                                 return
                             frame.vars.fileName[0] = fileName
@@ -3924,8 +3949,11 @@ class WyeUILib(Wye.staticObj):
                                     else:
                                         # ignoring generated runtime code is good.  Anything else is a problem
                                         if not verb.__name__[-3:] == "_rt":
+                                            pos = editLnFrm.vars.position[0]
+                                            pos = [pos[0] + .5, pos[1] - .5, pos[2] - .5]
                                             msg = "WARNING: Cannot save library "+lib.__name__ +" because Verb "+ verb.__name__+" does not have all required attributes"
-                                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg, Wye.color.WARNING_COLOR)
+                                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg, Wye.color.WARNING_COLOR,
+                                                                                     parent=parentFrm, position=pos)
                                             frame.status = Wye.status.SUCCESS
                                             return
 
@@ -3933,6 +3961,8 @@ class WyeUILib(Wye.staticObj):
                         if not os.path.dirname(fileName):
                             fileName = WyeCore.Utils.userLibPath() + fileName
 
+                        pos = editLnFrm.vars.position[0]
+                        pos = [pos[0] + .5, pos[1] - .5, pos[2] - .5]
                         try:
                             # write the file
                             f = open(fileName, "w")
@@ -3941,12 +3971,14 @@ class WyeUILib(Wye.staticObj):
                         except Exception as e:
                             #print("Failed to write library '" + libName + "' to file '" + fileName + "'\n", str(e))
                             traceback.print_exception(e)
+
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Failed to write library", "Failed to write library '"+libName+"' to file '"+fileName+"'",
-                                                   Wye.color.WARNING_COLOR)
+                                                   Wye.color.WARNING_COLOR, parent=parentFrm, position=pos)
                             frame.status = Wye.status.SUCCESS
                             return
 
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to WyeUserLibraries/"+os.path.basename(fileName))
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to WyeUserLibraries/"+os.path.basename(fileName),
+                                                                 parent=parentFrm, position=pos)
                         #print("SaveLibToFileCallback case 1: Wrote lib '" + libName + "' to '" + fileName + "'")
 
 
@@ -4026,19 +4058,25 @@ class WyeUILib(Wye.staticObj):
                                 # print("EditLibLineCallback: case 0: save library")
 
                             case 1:     # Delete library op
+                                pos = editLnFrm.vars.position[0]
+                                pos = [pos[0] + .5, pos[1] - .5, pos[2] - .5]
                                 if hasattr(lib, "systemLib"):
-                                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", "System libraries cannot be deleted", Wye.color.WARNING_COLOR)
+                                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", "System libraries cannot be deleted",
+                                                                             Wye.color.WARNING_COLOR, position=pos, parent=parentFrm)
                                     frame.status = Wye.status.SUCCESS
                                     return
 
                                 # delete lib ok?
                                 #print("EditLibLineCallback: case 0: delete library")
-                                delOkFrm = WyeCore.libs.WyeUIUtilsLib.doPopUpDialogAsync(frame, "Delete Library", "Delete Library "+lib.__name__+"?", formatLst=[""])
+                                delOkFrm = WyeCore.libs.WyeUIUtilsLib.doPopUpDialogAsync(frame, "Delete Library", "Delete Library "+lib.__name__+"?", formatLst=[""],
+                                                                                         position=pos, parent=parentFrm)
                                 frame.SP.append(delOkFrm)  # push dialog so it runs next cycle
                                 frame.PC = 2  # on return from dialog, run del ok case
 
                     case 1: # continue saving library after user responds (if we asked them about overwrite/saveAs)
                         frame.status = Wye.status.SUCCESS
+                        pos = editLnFrm.vars.position[0]
+                        pos = [pos[0] + .5, pos[1] - .5, pos[2] - .5]
                         # if we asked the user about overwrite, get the final filename
                         if frame.vars.doExistsQuery[0]:
                             askSaveFrm = frame.SP.pop()
@@ -4054,7 +4092,7 @@ class WyeUILib(Wye.staticObj):
                             fileName = askSaveFrm.params.fileName[0].strip()
                             if not fileName:
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid File Name", "'"+fileName+"' is not a valid library file name",
-                                                       Wye.color.WARNING_COLOR)
+                                                       Wye.color.WARNING_COLOR, position=pos, parent=parentFrm)
                                 frame.status = Wye.status.SUCCESS
                                 return
                             frame.vars.fileName[0] = fileName
@@ -4098,7 +4136,8 @@ class WyeUILib(Wye.staticObj):
                                         # ignoring generated runtime code is good.  Anything else is a problem
                                         if not verb.__name__[-3:] == "_rt":
                                             msg = "WARNING: Cannot save library "+lib.__name__ +" because Verb "+ verb.__name__+" does not have all required attributes"
-                                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg, Wye.color.WARNING_COLOR)
+                                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg, Wye.color.WARNING_COLOR,
+                                                                                     position=pos, parent=parentFrm)
                                             frame.status = Wye.status.SUCCESS
                                             return
 
@@ -4116,14 +4155,23 @@ class WyeUILib(Wye.staticObj):
                             #print("Failed to write library '" + libName + "' to file '" + fileName + "'\n", str(e))
                             traceback.print_exception(e)
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Failed to write library", "Failed to write library '"+libName+"' to file '"+fileName+"'",
-                                                   Wye.color.WARNING_COLOR)
+                                                   Wye.color.WARNING_COLOR, position=pos, parent=parentFrm)
                             frame.status = Wye.status.SUCCESS
                             return
 
                         # mark lib as saved
                         lib.modified = False
+                        if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
+                            dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
+                            dlgFrm.motherFrame.verb.update(dlgFrm.motherFrame, dlgFrm)
 
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to WyeUserLibraries/"+os.path.basename(fileName))
+                        # if there's a lib list
+                        if WyeCore.World.editMenu:
+                            WyeCore.World.editMenu.verb.update(WyeCore.World.editMenu,
+                                                               WyeCore.World.editMenu.vars.dlgFrm[0])
+
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+libName+" to WyeUserLibraries/"+os.path.basename(fileName),
+                                                                 position=pos, parent=parentFrm)
                         #print("EditLibLineCallback case 1: Wrote lib '" + libName + "' to '" + fileName + "'")
 
 
@@ -4507,6 +4555,12 @@ class WyeUILib(Wye.staticObj):
                 # make sure we have the latest lib
                 lib = WyeCore.World.libDict[frame.vars.lib[0].__name__]
                 frame.vars.lib[0] = lib
+
+                if lib.modified:
+                    libLabel = "Library '" + lib.__name__ +"' *modified*"
+                else:
+                    libLabel = "Library '" + lib.__name__ +"'"
+                dlgFrm.verb.setTitle(dlgFrm, libLabel)
 
                 # delete all dialog lib verb inputs
                 delCt = 0
@@ -6242,10 +6296,11 @@ class WyeUILib(Wye.staticObj):
                         #pass
 
                         cutData = WyeCore.World.copyPasteManager.getSelected()
-                        print("paste param before: cutData", cutData)
+                        #print("paste param before: cutData", cutData)
                         if not cutData or cutData[0] != "Variable":
                             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Missing or Incorrect Data Type",
                               "Please select a 'Variable' row from Copy/Paste List", Wye.color.WARNING_COLOR)
+                            return
 
                         data = Wye.listCopy(cutData[1])
                         label = "'"+data[0] + "' "+Wye.dType.tostring(data[1]) + " = "+str(data[2])
@@ -7717,7 +7772,7 @@ class WyeUILib(Wye.staticObj):
                                         newTxt = libTxt + "." + vbTxt
                                         newTuple.append("WyeCore.libs."+newTxt)
                                         for param in newVerb.paramDescr:
-                                            pTuple = ["Expr", "0 # <put parameter here>"]
+                                            pTuple = ["Expr", "[0] # <put parameter here>"]
                                             newTuple.append(pTuple)
 
                                 case 1:     # Var=
@@ -8471,6 +8526,8 @@ class WyeUILib(Wye.staticObj):
                     # continue saving library after user responds (if we asked them about overwrite/saveAs)
                     case 1:
                         frame.status = Wye.status.SUCCESS       # make sure we exit, one way or another
+                        pos = btnFrm.vars.position[0]
+                        pos = [pos[0] + .5, pos[1] - .5, pos[2] - .5]
 
                         # if we asked the user about overwrite, get the final filename
                         if frame.vars.doExistsQuery[0]:
@@ -8487,7 +8544,7 @@ class WyeUILib(Wye.staticObj):
                             fileName = askSaveFrm.params.fileName[0].strip()
                             if not fileName:
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid File Name", "'"+fileName+"' is not a valid library file name",
-                                                       Wye.color.WARNING_COLOR)
+                                                       Wye.color.WARNING_COLOR, position=pos, parent=parentFrm)
                                 frame.status = Wye.status.SUCCESS
                                 return
                             frame.vars.fileName[0] = fileName
@@ -8547,7 +8604,7 @@ class WyeUILib(Wye.staticObj):
                                                 if not verb.__name__[-3:] == "_rt":
                                                     msg = "WARNING: Cannot save library " + lib.__name__ + " because Verb " + verb.__name__ + " does not have all required attributes"
                                                     WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", msg,
-                                                                                             Wye.color.WARNING_COLOR)
+                                                                Wye.color.WARNING_COLOR, position=pos, parent=parentFrm)
                                                     frame.status = Wye.status.SUCCESS
                                                     return
                                         #else:
@@ -8580,8 +8637,17 @@ class WyeUILib(Wye.staticObj):
                             return
 
                         lib.modified = False        # lib's been saved
+                        if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
+                            dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
+                            dlgFrm.motherFrame.verb.update(dlgFrm.motherFrame, dlgFrm)
 
-                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+verbName+" to WyeUserLibraries/"+os.path.basename(fileName))
+                        # if there's a lib list
+                        if WyeCore.World.editMenu:
+                            WyeCore.World.editMenu.verb.update(WyeCore.World.editMenu,
+                                                               WyeCore.World.editMenu.vars.dlgFrm[0])
+
+                        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Saved Library", "Wrote "+verbName+" to WyeUserLibraries/"+os.path.basename(fileName),
+                                                                 position=pos, parent=parentFrm)
                         #print("EditCodeSaveLibCallback: Wrote verb ", verbName, " to library file", libFileName)
 
 
