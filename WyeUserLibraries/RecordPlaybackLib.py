@@ -22,6 +22,8 @@ class RecordPlaybackLib:
         ("position","FL",1))
     varDescr =        ()
     codeDescr =        (
+        ("Code","#<your code here>"),
+        ("Code","#Clear mouse"),
         ("Code","#Clear mouse"),
         ("Code","WyeCore.World.mouseHandler.mouseMove(0,0, 0, 0, 0, 0, 0, 0)"),
         ("Code","x = frame.params.position[0][0] #"),
@@ -50,7 +52,7 @@ class RecordPlaybackLib:
 
   class Delay:
     mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
+    autoStart = False
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
@@ -107,6 +109,7 @@ class RecordPlaybackLib:
         ("Code","shift = frame.params.shift[0] #"),
         ("Code","alt = frame.params.alt[0] #"),
         ("Code","ctl = frame.params.ctrl[0] #"),
+        ("Code","base.win.movePointer(0, x,y)"),
         ("Code","WyeCore.World.mouseHandler.mouseMove(x,y, mb1, mb2, mb3, shift, ctl, alt)"),
         ("Var=","frame.vars.frameNum[0] += 1"),
         ("Label","Done"),
@@ -147,6 +150,62 @@ class RecordPlaybackLib:
     def run(frame):
         # print('Run 'DoMouseWheel)
         RecordPlaybackLib.RecordPlaybackLib_rt.DoMouseWheel_run_rt(frame)
+
+  class FakeMouse:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        (
+        ("ptrGObj","O",None),
+        ("cleanUpObjs","OL","None"))
+    codeDescr =        (
+        ("Code","frame.vars.cleanUpObjs[0] = []"),
+        ("Code","frame.vars.ptrGObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.5,.05,.5], pos=[0,0,0])"),
+        ("Code","frame.vars.ptrGObj[0].setTag('wyeTag'+str(WyeCore.Utils.getId()))"),
+        ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.ptrGObj[0]) "),
+        ("Label","Done"))
+
+    def _build(rowRef):
+        # print("Build ",FakeMouse)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('FakeMouse', RecordPlaybackLib.FakeMouse.codeDescr, RecordPlaybackLib.FakeMouse, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.FakeMouse, stack)
+
+    def run(frame):
+        # print('Run 'FakeMouse)
+        RecordPlaybackLib.RecordPlaybackLib_rt.FakeMouse_run_rt(frame)
+
+  class HideMouse:
+    mode = Wye.mode.SINGLE_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        ()
+    codeDescr =        (
+        ("Code","#<your code here>"),
+        ("Code","from panda3d.core import WindowProperties #"),
+        ("Code","props = WindowProperties() #"),
+        ("Code","props.setCursorHidden(True) #"),
+        ("Code","base.win.requestProperties(props) #"))
+
+    def _build(rowRef):
+        # print("Build ",HideMouse)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('HideMouse', RecordPlaybackLib.HideMouse.codeDescr, RecordPlaybackLib.HideMouse, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.HideMouse, stack)
+
+    def run(frame):
+        # print('Run 'HideMouse)
+        RecordPlaybackLib.RecordPlaybackLib_rt.HideMouse_run_rt(frame)
 
   class MouseDisplay:
     mode = Wye.mode.MULTI_CYCLE
@@ -229,7 +288,7 @@ class RecordPlaybackLib:
 
   class RecordDialog:
     mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
+    autoStart = False
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
@@ -307,6 +366,32 @@ class RecordPlaybackLib:
         # print('Run 'SendKey)
         RecordPlaybackLib.RecordPlaybackLib_rt.SendKey_run_rt(frame)
 
+  class ShowMouse:
+    mode = Wye.mode.SINGLE_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        ()
+    codeDescr =        (
+        ("Code","from panda3d.core import WindowProperties #"),
+        ("Code","props = WindowProperties() #"),
+        ("Code","props.setCursorHidden(0) #"),
+        ("Code","base.win.requestProperties(props) #"))
+
+    def _build(rowRef):
+        # print("Build ",ShowMouse)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('ShowMouse', RecordPlaybackLib.ShowMouse.codeDescr, RecordPlaybackLib.ShowMouse, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.ShowMouse, stack)
+
+    def run(frame):
+        # print('Run 'ShowMouse)
+        RecordPlaybackLib.RecordPlaybackLib_rt.ShowMouse_run_rt(frame)
+
   class Test1:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = False
@@ -315,25 +400,24 @@ class RecordPlaybackLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
-        ("count","I",0),)
+        ("count","I",0),
+        ("testPtr","O",None))
     codeDescr =        (
-        ("Code","print('Move the mouse around - should be reported in mouseMove')"),
-        ("WyeCore.libs.RecordPlaybackLib.Delay",
-          ("Expr","[60] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.HideMouse",),
         ("Label","Start"),
         ("Code","Wye.UITest = True #disable normal mouse handling"),
-        ("Code","print('now mouse move should not call moveMouse')"),
+        ("Code","#print('now mouse move should not call moveMouse')"),
+        ("WyeCore.libs.RecordPlaybackLib.FakeMouse",),
+        ("Var=","frame.vars.testPtr[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("WyeCore.libs.RecordPlaybackLib.MoveCameraToPosHpr",
           ("Expr","[[0, -20, 0]] #pos"),
           ("Expr","[[0,0,0]] # HPR")),
-        ("Label","OneCycle"),
         ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'before delay', position=[0,0,1])"),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop2', 'after delay', position=[0,0,-1])"),
         ("Code","#print('>>>>>>>>> do click M1, ctrl, alt for WyeMainMenu') "),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
-          ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[1] # <put parameter here>"),
@@ -359,6 +443,8 @@ class RecordPlaybackLib:
         ("Code","#<your code here>"),
         ("Label","Done"),
         ("Code","frame.status = Wye.status.SUCCESS #<your code here>"),
+        ("WyeCore.libs.RecordPlaybackLib.ShowMouse",
+          ("Expr","[1] # <put parameter here>")),
         ("Code","Wye.UITest = False #enable normal mouse handling"),
         ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Test Complete', 'Finished Test', position=[0,0,1])"))
 
@@ -373,3 +459,64 @@ class RecordPlaybackLib:
     def run(frame):
         # print('Run 'Test1)
         RecordPlaybackLib.RecordPlaybackLib_rt.Test1_run_rt(frame)
+
+  class Test2:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        (
+        ("newVar","A",None),)
+    codeDescr =        (
+        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Hide Mouse', position=[0,0,-.5])"),
+        ("WyeCore.libs.RecordPlaybackLib.HideMouse",),
+        ("Label","Wait1Frame"),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[90] #")),
+        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Show Mouse',position=[0,0,.5])"),
+        ("WyeCore.libs.RecordPlaybackLib.ShowMouse",),
+        ("Code","frame.status = Wye.status.SUCCESS "))
+
+    def _build(rowRef):
+        # print("Build ",Test2)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('Test2', RecordPlaybackLib.Test2.codeDescr, RecordPlaybackLib.Test2, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.Test2, stack)
+
+    def run(frame):
+        # print('Run 'Test2)
+        RecordPlaybackLib.RecordPlaybackLib_rt.Test2_run_rt(frame)
+
+  class TestFakeMouse:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        (
+        ("newVar","A",None),)
+    codeDescr =        (
+        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Before Mouse', position=[0,0,-.5])"),
+        ("WyeCore.libs.RecordPlaybackLib.FakeMouse",),
+        ("Label","Wait1Frame"),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[90] #")),
+        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'After Mouse',position=[0,0,.5])"),
+        ("Code","frame.status = Wye.status.SUCCESS "))
+
+    def _build(rowRef):
+        # print("Build ",TestFakeMouse)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('TestFakeMouse', RecordPlaybackLib.TestFakeMouse.codeDescr, RecordPlaybackLib.TestFakeMouse, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.TestFakeMouse, stack)
+
+    def run(frame):
+        # print('Run 'TestFakeMouse)
+        RecordPlaybackLib.RecordPlaybackLib_rt.TestFakeMouse_run_rt(frame)

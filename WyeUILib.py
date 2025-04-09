@@ -16,6 +16,7 @@ from panda3d.core import MouseButton
 from os import listdir
 from os.path import isfile, join
 import inspect
+from panda3d.core import WindowProperties
 
 ## DEBUG - useful code snippet - show caller of curr fun
 #curframe = inspect.currentframe()
@@ -759,6 +760,10 @@ class WyeUILib(Wye.staticObj):
                     WyeUILib.FocusManager._shiftDown = True
                     return True
                 case Wye.ctlKeys.F1:        # cycle through window sizes
+                    print("Show mouse, enable mouse input")
+                    props = WindowProperties()
+                    props.setCursorHidden(False)
+                    base.win.requestProperties(props)
                     Wye.UIText = False      # stop test mode (re-enable normal mouse handling)
                     return True
                 case Wye.ctlKeys.F11:       # cycle through window sizes
@@ -2026,7 +2031,7 @@ class WyeUILib(Wye.staticObj):
             # do user inputs
             # Note that input returns its frame as parameter value
 
-            # draw user- supplied label and text inputs
+            # draw user-supplied label and text inputs
             # print("Dialog run: display %i inputs" % nInputs)
             newX = pos[0]
             prevZ = pos[2]
@@ -5367,6 +5372,8 @@ class WyeUILib(Wye.staticObj):
 
 
             # fill in text and callback based on code row type
+            op = "Code"     # failover value
+            btnFrm.params.label = [indent + prefix + "Tuple broken:"+str(tuple)]
 
             # if lib.verb
             if not tuple[0] is None and "." in tuple[0]:
@@ -5374,24 +5381,37 @@ class WyeUILib(Wye.staticObj):
                 vStr = str(tuple[0])
                 if vStr.startswith("WyeCore.libs."):        # trim off the prefix
                     vStr = vStr[13:]
+                btnFrm.params.label = [indent + prefix + "Verb: " + vStr]
                 # parse out the lib and verb names
                 libStr,verbStr = vStr.split(".")
-                lib = WyeCore.World.libDict[libStr]
-                # find the actual verb from the lib
-                verb = getattr(lib, verbStr)
-                btnFrm.params.label = [indent + prefix + "Verb: " + vStr]
+                if libStr in WyeCore.World.libDict:
+                    lib = WyeCore.World.libDict[libStr]
+                    # find the actual verb from the lib
+                    if hasattr(lib, verbStr):
+                        verb = getattr(lib, verbStr)
 
-                # display verb's params (if any)
-                if len(tuple) > 1:
-                    paramIx = 0
-                    for paramTuple in tuple[1:]:
-                        if paramIx < len(verb.paramDescr):
-                            prefix = "(param: " + verb.paramDescr[paramIx][0] + ") "
-                        else:
-                            prefix = "(param: <no parameter>) "
-                        WyeUILib.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, dlgFrm, rowLst, prefix)
-                        if verb.paramDescr[paramIx][1] != Wye.dType.VARIABLE:
-                            paramIx += 1
+                        # display verb's params (if any)
+                        if len(tuple) > 1:
+                            paramIx = 0
+                            for paramTuple in tuple[1:]:
+                                if paramIx < len(verb.paramDescr):
+                                    prefix = "(param: " + verb.paramDescr[paramIx][0] + ") "
+                                    WyeUILib.EditVerb.bldEditCodeLine(paramTuple, level + 1, editVerbFrm, dlgFrm, rowLst, prefix)
+                                    if paramIx < len(verb.paramDescr) and verb.paramDescr[paramIx][1] != Wye.dType.VARIABLE:
+                                        paramIx += 1
+                                # ran out of parameters in verb, ignore any more in tuple
+                                else:
+                                    break;
+                    else:
+                        print("Code", "# Warning, '"+verbStr+"' not found in library '", lib.__name__, "'")
+                        tuple = ("Code", "# Warning, '"+verbStr+"' not found in library '", lib.__name__, "'")
+                        WyeUILib.EditVerb.bldEditCodeLine(tuple, level + 1, editVerbFrm, dlgFrm, rowLst, "")
+
+                else:
+                    print("Code", "# Warning, library '"+libStr+"' not loaded in Wye")
+                    tuple = ("Code", "# Warning, '"+libStr+"' not loaded in Wye")
+                    WyeUILib.EditVerb.bldEditCodeLine(tuple, level + 1, editVerbFrm, dlgFrm, rowLst, "")
+
             # else Code, etc.
             else:
                 match tuple[0]:
@@ -8400,7 +8420,7 @@ class WyeUILib(Wye.staticObj):
                 lib = WyeCore.World.libDict[libName]
 
                 listFlag = editFrm.vars.listCodeFrm[0].params.value[0]
-                #print("TestCodeCallback: List Code")
+                #print("TestCodeCallback: List Code", listFlag)
                 WyeCore.Utils.createVerb(lib, name,
                                          editFrm.vars.newVerbSettings[0],
                                          editFrm.vars.newParamDescr[0],

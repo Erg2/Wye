@@ -223,6 +223,134 @@ class Wye3dObjsLib(Wye.staticObj):
             self._path.hide()
             WyeCore.picker.makeNotPickable(self._path)
 
+
+    # create a scaled triangle for playback cursor
+    class _pointer:
+
+        def __init__(self, size, pos=[0,0,0], parent=None):
+            # Instantiate a vertex buffer
+            # https://stackoverflow.com/questions/75774821/how-to-create-three-dimensional-geometric-shapes-in-panda3d-in-python
+            # https://docs.panda3d.org/1.10/python/programming/internal-structures/procedural-generation/creating-vertex-data
+            format = GeomVertexFormat.getV3c4()
+            format = GeomVertexFormat.registerFormat(format)
+            vdata = GeomVertexData("name", format, Geom.UHStatic)
+            vertex = GeomVertexWriter(vdata, "vertex")
+            color = GeomVertexWriter(vdata, "color")
+            self.size = size
+
+            # Add vertices and colors
+            #vertex.addData3f(-1*size[0], -1*size[1], -1*size[2])
+            vertex.addData3f(0*size[0], -1*size[1], 0*size[2])          # llb - 0
+            color.addData4f(0, 0, 0, 1)
+
+            #vertex.addData3f(-1*size[0], -1*size[1], 1*size[2])
+            vertex.addData3f(-1*size[0], -1*size[1], -.1*size[2])       # llt - 1
+            color.addData4f(0, 0, 1, 1)
+
+            #vertex.addData3f(-1*size[0], 1*size[1], -1*size[2])
+            vertex.addData3f(0*size[0], 1*size[1], 0*size[2])          # ulb - 2
+            color.addData4f(0, 1, 0, 1)
+
+            #vertex.addData3f(-1*size[0], 1*size[1], 1*size[2])
+            vertex.addData3f(-1*size[0], 1*size[1], -.1*size[2])       # ult - 3
+            color.addData4f(0, 1, 1, 1)
+
+            #vertex.addData3f(1*size[0], -1*size[1], -1*size[2])
+            vertex.addData3f(-.1*size[0], -1*size[1], -1*size[2])       # lrb - 4
+            color.addData4f(1, 0, 0, 1)
+
+            #vertex.addData3f(1*size[0], -1*size[1], 1*size[2])
+            vertex.addData3f(1*size[0], -1*size[1], 1*size[2])          # lrt - 5
+            color.addData4f(1, 0, 1, 1)
+
+            #vertex.addData3f(1*size[0], 1*size[1], -1*size[2])
+            vertex.addData3f(-.1*size[0], 1*size[1], -1*size[2])       # urb - 6
+            color.addData4f(1, 0, 1, 1)
+
+            #vertex.addData3f(1*size[0], 1*size[1], 1*size[2])
+            vertex.addData3f(1*size[0], 1*size[1], 1*size[2])          # urt - 7
+            color.addData4f(1, 1, 1, 1)
+
+            # Create the triangles (2 per face)
+            # https://docs.panda3d.org/1.10/python/programming/internal-structures/procedural-generation/creating-primitives
+            prim = GeomTriangles(Geom.UHStatic)
+            prim.addVertices(0, 1, 2)
+            prim.addVertices(2, 1, 3)
+            prim.addVertices(2, 3, 6)
+            prim.addVertices(6, 3, 7)
+            prim.addVertices(6, 7, 4)
+            prim.addVertices(4, 7, 5)
+            prim.addVertices(4, 5, 0)
+            prim.addVertices(0, 5, 1)
+            prim.addVertices(1, 5, 3)
+            prim.addVertices(3, 5, 7)
+            prim.addVertices(6, 4, 2)
+            prim.addVertices(2, 4, 0)
+
+            geom = Geom(vdata)
+            geom.addPrimitive(prim)
+            self.node = GeomNode("node")
+            self.node.addGeom(geom)
+
+            self._path = render.attachNewNode(self.node)
+            if parent:
+                self._path.reparentTo(parent)
+            self.setPos(pos[0], pos[1], pos[2])
+
+
+        def removeNode(self):
+            self._path.removeNode()
+
+        def setColor(self, val):
+            self._path.setColor(val)
+
+        def setScale(self, val):
+            self._path.setScale(val)
+
+        def setPos(self, *args):
+            self._path.setPos(args)
+
+        def setTag(self, tag):
+            return self.node.setTag("wyeTag", tag)
+
+        def show(self):
+            self._path.show()
+            WyeCore.picker.makePickable(self._path)
+
+        def hide(self):
+            self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
+
+        def getColor(self):
+            return self._path.getColor()
+
+        def getNodePath(self):
+            return self._path
+
+        def getPos(self):
+            return self._path.getPos()
+
+        def getScale(self):
+            return self._path.getScale()
+
+        def getHeight(self):
+            return self.size[2]
+
+        def getTag(self):
+            return self.node.getTag('wyeTag')
+
+        def getWidth(self):
+            return self.size[0]
+
+        def show(self):
+            self._path.show()
+            WyeCore.picker.makePickable(self._path)
+
+        def hide(self):
+            self._path.hide()
+            WyeCore.picker.makeNotPickable(self._path)
+
+
     # create a scaled surface from a point grid
     # NOTE: this class gets instantiated
     class _surf:
