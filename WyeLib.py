@@ -244,7 +244,10 @@ class WyeLib:
 
             filepath = frame.params.objectFileName[0]
             # full path minus drive letter
-            path = WyeCore.Utils.resourcePath(filepath)[2:]
+            if sys.platform == 'win32':
+                path = WyeCore.Utils.resourcePath(filepath)[2:]
+            else:
+                path = WyeCore.Utils.resourcePath(filepath)
             #path = filepath
             #path = "C/Users/ebeng/PycharmProjects/Wye/flyer_01.glb"
             try:

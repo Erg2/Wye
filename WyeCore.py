@@ -353,7 +353,10 @@ class WyeCore(Wye.staticObj):
                     # print("Load ", libName)
 
                     # path = libFile
-                    path = WyeCore.Utils.resourcePath(libFile)[2:]
+                    if sys.platform == 'win32':
+                        path = WyeCore.Utils.resourcePath(libFile)[2:]
+                    else:
+                        path = WyeCore.Utils.resourcePath(libFile)
                     # print("Load library '" + path + "'")
                     try:
                         libModule = SourceFileLoader(libName, path).load_module()
@@ -412,7 +415,8 @@ class WyeCore(Wye.staticObj):
 
                 ######## Midi sound
 
-                Wye.midi = WyeCore.WyeMidi(0)
+                if sys.platform == 'win32':
+                    Wye.midi = WyeCore.WyeMidi(0)
 
                 # test midi sound
                 #Wye.midi.playNote(50, 45,64,.25)
