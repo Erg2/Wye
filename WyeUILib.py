@@ -396,6 +396,7 @@ class WyeUILib(Wye.staticObj):
                     #print("Already have debugger")
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
+                    WyeCore.World.debugger.verb.update(WyeCore.World.debugger, WyeCore.World.debugger.vars.dlgFrm[0])
 
             elif self.m1Pressed and WyeCore.picker.objSelectEvent(x, y):
                 # if picker used event then everything already done in picker, nothing more to do here
@@ -4892,7 +4893,7 @@ class WyeUILib(Wye.staticObj):
                     ("codeHdrFrm", Wye.dType.OBJECT, None),         # Label for code
                     ("fileName", Wye.dType.STRING, "MyWyeLib.py"),             # file name to save to
                     ("test", Wye.dType.BOOL, False),
-                    ("activeKey", Wye.dType.OBJECT, None),
+                    ("activeKey", Wye.dType.STRING, None),
                     )
 
         # global list of frames being edited
@@ -4997,13 +4998,13 @@ class WyeUILib(Wye.staticObj):
                         WyeCore.World.stopActiveObject(frame)
 
                         # bring lib in front of user
-                        frm = WyeUILib.EditVerb.activeVerbs[verb]
+                        frm = WyeUILib.EditVerb.activeVerbs[verb.library.__name__+"."+verb.__name__]
                         frm.vars.dragPath[0].setPos(base.camera, 0, Wye.UI.DIALOG_OFFSET, 0)
                         frm.vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
                         frame.status = Wye.status.FAIL
                         return
-                    frame.vars.activeKey[0] = verb      # we will update the verb, so keep this for clearing activeVerbs entry
+                    frame.vars.activeKey[0] = verb.library.__name__+"."+verb.__name__      # we will update the verb, so keep this for clearing activeVerbs entry
 
                     if not hasattr(verb, "codeDescr"):
                         #print("Cannot edit hard-coded verb")
@@ -5205,7 +5206,7 @@ class WyeUILib(Wye.staticObj):
 
 
                     # mark this frame actively being edited
-                    WyeUILib.EditVerb.activeVerbs[verb] = dlgFrm
+                    WyeUILib.EditVerb.activeVerbs[verb.library.__name__+"."+verb.__name__] = dlgFrm
 
                     # WyeUILib.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
@@ -5605,9 +5606,6 @@ class WyeUILib(Wye.staticObj):
                         ("verbNames", Wye.dType.STRING_LIST, []),
                         ("prefix", Wye.dType.STRING, ""),
                         )
-
-            # global list of frames being edited
-            activeVerbs = {}
 
             tempLib = None      # lib holding new version of verb
 

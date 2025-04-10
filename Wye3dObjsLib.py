@@ -307,7 +307,8 @@ class Wye3dObjsLib(Wye.staticObj):
         def setScale(self, val):
             self._path.setScale(val)
 
-        def setPos(self, *args):
+        def setPos(self, *args):        # use args so can set abs or obj-relative path
+            print("_pointer setPos", args)
             self._path.setPos(args)
 
         def setTag(self, tag):

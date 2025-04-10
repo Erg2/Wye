@@ -160,13 +160,24 @@ class RecordPlaybackLib:
     paramDescr =        ()
     varDescr =        (
         ("gObj","O",None),
+        ("tag","S","None"),
         ("cleanUpObjs","OL","None"))
     codeDescr =        (
         ("Code","frame.vars.cleanUpObjs[0] = []"),
         ("Code","frame.vars.gObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.1,.05,.1], pos=[0,0,0])"),
-        ("Code","frame.vars.gObj[0].setTag('wyeTag'+str(WyeCore.Utils.getId()))"),
+        ("Code","frame.vars.tag[0] = 'wyeTag'+str(WyeCore.Utils.getId())"),
+        ("Code","frame.vars.gObj[0].setTag(frame.vars.tag[0])"),
+        ("WyeCore.libs.WyeLib.makePickable",
+          ("Expr","frame.vars.tag"),
+          ("Expr","[frame.vars.gObj[0]._path]")),
+        ("Code","WyeCore.World.registerObjTag(frame.vars.tag[0], frame)"),
         ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.gObj[0]) "),
-        ("Label","Done"))
+        ("Label","HangingOut"),
+        ("Code","# Outside agent has to set PC += 1 to force FakeMouse to the Done case"),
+        ("GoTo","HangingOut"),
+        ("Label","Done"),
+        ("Code","frame.vars.gObj[0].removeNode()"),
+        ("Code","frame.status = Wye.status.SUCCESS"))
 
     def _build(rowRef):
         # print("Build ",FakeMouse)
@@ -366,6 +377,52 @@ class RecordPlaybackLib:
         # print('Run 'SendKey)
         RecordPlaybackLib.RecordPlaybackLib_rt.SendKey_run_rt(frame)
 
+  class SetFakeMousePos:
+    mode = Wye.mode.SINGLE_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        (
+        ("position","FL",1,"[0,0]"),)
+    varDescr =        (
+        ("fakeMouseFrm","O",None),)
+    codeDescr =        (
+        ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
+        ("Code","if not frame.vars.fakeMouseFrm[0]:  # if mouse not running, nevermind!"),
+        ("Code"," return"),
+        ("Code","from panda3d.core import NodePath, LPlanef, LPoint2f, Point3, LVecBase3f"),
+        ("Code","point=NodePath('point')"),
+        ("Code","point.reparentTo(render)"),
+        ("Code","point.setPos(0,1,0)"),
+        ("Code","pos=point.getPos()"),
+        ("Code","print('SetFakeMousePos planePos', pos)"),
+        ("Code","fwd=render.getRelativeVector(point,(0,-1,0))"),
+        ("Code","point.removeNode()"),
+        ("Code","objPlane=LPlanef(fwd, pos)"),
+        ("Code","mpos = LPoint2f(frame.params.position[0][0], frame.params.position[0][1])"),
+        ("Code","wldPos=Point3(0,0,0)"),
+        ("Code","newPos = Point3(0,0,0)"),
+        ("Code","near=Point3()"),
+        ("Code","far=Point3()"),
+        ("Code","base.camLens.extrude(mpos, near, far)"),
+        ("Code","objPlane.intersectsLine(newPos,render.getRelativePoint(base.camera, near),render.getRelativePoint(base.camera, far))"),
+        ("Code","#objPosInPlane = self.objPlane.project(pos)"),
+        ("Code","print('setFakeMousePos mouse', frame.params.position[0][0],',',frame.params.position[0][1],' 3d pos', newPos)"),
+        ("Code","frame.vars.fakeMouseFrm[0].vars.gObj[0].setPos(newPos[0], newPos[1], newPos[2])"))
+
+    def _build(rowRef):
+        # print("Build ",SetFakeMousePos)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('SetFakeMousePos', RecordPlaybackLib.SetFakeMousePos.codeDescr, RecordPlaybackLib.SetFakeMousePos, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.SetFakeMousePos, stack)
+
+    def run(frame):
+        # print('Run 'SetFakeMousePos)
+        RecordPlaybackLib.RecordPlaybackLib_rt.SetFakeMousePos_run_rt(frame)
+
   class ShowMouse:
     mode = Wye.mode.SINGLE_CYCLE
     autoStart = False
@@ -391,6 +448,33 @@ class RecordPlaybackLib:
     def run(frame):
         # print('Run 'ShowMouse)
         RecordPlaybackLib.RecordPlaybackLib_rt.ShowMouse_run_rt(frame)
+
+  class StopFakeMouse:
+    mode = Wye.mode.SINGLE_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        (
+        ("fakeMouseFrm","A",None),)
+    codeDescr =        (
+        ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
+        ("Code","if not frame.vars.fakeMouseFrm[0]:  # if mouse not running, nevermind!"),
+        ("Code"," return"),
+        ("Code","frame.vars.fakeMouseFrm[0].PC += 1"))
+
+    def _build(rowRef):
+        # print("Build ",StopFakeMouse)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('StopFakeMouse', RecordPlaybackLib.StopFakeMouse.codeDescr, RecordPlaybackLib.StopFakeMouse, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.StopFakeMouse, stack)
+
+    def run(frame):
+        # print('Run 'StopFakeMouse)
+        RecordPlaybackLib.RecordPlaybackLib_rt.StopFakeMouse_run_rt(frame)
 
   class Test1:
     mode = Wye.mode.MULTI_CYCLE
@@ -514,11 +598,16 @@ class RecordPlaybackLib:
         ("Label","Loop"),
         ("Code","frame.vars.count[0] += 1"),
         ("Code","import math"),
-        ("Code","x = math.sin(frame.vars.count[0] * .0174)"),
-        ("Code","y = math.cos(frame.vars.count[0] * .0174)"),
+        ("Code","x = math.sin(frame.vars.count[0] * .0174)/2"),
+        ("Code","y = math.cos(frame.vars.count[0] * .0174)/2"),
+        ("Code","frame.vars.ptrFrm[0].vars.gObj[0].setPos(x,0,y)"),
+        ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
+          ("Expr","[[x,y]] # <put parameter here>")),
+        ("Code","#print('TestFakeMouse move', x, ',', y)"),
         ("IfGoTo","frame.vars.count[0] < 360","Loop"),
         ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'After Mouse',position=[x,0,y])"),
-        ("Code","frame.vars.ptrFrm[0].status = Wye.status.SUCCESS #shut down pointer object"),
+        ("Code","#frame.vars.ptrFrm[0].status = Wye.status.SUCCESS #shut down pointer object"),
+        ("WyeCore.libs.RecordPlaybackLib.StopFakeMouse",),
         ("Code","frame.status = Wye.status.SUCCESS "))
 
     def _build(rowRef):

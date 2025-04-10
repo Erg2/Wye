@@ -152,6 +152,41 @@ class WyeLib:
                     WyeCore.World.setEventCallback("key", frame.params.tag[0], frame)
                     #frame.status = Wye.status.SUCCESS
 
+    class loadWyePointer:
+        mode = Wye.mode.SINGLE_CYCLE
+        dataType = Wye.dType.OBJECT
+        paramDescr = (("gObj", Wye.dType.OBJECT, Wye.access.REFERENCE),         # graphic object returned
+                      ("objFrm", Wye.dType.OBJECT, Wye.access.REFERENCE),       # parent frame to associate obj with
+                      ("posVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # position to place graphic
+                      ("rotVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # YPR angles to orient graphic
+                      ("scaleVec", Wye.dType.INTEGER_LIST, Wye.access.REFERENCE), # scale to apply to object
+                      ("tag", Wye.dType.STRING_LIST, Wye.access.REFERENCE),     # returned tag assigned to graphic object
+                      ("colorVec", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE, None), # color to assign to object
+                      ("cleanUpObjs", Wye.dType.OBJECT_LIST, Wye.access.REFERENCE),
+                      )
+        varDescr = () # cleanup list to add obj to
+        codeDescr = (
+            #(None, "print('test inline code')"),
+            # call loadModel with testLoader params 0 and 1
+            ("WyeLib.setEqual", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.file")),
+            ("Code", ("Var=", "frame.params.gObj[0]=WyeCore.libs.Wye3dObjsLib._pointer(size=frame.params.scaleVec[0], pos=frame.params.posVec[0])")),
+            ("Code", "frame.params.cleanUpObjs[0].append(frame.params.gObj[0])"),
+            #(None, "print('loadWyePointer frame.params.gObj', frame.params.gObj)"),
+            ("WyeCore.libs.WyeLib.makePickable", ("Expr", "frame.params.tag"), ("Expr", "frame.params.gObj")),
+            ("Code", "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
+            ("WyeCore.libs.WyeLib.setObjAngle", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.rotVec")),
+            ("WyeCore.libs.WyeLib.setObjColor", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.colorVec")),
+        )
+
+        def _build(rowRef):
+            return WyeCore.Utils.buildCodeText("loadObject", WyeLib.loadObject.codeDescr, WyeLib.loadObject, rowRef)
+
+        def start(stack):
+            return Wye.codeFrame(WyeLib.loadObject, stack)
+
+        def run(frame):
+            WyeLib.WyeLib_rt.loadObject_run_rt(frame)
+
 
     # load model passed in at loc, scale passed in
     class loadObject:
@@ -171,14 +206,14 @@ class WyeLib:
         codeDescr = (
             #(None, "print('test inline code')"),
             # call loadModel with testLoader params 0 and 1
-            ("WyeCore.libs.WyeLib.loadModel", (None, "frame.params.gObj"), (None, "frame.params.file")),
+            ("WyeCore.libs.WyeLib.loadModel", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.file")),
             ("Code", "frame.params.cleanUpObjs[0].append(frame.params.gObj[0])"),
             #(None, "print('loadObject frame.params.gObj', frame.params.gObj)"),
-            ("WyeCore.libs.WyeLib.makePickable", (None, "frame.params.tag"), (None, "frame.params.gObj")),
-            (None, "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
-            ("WyeCore.libs.WyeLib.setObjAngle", (None, "frame.params.gObj"), (None, "frame.params.rotVec")),
-            ("WyeCore.libs.WyeLib.setObjMaterialColor", (None, "frame.params.gObj"), (None, "frame.params.colorVec")),
-            ("WyeCore.libs.WyeLib.showModel", (None, "frame.params.gObj"), (None, "frame.params.posVec"), (None, "frame.params.scaleVec")),
+            ("WyeCore.libs.WyeLib.makePickable", ("Expr", "frame.params.tag"), ("Expr", "frame.params.gObj")),
+            ("Code", "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
+            ("WyeCore.libs.WyeLib.setObjAngle", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.rotVec")),
+            ("WyeCore.libs.WyeLib.setObjMaterialColor", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.colorVec")),
+            ("WyeCore.libs.WyeLib.showModel", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.posVec"), ("Expr", "frame.params.scaleVec")),
         )
 
         def _build(rowRef):
