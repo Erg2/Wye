@@ -10016,7 +10016,13 @@ Dialogs:
     Cancel (or the Escape key) will close a dialog without saving.
     Ok (or Enter) will close any dialog that has just an OK button. (information/warning dialogs)
 
-Overview:
+Hot Keys
+    F11 cycles between screen sizes
+    Escape will quit out of the current dialog
+    Enter(aka Return) will close dialogs that have only an OK button.
+    F1 brings the mouse back if it is hidden.
+    
+Wye Overview:
     Wye will be an IDE for interactive VR characters.
     This Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
     When the alpha starts it loads the demo library TestLib.py.  You can also load, edit, and save user defined
@@ -10028,14 +10034,14 @@ Overview:
 
     Also, saving to files is pretty reliable so you can save early/save often   
 
-    The engine is fairly well protected from crashes, so it should stay running even if it doesn't like your changes 
-    and it probably will keep your changes around so you can keep working on it.  
+    The engine is fairly well protected from crashes, so it should stay running even if it puts up alarming dialogs
+    when things go funny.  In many cases it will keep your changes around so you can keep working on them.  
 
     On the minus side, All the helpful UI stuff like undo and and "why didn't that work" debug support that Wye is 
     intended to provide is not in this release.  Remember: Underlying engine, no flashy features.  
     You probably want to ask to be on the beta test list...
 
-    See the release notes for more details on what you can do in this release. 
+    Check out the release notes for a walkthrough of cool things you can do in this release. 
 '''
 
             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "NO_CANCEL"])

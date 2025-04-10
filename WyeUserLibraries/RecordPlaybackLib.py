@@ -159,13 +159,13 @@ class RecordPlaybackLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
-        ("ptrGObj","O",None),
+        ("gObj","O",None),
         ("cleanUpObjs","OL","None"))
     codeDescr =        (
         ("Code","frame.vars.cleanUpObjs[0] = []"),
-        ("Code","frame.vars.ptrGObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.5,.05,.5], pos=[0,0,0])"),
-        ("Code","frame.vars.ptrGObj[0].setTag('wyeTag'+str(WyeCore.Utils.getId()))"),
-        ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.ptrGObj[0]) "),
+        ("Code","frame.vars.gObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.1,.05,.1], pos=[0,0,0])"),
+        ("Code","frame.vars.gObj[0].setTag('wyeTag'+str(WyeCore.Utils.getId()))"),
+        ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.gObj[0]) "),
         ("Label","Done"))
 
     def _build(rowRef):
@@ -246,7 +246,7 @@ class RecordPlaybackLib:
         ("Code","x = camPos[0] #"),
         ("Code","y = camPos[1] #"),
         ("Code","z = camPos[2] #"),
-        ("Code","frame.vars.camLblFrm[0].verb.setLabel(frame.vars.camLblFrm[0], ('Cam HPR %0.3f,%0.3f,%0.3f' %(h,p,r))+(' pos %0.3f,%0.3f,%0.3f' %(x,y,z))) #"))
+        ("Code","frame.vars.camLblFrm[0].verb.setLabel(frame.vars.camLblFrm[0], ('Cam HPR %0.3f,%0.3f,%0.3f' %(h,p,r))+(' Pos %0.3f,%0.3f,%0.3f' %(x,y,z))) #"))
 
     def _build(rowRef):
         # print("Build ",MouseDisplay)
@@ -401,18 +401,20 @@ class RecordPlaybackLib:
     paramDescr =        ()
     varDescr =        (
         ("count","I",0),
-        ("testPtr","O",None))
+        ("testPtr","O",None),
+        ("testPtrFrm","O",None))
     codeDescr =        (
         ("WyeCore.libs.RecordPlaybackLib.HideMouse",),
         ("Label","Start"),
         ("Code","Wye.UITest = True #disable normal mouse handling"),
         ("Code","#print('now mouse move should not call moveMouse')"),
-        ("WyeCore.libs.RecordPlaybackLib.FakeMouse",),
+        ("Code","frame.vars.testPtrFrm[0] = WyeCore.World.startActiveObject(WyeCore.libs.RecordPlaybackLib.FakeMouse)"),
         ("Var=","frame.vars.testPtr[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("WyeCore.libs.RecordPlaybackLib.MoveCameraToPosHpr",
           ("Expr","[[0, -20, 0]] #pos"),
           ("Expr","[[0,0,0]] # HPR")),
         ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'before delay', position=[0,0,1])"),
+        ("Code","frame.vars.testPtrFrm[0].vars.gObj[0].setPos(-1,0,0)"),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop2', 'after delay', position=[0,0,-1])"),
@@ -499,14 +501,24 @@ class RecordPlaybackLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =        ()
     varDescr =        (
-        ("newVar","A",None),)
+        ("ptrFrm","O",None),
+        ("count","I",0))
     codeDescr =        (
+        ("Code","#<your code here>"),
         ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Before Mouse', position=[0,0,-.5])"),
-        ("WyeCore.libs.RecordPlaybackLib.FakeMouse",),
+        ("Code","#<your code here>"),
+        ("Code","frame.vars.ptrFrm[0] = WyeCore.World.startActiveObject(WyeCore.libs.RecordPlaybackLib.FakeMouse)"),
         ("Label","Wait1Frame"),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[90] #")),
-        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'After Mouse',position=[0,0,.5])"),
+        ("Label","Loop"),
+        ("Code","frame.vars.count[0] += 1"),
+        ("Code","import math"),
+        ("Code","x = math.sin(frame.vars.count[0] * .0174)"),
+        ("Code","y = math.cos(frame.vars.count[0] * .0174)"),
+        ("IfGoTo","frame.vars.count[0] < 360","Loop"),
+        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'After Mouse',position=[x,0,y])"),
+        ("Code","frame.vars.ptrFrm[0].status = Wye.status.SUCCESS #shut down pointer object"),
         ("Code","frame.status = Wye.status.SUCCESS "))
 
     def _build(rowRef):
