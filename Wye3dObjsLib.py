@@ -71,6 +71,12 @@ class Wye3dObjsLib(Wye.staticObj):
         def setPos(self, *args):
             self._path.setPos(args)
 
+        def getHpr(self):
+            return self._path.getHpr()
+
+        def setHpr(self, *args):
+            self._path.setHpr(args)
+
         def setTag(self, tag):
             self.node.setTag("wyeTag", tag)
 
@@ -182,6 +188,12 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def setPos(self, *args):
             self._path.setPos(args)
+
+        def getHpr(self):
+            return self._path.getHpr()
+
+        def setHpr(self, *args):
+            self._path.setHpr(args)
 
         def setTag(self, tag):
             return self.node.setTag("wyeTag", tag)
@@ -308,8 +320,15 @@ class Wye3dObjsLib(Wye.staticObj):
             self._path.setScale(val)
 
         def setPos(self, *args):        # use args so can set abs or obj-relative path
-            print("_pointer setPos", args)
+            #print("_pointer setPos", args)
             self._path.setPos(args)
+
+        def getHpr(self):
+            return self._path.getHpr()
+
+        def setHpr(self, *args):
+            #print("_pointer setHpr", args)
+            self._path.setHpr(args)
 
         def setTag(self, tag):
             return self.node.setTag("wyeTag", tag)
@@ -459,6 +478,12 @@ class Wye3dObjsLib(Wye.staticObj):
         def getPos(self):
             return self._path.getPos()
 
+        def getHpr(self):
+            return self._path.getHpr()
+
+        def setHpr(self, *args):
+            self._path.setHpr(args)
+
         def show(self):
             self._path.show()
             WyeCore.picker.makePickable(self._path)
@@ -550,6 +575,9 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def setPos(self, *args):
             self._path.setPos(*args)
+
+        def getHpr(self):
+            return self._path.getHpr()
 
         def setHpr(self, *args):
             self._path.setHpr(*args)

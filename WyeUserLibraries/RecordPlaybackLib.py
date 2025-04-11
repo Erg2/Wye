@@ -22,10 +22,14 @@ class RecordPlaybackLib:
         ("position","FL",1))
     varDescr =        ()
     codeDescr =        (
-        ("Code","#<your code here>"),
+        ("Code","if not frame.params.position:  # DEBUG - null param not supposed to happen"),
+        ("Code","    print('>>>>> ClickMouse position is null!')  "),
+        ("Code","    return"),
+        ("Code","print('ClickMouse mb', frame.params.MBtn[0], ' shift', frame.params.shift[0], ' ctrl', frame.params.ctrl[0], ' alt', frame.params.alt[0], ' position', frame.params.position[0], flush=True)"),
         ("Code","#Clear mouse"),
-        ("Code","#Clear mouse"),
+        ("Code","# clear mouse"),
         ("Code","WyeCore.World.mouseHandler.mouseMove(0,0, 0, 0, 0, 0, 0, 0)"),
+        ("Code","# Do mouse"),
         ("Code","x = frame.params.position[0][0] #"),
         ("Code","y = frame.params.position[0][1] #"),
         ("Code","#print('ClickMouse', frame.params.MBtn[0] )"),
@@ -161,10 +165,11 @@ class RecordPlaybackLib:
     varDescr =        (
         ("gObj","O",None),
         ("tag","S","None"),
-        ("cleanUpObjs","OL","None"))
+        ("cleanUpObjs","OL","None"),
+        ("dbgCt","I",0))
     codeDescr =        (
         ("Code","frame.vars.cleanUpObjs[0] = []"),
-        ("Code","frame.vars.gObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.1,.05,.1], pos=[0,0,0])"),
+        ("Code","frame.vars.gObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.05,.01,.05], pos=[0,0,0])"),
         ("Code","frame.vars.tag[0] = 'wyeTag'+str(WyeCore.Utils.getId())"),
         ("Code","frame.vars.gObj[0].setTag(frame.vars.tag[0])"),
         ("WyeCore.libs.WyeLib.makePickable",
@@ -173,9 +178,14 @@ class RecordPlaybackLib:
         ("Code","WyeCore.World.registerObjTag(frame.vars.tag[0], frame)"),
         ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.gObj[0]) "),
         ("Label","HangingOut"),
+        ("Code","#if frame.vars.dbgCt[0] <= 0:"),
+        ("Code","#    print('FakeMouse HangingOut gObj', frame.vars.gObj[0])"),
+        ("Code","#    frame.vars.dbgCt[0] = 10"),
+        ("Code","#frame.vars.dbgCt[0] -= 1"),
         ("Code","# Outside agent has to set PC += 1 to force FakeMouse to the Done case"),
         ("GoTo","HangingOut"),
         ("Label","Done"),
+        ("Code","print('FakeMouse done, remove gObj')"),
         ("Code","frame.vars.gObj[0].removeNode()"),
         ("Code","frame.status = Wye.status.SUCCESS"))
 
@@ -388,27 +398,38 @@ class RecordPlaybackLib:
     varDescr =        (
         ("fakeMouseFrm","O",None),)
     codeDescr =        (
+        ("Code","#print('SetFakeMousePos position', frame.params.position[0])"),
         ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("Code","if not frame.vars.fakeMouseFrm[0]:  # if mouse not running, nevermind!"),
-        ("Code"," return"),
+        ("Code","    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('SetFakeMousePos Error', 'Did not find running FakeMouse', Wye.color.WARNING)"),
+        ("Code","    return"),
+        ("Code","else:"),
+        ("Code","    if not frame.vars.fakeMouseFrm[0].vars.gObj[0]:"),
+        ("Code","        print('SetFakeMousePos error: FakeMouse found but gObj is None.  FakeMouse frame', frame.vars.fakeMouseFrm[0])"),
+        ("Code","        WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('SetFakeMousePos Error', 'FakeMouse found but gObj is None. Frame'+str(frame.vars.fakeMouseFrm[0]), color=Wye.color.WARNING_COLOR)"),
+        ("Code","        print('SetFakeMousePos: Oh help.  fakeMouse gObj is null')"),
+        ("Code","        return"),
+        ("Code","    #print('setFakeMousePos: Found FakeMouse. frame', frame.vars.fakeMouseFrm[0],' gObj=', frame.vars.fakeMouseFrm[0].vars.gObj[0])"),
         ("Code","from panda3d.core import NodePath, LPlanef, LPoint2f, Point3, LVecBase3f"),
         ("Code","point=NodePath('point')"),
         ("Code","point.reparentTo(render)"),
-        ("Code","point.setPos(0,1,0)"),
-        ("Code","pos=point.getPos()"),
-        ("Code","print('SetFakeMousePos planePos', pos)"),
-        ("Code","fwd=render.getRelativeVector(point,(0,-1,0))"),
+        ("Code","point.setPos(base.camera, 0,5,0)"),
+        ("Code","pos=point.getPos(render)"),
+        ("Code","fwd=render.getRelativeVector(base.camera,(0,-1,0))"),
         ("Code","point.removeNode()"),
         ("Code","objPlane=LPlanef(fwd, pos)"),
-        ("Code","mpos = LPoint2f(frame.params.position[0][0], frame.params.position[0][1])"),
+        ("Code","mpos = LPoint2f(frame.params.position[0][0]-.01, frame.params.position[0][1]-.01)"),
         ("Code","wldPos=Point3(0,0,0)"),
         ("Code","newPos = Point3(0,0,0)"),
         ("Code","near=Point3()"),
         ("Code","far=Point3()"),
         ("Code","base.camLens.extrude(mpos, near, far)"),
         ("Code","objPlane.intersectsLine(newPos,render.getRelativePoint(base.camera, near),render.getRelativePoint(base.camera, far))"),
-        ("Code","#objPosInPlane = self.objPlane.project(pos)"),
-        ("Code","print('setFakeMousePos mouse', frame.params.position[0][0],',',frame.params.position[0][1],' 3d pos', newPos)"),
+        ("Code","#print('setFakeMousePos mouse', frame.params.position[0][0],',',frame.params.position[0][1],' 3d pos', newPos)"),
+        ("Code","fwd=base.camera.getHpr()"),
+        ("Code","#print('setHpr on _pointer', frame.vars.fakeMouseFrm[0].vars.gObj[0]) #<your code here>"),
+        ("Code","frame.vars.fakeMouseFrm[0].vars.gObj[0].setHpr(fwd[0], fwd[1], fwd[2])"),
+        ("Code","#print('did setHpr on _pointer') #<your code here>"),
         ("Code","frame.vars.fakeMouseFrm[0].vars.gObj[0].setPos(newPos[0], newPos[1], newPos[2])"))
 
     def _build(rowRef):
@@ -449,6 +470,29 @@ class RecordPlaybackLib:
         # print('Run 'ShowMouse)
         RecordPlaybackLib.RecordPlaybackLib_rt.ShowMouse_run_rt(frame)
 
+  class StartFakeMouse:
+    mode = Wye.mode.SINGLE_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =        ()
+    varDescr =        ()
+    codeDescr =        (
+        ("Code","WyeCore.World.startActiveObject(WyeCore.libs.RecordPlaybackLib.FakeMouse)"),)
+
+    def _build(rowRef):
+        # print("Build ",StartFakeMouse)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('StartFakeMouse', RecordPlaybackLib.StartFakeMouse.codeDescr, RecordPlaybackLib.StartFakeMouse, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.StartFakeMouse, stack)
+
+    def run(frame):
+        # print('Run 'StartFakeMouse)
+        RecordPlaybackLib.RecordPlaybackLib_rt.StartFakeMouse_run_rt(frame)
+
   class StopFakeMouse:
     mode = Wye.mode.SINGLE_CYCLE
     autoStart = False
@@ -486,52 +530,68 @@ class RecordPlaybackLib:
     varDescr =        (
         ("count","I",0),
         ("testPtr","O",None),
-        ("testPtrFrm","O",None))
+        ("testPtrFrm","O",None),
+        ("fakeMouse","O",None))
     codeDescr =        (
         ("WyeCore.libs.RecordPlaybackLib.HideMouse",),
+        ("WyeCore.libs.RecordPlaybackLib.StartFakeMouse",),
+        ("Label","Delay1Cycle"),
         ("Label","Start"),
+        ("Code","frame.vars.fakeMouse[0] = WyeCore.World.findActiveObj('FakeMouse')"),
+        ("Code","if not frame.vars.fakeMouse[0]:"),
+        ("Code","  WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Test1 Error', 'FakeMouse did not start',Wye.color.WARNING)"),
+        ("Code","  return #<your code here>"),
+        ("Code","if not frame.vars.fakeMouse[0].vars.gObj[0]:"),
+        ("Code","    print('Test1: FakeMouse gObj not found')"),
         ("Code","Wye.UITest = True #disable normal mouse handling"),
         ("Code","#print('now mouse move should not call moveMouse')"),
-        ("Code","frame.vars.testPtrFrm[0] = WyeCore.World.startActiveObject(WyeCore.libs.RecordPlaybackLib.FakeMouse)"),
-        ("Var=","frame.vars.testPtr[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("WyeCore.libs.RecordPlaybackLib.MoveCameraToPosHpr",
           ("Expr","[[0, -20, 0]] #pos"),
           ("Expr","[[0,0,0]] # HPR")),
-        ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'before delay', position=[0,0,1])"),
-        ("Code","frame.vars.testPtrFrm[0].vars.gObj[0].setPos(-1,0,0)"),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop2', 'after delay', position=[0,0,-1])"),
-        ("Code","#print('>>>>>>>>> do click M1, ctrl, alt for WyeMainMenu') "),
+        ("Code","print('Test1 ClickMouse 0,0 with Ctrl,Alt')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
+          ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[1] # <put parameter here>"),
-          ("Expr","[(0,0,0)] # <put parameter here>")),
+          ("Code","[(0,0),]#<your code here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('>>>>>>>>>> do click m1 at .1349, -.4146 for Show Test Fish') "),
+        ("Code","print('Test1 ClickMouse 0.1349, -0.4146')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
-          ("Expr","[(0.1349,-0.4146)] #Show Test Fish")),
+          ("Expr","[(0.1349,-0.4146),] #Show Test Fish")),
+        ("Code","print('Test1 SetFakeMousePos 0.1349, -0.4146')"),
+        ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
+          ("Expr","[[0.1349,-0.4146]] # <put parameter here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Code","#print('>>>>>>> do m1 at .1510, .0117 for Wye Main Menu OK') "),
+        ("Code","print('Test1 ClickMouse 0.1510, 0.0117')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
-          ("Expr","[(0.1510,0.0117)] #Close Main Menu")),
-        ("Code","#<your code here>"),
+          ("Expr","[(0.1510,0.0117),] #Close Main Menu")),
+        ("Code","print('Test1 SetFakeMousePos 0.1510, 0.0117')"),
+        ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
+          ("Expr","[[0.1510,0.0117]] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
         ("Label","Done"),
+        ("Code","print('Test1: Done') #<your code here>"),
         ("Code","frame.status = Wye.status.SUCCESS #<your code here>"),
         ("WyeCore.libs.RecordPlaybackLib.ShowMouse",
           ("Expr","[1] # <put parameter here>")),
         ("Code","Wye.UITest = False #enable normal mouse handling"),
+        ("WyeCore.libs.RecordPlaybackLib.StopFakeMouse",),
         ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Test Complete', 'Finished Test', position=[0,0,1])"))
 
     def _build(rowRef):
@@ -594,13 +654,13 @@ class RecordPlaybackLib:
         ("Code","frame.vars.ptrFrm[0] = WyeCore.World.startActiveObject(WyeCore.libs.RecordPlaybackLib.FakeMouse)"),
         ("Label","Wait1Frame"),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
-          ("Expr","[90] #")),
+          ("Expr","[60] #")),
         ("Label","Loop"),
         ("Code","frame.vars.count[0] += 1"),
         ("Code","import math"),
         ("Code","x = math.sin(frame.vars.count[0] * .0174)/2"),
         ("Code","y = math.cos(frame.vars.count[0] * .0174)/2"),
-        ("Code","frame.vars.ptrFrm[0].vars.gObj[0].setPos(x,0,y)"),
+        ("Code","#frame.vars.ptrFrm[0].vars.gObj[0].setPos(x,0,y)"),
         ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
           ("Expr","[[x,y]] # <put parameter here>")),
         ("Code","#print('TestFakeMouse move', x, ',', y)"),

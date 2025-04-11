@@ -1076,7 +1076,7 @@ class WyeCore(Wye.staticObj):
                 self.getObjectHit(LPoint2f(x,y))
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    #print("Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
+                    #print("Picker objSelectEvent: Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                         # if there's an object editor
@@ -1421,7 +1421,8 @@ class WyeCore(Wye.staticObj):
 
                                             # skip empty tuples (list ended in ",") and debug highlighting tuples and tuples beyond len of paramDescr
                                             if len(paramTuple) == 0 or paramIx > len(verbClass.paramDescr):
-                                                print("0 paramIx",paramIx," > len(", verbClass.__name__,".paramDescr)", len(verbClass.paramDescr))
+                                                if paramIx > len(verbClass.paramDescr):
+                                                    print("0 paramIx",paramIx," > len(", verbClass.__name__,".paramDescr)", len(verbClass.paramDescr))
                                                 continue
 
                                             tupleKey = paramTuple[0]
