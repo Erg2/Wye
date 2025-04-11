@@ -169,9 +169,11 @@ class WyeLib:
             #(None, "print('test inline code')"),
             # call loadModel with testLoader params 0 and 1
             ("WyeLib.setEqual", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.file")),
-            ("Code", ("Var=", "frame.params.gObj[0]=WyeCore.libs.Wye3dObjsLib._pointer(size=frame.params.scaleVec[0], pos=frame.params.posVec[0])")),
+            ("Var=", "frame.params.gObj[0]=WyeCore.libs.Wye3dObjsLib._pointer(size=frame.params.scaleVec[0], pos=frame.params.posVec[0])"),
             ("Code", "frame.params.cleanUpObjs[0].append(frame.params.gObj[0])"),
             #(None, "print('loadWyePointer frame.params.gObj', frame.params.gObj)"),
+            ("Code", "frame.params.tag[0] = 'wyeTag'+str(WyeCore.Utils.getId())"),
+            ("Code", "frame.params.gObj[0].setTag(frame.params.tag[0])"),
             ("WyeCore.libs.WyeLib.makePickable", ("Expr", "frame.params.tag"), ("Expr", "frame.params.gObj")),
             ("Code", "WyeCore.World.registerObjTag(frame.params.tag[0], frame.params.objFrm[0])"),
             ("WyeCore.libs.WyeLib.setObjAngle", ("Expr", "frame.params.gObj"), ("Expr", "frame.params.rotVec")),

@@ -282,8 +282,8 @@ class WyeUILib(Wye.staticObj):
             self.pos = [0,0]        # filled in with most recent mouse position
 
         def mouseMove(self, x, y, mb1, mb2, mb3, shift, ctrl, alt):
-            if Wye.UITest:
-                print("mouseMove UITest=True: x,y", x, ",", y, 'mb', mb1, "", mb2, "", mb3, " shift", shift, " ctrl", ctrl, " alt", alt)
+            #if Wye.UITest:
+            #    print("mouseMove UITest=True: x,y", x, ",", y, 'mb', mb1, "", mb2, "", mb3, " shift", shift, " ctrl", ctrl, " alt", alt)
             global base
             global render
 

@@ -1421,8 +1421,9 @@ class WyeCore(Wye.staticObj):
 
                                             # skip empty tuples (list ended in ",") and debug highlighting tuples and tuples beyond len of paramDescr
                                             if len(paramTuple) == 0 or paramIx > len(verbClass.paramDescr):
-                                                if paramIx > len(verbClass.paramDescr):
-                                                    print("0 paramIx",paramIx," > len(", verbClass.__name__,".paramDescr)", len(verbClass.paramDescr))
+                                                # todo - figure out why this triggers on zero param verbs and if it's a big deal
+                                                #if paramIx > len(verbClass.paramDescr):
+                                                #    print("0 paramIx",paramIx," > len(", verbClass.__name__,".paramDescr)", len(verbClass.paramDescr))
                                                 continue
 
                                             tupleKey = paramTuple[0]
