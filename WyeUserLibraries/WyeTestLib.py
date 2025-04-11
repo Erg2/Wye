@@ -21,7 +21,7 @@ class WyeTestLib:
     codeDescr =        (
         ("WyeCore.libs.RecordPlaybackLib.StartFakeMouse",),
         ("Code","#<your code here>"),
-        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Before Mouse', position=[0,0,-.5])"),
+        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Start mouse test', position=[0,0,-.5])"),
         ("Label","Wait1Frame"),
         ("Label","Wait2Frame"),
         ("Code","frame.vars.ptrFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
@@ -37,7 +37,7 @@ class WyeTestLib:
           ("Expr","[[x,y]]")),
         ("Code","#print('TestFakeMouse move', x, ',', y)"),
         ("IfGoTo","frame.vars.count[0] < 360","Loop"),
-        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'After Mouse',position=[x,0,y])"),
+        ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Done mouse test',position=[x,0,y])"),
         ("Code","#frame.vars.ptrFrm[0].status = Wye.status.SUCCESS #shut down pointer object"),
         ("WyeCore.libs.RecordPlaybackLib.StopFakeMouse",),
         ("Code","frame.status = Wye.status.SUCCESS "))
@@ -85,7 +85,7 @@ class WyeTestLib:
         # print('Run 'TestHideMouse)
         WyeTestLib.WyeTestLib_rt.TestHideMouse_run_rt(frame)
 
-  class Test_WyeMainMenu:
+  class TestWyeMainMenu:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = False
     dataType = Wye.dType.NONE
@@ -104,10 +104,10 @@ class WyeTestLib:
         ("Label","Start"),
         ("Code","frame.vars.fakeMouse[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("Code","if not frame.vars.fakeMouse[0]:"),
-        ("Code","  WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Test_WyeMainMenu Error', 'FakeMouse did not start',Wye.color.WARNING)"),
+        ("Code","  WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('TestWyeMainMenu Error', 'FakeMouse did not start',Wye.color.WARNING)"),
         ("Code","  return #<your code here>"),
         ("Code","if not frame.vars.fakeMouse[0].vars.gObj[0]:"),
-        ("Code","    print('Test_WyeMainMenu: FakeMouse gObj not found')"),
+        ("Code","    print('TestWyeMainMenu: FakeMouse gObj not found')"),
         ("Code","    frame.status=Wye.status.SUCCESS"),
         ("Code","    return"),
         ("Code","Wye.UITest = True #disable normal mouse handling"),
@@ -118,7 +118,7 @@ class WyeTestLib:
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop2', 'after delay', position=[0,0,-1])"),
-        ("Code","#print('Test_WyeMainMenu ClickMouse 0,0 with Ctrl,Alt')"),
+        ("Code","#print('TestWyeMainMenu ClickMouse 0,0 with Ctrl,Alt')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
@@ -127,12 +127,12 @@ class WyeTestLib:
           ("Code","[(0,0),]#<your code here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('Test_WyeMainMenu SetFakeMousePos 0.1349, -0.4146')"),
+        ("Code","#print('TestWyeMainMenu SetFakeMousePos 0.1349, -0.4146')"),
         ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
           ("Expr","[[0.1349,-0.4146]] # <put parameter here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('Test_WyeMainMenu ClickMouse 0.1349, -0.4146')"),
+        ("Code","#print('TestWyeMainMenu ClickMouse 0.1349, -0.4146')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
@@ -141,12 +141,12 @@ class WyeTestLib:
           ("Expr","[(0.1349,-0.4146),] #Show Test Fish")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('Test_WyeMainMenu SetFakeMousePos 0.1510, 0.0117')"),
+        ("Code","#print('TestWyeMainMenu SetFakeMousePos 0.1510, 0.0117')"),
         ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
           ("Expr","[[0.1510,0.0117]] # <put parameter here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('Test_WyeMainMenu ClickMouse 0.1510, 0.0117')"),
+        ("Code","#print('TestWyeMainMenu ClickMouse 0.1510, 0.0117')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
@@ -156,7 +156,7 @@ class WyeTestLib:
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Label","Done"),
-        ("Code","#print('Test_WyeMainMenu: Done') #<your code here>"),
+        ("Code","#print('TestWyeMainMenu: Done') #<your code here>"),
         ("Code","frame.status = Wye.status.SUCCESS #<your code here>"),
         ("WyeCore.libs.RecordPlaybackLib.ShowMouse",
           ("Expr","[1] # <put parameter here>")),
@@ -165,13 +165,13 @@ class WyeTestLib:
         ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Test Complete', 'Finished Test', position=[0,0,1])"))
 
     def _build(rowRef):
-        # print("Build ",Test_WyeMainMenu)
+        # print("Build ",TestWyeMainMenu)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('Test_WyeMainMenu', WyeTestLib.Test_WyeMainMenu.codeDescr, WyeTestLib.Test_WyeMainMenu, rowIxRef)
+        return WyeCore.Utils.buildCodeText('TestWyeMainMenu', WyeTestLib.TestWyeMainMenu.codeDescr, WyeTestLib.TestWyeMainMenu, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(WyeTestLib.Test_WyeMainMenu, stack)
+        return Wye.codeFrame(WyeTestLib.TestWyeMainMenu, stack)
 
     def run(frame):
-        # print('Run 'Test_WyeMainMenu)
-        WyeTestLib.WyeTestLib_rt.Test_WyeMainMenu_run_rt(frame)
+        # print('Run 'TestWyeMainMenu)
+        WyeTestLib.WyeTestLib_rt.TestWyeMainMenu_run_rt(frame)

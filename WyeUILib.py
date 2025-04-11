@@ -3235,14 +3235,16 @@ class WyeUILib(Wye.staticObj):
                                                                      WyeUILib.MainMenuDialog.AngleFishCheckCallback)
                     obj2ChkFrm.params.optData = [obj2ChkFrm]
 
-                    # midi test
-                    midFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Test Midi: ", WyeUILib.MainMenuDialog.TestMidiCallback)
-                    midInsFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Instrument:", [94], layout=Wye.layout.ADD_RIGHT)
-                    midNoteFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Note:", [64], layout=Wye.layout.ADD_RIGHT)
-                    midVolFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Vol:", [64], layout=Wye.layout.ADD_RIGHT)
-                    midLenFrm = WyeCore.libs.WyeUIUtilsLib.doInputFloat(dlgFrm, "Len(s)", [1.0], layout=Wye.layout.ADD_RIGHT)
-                    # fill in midFrm callback data now that ins, note frames created
-                    midFrm.params.optData = [(midInsFrm, midNoteFrm, midVolFrm, midLenFrm)]  # button row, dialog frame
+                    # don't have a midi lib on Linux
+                    if sys.platform == 'win32':
+                        # midi test
+                        midFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Test Midi: ", WyeUILib.MainMenuDialog.TestMidiCallback)
+                        midInsFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Instrument:", [94], layout=Wye.layout.ADD_RIGHT)
+                        midNoteFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Note:", [64], layout=Wye.layout.ADD_RIGHT)
+                        midVolFrm = WyeCore.libs.WyeUIUtilsLib.doInputInteger(dlgFrm, "Vol:", [64], layout=Wye.layout.ADD_RIGHT)
+                        midLenFrm = WyeCore.libs.WyeUIUtilsLib.doInputFloat(dlgFrm, "Len(s)", [1.0], layout=Wye.layout.ADD_RIGHT)
+                        # fill in midFrm callback data now that ins, note frames created
+                        midFrm.params.optData = [(midInsFrm, midNoteFrm, midVolFrm, midLenFrm)]  # button row, dialog frame
 
                     #WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Test Button",
                     #                                                   WyeUILib.MainMenuDialog.TestButtonCallback)
