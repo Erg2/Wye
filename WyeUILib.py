@@ -1327,7 +1327,7 @@ class WyeUILib(Wye.staticObj):
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
             dlgPath = dlgFrm.vars.dragPath[0]
-            print("InputButton display: label", frame.params.label)
+            #print("InputButton display: label", frame.params.label)
             btn = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0],
                     bg=frame.params.backgroundColor[0], pos=(pos[0], pos[1], pos[2]), scale=(1, 1, 1),
                     parent=dlgPath)
