@@ -5,7 +5,6 @@ class CirclingFishLib:
     WyeCore.Utils.buildLib(CirclingFishLib)
   canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
-
   class CirclingFishLib_rt:
    pass #1
 
@@ -15,20 +14,17 @@ class CirclingFishLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.OBJECT
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (3,2,-1)),
-        ("dPos","FL",
-          (0.0,0.0,0.03)),
-        ("posAngle","F",4.712388),
-        ("dAngleDeg","FL",
-          (0.0,0.0,0.5)),
-        ("dAngleRad","F",-0.0087266462),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(3, 2, -1)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.03)),
+        ("posAngle",Wye.dType.FLOAT,4.712388),
+        ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
+        ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
         ("NewStream",
           (
@@ -83,7 +79,6 @@ frame.vars.posAngle[0] = angle
 
     def _build(rowRef):
         # print("Build ",testParallelFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish', CirclingFishLib.testParallelFish.codeDescr, CirclingFishLib.testParallelFish)
 
@@ -100,20 +95,17 @@ frame.vars.posAngle[0] = angle
     dataType = Wye.dType.NONE
     cType = Wye.cType.OBJECT
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (1.0,2.0,-1.0)),
-        ("dPos","FL",
-          (0.0,0.0,0.03)),
-        ("posAngle","F",4.712388),
-        ("dAngleDeg","FL",
-          (0.0,0.0,0.5)),
-        ("dAngleRad","F",-0.0087266462),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(1.0, 2.0, -1.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.03)),
+        ("posAngle",Wye.dType.FLOAT,4.712388),
+        ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
+        ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
         ("NewStream",
           (
@@ -168,7 +160,6 @@ frame.vars.posAngle[0] = angle
 
     def _build(rowRef):
         # print("Build ",testParallelFish1)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish1', CirclingFishLib.testParallelFish1.codeDescr, CirclingFishLib.testParallelFish1)
 
@@ -185,20 +176,17 @@ frame.vars.posAngle[0] = angle
     dataType = Wye.dType.NONE
     cType = Wye.cType.OBJECT
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (0.0,2.0,-1.0)),
-        ("dPos","FL",
-          (0.0,0.0,0.03)),
-        ("posAngle","F",4.712388),
-        ("dAngleDeg","FL",
-          (0.0,0.0,0.5)),
-        ("dAngleRad","F",-0.0087266462),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(0.0, 2.0, -1.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.03)),
+        ("posAngle",Wye.dType.FLOAT,4.712388),
+        ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
+        ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
         ("NewStream",
           (
@@ -253,7 +241,6 @@ frame.vars.posAngle[0] = angle
 
     def _build(rowRef):
         # print("Build ",testParallelFish2)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish2', CirclingFishLib.testParallelFish2.codeDescr, CirclingFishLib.testParallelFish2)
 
@@ -270,20 +257,17 @@ frame.vars.posAngle[0] = angle
     dataType = Wye.dType.NONE
     cType = Wye.cType.OBJECT
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (2.0,2.0,-1.0)),
-        ("dPos","FL",
-          (0.0,0.0,0.03)),
-        ("posAngle","F",4.712388),
-        ("dAngleDeg","FL",
-          (0.0,0.0,0.5)),
-        ("dAngleRad","F",-0.0087266462),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(2.0, 2.0, -1.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.03)),
+        ("posAngle",Wye.dType.FLOAT,4.712388),
+        ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
+        ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
         ("NewStream",
           (
@@ -338,7 +322,6 @@ frame.vars.posAngle[0] = angle
 
     def _build(rowRef):
         # print("Build ",testParallelFish3)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildParallelText('CirclingFishLib', 'testParallelFish3', CirclingFishLib.testParallelFish3.codeDescr, CirclingFishLib.testParallelFish3)
 

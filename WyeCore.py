@@ -1327,6 +1327,29 @@ class WyeCore(Wye.staticObj):
                     tupleStr += str(hierList)
             return tupleStr
 
+        # replace dType code with Wye.dType string for param or var descrs
+        def descrListToString(descr):
+            newDescr = "("
+            totLen = len(descr)
+            for jj in range(totLen):
+                desc = descr[jj]
+                dLen = len(desc)
+                newDescr += "\n        ("
+                for ii in range(len(desc)):
+                    p = desc[ii]
+                    if ii == 1:      # if type
+                        newDescr += "Wye.dType."+Wye.dType.tostring(p)+","
+                    else:
+                        if isinstance(p, str):
+                            newDescr += "\"" + p + "\"" + ("," if ii<(dLen-1) else "")
+                        else:
+                            newDescr += str(p) + ("," if ii<(dLen-1) else "")
+                if jj < (totLen-1):
+                    newDescr+="),"
+                else:
+                    newDescr+=")"
+            return newDescr+")"
+
         # recursively count nested lists in list
         def countNestedLists(tupleLst):
             count = 0
@@ -1933,13 +1956,13 @@ class WyeCore(Wye.staticObj):
             # a deep copy of any initial value list/tuple to ensure frames don't share values, and it turns all tuples
             # into lists again.  This could be a surprise somewhere down the road.
 
-            paramStr = WyeCore.Utils.listToTupleString(paramDescr, 0)
-            varStr = WyeCore.Utils.listToTupleString(varDescr, 0)
-            codeStr = WyeCore.Utils.listToTupleString(codeDescr, 0)
+            paramStr = WyeCore.Utils.descrListToString(paramDescr)  # cvt to string and put types in place of type codes
+            varStr = WyeCore.Utils.descrListToString(varDescr)
+            codeStr = WyeCore.Utils.listToTupleString(codeDescr, 0) # cvt to string
 
             # note: trim off leading \n from formatted string or compiler fusses
-            vrbStr += "    paramDescr =  " + paramStr[1:] + "\n"
-            vrbStr += "    varDescr =  " + varStr[1:] + "\n"
+            vrbStr += "    paramDescr =  " + paramStr + "\n"
+            vrbStr += "    varDescr =  " + varStr + "\n"
             vrbStr += "    codeDescr =  " + codeStr[1:] + "\n"
             vrbStr += '''
     def _build(rowRef):

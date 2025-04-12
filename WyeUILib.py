@@ -1327,7 +1327,7 @@ class WyeUILib(Wye.staticObj):
             frame.vars.position[0] = (pos[0], pos[1], pos[2])  # save this position
 
             dlgPath = dlgFrm.vars.dragPath[0]
-            #print("InputButton display: label", frame.params.label)
+            print("InputButton display: label", frame.params.label)
             btn = WyeCore.libs.Wye3dObjsLib._3dText(frame.params.label[0], frame.params.color[0],
                     bg=frame.params.backgroundColor[0], pos=(pos[0], pos[1], pos[2]), scale=(1, 1, 1),
                     parent=dlgPath)
@@ -1369,8 +1369,6 @@ class WyeUILib(Wye.staticObj):
 
                     WyeUILib.Dialog.doCallback(dlgFrame, frame, tag)
                 else:
-
-
                     print("InputButton doSelect: ignore click, in flashCount", frame.vars.flashCount[0])
                 return True
             else:
@@ -3271,6 +3269,10 @@ class WyeUILib(Wye.staticObj):
                                         WyeUILib.MainMenuDialog.ListDevCodeCallback)
                     devChkFrm.params.optData = [devChkFrm]
 
+                    devChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Debug System Objects", [Wye.allowSysDebug],
+                                        WyeUILib.MainMenuDialog.debugSysCallback)
+                    devChkFrm.params.optData = [devChkFrm]
+
 
                     # exit
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Exit", color=Wye.color.SUBHD_COLOR)
@@ -3402,6 +3404,26 @@ class WyeUILib(Wye.staticObj):
                 rowFrm = data[1]
                 WyeCore.debugListCode = rowFrm.vars.currVal[0]
                 #("List Code On", WyeCore.debugListCode)
+
+
+
+        # allow debugging system objects (danger Will Robinson!)
+        class debugSysCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("debugSysCallback started")
+                return Wye.codeFrame(WyeUILib.MainMenuDialog.debugSysCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                rowFrm = data[1]
+                Wye.allowSysDebug = rowFrm.vars.currVal[0]
+                print("Allow debugging system objects", Wye.allowSysDebug)
+
 
 
         # turn compile code listing
@@ -4296,11 +4318,11 @@ class WyeUILib(Wye.staticObj):
                         if libName in WyeCore.World.libDict:
                             #print("Lib", libName, " already loaded.  Delete old and add new")
                             oldLib = WyeCore.World.libDict[libName]
-                            # don't allow overwrite of system lib
                             if not hasattr(oldLib, "systemLib"):
                                 oldLibIx = WyeCore.World.libList.index(oldLib)
                                 WyeCore.World.libList.remove(oldLib)
                                 newLib = False
+                                # don't allow overwrite of system lib
                             else:
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", libName + " is a system library.  Overwriting not allowed",
                                                     Wye.color.ERROR_COLOR)
@@ -4400,7 +4422,7 @@ class WyeUILib(Wye.staticObj):
                         oldLibIx = WyeCore.World.libList.index(oldLib)
                         WyeCore.World.libList.remove(oldLib)
                         mewlib = False
-                        # don't allow overwrite of system lib
+                    # don't allow overwrite of system lib
                     else:
                         WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("System Library", libName + " is a system library.  Overwriting not allowed",
                                             Wye.color.ERROR_COLOR)
@@ -7769,11 +7791,12 @@ class WyeUILib(Wye.staticObj):
                         # IfGoTo
 
                         frame.vars.ifExprTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [tupleTxt], hidden=True, layout=Wye.layout.ADD_RIGHT)
+
                         if len(tuple) > 2:
                             lblStr = str(tuple[2])
                         else:
                             lblStr = "MyGoToLabel"
-                        frame.vars.ifTgtTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "", [lblStr], hidden=True, layout=Wye.layout.ADD_RIGHT)
+                        frame.vars.ifTgtTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, " GoTo ", [lblStr], hidden=True, layout=Wye.layout.ADD_RIGHT)
                         
                         # run dlg to generate display objects so can hide them
                         dlgFrm.verb.run(dlgFrm)
@@ -8707,10 +8730,12 @@ class WyeUILib(Wye.staticObj):
                             frame.status = Wye.status.SUCCESS
                             return
 
-                        lib.modified = False        # lib's been saved
-                        if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
-                            dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
-                            dlgFrm.motherFrame.verb.update(dlgFrm.motherFrame, dlgFrm)
+                        # if there's an in memory library (i.e. not EditVerb writing to file)
+                        if lib:
+                            lib.modified = False        # lib's been saved
+                            if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
+                                dlgFrm = WyeUILib.EditMainDialog.activeLibs[lib.__name__]
+                                dlgFrm.motherFrame.verb.update(dlgFrm.motherFrame, dlgFrm)
 
                         # if there's a lib list
                         if WyeCore.World.editMenu:
@@ -8815,7 +8840,7 @@ class WyeUILib(Wye.staticObj):
                 offset = 0
                 for objFrm in stack:
                     # only let user delete top level non-system objects on regular stack
-                    if top and offset == 0 and prefix == "stack" and not hasattr(stack[0], "systemObject"):       # HACK!
+                    if top and offset == 0 and prefix == "stack" and ((not hasattr(stack[0], "systemObject")) or Wye.allowSysDebug):       # HACK!
                         doKillBtn = True
                     else:
                         doKillBtn = False
@@ -8841,7 +8866,7 @@ class WyeUILib(Wye.staticObj):
                     else:
                         #print("   no breakpoint")
                         bg = Wye.color.TRANSPARENT
-                    if hasattr(stack[0], "systemObject"):
+                    if hasattr(stack[0], "systemObject") and not Wye.allowSysDebug:
                         color = Wye.color.LABEL_COLOR
                         btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, label, color=color, backgroundColor=bg)
                     else:
@@ -9091,6 +9116,7 @@ class WyeUILib(Wye.staticObj):
                     ("codeInpLst", Wye.dType.OBJECT_LIST, None),
                     ("breakLst", Wye.dType.OBJECT_LIST, None),
                     ("isSysObj", Wye.dType.BOOL, False),
+                    ("sysDbgFrms", Wye.dType.OBJECT_LIST, None)
                     )
 
         # global list of frames being edited
@@ -9103,6 +9129,7 @@ class WyeUILib(Wye.staticObj):
             f.vars.varInpLst[0] = []
             f.vars.codeInpLst[0] = []
             f.vars.breakLst[0] = []
+            f.vars.sysDbgFrms[0] = []
             f.systemObject = True         # not stopped by breakAll or debugger
             return f
 
@@ -9138,7 +9165,7 @@ class WyeUILib(Wye.staticObj):
 
 
                     # if it's a systemObject (immune from Wye.breakAll) don't debug it
-                    if hasattr(objFrm.SP[0], "systemObject"):
+                    if hasattr(objFrm.SP[0], "systemObject") and not Wye.allowSysDebug:
                         #print("This is a system object, it must stay running")
                         WyeCore.World.stopActiveObject(frame)
                         frame.status = Wye.status.FAIL
@@ -9220,35 +9247,45 @@ class WyeUILib(Wye.staticObj):
                     edBtnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Open Verb Source in Editor", WyeUILib.ObjectDebugger.DebugEditCallback, color = (1,1,0,1))
                     edBtnFrm.params.optData = [(edBtnFrm, frame, dlgFrm, objFrm)]  # button row, dialog frame
 
-                    #print("ObjectDebugger objFrm", objFrm.tostring())
+                    if Wye.allowSysDebug:
+                        WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Frame:", color=Wye.color.SUBHD_COLOR)
+
+                        sysStr = Wye.mode.tostring(objFrm.verb.mode) if hasattr(objFrm.verb, "mode") else "---"
+                        sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  mode: " + sysStr)
+                        frame.vars.sysDbgFrms[0].append(sysLbl)
+
+                        sysStr = str(objFrm.verb.autoStart) if hasattr(objFrm.verb, "autoStart") else "---"
+                        sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  autoStart: " + sysStr)
+                        frame.vars.sysDbgFrms[0].append(sysLbl)
+
+                        sysStr = Wye.dType.tostring(objFrm.verb.dType) if hasattr(objFrm.verb, "dType") else "---"
+                        sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  dType: " + sysStr)
+                        frame.vars.sysDbgFrms[0].append(sysLbl)
+
+                        sysStr = Wye.cType.tostring(objFrm.verb.cType) if hasattr(objFrm.verb, "cType") else "---"
+                        sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  cType: " + sysStr)
+                        frame.vars.sysDbgFrms[0].append(sysLbl)
+
+                        sysStr = Wye.parTermType.tostring(objFrm.verb.parTermType) if hasattr(objFrm.verb, "parTermType") else "---"
+                        sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  parTermType: " + sysStr)
+                        frame.vars.sysDbgFrms[0].append(sysLbl)
+
+                        sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  PC: " + str(objFrm.PC))
+                        frame.vars.sysDbgFrms[0].append(sysLbl)
+
                     # params
-                    lblFrm = WyeUILib.InputLabel.start(dlgFrm.SP)
-                    lblFrm.params.frame = [None]  # return value
-                    lblFrm.params.parent = [None]
-                    lblFrm.params.label = ["Parameters:"]
-                    lblFrm.params.color = [Wye.color.SUBHD_COLOR]
-                    WyeUILib.InputLabel.run(lblFrm)
-                    dlgFrm.params.inputs[0].append([lblFrm])
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Parameters:", color=Wye.color.SUBHD_COLOR)
 
                     if len(paramDescr) > 0:     # if we have params, list them
-
                         attrIx = 0
-
                         for param in paramDescr:
                             # make the dialog row
-                            btnFrm = WyeUILib.InputButton.start(dlgFrm.SP)
-                            dlgFrm.params.inputs[0].append([btnFrm])
-                            btnFrm.params.frame = [None]  # return value
-                            btnFrm.params.parent = [None]
                             paramVal = getattr(objFrm.params, param[0])
-                            btnFrm.params.label = ["  '" + param[0] + "' " + Wye.dType.tostring(
-                                param[1]) + " = " + str(paramVal)]
-                            btnFrm.params.callback = [WyeUILib.ObjectDebugger.DebugParamCallback]  # button callback
+                            label = " '" + param[0] + "' " + Wye.dType.tostring(param[1]) + " = " + str(paramVal)
+                            btnFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, label, WyeUILib.ObjectDebugger.DebugParamCallback)
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, dialog frame
-                            WyeUILib.InputButton.run(btnFrm)
 
                             attrIx += 1
-
                     # else no params
                     else:
                         WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no parameters>", layout=Wye.layout.ADD_RIGHT)
@@ -9268,8 +9305,6 @@ class WyeUILib(Wye.staticObj):
                             frame.vars.varInpLst[0].append(btnFrm)
                             btnFrm.params.optData = [(attrIx, btnFrm, dlgFrm, objFrm, frame)]  # button row, dialog frame
                             attrIx += 1
-
-
                     # else this space intentionally left blank
                     else:
                         WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no variables>")
@@ -9457,6 +9492,25 @@ class WyeUILib(Wye.staticObj):
             else:
                 varDescr = objFrm.verb.varDescr
 
+            # if sysDebug, update frame values
+            if Wye.allowSysDebug and len(frame.vars.sysDbgFrms[0]) > 0:
+                sysStr = Wye.mode.tostring(objFrm.verb.mode) if hasattr(objFrm.verb, "mode") else "---"
+                frame.vars.sysDbgFrms[0][0].verb.setLabel(frame.vars.sysDbgFrms[0][0], "  mode: " + sysStr)
+
+                sysStr = str(objFrm.verb.autoStart) if hasattr(objFrm.verb, "autoStart") else "---"
+                frame.vars.sysDbgFrms[0][1].verb.setLabel(frame.vars.sysDbgFrms[0][1], "  autoStart: " + sysStr)
+
+                sysStr = Wye.dType.tostring(objFrm.verb.dType) if hasattr(objFrm.verb, "dType") else "---"
+                frame.vars.sysDbgFrms[0][2].verb.setLabel(frame.vars.sysDbgFrms[0][2], "  dType: " + sysStr)
+
+                sysStr = Wye.cType.tostring(objFrm.verb.cType) if hasattr(objFrm.verb, "cType") else "---"
+                frame.vars.sysDbgFrms[0][3].verb.setLabel(frame.vars.sysDbgFrms[0][3], "  cType: " + sysStr)
+
+                sysStr = Wye.parTermType.tostring(objFrm.verb.parTermType) if hasattr(objFrm.verb, "parTermType") else "---"
+                frame.vars.sysDbgFrms[0][4].verb.setLabel(frame.vars.sysDbgFrms[0][4], "  parTermType: " + sysStr)
+
+                frame.vars.sysDbgFrms[0][5].verb.setLabel(frame.vars.sysDbgFrms[0][5], "  PC: " + str(objFrm.PC))
+
             attrIx = 0
             # clear any previous row
             #print("ObjectDebugger refresh: clear rows")
@@ -9470,7 +9524,7 @@ class WyeUILib(Wye.staticObj):
                 # update the given input
                 var = varDescr[attrIx]
                 varVal = getattr(objFrm.vars, var[0])
-                btnFrm.verb.setLabel(btnFrm, "  '" + var[0] + "' " + Wye.dType.tostring(var[1]) + " = " + str(varVal[0]))
+                btnFrm.verb.setLabel(btnFrm, " '" + var[0] + "' " + Wye.dType.tostring(var[1]) + " = " + str(varVal[0]))
                 attrIx += 1
 
             dbgFrm = objFrm

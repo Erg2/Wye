@@ -14,13 +14,13 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("MBtn","I",1),
-        ("shift","B",1),
-        ("ctrl","B",1),
-        ("alt","B",1),
-        ("position","FL",1))
-    varDescr =        ()
+    paramDescr =  (
+        ("MBtn",Wye.dType.INTEGER,1),
+        ("shift",Wye.dType.BOOL,1),
+        ("ctrl",Wye.dType.BOOL,1),
+        ("alt",Wye.dType.BOOL,1),
+        ("position",Wye.dType.FLOAT_LIST,1))
+    varDescr =  ()
     codeDescr =        (
         ("Code","if not frame.params.position:  # DEBUG - null param not supposed to happen"),
         ("Code","    print('>>>>> ClickMouse position is null!')  "),
@@ -60,10 +60,10 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("nFrames","I",1),)
-    varDescr =        (
-        ("frameCt","I",0),)
+    paramDescr =  (
+        ("nFrames",Wye.dType.INTEGER,1))
+    varDescr =  (
+        ("frameCt",Wye.dType.INTEGER,0))
     codeDescr =        (
         ("Label","Loop"),
         ("IfGoTo","frame.vars.frameCt[0] >= frame.params.nFrames[0]","Done"),
@@ -90,16 +90,16 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("MBtn","I",1),
-        ("shift","B",1),
-        ("ctrl","B",1),
-        ("alt","B",1),
-        ("startPos","FL",1),
-        ("endPos","FL",1),
-        ("nFrames","I",1))
-    varDescr =        (
-        ("frameNum","I",0),)
+    paramDescr =  (
+        ("MBtn",Wye.dType.INTEGER,1),
+        ("shift",Wye.dType.BOOL,1),
+        ("ctrl",Wye.dType.BOOL,1),
+        ("alt",Wye.dType.BOOL,1),
+        ("startPos",Wye.dType.FLOAT_LIST,1),
+        ("endPos",Wye.dType.FLOAT_LIST,1),
+        ("nFrames",Wye.dType.INTEGER,1))
+    varDescr =  (
+        ("frameNum",Wye.dType.INTEGER,0))
     codeDescr =        (
         ("IfGoTo","frame.vars.frameNum[0] > frame.params.nFrames","Done"),
         ("Code","frac = frame.vars.frameNum[0] / params.nFrames[0]"),
@@ -137,9 +137,9 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("dir","I",1),)
-    varDescr =        ()
+    paramDescr =  (
+        ("dir",Wye.dType.INTEGER,1))
+    varDescr =  ()
     codeDescr =        (
         ("Code","WyeCore.focusManager._mouseHandler.mouseWheel(frame.params.dir[0])"),)
 
@@ -161,12 +161,12 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("tag","S","None"),
-        ("cleanUpObjs","OL","None"),
-        ("dbgCt","I",0))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("tag",Wye.dType.STRING,"None"),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,"None"),
+        ("dbgCt",Wye.dType.INTEGER,0))
     codeDescr =        (
         ("Code","frame.vars.cleanUpObjs[0] = []"),
         ("Code","frame.vars.gObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.05,.01,.05], pos=[0,0,0])"),
@@ -202,8 +202,8 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        ()
+    paramDescr =  ()
+    varDescr =  ()
     codeDescr =        (
         ("Code","#<your code here>"),
         ("Code","from panda3d.core import WindowProperties #"),
@@ -229,11 +229,11 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("lblFrm","O",None),
-        ("camLblFrm","O",None),
-        ("dlgFrm","O",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("lblFrm",Wye.dType.OBJECT,None),
+        ("camLblFrm",Wye.dType.OBJECT,None),
+        ("dlgFrm",Wye.dType.OBJECT,None))
     codeDescr =        (
         ("Code","dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog('Mouse Position', None, formatLst=['NO_OK']) #"),
         ("Code","frame.vars.dlgFrm[0] = dlgFrm "),
@@ -282,10 +282,10 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("position","FL",1),
-        ("Hpr","FL",1))
-    varDescr =        ()
+    paramDescr =  (
+        ("position",Wye.dType.FLOAT_LIST,1),
+        ("Hpr",Wye.dType.FLOAT_LIST,1))
+    varDescr =  ()
     codeDescr =        (
         ("Code","base.camera.setPos(frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2]) #"),
         ("Code","base.camera.setHpr(frame.params.Hpr[0][0], frame.params.Hpr[0][1], frame.params.Hpr[0][2]) #"))
@@ -308,9 +308,9 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("newVar","A",None),)
+    paramDescr =  ()
+    varDescr =  (
+        ("newVar",Wye.dType.ANY,None))
     codeDescr =        (
         ("Code","pass #"),
         ("Code","#"),
@@ -340,9 +340,9 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("key","I",1),)
-    varDescr =        ()
+    paramDescr =  (
+        ("key",Wye.dType.INTEGER,1))
+    varDescr =  ()
     codeDescr =        (
         ("Code","WyeCore.World.keyHandler.controlKeyFunc(frame.params.key[0]) #"),)
 
@@ -364,9 +364,9 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("key","S",1),)
-    varDescr =        ()
+    paramDescr =  (
+        ("key",Wye.dType.STRING,1))
+    varDescr =  ()
     codeDescr =        (
         ("Code","WyeCore.World.keyHandler.keyFunc(frame.params.key[0])"),)
 
@@ -388,10 +388,10 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        (
-        ("position","FL",1,"[0,0]"),)
-    varDescr =        (
-        ("fakeMouseFrm","O",None),)
+    paramDescr =  (
+        ("position",Wye.dType.FLOAT_LIST,1,"[0,0]"))
+    varDescr =  (
+        ("fakeMouseFrm",Wye.dType.OBJECT,None))
     codeDescr =        (
         ("Code","#print('SetFakeMousePos position', frame.params.position[0])"),
         ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
@@ -449,8 +449,8 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        ()
+    paramDescr =  ()
+    varDescr =  ()
     codeDescr =        (
         ("Code","from panda3d.core import WindowProperties #"),
         ("Code","props = WindowProperties() #"),
@@ -475,8 +475,8 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        ()
+    paramDescr =  ()
+    varDescr =  ()
     codeDescr =        (
         ("Code","WyeCore.World.startActiveObject(WyeCore.libs.RecordPlaybackLib.FakeMouse)"),)
 
@@ -498,9 +498,9 @@ class RecordPlaybackLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("fakeMouseFrm","A",None),)
+    paramDescr =  ()
+    varDescr =  (
+        ("fakeMouseFrm",Wye.dType.ANY,None))
     codeDescr =        (
         ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("Code","if not frame.vars.fakeMouseFrm[0]:  # if mouse not running, nevermind!"),

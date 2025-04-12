@@ -14,10 +14,10 @@ class WyeTestLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("ptrFrm","O",None),
-        ("count","I",0))
+    paramDescr =  ()
+    varDescr =  (
+        ("ptrFrm",Wye.dType.OBJECT,None),
+        ("count",Wye.dType.INTEGER,0))
     codeDescr =        (
         ("WyeCore.libs.RecordPlaybackLib.StartFakeMouse",),
         ("Code","#<your code here>"),
@@ -60,9 +60,9 @@ class WyeTestLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("newVar","A",None),)
+    paramDescr =  ()
+    varDescr =  (
+        ("newVar",Wye.dType.ANY,None))
     codeDescr =        (
         ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Hide Mouse', position=[0,0,-.5])"),
         ("WyeCore.libs.RecordPlaybackLib.HideMouse",),
@@ -91,12 +91,12 @@ class WyeTestLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("count","I",0),
-        ("testPtr","O",None),
-        ("testPtrFrm","O",None),
-        ("fakeMouse","O",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("count",Wye.dType.INTEGER,0),
+        ("testPtr",Wye.dType.OBJECT,None),
+        ("testPtrFrm",Wye.dType.OBJECT,None),
+        ("fakeMouse",Wye.dType.OBJECT,None))
     codeDescr =        (
         ("WyeCore.libs.RecordPlaybackLib.HideMouse",),
         ("WyeCore.libs.RecordPlaybackLib.StartFakeMouse",),

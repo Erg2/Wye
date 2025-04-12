@@ -5,7 +5,6 @@ class MyFlashingFishLib:
     WyeCore.Utils.buildLib(MyFlashingFishLib)
   canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
-
   class MyFlashingFishLib_rt:
    pass #1
 
@@ -15,26 +14,20 @@ class MyFlashingFishLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (0.0,15.0,-4.0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.1)),
-        ("dAngle","FL",
-          (0.0,0.0,0.0)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (1,2,10)),
-        ("color","FL",
-          (0.75,0.75,0.75,1.0)),
-        ("skew","F",0),
-        ("delta","F",0),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(0.0, 15.0, -4.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.1)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.0)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(1, 2, 10)),
+        ("color",Wye.dType.FLOAT_LIST,(0.75, 0.75, 0.75, 1.0)),
+        ("skew",Wye.dType.FLOAT,0),
+        ("delta",Wye.dType.FLOAT,0),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
         ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
@@ -82,7 +75,6 @@ class MyFlashingFishLib:
 
     def _build(rowRef):
         # print("Build ",FlashingTestFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('FlashingTestFish', MyFlashingFishLib.FlashingTestFish.codeDescr, MyFlashingFishLib.FlashingTestFish, rowIxRef)
 
@@ -99,26 +91,20 @@ class MyFlashingFishLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (-4.0,15.0,4.0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.1)),
-        ("dAngle","FL",
-          (0.0,0.0,0.0)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (1,5,10)),
-        ("color","FL",
-          (0.5,0.5,0.5,1)),
-        ("skew","F",0),
-        ("delta","F",0),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(-4.0, 15.0, 4.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.1)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.0)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(1, 5, 10)),
+        ("color",Wye.dType.FLOAT_LIST,(0.5, 0.5, 0.5, 1)),
+        ("skew",Wye.dType.FLOAT,0),
+        ("delta",Wye.dType.FLOAT,0),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
         ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
@@ -166,7 +152,6 @@ class MyFlashingFishLib:
 
     def _build(rowRef):
         # print("Build ",FlyerTestFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('FlyerTestFish', MyFlashingFishLib.FlyerTestFish.codeDescr, MyFlashingFishLib.FlyerTestFish, rowIxRef)
 
@@ -183,26 +168,20 @@ class MyFlashingFishLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (4.0,15.0,2.0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.1)),
-        ("dAngle","FL",
-          (0.0,0.0,0.0)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (2,5,15)),
-        ("color","FL",
-          (0.5,0.5,0.5,1)),
-        ("skew","F",0),
-        ("delta","F",0),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(4.0, 15.0, 2.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.1)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.0)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(2, 5, 15)),
+        ("color",Wye.dType.FLOAT_LIST,(0.5, 0.5, 0.5, 1)),
+        ("skew",Wye.dType.FLOAT,0),
+        ("delta",Wye.dType.FLOAT,0),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
         ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
@@ -250,7 +229,6 @@ class MyFlashingFishLib:
 
     def _build(rowRef):
         # print("Build ",SmallFlashingFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('SmallFlashingFish', MyFlashingFishLib.SmallFlashingFish.codeDescr, MyFlashingFishLib.SmallFlashingFish, rowIxRef)
 

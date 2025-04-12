@@ -13,6 +13,7 @@ from panda3d.core import WindowProperties
 # Wye container class that holds Wye classes
 class Wye:
 
+    allowSysDebug = False   # allow debugging systemLib
     debugOn = 0             # > 0 if exec should check debug flags
     breakAll = False        # true if stop everything but system objects
     soundOn = True
