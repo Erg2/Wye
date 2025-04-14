@@ -1080,7 +1080,7 @@ class WyeCore(Wye.staticObj):
                 self.getObjectHit(LPoint2f(x,y))
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    print("Picker objSelectEvent: Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
+                    #print("Picker objSelectEvent: Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                         # if there's an object editor
@@ -1395,9 +1395,9 @@ class WyeCore(Wye.staticObj):
 
             # Wye verb
             if wyeTuple[0] and wyeTuple[0] not in ["Var", "Const", "Var=", "Par=", "Expr", "Code", "CodeBlock"]:     # if there is a verb here
-                #print("parseWyeTuple: lib.verb tuple", wyeTuple)
+              try:
+                #print("parseWyeTuple: parse lib.verb from tuple", wyeTuple)
                 #Pick it apart to locate lib and verb
-                #print("parseWyeTuple parse ", wyeTuple)
                 tupleParts = wyeTuple[0].split('.')
                 if len(tupleParts) >= 2:
                     libName = tupleParts[-2]
@@ -1609,6 +1609,8 @@ class WyeCore(Wye.staticObj):
                     #    codeText += "    # "+lib.__name__+"."+verbName+" WARNING: library '"+verbName+"' not loaded in Wye\n"
                 else:
                     print("parseWyeTuple ERROR: expected lib.verb in", wyeTuple, " tupleParts=", tupleParts)
+              except Exception as e:
+                  print("parseWyeTuple: failed to parse lib.verb from tuple", wyeTuple, "\n", str(e), "\n", traceback.format_exc())
 
             # Tuple has no verb, just raw Python code
             else:

@@ -281,8 +281,8 @@ class WyeUILib(Wye.staticObj):
             self.pos = [0,0]        # filled in with most recent mouse position
 
         def mouseMove(self, x, y, mb1, mb2, mb3, shift, ctrl, alt):
-            if Wye.UITest:
-                print("mouseMove UITest=True: x,y", x, ",", y, 'mb', mb1, "", mb2, "", mb3, " shift", shift, " ctrl", ctrl, " alt", alt)
+            #if Wye.UITest:
+            #    print("mouseMove UITest=True: x,y", x, ",", y, 'mb', mb1, "", mb2, "", mb3, " shift", shift, " ctrl", ctrl, " alt", alt)
             global base
             global render
 
@@ -2165,6 +2165,7 @@ class WyeUILib(Wye.staticObj):
             cardPath.reparentTo(dlgNodePath)
             cardPath.setPos((-.5, .1, 1.2 - ht))
             cardPath.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
+            cardPath.setLightOff()
             frame.vars.bgndGObj[0] = cardPath
 
             # background outline
@@ -2181,6 +2182,7 @@ class WyeUILib(Wye.staticObj):
             oCardPath.reparentTo(dlgNodePath)
             oCardPath.setPos((-.6, .2, 1.1 - ht))
             oCardPath.setColor(outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3])
+            oCardPath.setLightOff()
             frame.vars.outlineGObj[0] = oCardPath
 
         # dialog's input list changed, update all row positions
@@ -3823,7 +3825,7 @@ class WyeUILib(Wye.staticObj):
                 case 1:
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                     frame.status = Wye.status.SUCCESS  # done
-                    print("******** EditMainDialog: Done")
+                    print("EditMainDialog: Done")
 
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.editMenu)
@@ -4593,7 +4595,7 @@ class WyeUILib(Wye.staticObj):
 
                 case 1:
                     dlgFrm = frame.SP.pop()
-                    print("******** EditLibDialog exit ", dlgFrm.params.title[0])
+                    print("EditLibDialog exit ", dlgFrm.params.title[0])
                     frame.status = Wye.status.SUCCESS
 
 
@@ -5321,7 +5323,7 @@ class WyeUILib(Wye.staticObj):
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                     frame.status = dlgFrm.status
                     WyeUILib.EditVerb.activeVerbs.pop(frame.vars.activeKey[0])
-                    print("ObjEditor: dlg", dlgFrm.params.title[0]," returned status", dlgFrm.params.retVal[0])  # Wye.status.tostring(frame.))
+                    #print("ObjEditor: dlg", dlgFrm.params.title[0]," returned status", dlgFrm.params.retVal[0])  # Wye.status.tostring(frame.))
 
                     # pass dlg status back to our caller
                     frame.params.retVal = dlgFrm.params.retVal
@@ -10282,7 +10284,7 @@ Wye Overview:
 
 
         def mouseCallback(frame, mouseMove):
-            print("RecordPlayback mouseCalled: mouseMove", mouseMove)
+            #print("RecordPlayback mouseCalled: mouseMove", mouseMove)
             if mouseMove.m1Pressed:
                 #print("m1Pressed", mouseMove.pos, " recording", frame.vars.recording[0])
                 if frame.vars.recording[0]:
@@ -10424,7 +10426,6 @@ Wye Overview:
                 recMgrFrm = data[1][0]
                 libFrm = recMgrFrm.vars.libNameFrm[0]
                 verbFrm = recMgrFrm.vars.verbNameFrm[0]
-                overWriteFrm = recMgrFrm.vars.libNameFrm[0]
                 startStopFrm = recMgrFrm.vars.startStopFrm[0]
 
                 # if stopping, go to stop case
@@ -10433,10 +10434,6 @@ Wye Overview:
                     startStopFrm.verb.setLabel(startStopFrm, "Start")       # switch lavel back to start
                     startStopFrm.verb.setValue(startStopFrm, False)         # causes recursion
                     frame.PC = 3
-                # start recording, drop through to case 0
-                else:
-                    startStopFrm.verb.setLabel(startStopFrm, "Stop")       # switch lave to Stop
-                    startStopFrm.verb.setValue(startStopFrm, True)          # causes recursion
 
                 match (frame.PC):
                     # start recording
@@ -10469,6 +10466,9 @@ Wye Overview:
                             return
 
                         # if get this far, go to start recording
+                        startStopFrm.verb.setLabel(startStopFrm, "Stop")  # switch lave to Stop
+                        startStopFrm.verb.setValue(startStopFrm, True)  # causes recursion
+
                         frame.PC = 2
                         frame.vars.processing[0] = False
 
@@ -10478,6 +10478,9 @@ Wye Overview:
 
                         # if user wants to overwrite, doit
                         if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
+                            # go to start recording
+                            startStopFrm.verb.setLabel(startStopFrm, "Stop")  # switch lave to Stop
+                            startStopFrm.verb.setValue(startStopFrm, True)  # causes recursion
                             frame.PC = 2
 
                         # else cancel
@@ -10532,17 +10535,17 @@ Wye Overview:
                         code = [
                             ("WyeCore.libs.RecordPlaybackLib.StartTest",),
                         ]
-                        m1Ct = 0
-                        m1Start = [0,0]
                         m1Op = None     # tuple inserted in descr
-                        m2Ct = 0
-                        m2Start = [0,0]
                         m2Op = None
-                        m3Ct = 0
-                        m3Start = [0,0]
                         m3Op = None
+                        m1Mv = None
+                        m2Mv = None
+                        m3Mv = None
+                        m1Ct = 0
+                        m2Ct = 0
+                        m3Ct = 0
 
-                        lastMUp = None
+                        lastMUpPos = None
 
                         # loop for events in list
                         for evt in recMgrFrm.vars.eventList[0]:
@@ -10563,41 +10566,59 @@ Wye Overview:
 
                                 case "key":
                                     key = evt[1]
-                                    tuple = ("WyeCore.libs.RecordPlaybackLib.SendKey",
-                                             ("Expr","['%s']" % key)),
-                                    code.append(tuple)
-                                    # put in a little pause
-                                    tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay",
-                                                ("Expr", "[10]"))
-                                    code.append(tupleDly)
+                                    # only use printable chars
+                                    if key >= ' ':
+                                        tuple = ("WyeCore.libs.RecordPlaybackLib.SendKey", ("Expr","['%s']" % key))
+                                        code.append(tuple)
+                                        # put in a little pause
+                                        tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay",
+                                                    ("Expr", "[10]"))
+                                        code.append(tupleDly)
 
                                 case "controlKey":
                                     controlKey = evt[1]
                                     if controlKey != Wye.ctlKeys.CTL_S and controlKey != Wye.ctlKeys.CTL_R:  # ignore recording cmds
-                                        tuple = ("WyeCore.libs.RecordPlaybackLib.SendKey",
-                                                 ("Expr","['%s']" % Wye.ctlKeys.tostring(controlKey))),
+                                        tuple = ("WyeCore.libs.RecordPlaybackLib.SendControlKey",
+                                                 ("Expr","['%s']" % Wye.ctlKeys.tostring(controlKey)))
                                         code.append(tuple)
                                         # put in a little pause
-                                        tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay",
-                                                 ("Expr", "[10]"))
+                                        tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay", ("Expr", "[10]"))
                                         code.append(tupleDly)
 
-                                case "m1Pressed":
-                                    m1Ct = 0
-                                    m1Start = evt[1:]
-                                    start = evt[1]
-                                    #print("m1Pressed, m1Start", m1Start)
+                                # handle all mouse buttons at once
+                                case "m1Pressed" | "m2Pressed" | "m3Pressed":
+                                    match (evt[0]):
+                                        case "m1Pressed":
+                                            m1Ct = 0
+                                            m1Start = evt[1:]
+                                            m1Mv = ["WyeLib.noop", ]
+                                            mv = m1Mv
+                                            #print("m1Pressed, m1Start", m1Start)
 
-                                    # if there was a previous mouse pos, do a move to this one
-                                    if lastMUp:
-                                        tupleMv = ("WyeCore.libs.RecordPlaybackLib.DoMouseMove",
+                                        case "m2Pressed":
+                                            m2Ct = 0
+                                            m2Start = evt[1:]
+                                            m2Mv = ["WyeLib.noop", ]
+                                            mv = m2Mv
+
+                                        case "m3Pressed":
+                                            m3Ct = 0
+                                            m3Start = evt[1:]
+                                            m3Mv = ["WyeLib.noop", ]
+                                            mv = m3Mv
+
+                                    start = evt[1]
+                                    # if there was a previous mouse pos, do a move to this one with nothing pressed
+                                    if lastMUpPos:
+                                        mv.extend(
+                                         (("Expr", "[0]"),
                                          ("Expr", "[0]"),
                                          ("Expr", "[0]"),
                                          ("Expr", "[0]"),
-                                         ("Expr", "[0]"),
-                                         ("Expr", "[[%f,%f]]" % (lastMUp[0], lastMUp[1])),
+                                         ("Expr", "[[%f,%f]]" % (lastMUpPos[0], lastMUpPos[1])),
                                          ("Expr", "[[%f,%f]]" % (start[0], start[1])),
-                                         ("Expr", "[30]"))
+                                         ("Expr", "[30]")))
+                                        code.append(mv)
                                     # else first mouse pos, just put it there
                                     else:
                                         # move fake mouse to posit and pause before doing mouse click
@@ -10609,70 +10630,104 @@ Wye Overview:
                                              ("Expr", "[30]"))
                                     code.append(tuple2)
 
-                                    # put placeholder in verb list filled in on mouse up
-                                    m1Op = ["WyeLib.noop", ]
-                                    code.append(m1Op)
+                                    match (evt[0]):
+                                        case "m1Pressed":
+                                            m1Op = ["WyeLib.noop", ]
+                                            code.append(m1Op)  # put placeholder in verb list filled in on mouse up
+
+                                        case "m2Pressed":
+                                            m2Op = ["WyeLib.noop", ]
+                                            code.append(m2Op)  # put placeholder in verb list filled in on mouse up
+
+                                        case "m3Pressed":
+                                            m3Op = ["WyeLib.noop", ]
+                                            code.append(m3Op)  # put placeholder in verb list filled in on mouse up
 
                                 case "m1down":
                                     if m1Op:        # skip star-recording mouse events
                                         m1Ct += 1
 
-                                case "m1Released":
-                                    if m1Op:        # skip star-recording mouse events
-                                        # process mouse start/end to see if mouse moved or not
-                                        m1End = evt[1]
-                                        lastMUp = (m1End[0], m1End[1])
-                                        start = m1Start[0]
-                                        shift = m1Start[1]
-                                        ctl = m1Start[2]
-                                        alt = m1Start[3]
-                                        dx = start[0]-m1End[0]
-                                        dy = start[1]-m1End[1]
-
-                                        # is this a move?
-                                        if dx*dx + dy*dy > (.001 * .001):
-                                            # do mouse move
-                                            m1Op[0] = "WyeCore.libs.RecordPlaybackLib.DoMouseMove"
-                                            m1Op.append(("Expr", "[1]"))
-                                            m1Op.append(("Expr", "[%s]" % str(shift)))
-                                            m1Op.append(("Expr", "[%s]" % str(ctl)))
-                                            m1Op.append(("Expr", "[%s]" % str(alt)))
-                                            m1Op.append(("Expr", "[[%f,%f]]" % (start[0], start[1])))
-                                            m1Op.append(("Expr", "[[%f,%f]]" % (m1End[0], m1End[1])))
-                                            m1Op.append(("Expr", "[%d]" % m1Ct))
-                                        else:
-                                            # do mouse click
-                                            m1Op[0] = "WyeCore.libs.RecordPlaybackLib.ClickMouse"
-                                            m1Op.append(("Expr", "[1]"))
-                                            m1Op.append(("Expr", "[%s]" % str(shift)))
-                                            m1Op.append(("Expr", "[%s]" % str(ctl)))
-                                            m1Op.append(("Expr", "[%s]" % str(alt)))
-                                            m1Op.append(("Expr", "[[%f,%f]]" % (m1End[0], m1End[1])))
-
-
-                                case "m2Pressed":
-                                    m2Ct = 0
-                                    m2Start = evt[1]
-
                                 case "m2down":
-                                    pass
-
-                                case "m2Released":
-                                    pass
-
-
-                                case "m3Pressed":
-                                    m3Ct = 0
-                                    m3Start = evt[1]
+                                    if m2Op:        # skip star-recording mouse events
+                                        m2Ct += 1
 
                                 case "m3down":
-                                    pass
+                                    if m3Op:        # skip star-recording mouse events
+                                        m3Ct += 1
 
-                                case "m3Released":
-                                    pass
+                                case "m1Released" | "m2Released" | "m3Released":
+                                    match (evt[0]):
+                                        case "m1Released":
+                                            mp = m1Op
+                                            mb = 1
+                                            ct = m1Ct
+                                            if mp:
+                                                mStart = m1Start[0]
+                                                shift = m1Start[1]
+                                                ctl = m1Start[2]
+                                                alt = m1Start[3]
+                                                mv = m1Mv
+
+                                        case "m2Released":
+                                            mp = m2Op
+                                            mb = 2
+                                            ct = m2Ct
+                                            if mp:
+                                                mStart = m2Start[0]
+                                                shift = m2Start[1]
+                                                ctl = m2Start[2]
+                                                alt = m2Start[3]
+                                                mv = m2Mv
+
+                                        case "m3Released":
+                                            mp = m3Op
+                                            mb = 3
+                                            ct = m3Ct
+                                            if mp:
+                                                mStart = m3Start[0]
+                                                shift = m3Start[1]
+                                                ctl = m3Start[2]
+                                                alt = m3Start[3]
+                                                mv = m3Mv
+
+                                    if mp:        # skip beginning-of-recording mouse events that don't include a mouse press
+                                        # process mouse start/end to see if mouse moved or not
+                                        mEnd = evt[1]
+                                        lastMUpPos = (mEnd[0], mEnd[1])
+
+                                        dx = mStart[0]-mEnd[0]
+                                        dy = mStart[1]-mEnd[1]
+
+                                        # is this a move?
+                                        #print("RecordStartStopCallback", evt[0], " mStart", mStart, " end", mEnd, " dx,dy", dx,"",dy)
+                                        mv[0] = "WyeCore.libs.RecordPlaybackLib.DoMouseMove"    # change pre-move from noop to move
+                                        if dx*dx + dy*dy > (.001 * .001):
+                                            # do mouse move
+                                            mp[0] = "WyeCore.libs.RecordPlaybackLib.DoMouseMove"
+                                            mp.append(("Expr", "[%d]" % mb))
+                                            mp.append(("Expr", "[%s]" % str(shift)))
+                                            mp.append(("Expr", "[%s]" % str(ctl)))
+                                            mp.append(("Expr", "[%s]" % str(alt)))
+                                            mp.append(("Expr", "[[%f,%f]]" % (mStart[0], mStart[1])))
+                                            mp.append(("Expr", "[[%f,%f]]" % (mEnd[0], mEnd[1])))
+                                            mp.append(("Expr", "[%d]" % ct))
+                                        else:
+                                            # do mouse click
+                                            mp[0] = "WyeCore.libs.RecordPlaybackLib.ClickMouse"
+                                            mp.append(("Expr", "[%d]" % mb))
+                                            mp.append(("Expr", "[%s]" % str(shift)))
+                                            mp.append(("Expr", "[%s]" % str(ctl)))
+                                            mp.append(("Expr", "[%s]" % str(alt)))
+                                            mp.append(("Expr", "[[%f,%f]]" % (mEnd[0], mEnd[1])))
+
 
                                 case "mouseWheel":
-                                    pass
+                                    dir = evt[1]
+                                    tuple = ("WyeCore.libs.RecordPlaybackLib.DoMouseWheel", ("Expr","[%d]" % dir))
+                                    code.append(tuple)
+                                    # put in a little pause
+                                    tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay", ("Expr", "[4]"))
+                                    code.append(tupleDly)
 
                         # write end of test, close up and exit
                         tuple = ("WyeCore.libs.RecordPlaybackLib.FinishTest",)

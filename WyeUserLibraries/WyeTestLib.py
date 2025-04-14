@@ -183,7 +183,7 @@ class WyeTestLib:
           ("Expr","[0] # <put parameter here>"),
           ("Expr","[[-.9563, -.8301]] # <put parameter here>")),
         ("WyeCore.libs.RecordPlaybackLib.FinishTest",),
-        ("WyeLib.noop"))
+        ("WyeLib.noop",))
 
     def _build(rowRef):
         # print("Build ",TestKeys)
