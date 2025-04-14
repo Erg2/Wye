@@ -692,7 +692,7 @@ class Wye:
 
     # UI text color
     class color:
-        ACTIVE_COLOR = (1, 1, .5, 1)                # something for the user to click on
+        ACTIVE_COLOR = (1, .9, 0, 1)                # something for the user to click on
         SELECTED_COLOR = (0, 1, 0, 1)               # Text box active
         SELECTED_BG_COLOR = (.25, .75, .25, 1)      # highlight dialog row
         LABEL_COLOR = (.8, .8, .8, 1)               # informational

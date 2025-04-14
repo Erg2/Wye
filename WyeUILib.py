@@ -10197,6 +10197,7 @@ Wye Overview:
                     ("overwriteFrm", Wye.dType.OBJECT, None),
                     ("badLib", Wye.dType.BOOL, False),
                     ("badVerb", Wye.dType.BOOL, False),
+                    ("warnVerb", Wye.dType.BOOL, False),
                     )
 
         def start(stack):
@@ -10223,7 +10224,8 @@ Wye Overview:
                                                    WyeUILib.RecordManager.CheckExistsCallback, (frame,))
 
 
-                    frame.vars.overwriteFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Overwrite Existing Verb", [True])
+                    frame.vars.overwriteFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Overwrite Existing Verb", [False],
+                                                   WyeUILib.RecordManager.CheckExistsCallback, (frame,))
 
                     WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Start",
                                         WyeUILib.RecordManager.RecordStartCallback, (frame,))
@@ -10315,7 +10317,9 @@ Wye Overview:
                 else:
                     lib = None
 
-                print("CheckExistsCallback: verbName", verbName, " lib", lib.__name__ if lib else "None", " overwriteFlag", overFlag)
+                #print("CheckExistsCallback: verbName", verbName, " lib", lib.__name__ if lib else "None", " overwriteFlag", overFlag)
+
+                # if invalid verb or would overwrite existing and user hasn't ok'd that
                 if not verbName or (lib and hasattr(lib, verbName) and not overFlag):
                     if not recMgrFrm.vars.badVerb[0]:
                         verbFrm.verb.setLabelColor(verbFrm, Wye.color.ERROR_COLOR)
@@ -10324,6 +10328,7 @@ Wye Overview:
                     if recMgrFrm.vars.badVerb[0]:
                         verbFrm.verb.setLabelColor(verbFrm, Wye.color.LABEL_COLOR)
                         recMgrFrm.vars.badVerb[0] = False
+
 
 
         # start recording
