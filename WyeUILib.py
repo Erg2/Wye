@@ -118,7 +118,6 @@ class WyeUILib(Wye.staticObj):
                 #print("CopyPasteDisplay: Start")
                 f = Wye.codeFrame(WyeUILib.CopyPasteManager.CopyPasteDisplay, stack)  # not stopped by breakAll or debugger debugger
                 f.systemObject = True
-                f.vars.rows[0] = []
                 return f
 
             def run(frame):
@@ -796,7 +795,7 @@ class WyeUILib(Wye.staticObj):
                     return True
                 case Wye.ctlKeys.CTL_S:       # stop recording
                     if WyeCore.recorder:
-                        WyeCore.recorder.verb.Stop()
+                        WyeUILib.Dialog.doCallback(WyeCore.recorder.vars.dlgFrm[0], WyeCore.recorder.vars.startStopFrm[0], "CTL_S")
                     return True
                 case Wye.ctlKeys.CTL_W:       # show main HUD
                     if not WyeCore.HUD:
@@ -860,7 +859,7 @@ class WyeUILib(Wye.staticObj):
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.InputLabel, stack)
             frame.vars.gWidgetStack[0] = []
-            frame.vars.tags[0] = []     # no clickable tags
+            #frame.vars.tags[0] = []     # no clickable tags
             return frame
 
         def run(frame):
@@ -955,8 +954,8 @@ class WyeUILib(Wye.staticObj):
                     )
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.InputText, stack)
-            frame.vars.gWidgetStack[0] = []
-            frame.vars.tags[0] = []  # create local stack
+            #frame.vars.gWidgetStack[0] = []
+            #frame.vars.tags[0] = []  # create local stack
             return frame
 
         def run(frame):
@@ -1099,8 +1098,8 @@ class WyeUILib(Wye.staticObj):
 
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.InputInteger, stack)
-            frame.vars.gWidgetStack[0] = []
-            frame.vars.tags[0] = []  # create local stack
+            #frame.vars.gWidgetStack[0] = []
+            #frame.vars.tags[0] = []  # create local stack
             return frame
 
         def display(frame, dlgFrm, pos):
@@ -1220,8 +1219,8 @@ class WyeUILib(Wye.staticObj):
 
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.InputFloat, stack)
-            frame.vars.gWidgetStack[0] = []
-            frame.vars.tags[0] = []  # create local stack
+            #frame.vars.gWidgetStack[0] = []
+            #frame.vars.tags[0] = []  # create local stack
             return frame
 
         def display(frame, dlgFrm, pos):
@@ -1336,8 +1335,8 @@ class WyeUILib(Wye.staticObj):
 
         def start(stack):
             frm = Wye.codeFrame(WyeUILib.InputButton, stack)
-            frm.vars.gWidgetStack[0] = []   # create local stack
-            frm.vars.tags[0] = []           # create local stack
+            #frm.vars.gWidgetStack[0] = []   # create local stack
+            #frm.vars.tags[0] = []           # create local stack
             return frm
 
         def run(frame):
@@ -1458,8 +1457,8 @@ class WyeUILib(Wye.staticObj):
                     )
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.InputCheckbox, stack)
-            frame.vars.gWidgetStack[0] = []
-            frame.vars.tags[0] = []  # create local stack
+            #frame.vars.gWidgetStack[0] = []
+            #frame.vars.tags[0] = []  # create local stack
             return frame
 
         def run(frame):
@@ -1659,9 +1658,9 @@ class WyeUILib(Wye.staticObj):
 
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.InputDropdown, stack)
-            frame.vars.gWidgetStack[0] = []
-            frame.vars.list[0] = []
-            frame.vars.tags[0] = []  # create local stack
+            #frame.vars.gWidgetStack[0] = []
+            #frame.vars.list[0] = []
+            #frame.vars.tags[0] = []  # create local stack
             return frame
 
         def run(frame):
@@ -1935,13 +1934,13 @@ class WyeUILib(Wye.staticObj):
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.Dialog, stack)
             # give frame unique lists
-            frame.vars.dlgWidgets[0] = []       # standard widgets common to all Dialogs
-            frame.vars.okTags[0] = []           # tags for OK buttons
-            frame.vars.canTags[0] = []          # tags for Cancel buttons
+            #frame.vars.dlgWidgets[0] = []       # standard widgets common to all Dialogs
+            #frame.vars.okTags[0] = []           # tags for OK buttons
+            #frame.vars.canTags[0] = []          # tags for Cancel buttons
             frame.vars.inpTags[0] = {}          # map input widget to input sequence number
-            frame.vars.clickedBtns[0] = []      # clicked button(s) being "flashed" (so user sees they were clicked)
+            #frame.vars.clickedBtns[0] = []      # clicked button(s) being "flashed" (so user sees they were clicked)
             frame.vars.radBtnDict[0] = {}  # dictionary of radio button groups in this dialog
-            frame.vars.topTags[0] = []
+            #frame.vars.topTags[0] = []
 
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
@@ -2756,12 +2755,12 @@ class WyeUILib(Wye.staticObj):
     class DropDown(Dialog):
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.DropDown, stack)
-            frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
-            frame.vars.okTags[0] = []         # tags for OK buttons
-            frame.vars.canTags[0] = []         # tags for Cancel buttons
+            #frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
+            #frame.vars.okTags[0] = []         # tags for OK buttons
+            #frame.vars.canTags[0] = []         # tags for Cancel buttons
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
-            frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
-            frame.vars.topTags[0] = []
+            #frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
+            #frame.vars.topTags[0] = []
 
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
@@ -2916,12 +2915,12 @@ class WyeUILib(Wye.staticObj):
     class HUDDialog(Dialog):
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.HUDDialog, stack)
-            frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
-            frame.vars.okTags[0] = []         # tags for OK buttons
-            frame.vars.canTags[0] = []         # tags for Cancel buttons
+            #frame.vars.dlgWidgets[0] = []      # standard widgets common to all Dialogs
+            #frame.vars.okTags[0] = []         # tags for OK buttons
+            #frame.vars.canTags[0] = []         # tags for Cancel buttons
             frame.vars.inpTags[0] = {}         # map input widget to input sequence number
-            frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
-            frame.vars.topTags[0] = []
+            #frame.vars.clickedBtns[0] = []     # clicked button(s) being "flashed" (so user sees they were clicked)
+            #frame.vars.topTags[0] = []
 
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
@@ -3651,7 +3650,7 @@ class WyeUILib(Wye.staticObj):
 
                 codeDescr = (
 # (None, ("print('MyTestVerb case 0: start - set up object')")),
-("Var=", "frame.vars.cleanUpObjs[0] = []"),
+#("Var=", "frame.vars.cleanUpObjs[0] = []"),
 ("WyeCore.libs.WyeLib.loadObject",
  (None, "[frame]"),
  (None, "frame.vars.gObj"),
@@ -3771,7 +3770,7 @@ class WyeUILib(Wye.staticObj):
         def start(stack):
             f = Wye.codeFrame(WyeUILib.EditMainDialog, stack)
             f.systemObject = True
-            f.vars.libRows[0] = []
+            #f.vars.libRows[0] = []
             return f
 
         def run(frame):
@@ -4501,7 +4500,7 @@ class WyeUILib(Wye.staticObj):
             # print("EditLibDialog started")
             f = Wye.codeFrame(WyeUILib.EditLibDialog, stack)
             f.modified = False
-            f.vars.rows[0] = []
+            #f.vars.rows[0] = []
             return f
 
         def run(frame):
@@ -8203,6 +8202,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.retVal = frame.vars.dlgStat
                         dlgFrm.params.title = ["Edit Parameter"]
                         dlgFrm.params.parent = [parentFrm]
+                        dlgFrm.okOnCr = [True]
                         #print("EditParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
                         dlgFrm.params.position = [(.5,-.5, -.5 + btnFrm.vars.position[0][2]),]
 
@@ -8350,7 +8350,7 @@ class WyeUILib(Wye.staticObj):
                 match (frame.PC):
                     case 0:
                         # build var dialog
-                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit Variable", parentFrm, (.5,-.5, -.5 + btnFrm.vars.position[0][2]))
+                        dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit Variable", parentFrm, (.5,-.5, -.5 + btnFrm.vars.position[0][2]), okOnCr=True)
 
                         # Var name
                         frame.vars.varName[0] = editVerbFrm.vars.newVarDescr[0][varIx][0]
@@ -9841,6 +9841,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.retVal = frame.vars.dlgStat
                         dlgFrm.params.title = ["Debug Variable"]
                         dlgFrm.params.parent = [parentFrm]
+                        dlgFrm.okOnCr = [True]
                         # print("DebugVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
                         dlgFrm.params.position = [(.5, -.5, -.5 + btnFrm.vars.position[0][2]), ]
 
@@ -10195,9 +10196,12 @@ Wye Overview:
                     ("verbNameFrm", Wye.dType.OBJECT, None),
                     ("dlgFrm", Wye.dType.OBJECT, None),
                     ("overwriteFrm", Wye.dType.OBJECT, None),
+                    ("startStopFrm", Wye.dType.OBJECT, None),
                     ("badLib", Wye.dType.BOOL, False),
                     ("badVerb", Wye.dType.BOOL, False),
-                    ("warnVerb", Wye.dType.BOOL, False),
+                    ("badVerbOverwrite", Wye.dType.BOOL, False),
+                    ("eventList", Wye.dType.OBJECT_LIST, None),
+                    ("recording", Wye.dType.BOOL, False)        # true if recording is running
                     )
 
         def start(stack):
@@ -10227,8 +10231,8 @@ Wye Overview:
                     frame.vars.overwriteFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Overwrite Existing Verb", [False],
                                                    WyeUILib.RecordManager.CheckExistsCallback, (frame,))
 
-                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Start",
-                                        WyeUILib.RecordManager.RecordStartCallback, (frame,))
+                    frame.vars.startStopFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Start", [False],
+                                        WyeUILib.RecordManager.RecordStartStopCallback, (frame,))
 
                     # get mouse and key events
                     WyeCore.keyCallbacks.append((WyeUILib.RecordManager.keyCallback, frame))
@@ -10253,23 +10257,56 @@ Wye Overview:
 
         def keyCallback(frame, key):
             #print("keyCallback: key", key)
+            if frame.vars.recording[0]:
+                frame.vars.eventList[0].append(("key", key))
             return False
 
 
         def controlKeyCallback(frame, keyCode):
-            print("controKey", Wye.ctlKeys.tostring(keyCode))
+            #print("controKey", Wye.ctlKeys.tostring(keyCode))
+            if frame.vars.recording[0]:
+                frame.vars.eventList[0].append(("controlKey", keyCode))
             return False
 
 
         def mouseCallback(frame, mouseMove):
             if mouseMove.m1Pressed:
-                print("mouse", mouseMove.pos, "", mouseMove.m1Down)
-            if mouseMove.m1Released:
-                print("mouse", mouseMove.pos, "", mouseMove.m1Down)
+                #print("mouse", mouseMove.pos, "", mouseMove.m1Down)
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m1Pressed", mouseMove.pos))
+            elif mouseMove.m1Released:
+                #print("mouse", mouseMove.pos, "", mouseMove.m1Down)
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m1Released", mouseMove.pos))
+            elif mouseMove.m1Down:
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m1down", mouseMove.pos))
 
+            elif mouseMove.m2Pressed:
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m2Pressed", mouseMove.pos))
+            elif mouseMove.m2Released:
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m2Released", mouseMove.pos))
+            elif mouseMove.m2Down:
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m2down", mouseMove.pos))
+
+            elif mouseMove.m3Pressed:
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m3Pressed", mouseMove.pos))
+            elif mouseMove.m3Released:
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m3Released", mouseMove.pos))
+            elif mouseMove.m3Down:
+                if frame.vars.recording[0]:
+                    frame.vars.eventList[0].append(("m3down", mouseMove.pos))
 
         def mouseWheelCallback(frame, dir):
-            print("mouseWheel", dir)
+            #print("mouseWheel", dir)
+
+            if frame.vars.recording[0]:
+                frame.vars.eventList[0].append(("mouseWheel", dir))
 
 
         # called every verb name text keystroke
@@ -10307,6 +10344,7 @@ Wye Overview:
                     if not recMgrFrm.vars.badLib[0]:
                         libFrm.verb.setLabelColor(libFrm, Wye.color.ERROR_COLOR)
                         recMgrFrm.vars.badLib[0] = True
+                        return
                 else:
                     if recMgrFrm.vars.badLib[0]:
                         libFrm.verb.setLabelColor(libFrm, Wye.color.LABEL_COLOR)
@@ -10320,49 +10358,155 @@ Wye Overview:
                 #print("CheckExistsCallback: verbName", verbName, " lib", lib.__name__ if lib else "None", " overwriteFlag", overFlag)
 
                 # if invalid verb or would overwrite existing and user hasn't ok'd that
-                if not verbName or (lib and hasattr(lib, verbName) and not overFlag):
+                if not verbName:
                     if not recMgrFrm.vars.badVerb[0]:
                         verbFrm.verb.setLabelColor(verbFrm, Wye.color.ERROR_COLOR)
                         recMgrFrm.vars.badVerb[0] = True
+                        return
                 else:
                     if recMgrFrm.vars.badVerb[0]:
                         verbFrm.verb.setLabelColor(verbFrm, Wye.color.LABEL_COLOR)
                         recMgrFrm.vars.badVerb[0] = False
 
+                if lib and hasattr(lib, verbName) and not overFlag:
+                    if not recMgrFrm.vars.badVerbOverwrite[0]:
+                        verbFrm.verb.setLabelColor(verbFrm, Wye.color.ERROR_COLOR)
+                        recMgrFrm.vars.badVerbOverwrite[0] = True
+                        return
+                else:
+                    if recMgrFrm.vars.badVerbOverwrite[0]:
+                        verbFrm.verb.setLabelColor(verbFrm, Wye.color.LABEL_COLOR)
+                        recMgrFrm.vars.badVerbOverwrite[0] = False
 
 
-        # start recording
-        class RecordStartCallback:
+
+        # start/stop recording
+        # also called from Ctl-S
+        class RecordStartStopCallback:
             mode = Wye.mode.MULTI_CYCLE
             dataType = Wye.dType.STRING
             paramDescr = ()
             varDescr = (("retStat", Wye.dType.INTEGER, -1),
                         ("rowFrm", Wye.dType.OBJECT, None),
+                        ("processing", Wye.dType.BOOL, False)   # don't allow recursion
                         )
 
             def start(stack):
-                # print("RecordStartCallback started")
-                f = Wye.codeFrame(WyeUILib.RecordManager.RecordStartCallback, stack)
+                # print("RecordStartStopCallback started")
+                f = Wye.codeFrame(WyeUILib.RecordManager.RecordStartStopCallback, stack)
                 f.systemObject = True
                 return f
 
             def run(frame):
+                if frame.vars.processing[0]:        # don't allow recursion
+                    print("RecordStartStopCallback: prevented recursion")
+                    frame.status = Wye.status.SUCCESS
+                    return
+                frame.vars.processing[0] = True
+
                 data = frame.eventData
-                #print("RecordStartCallback run: data", data)
+                print("RecordStartStopCallback run: data", data)
                 recMgrFrm = data[1][0]
-                parentFrm = recMgrFrm.vars.dlgFrm[0]
                 libFrm = recMgrFrm.vars.libNameFrm[0]
                 verbFrm = recMgrFrm.vars.verbNameFrm[0]
                 overWriteFrm = recMgrFrm.vars.libNameFrm[0]
+                startStopFrm = recMgrFrm.vars.startStopFrm[0]
+
+                # if stopping, go to stop
+                if recMgrFrm.vars.recording[0]:
+                    print("RecordStartStopCallback: recording, go to stop")
+                    startStopFrm.verb.setLabel(startStopFrm, "Start")       # switch lavel back to start
+                    startStopFrm.verb.setValue(startStopFrm, False)         # causes recursion
+                    frame.PC = 3
+                # start recording
+                else:
+                    startStopFrm.verb.setLabel(startStopFrm, "Stop")       # switch lave to Stop
+                    startStopFrm.verb.setValue(startStopFrm, True)          # causes recursion
 
                 match (frame.PC):
+                    # start recording
                     case 0:
-                        print("Record start")
+                        print(" case 0: Record start")
+
+                        # bad lib, can't start
+                        if recMgrFrm.vars.badLib[0]:
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library", "Invalid Library Name.  Unable to record.", color=Wye.color.WARNING_COLOR)
+                            frame.status = Wye.status.SUCCESS
+                            frame.vars.processing[0] = False
+                            return
+
+                        # bad verb
+                        if recMgrFrm.vars.badVerb[0]:
+                            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library", "Invalid Library Name.  Unable to record.", color=Wye.color.WARNING_COLOR)
+                            frame.status = Wye.status.SUCCESS
+                            frame.vars.processing[0] = False
+                            return
+
+                        # overwrite?
+                        if recMgrFrm.vars.badVerbOverwrite[0]:
+                            overOkFrm = WyeCore.libs.WyeUIUtilsLib.doPopUpDialogAsync(frame, "Overwrite Verb?",
+                            "Overwrite "+libFrm.vars.currVal[0]+"."+verbFrm.vars.currVal[0]+"?  Are you sure?",
+                                                                                     formatLst=[""], okOnCr=False)
+
+                            frame.SP.append(overOkFrm)  # push dialog so it runs next cycle
+                            frame.PC = 1  # on return from dialog, run del ok case
+                            frame.vars.processing[0] = False
+                            return
+
+                        # if get this far, go to start recording
+                        frame.PC = 2
+                        frame.vars.processing[0] = False
+
+                    case 1:  # return from Overwrise Ok? dialog
+                        delOkFrm = frame.SP.pop()
+                        print("RecordStartStopCallback: overwrite OK returned", Wye.status.tostring(delOkFrm.params.retVal[0]))
+
+                        # if user wants to overwrite, doit
+                        if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
+                            frame.PC = 2
+
+                        # else cancel
+                        else:
+                            frame.vars.processing[0] = False
+                            frame.status = Wye.status.SUCCESS
+
+                    # start recording
+                    # begin with record of current cam location/angle
+                    case 2:
+                        print("RecordStartStopCallback: case 2 actually start recording")
+                        recMgrFrm.vars.recording[0] = True
+                        frame.status = Wye.status.SUCCESS
+                        pos = base.camera.getPos()
+                        hpr = base.camera.getHpr()
+                        recMgrFrm.vars.eventList[0].append(("setCamera", pos, hpr))
+                        frame.vars.processing[0] = False
+                        print(" recording started")
+
+                    # stop
+                    case 3:
+                        print("RecordManager: Stop")
+                        recMgrFrm.vars.recording[0] = False     # done
                         frame.status = Wye.status.SUCCESS
 
-        # called by Ctrl-S
-        def stop():
-            print("RecordManager: stop")
-            recMgrDlg = WyeCore.recorder
-            dlgFrm = recMgrDlg.vars.dlgFrm[0]
-            pass
+                        # delete last mouse click
+                        print(" Remove last event")
+                        recMgrFrm.vars.eventList[0] = recMgrFrm.vars.eventList[0][:-1]
+
+                        print(" find lib, save events to it", recMgrFrm.vars.eventList[0])
+
+                        # if no lib, create one.
+
+                        # start making verb
+
+                        # loop for events
+
+                            # if m1 down, have to process xy coords to decide if drag or not
+
+                        # create verb
+
+                        # clear event list
+                        recMgrFrm.vars.eventList[0] = []
+                        frame.vars.processing[0] = False
+
+
+

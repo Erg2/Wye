@@ -38,7 +38,7 @@ class CirclingFishLib:
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -119,7 +119,7 @@ frame.vars.posAngle[0] = angle
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -200,7 +200,7 @@ frame.vars.posAngle[0] = angle
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -281,7 +281,7 @@ frame.vars.posAngle[0] = angle
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),

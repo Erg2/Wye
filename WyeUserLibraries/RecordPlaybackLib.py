@@ -168,7 +168,6 @@ class RecordPlaybackLib:
         ("cleanUpObjs",Wye.dType.OBJECT_LIST,"None"),
         ("dbgCt",Wye.dType.INTEGER,0))
     codeDescr =        (
-        ("Code","frame.vars.cleanUpObjs[0] = []"),
         ("Code","frame.vars.gObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.05,.01,.05], pos=[0,0,0])"),
         ("Code","#Note: don't put on tag or register tag 'cause don't want mouse ptr to be clickable"),
         ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.gObj[0]) "),

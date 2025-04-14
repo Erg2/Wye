@@ -29,7 +29,6 @@ class MyFlashingFishLib:
         ("delta",Wye.dType.FLOAT,0),
         ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -106,7 +105,6 @@ class MyFlashingFishLib:
         ("delta",Wye.dType.FLOAT,0),
         ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -183,7 +181,6 @@ class MyFlashingFishLib:
         ("delta",Wye.dType.FLOAT,0),
         ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),

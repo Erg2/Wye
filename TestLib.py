@@ -106,7 +106,7 @@ class TestLib:
           (1,1,1,1)),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        #("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -184,7 +184,7 @@ class TestLib:
           (-2,2,2.5)),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        #("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -302,9 +302,9 @@ class TestLib:
         ("objAhead","O",None),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
-        ("Var=","frame.vars.fishes[0] = []"),
-        ("Var=","frame.vars.fishTags[0] = []"),
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        #("Var=","frame.vars.fishes[0] = []"),
+        #("Var=","frame.vars.fishTags[0] = []"),
+        #("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("Label","MakeFish"),
         ("Expr","frame.vars.fishes[0].append([None])"),
         ("Expr","frame.vars.fishTags[0].append([''])"),
@@ -403,7 +403,7 @@ class TestLib:
         ("cleanUpObjs","OL",None))
     codeDescr =        (
         ("CodeBlock",'''
-frame.vars.cleanUpObjs[0] = []
+#frame.vars.cleanUpObjs[0] = []
 # ground
 floorPos = [] #[[0]*20]*20      # 20x20 floor tile heights
 from random import random
@@ -566,6 +566,7 @@ for ii in range(len(frame.vars.bubbles[0])):
         ("startQ","O",None),
         ("endQ","O",None),
         ("deltaT","F",0.005),
+        ("deltaV","FL",[0,0,0]),
         ("lerpT","F",0.0),
         ("horizLim","F",10.0),
         ("vertLim","F",3.0),
@@ -574,8 +575,8 @@ for ii in range(len(frame.vars.bubbles[0])):
     codeDescr =        (
         ("loaderStream",
           (
-            ("Var=","frame.vars.deltaV=[[0,0,0]]"),
-            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            #("Var=","frame.vars.deltaV=[[0,0,0]]"),
+            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.fish"),
@@ -929,7 +930,7 @@ else:
           (0,0.33,0.66,1)),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        #("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -992,7 +993,7 @@ else:
           (0,0.33,0.66,1)),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        #("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -1055,7 +1056,7 @@ else:
     codeDescr =        (
         ("loaderStream",
           (
-            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),

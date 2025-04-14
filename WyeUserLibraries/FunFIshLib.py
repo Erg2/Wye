@@ -24,8 +24,6 @@ class FunFIshLib:
         ("tag",Wye.dType.STRING,""),
         ("cleanUpObjs","OL",None))
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
-        ("Var=","frame.vars.t1[0] = []"),
         ("Code","frame.vars.body[0] = Wye3dObjsLib._ball(.5, [0,0,0]) #"),
         ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.body[0]._path) #"),
         ("Label","buildTentacle"),

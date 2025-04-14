@@ -762,6 +762,8 @@ class Wye:
                         # (side effect of editing can be user's lists got converted to tuples, this puts 'em back)
                         if isinstance(varVal, tuple) or isinstance(varVal, list):
                             varVal = Wye.listCopy(varVal)
+                        elif varDef[1] in [Wye.dType.OBJECT_LIST, Wye.dType.INTEGER_LIST, Wye.dType.BOOL_LIST, Wye.dType.FLOAT_LIST, Wye.dType.STRING_LIST, Wye.dType.NUMBER_LIST, Wye.dType.ANY_LIST]:
+                            varVal = []
                         setattr(self.vars, varDef[0], [varVal])
                         #print("  set vars."+varDef[0], "to", str(getattr(self.vars, varDef[0])))
                     #else:
