@@ -29,10 +29,9 @@ class WyeLib:
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.NONE
         autoStart = False
-        paramDescr = (("param", Wye.dType.ANY, Wye.access.REFERENCE),
-                      )
-        varDescr = (("var", Wye.dType.INTEGER, 0),)
-        codeDescr = (("Label", "Noop"),)
+        paramDescr = ()
+        varDescr = ()
+        codeDescr = (("Code", "pass"),)
 
 
         def _build(rowRef):

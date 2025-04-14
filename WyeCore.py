@@ -1429,7 +1429,7 @@ class WyeCore(Wye.staticObj):
                                     #print("   eff", eff)
                                     # for all the params in the tuple
                                     if len(wyeTuple) > 1:
-                                        #print("*** parseWyeTuple: parse params")
+                                        #print("parseWyeTuple: parse params")
                                         paramIx = 0
                                         for paramTuple in wyeTuple:
                                             #print(" parseWyeTuple: 2a paramIx ", paramIx, " out of ", len(wyeTuple) - 1)
@@ -1498,7 +1498,7 @@ class WyeCore(Wye.staticObj):
                                                     print("  but verb", verbClass.__name__, " has only", len(verbClass.paramDescr), " params:", verbClass.paramDescr)
 
 
-                                    #print("*** parseWyeTuple: finished params for SINGLE_CYCLE verb", verbClass.__name__, " put in run code")
+                                    #print("parseWyeTuple: finished params for SINGLE_CYCLE verb", verbClass.__name__, " put in run code")
 
                                     # debug hook placeholder
                                     codeText += "    if not Wye.debugOn:\n"

@@ -2548,7 +2548,6 @@ class WyeUILib(Wye.staticObj):
             if key == Wye.ctlKeys.ENTER:
                 #print("OK to dialog", frame.params.title[0], " okOnCr", frame.params.okOnCr[0])
                 if frame.params.okOnCr[0]:
-                    print("doKey <cr>", frame.params.title[0], " okOnCr", frame.params.okOnCr[0])
                     if "NO_OK" in frame.params.format[0]:   # if dlg not showing OK, do Cancel
                         tag = frame.vars.canTags[0][0]
                     else:
@@ -3824,7 +3823,7 @@ class WyeUILib(Wye.staticObj):
                 case 1:
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                     frame.status = Wye.status.SUCCESS  # done
-                    #print("EditMainDialog: Done")
+                    print("******** EditMainDialog: Done")
 
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.editMenu)
@@ -4484,6 +4483,7 @@ class WyeUILib(Wye.staticObj):
     # NOTE,CALLED FROM EditVerb and EditMainDialog.
     class EditLibDialog:
         mode = Wye.mode.MULTI_CYCLE
+
         dataType = Wye.dType.STRING
         paramDescr = ()
         varDescr = (("dlgStat", Wye.dType.OBJECT, None),
@@ -4499,6 +4499,7 @@ class WyeUILib(Wye.staticObj):
         def start(stack):
             # print("EditLibDialog started")
             f = Wye.codeFrame(WyeUILib.EditLibDialog, stack)
+            f.systemObject = True
             f.modified = False
             #f.vars.rows[0] = []
             return f
@@ -4592,8 +4593,10 @@ class WyeUILib(Wye.staticObj):
 
                 case 1:
                     dlgFrm = frame.SP.pop()
-                    print("EditLibDialog exit ", dlgFrm.params.title[0])
+                    print("******** EditLibDialog exit ", dlgFrm.params.title[0])
                     frame.status = Wye.status.SUCCESS
+
+
 
         def listVerbs(frame, dlgFrm):
             lib = frame.vars.lib[0]
@@ -5317,7 +5320,7 @@ class WyeUILib(Wye.staticObj):
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                     frame.status = dlgFrm.status
                     WyeUILib.EditVerb.activeVerbs.pop(frame.vars.activeKey[0])
-                    #print("ObjEditor: returned status", frame.vars.dlgStat[0])  # Wye.status.tostring(frame.))
+                    print("ObjEditor: dlg", dlgFrm.params.title[0]," returned status", dlgFrm.params.retVal[0])  # Wye.status.tostring(frame.))
 
                     # pass dlg status back to our caller
                     frame.params.retVal = dlgFrm.params.retVal
@@ -5355,20 +5358,21 @@ class WyeUILib(Wye.staticObj):
                                                     "Please enter a name in the Name: field",
                                                     Wye.color.WARNING_COLOR)
                 return
+
             # find library
             libName = frame.vars.existingLibFrm[0].vars.list[0][frame.vars.existingLibFrm[0].params.selectedIx[0]]
             if not libName in WyeCore.World.libDict:
                 WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
-                                                    "Library '"+libName+"' is no longer loaded.  Unable to update verb.",
-                                                    Wye.color.WARNING_COLOR)
+                          "Library '"+libName+"' is no longer loaded.  Unable to update verb.", Wye.color.WARNING_COLOR)
                 return
+
+            # get lib
             lib = WyeCore.World.libDict[libName]
 
             frame.params.retLib[0] = lib  # tell caller where verb went
 
             disableAuto = frame.vars.disaAutoFrm[0].params.value[0]
 
-            #print("Update verb named", name, " in lib", lib.__name__)
             WyeCore.Utils.createVerb(lib, name,
                                      frame.vars.newVerbSettings[0],
                                      frame.vars.newParamDescr[0],
@@ -5388,6 +5392,8 @@ class WyeUILib(Wye.staticObj):
             # if there's a lib list
             if WyeCore.World.editMenu:
                 WyeCore.World.editMenu.verb.update(WyeCore.World.editMenu, WyeCore.World.editMenu.vars.dlgFrm[0])
+
+            #print("updateVerb: Done")
 
         # build a parallel stream code entry
         # stream header plus recursively displayed code
@@ -10493,10 +10499,91 @@ Wye Overview:
                         recMgrFrm.vars.eventList[0] = recMgrFrm.vars.eventList[0][:-1]
 
                         print(" find lib, save events to it", recMgrFrm.vars.eventList[0])
+                        libName = libFrm.vars.currVal[0].strip()
 
                         # if no lib, create one.
+                        if libName in WyeCore.World.libDict:
+                            lib = WyeCore.World.libDict[libName]
+                        else:
+                            lib = WyeCore.Utils.createLib(libName)
+
+                        verbName = verbFrm.vars.currVal[0].strip()
 
                         # start making verb
+                        settings = {
+                            'mode': Wye.mode.MULTI_CYCLE,
+                            'autoStart': False,
+                            'dataType': Wye.dType.NONE,
+                            'cType':Wye.cType.VERB
+                        }
+
+                        params = ()
+                        vars = (
+                            ("count", Wye.dType.INTEGER, 0),
+                            ("testPtr", Wye.dType.OBJECT, None),
+                            ("testPtrFrm", Wye.dType.OBJECT, None),
+                            ("fakeMouse", Wye.dType.OBJECT, None),
+                        )
+                        descr = [
+
+                        ]
+                        m1Ct = 0
+                        m1Start = [0,0]
+                        m1Op = None     # tuple inserted in descr
+                        m2Ct = 0
+                        m2Start = [0,0]
+                        m2Op = None
+                        m3Ct = 0
+                        m3Start = [0,0]
+                        m3Op = None
+                        for evt in recMgrFrm.vars.eventList[0]:
+                            match(evt[0]):
+                                case "setCamera":
+                                    pos = evt[1]
+                                    hpr = evt[2]
+                                    tuple = ("")
+
+                                case "key":
+                                    key = evt[1]
+
+                                case "controlKey":
+                                    controlKey = evt[1]
+
+                                case "m1Pressed":
+                                    m1Ct = 0
+                                    m1Start = evt[1]
+
+                                case "m1down":
+                                    m1Ct += 1
+
+                                case "m1Released":
+                                    pass
+
+                                case "m2Pressed":
+                                    m2Ct = 0
+                                    m2Start = evt[1]
+
+
+                                case "m2down":
+                                    pass
+
+                                case "m2Released":
+                                    pass
+
+                                case "m3Pressed":
+                                    m3Ct = 0
+                                    m3Start = evt[1]
+
+
+                                case "m3down":
+                                    pass
+
+                                case "m3Released":
+                                    pass
+
+                                case "mouseWheel":
+                                    pass
+
 
                         # loop for events
 

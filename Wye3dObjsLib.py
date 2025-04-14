@@ -682,6 +682,7 @@ class Wye3dObjsLib(Wye.staticObj):
         def _genCardObj(self, bg=(0,0,0,0)):
             self.textNode.set_card_as_margin(.1,.1,.1,.1)
             self.textNode.set_card_color(bg[0], bg[1], bg[2], bg[3])
+            self.textNode.setCardDecal(True)        # force card behind text so can read it!!!
             #print("initial txtNode frame ", self.textNode.getFrameActual())
             #self.card = CardMaker("Txt Card")
             #self.card.set_color(bg[0], bg[1], bg[2], bg[3])    # set background color

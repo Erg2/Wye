@@ -20,14 +20,12 @@ class RecordPlaybackLib:
         ("ctrl",Wye.dType.BOOL,1),
         ("alt",Wye.dType.BOOL,1),
         ("position",Wye.dType.FLOAT_LIST,1),)
-    varDescr =  ()
+    varDescr =  (
+        ("fakePtrFrm",Wye.dType.OBJECT,None),)
     codeDescr =        (
-        ("Code","if not frame.params.position:  # DEBUG - null param not supposed to happen"),
-        ("Code","    print('>>>>> ClickMouse position is null!')  "),
-        ("Code","    return"),
         ("Code","#print('ClickMouse mb', frame.params.MBtn[0], ' shift', frame.params.shift[0], ' ctrl', frame.params.ctrl[0], ' alt', frame.params.alt[0], ' position', frame.params.position[0], flush=True)"),
+        ("Var=","frame.vars.fakePtrFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("Code","#Clear mouse"),
-        ("Code","# clear mouse"),
         ("Code","WyeCore.World.mouseHandler.mouseMove(0,0, 0, 0, 0, 0, 0, 0)"),
         ("Code","# Do mouse"),
         ("Code","x = frame.params.position[0][0] #"),
@@ -40,6 +38,8 @@ class RecordPlaybackLib:
         ("Code","alt = frame.params.alt[0] #"),
         ("Code","ctl = frame.params.ctrl[0] #"),
         ("Code","WyeCore.World.mouseHandler.mouseMove(x,y, mb1, mb2, mb3, shift, ctl, alt)"),
+        ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
+          ("Expr","[[x,y]] # Mouse position")),
         ("Code","WyeCore.World.mouseHandler.mouseMove(0,0, 0, 0, 0, 0, 0, 0)"))
 
     def _build(rowRef):
@@ -99,23 +99,28 @@ class RecordPlaybackLib:
         ("endPos",Wye.dType.FLOAT_LIST,1),
         ("nFrames",Wye.dType.INTEGER,1),)
     varDescr =  (
-        ("frameNum",Wye.dType.INTEGER,0),)
+        ("frameNum",Wye.dType.INTEGER,0),
+        ("fakePtrFrm",Wye.dType.OBJECT,None),)
     codeDescr =        (
-        ("IfGoTo","frame.vars.frameNum[0] > frame.params.nFrames","Done"),
-        ("Code","frac = frame.vars.frameNum[0] / params.nFrames[0]"),
-        ("Code","dx = int((frame.params.endPos[0][0] - frame.params.startPos[0][0])  * frac)#"),
-        ("Code","dy = int((frame.params.endPos[0][1] - frame.params.startPos[0][1]) * frac)#"),
+        ("Var=","frame.vars.fakePtrFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
+        ("Label","Loop"),
+        ("Code","frac = frame.vars.frameNum[0] / frame.params.nFrames[0]"),
+        ("Code","dx = (frame.params.endPos[0][0] - frame.params.startPos[0][0])  * frac"),
+        ("Code","dy = (frame.params.endPos[0][1] - frame.params.startPos[0][1]) * frac"),
         ("Code","x = frame.params.startPos[0][0] + dx #"),
         ("Code","y = frame.params.startPos[0][1] + dy #"),
-        ("Code","mb1 = True if frame.params.MBtn == 1 else False #"),
-        ("Code","mb2 = True if frame.params.MBtn == 2 else False #"),
-        ("Code","mb3 = True if frame.params.MBtn == 3 else False #"),
+        ("Code","mb1 = True if frame.params.MBtn[0] == 1 else False #"),
+        ("Code","mb2 = True if frame.params.MBtn[0] == 2 else False #"),
+        ("Code","mb3 = True if frame.params.MBtn[0] == 3 else False #"),
         ("Code","shift = frame.params.shift[0] #"),
         ("Code","alt = frame.params.alt[0] #"),
         ("Code","ctl = frame.params.ctrl[0] #"),
-        ("Code","base.win.movePointer(0, x,y)"),
+        ("Code","#base.win.movePointer(0, x,y)"),
         ("Code","WyeCore.World.mouseHandler.mouseMove(x,y, mb1, mb2, mb3, shift, ctl, alt)"),
+        ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
+          ("Expr","[[x,y]] # Mouse position")),
         ("Var=","frame.vars.frameNum[0] += 1"),
+        ("IfGoTo","frame.vars.frameNum[0] < frame.params.nFrames[0]","Loop"),
         ("Label","Done"),
         ("Code","frame.status = Wye.status.SUCCESS"))
 
@@ -194,6 +199,32 @@ class RecordPlaybackLib:
     def run(frame):
         # print('Run 'FakeMouse)
         RecordPlaybackLib.RecordPlaybackLib_rt.FakeMouse_run_rt(frame)
+
+  class FinishTest:
+    mode = Wye.mode.SINGLE_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  ()
+    codeDescr =        (
+        ("WyeCore.libs.RecordPlaybackLib.StopFakeMouse",),
+        ("Code","Wye.UITest = False #enable normal mouse handling"),
+        ("WyeCore.libs.RecordPlaybackLib.ShowMouse",
+          ("Expr","[1] # <put parameter here>")))
+
+    def _build(rowRef):
+        # print("Build ",FinishTest)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('FinishTest', RecordPlaybackLib.FinishTest.codeDescr, RecordPlaybackLib.FinishTest, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.FinishTest, stack)
+
+    def run(frame):
+        # print('Run 'FinishTest)
+        RecordPlaybackLib.RecordPlaybackLib_rt.FinishTest_run_rt(frame)
 
   class HideMouse:
     mode = Wye.mode.SINGLE_CYCLE
@@ -490,6 +521,35 @@ class RecordPlaybackLib:
     def run(frame):
         # print('Run 'StartFakeMouse)
         RecordPlaybackLib.RecordPlaybackLib_rt.StartFakeMouse_run_rt(frame)
+
+  class StartTest:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  ()
+    codeDescr =        (
+        ("WyeCore.libs.RecordPlaybackLib.HideMouse",),
+        ("Code","Wye.UITest = True #disable normal mouse handling"),
+        ("WyeCore.libs.RecordPlaybackLib.StartFakeMouse",),
+        ("Label","Delay1Frame"),
+        ("Label","Delay2ndFrame"),
+        ("Label","Delay3rdFrame"),
+        ("Code","frame.status=Wye.status.SUCCESS"))
+
+    def _build(rowRef):
+        # print("Build ",StartTest)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('StartTest', RecordPlaybackLib.StartTest.codeDescr, RecordPlaybackLib.StartTest, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(RecordPlaybackLib.StartTest, stack)
+
+    def run(frame):
+        # print('Run 'StartTest)
+        RecordPlaybackLib.RecordPlaybackLib_rt.StartTest_run_rt(frame)
 
   class StopFakeMouse:
     mode = Wye.mode.SINGLE_CYCLE

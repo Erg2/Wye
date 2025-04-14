@@ -8,6 +8,64 @@ class WyeTestLib:
   class WyeTestLib_rt:
    pass #1
 
+  class TestDrag:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  (
+        ("newVar",Wye.dType.ANY,None),)
+    codeDescr =        (
+        ("WyeCore.libs.RecordPlaybackLib.StartTest",),
+        ("Label","OpenWyeMainDialog"),
+        ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
+          ("Expr","[1] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[1] # <put parameter here>"),
+          ("Expr","[1] # <put parameter here>"),
+          ("Expr","[[0,0]] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
+        ("Label","DoMouseMove"),
+        ("WyeCore.libs.RecordPlaybackLib.DoMouseMove",
+          ("Expr","[1] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[[0,0]] # <put parameter here>"),
+          ("Expr","[[0,.5]] # <put parameter here>"),
+          ("Expr","[60] # <put parameter here>")),
+        ("Label","DoFinishTest"),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
+          ("Expr","[[.1421,.5036]] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
+          ("Expr","[1] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[[.1521,.5036]] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.FinishTest",),
+        ("Label","Done"),
+        ("Code","frame.status = Wye.status.SUCCESS"))
+
+    def _build(rowRef):
+        # print("Build ",TestDrag)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('TestDrag', WyeTestLib.TestDrag.codeDescr, WyeTestLib.TestDrag, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(WyeTestLib.TestDrag, stack)
+
+    def run(frame):
+        # print('Run 'TestDrag)
+        WyeTestLib.WyeTestLib_rt.TestDrag_run_rt(frame)
+
   class TestFakeMouse:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = False
@@ -35,7 +93,6 @@ class WyeTestLib:
         ("Code","#frame.vars.ptrFrm[0].vars.gObj[0].setPos(x,0,y)"),
         ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
           ("Expr","[[x,y]]")),
-        ("Code","#print('TestFakeMouse move', x, ',', y)"),
         ("IfGoTo","frame.vars.count[0] < 360","Loop"),
         ("Code","WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop1', 'Done mouse test',position=[x,0,y])"),
         ("Code","#frame.vars.ptrFrm[0].status = Wye.status.SUCCESS #shut down pointer object"),
@@ -111,14 +168,12 @@ class WyeTestLib:
         ("Code","    frame.status=Wye.status.SUCCESS"),
         ("Code","    return"),
         ("Code","Wye.UITest = True #disable normal mouse handling"),
-        ("Code","#print('now mouse move should not call moveMouse')"),
         ("WyeCore.libs.RecordPlaybackLib.MoveCameraToPosHpr",
           ("Expr","[[0, -20, 0]] #pos"),
           ("Expr","[[0,0,0]] # HPR")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Code","#WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('Pop2', 'after delay', position=[0,0,-1])"),
-        ("Code","#print('TestWyeMainMenu ClickMouse 0,0 with Ctrl,Alt')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
@@ -127,12 +182,10 @@ class WyeTestLib:
           ("Code","[(0,0),]#<your code here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('TestWyeMainMenu SetFakeMousePos 0.1349, -0.4146')"),
         ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
           ("Expr","[[0.1349,-0.4146]] # <put parameter here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('TestWyeMainMenu ClickMouse 0.1349, -0.4146')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
@@ -141,12 +194,10 @@ class WyeTestLib:
           ("Expr","[(0.1349,-0.4146),] #Show Test Fish")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('TestWyeMainMenu SetFakeMousePos 0.1510, 0.0117')"),
         ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
           ("Expr","[[0.1510,0.0117]] # <put parameter here>")),
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
-        ("Code","#print('TestWyeMainMenu ClickMouse 0.1510, 0.0117')"),
         ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
           ("Expr","[1] # <put parameter here>"),
           ("Expr","[0] # <put parameter here>"),
@@ -156,7 +207,6 @@ class WyeTestLib:
         ("WyeCore.libs.RecordPlaybackLib.Delay",
           ("Expr","[60] # <put parameter here>")),
         ("Label","Done"),
-        ("Code","#print('TestWyeMainMenu: Done') #<your code here>"),
         ("Code","frame.status = Wye.status.SUCCESS #<your code here>"),
         ("WyeCore.libs.RecordPlaybackLib.ShowMouse",
           ("Expr","[1] # <put parameter here>")),
