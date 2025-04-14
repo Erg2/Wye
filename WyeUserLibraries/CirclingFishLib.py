@@ -24,7 +24,7 @@ class CirclingFishLib:
         ("posAngle",Wye.dType.FLOAT,4.712388),
         ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
         ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("NewStream",
           (
@@ -38,7 +38,6 @@ class CirclingFishLib:
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -105,7 +104,7 @@ frame.vars.posAngle[0] = angle
         ("posAngle",Wye.dType.FLOAT,4.712388),
         ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
         ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("NewStream",
           (
@@ -119,7 +118,6 @@ frame.vars.posAngle[0] = angle
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -186,7 +184,7 @@ frame.vars.posAngle[0] = angle
         ("posAngle",Wye.dType.FLOAT,4.712388),
         ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
         ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("NewStream",
           (
@@ -200,7 +198,6 @@ frame.vars.posAngle[0] = angle
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),
@@ -267,7 +264,7 @@ frame.vars.posAngle[0] = angle
         ("posAngle",Wye.dType.FLOAT,4.712388),
         ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
         ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("NewStream",
           (
@@ -281,7 +278,6 @@ frame.vars.posAngle[0] = angle
             ("Code","#<your code here>"))),
         ("loaderStream",
           (
-            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.gObj"),

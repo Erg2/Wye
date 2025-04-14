@@ -27,7 +27,7 @@ class MyFlashingFishLib:
         ("color",Wye.dType.FLOAT_LIST,(0.75, 0.75, 0.75, 1.0)),
         ("skew",Wye.dType.FLOAT,0),
         ("delta",Wye.dType.FLOAT,0),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
@@ -103,7 +103,7 @@ class MyFlashingFishLib:
         ("color",Wye.dType.FLOAT_LIST,(0.5, 0.5, 0.5, 1)),
         ("skew",Wye.dType.FLOAT,0),
         ("delta",Wye.dType.FLOAT,0),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
@@ -179,7 +179,7 @@ class MyFlashingFishLib:
         ("color",Wye.dType.FLOAT_LIST,(0.5, 0.5, 0.5, 1)),
         ("skew",Wye.dType.FLOAT,0),
         ("delta",Wye.dType.FLOAT,0),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None))
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),

@@ -19,7 +19,7 @@ class RecordPlaybackLib:
         ("shift",Wye.dType.BOOL,1),
         ("ctrl",Wye.dType.BOOL,1),
         ("alt",Wye.dType.BOOL,1),
-        ("position",Wye.dType.FLOAT_LIST,1))
+        ("position",Wye.dType.FLOAT_LIST,1),)
     varDescr =  ()
     codeDescr =        (
         ("Code","if not frame.params.position:  # DEBUG - null param not supposed to happen"),
@@ -97,7 +97,7 @@ class RecordPlaybackLib:
         ("alt",Wye.dType.BOOL,1),
         ("startPos",Wye.dType.FLOAT_LIST,1),
         ("endPos",Wye.dType.FLOAT_LIST,1),
-        ("nFrames",Wye.dType.INTEGER,1))
+        ("nFrames",Wye.dType.INTEGER,1),)
     varDescr =  (
         ("frameNum",Wye.dType.INTEGER,0),)
     codeDescr =        (
@@ -166,7 +166,7 @@ class RecordPlaybackLib:
         ("gObj",Wye.dType.OBJECT,None),
         ("tag",Wye.dType.STRING,"None"),
         ("cleanUpObjs",Wye.dType.OBJECT_LIST,"None"),
-        ("dbgCt",Wye.dType.INTEGER,0))
+        ("dbgCt",Wye.dType.INTEGER,0),)
     codeDescr =        (
         ("Code","frame.vars.gObj[0] = WyeCore.libs.Wye3dObjsLib._pointer(size=[.05,.01,.05], pos=[0,0,0])"),
         ("Code","#Note: don't put on tag or register tag 'cause don't want mouse ptr to be clickable"),
@@ -232,7 +232,7 @@ class RecordPlaybackLib:
     varDescr =  (
         ("lblFrm",Wye.dType.OBJECT,None),
         ("camLblFrm",Wye.dType.OBJECT,None),
-        ("dlgFrm",Wye.dType.OBJECT,None))
+        ("dlgFrm",Wye.dType.OBJECT,None),)
     codeDescr =        (
         ("Code","dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog('Mouse Position', None, formatLst=['NO_OK']) #"),
         ("Code","frame.vars.dlgFrm[0] = dlgFrm "),
@@ -283,7 +283,7 @@ class RecordPlaybackLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  (
         ("position",Wye.dType.FLOAT_LIST,1),
-        ("Hpr",Wye.dType.FLOAT_LIST,1))
+        ("Hpr",Wye.dType.FLOAT_LIST,1),)
     varDescr =  ()
     codeDescr =        (
         ("Code","base.camera.setPos(frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2]) #"),
