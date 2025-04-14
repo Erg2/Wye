@@ -142,6 +142,61 @@ class WyeTestLib:
         # print('Run 'TestHideMouse)
         WyeTestLib.WyeTestLib_rt.TestHideMouse_run_rt(frame)
 
+  class TestKeys:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = False
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  ()
+    codeDescr =        (
+        ("WyeCore.libs.RecordPlaybackLib.StartTest",),
+        ("WyeCore.libs.RecordPlaybackLib.SendControlKey",
+          ("Expr","[Wye.ctlKeys.CTL_R] # Open record window")),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
+          ("Expr","[1] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[[-.8771, -.6806]] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.SendKey",
+          ("Expr","['a'] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.SendKey",
+          ("Expr","['b'] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.SendKey",
+          ("Expr","['c'] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.SetFakeMousePos",
+          ("Expr","[[-.9563, -.8301]]")),
+        ("WyeCore.libs.RecordPlaybackLib.Delay",
+          ("Expr","[60] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.ClickMouse",
+          ("Expr","[1] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[0] # <put parameter here>"),
+          ("Expr","[[-.9563, -.8301]] # <put parameter here>")),
+        ("WyeCore.libs.RecordPlaybackLib.FinishTest",),
+        ("WyeLib.noop"))
+
+    def _build(rowRef):
+        # print("Build ",TestKeys)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('TestKeys', WyeTestLib.TestKeys.codeDescr, WyeTestLib.TestKeys, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(WyeTestLib.TestKeys, stack)
+
+    def run(frame):
+        # print('Run 'TestKeys)
+        WyeTestLib.WyeTestLib_rt.TestKeys_run_rt(frame)
+
   class TestWyeMainMenu:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = False
@@ -161,7 +216,7 @@ class WyeTestLib:
         ("Label","Start"),
         ("Code","frame.vars.fakeMouse[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("Code","if not frame.vars.fakeMouse[0]:"),
-        ("Code","  WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('TestWyeMainMenu Error', 'FakeMouse did not start',Wye.color.WARNING)"),
+        ("Code","  WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('TestWyeMainMenu Error', 'FakeMouse did not start',Wye.color.WARNING_COLOR)"),
         ("Code","  return #<your code here>"),
         ("Code","if not frame.vars.fakeMouse[0].vars.gObj[0]:"),
         ("Code","    print('TestWyeMainMenu: FakeMouse gObj not found')"),

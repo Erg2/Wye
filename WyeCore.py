@@ -681,7 +681,7 @@ class WyeCore(Wye.staticObj):
 
         def unregisterMouseCallback(callback):
             if callback in WyeCore.World.mouseCallbacks:
-                WyeCore.World.mouseCallbacks.append(callback)
+                WyeCore.World.mouseCallbacks.remove(callback)
 
         # manage graphic object tag -> object frame list
         def registerObjTag(tag, frame):
@@ -1080,7 +1080,7 @@ class WyeCore(Wye.staticObj):
                 self.getObjectHit(LPoint2f(x,y))
                 if self.pickedObj:
                     wyeID = self.pickedObj.getTag('wyeTag')
-                    #print("Picker objSelectEvent: Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
+                    print("Picker objSelectEvent: Clicked on ", self.pickedObj, " at ", self.pickedObj.getPos(), " wyeID ", wyeID)
                     if wyeID:
                         #print("Picked object: '", self.pickedObj, "', wyeID ", wyeID)
                         # if there's an object editor

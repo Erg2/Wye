@@ -426,7 +426,7 @@ class RecordPlaybackLib:
         ("Code","#print('SetFakeMousePos position', frame.params.position[0])"),
         ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("Code","if not frame.vars.fakeMouseFrm[0]:  # if FakeMouse not running, nevermind!"),
-        ("Code","    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('SetFakeMousePos Error', 'Did not find running FakeMouse', Wye.color.WARNING)"),
+        ("Code","    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog('SetFakeMousePos Error', 'Did not find running FakeMouse', Wye.color.WARNING_COLOR)"),
         ("Code","    return"),
         ("Code","else:"),
         ("Code","    if not frame.vars.fakeMouseFrm[0].vars.gObj[0]:"),

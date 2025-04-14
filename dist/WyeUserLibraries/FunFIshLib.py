@@ -33,8 +33,7 @@ class FunFIshLib:
         ("WyeCore.libs.WyeLib.makePickable", (None, "frame.vars.tag"), (None, "frame.vars.t1[0][frame.vars.tCount[0]]")),
         ("Var=","frame.vars.tCount[0] += 1 #"),
         ("IfGoTo","frame.vars.tCount[0] < frame.vars.nSegs[0]","buildTentacle"),
-        ("WyeLib.noop",
-          ("Code","0")))
+        ("WyeLib.noop"))
 
     def _build(rowRef):
         # print("Build ",Jelly)
