@@ -300,6 +300,10 @@ class WyeUILib(Wye.staticObj):
             self.ctlReleased = False
             self.alttReleased = False
 
+            self.m1Released = False  # edge
+            self.m2Released = False
+            self.m3Released = False
+
             # get mouse buttons and mouse-down start pos
             if mb1:
                 if not self.m1Down:
@@ -308,6 +312,8 @@ class WyeUILib(Wye.staticObj):
                     self.m1DownRot = base.camera.getHpr()
                     self.m1Pressed = True
             else:
+                if self.m1Down:
+                    self.m1Released = True
                 self.m1Down = False
             if mb2:
                 if not self.m2Down:
@@ -316,6 +322,8 @@ class WyeUILib(Wye.staticObj):
                     self.m2DownRot = base.camera.getHpr()
                     self.m2Pressed = True
             else:
+                if self.m2Down:
+                    self.m2Released = True
                 self.m2Down = False
             if mb3:
                 if not self.m3Down:
@@ -324,6 +332,8 @@ class WyeUILib(Wye.staticObj):
                     self.m3DownRot = base.camera.getHpr()
                     self.m3Pressed = True
             else:
+                if self.m3Down:
+                    self.m3Released = True
                 self.m3Down = False
 
             # if anyone wants to know a mouse button was pressed
@@ -364,8 +374,8 @@ class WyeUILib(Wye.staticObj):
             # If callback(s) return True, don't process any further
             usedMouse = False
             if len(WyeCore.mouseMoveCallbacks) > 0:
-                for callback in WyeCore.mouseMoveCallbacks:
-                    usedMouse = usedMouse or callback(self)
+                for callbackStruct in WyeCore.mouseMoveCallbacks:
+                    usedMouse = usedMouse or callbackStruct[0](callbackStruct[1], self)
             if usedMouse:
                 return
 
@@ -642,8 +652,8 @@ class WyeUILib(Wye.staticObj):
             def mouseWheel(self, dir):
                 # external callbacks
                 if len(WyeCore.mouseWheelCallbacks) > 0:
-                    for callback in WyeCore.mouseWheelCallbacks:
-                        callback(self)
+                    for callbackStruct in WyeCore.mouseWheelCallbacks:
+                        callbackStruct[0](callbackStruct[1], dir)
 
                 #print("mouseWheel", dir)
                 if WyeUILib.FocusManager._activeDialog:
@@ -780,7 +790,15 @@ class WyeUILib(Wye.staticObj):
                 case Wye.ctlKeys.CTL_P:       # show copy/paste
                     WyeCore.World.copyPasteManager.show()
                     return True
-                case Wye.ctlKeys.CTL_W:       # show copy/paste
+                case Wye.ctlKeys.CTL_R:       # show record dialog
+                    if not WyeCore.recorder:
+                        WyeCore.recorder = WyeCore.World.startActiveObject(WyeCore.libs.WyeUILib.RecordManager)
+                    return True
+                case Wye.ctlKeys.CTL_S:       # stop recording
+                    if WyeCore.recorder:
+                        WyeCore.recorder.verb.Stop()
+                    return True
+                case Wye.ctlKeys.CTL_W:       # show main HUD
                     if not WyeCore.HUD:
                         WyeCore.HUD = WyeCore.World.startActiveObject(WyeCore.libs.WyeUILib.MainHUDDialog)
                     return True
@@ -1018,6 +1036,7 @@ class WyeUILib(Wye.staticObj):
             frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def setValue(frame, text):
+            print("InputText setValue", text)
             frame.vars.gWidget[0].setText(text)
             frame.vars.currVal[0] = text
             # relayout to fit everything
@@ -1025,6 +1044,12 @@ class WyeUILib(Wye.staticObj):
 
         def setColor(frame, color):
             frame.vars.gWidgetStack[0][0].setColor(color)
+            frame.vars.gWidget[0].setColor(color)
+
+        def setLabelColor(frame, color):
+            frame.vars.gWidgetStack[0][0].setColor(color)
+
+        def setTextColor(frame, color):
             frame.vars.gWidget[0].setColor(color)
 
         def setCurrentPos(frame, index):
@@ -1045,7 +1070,6 @@ class WyeUILib(Wye.staticObj):
             frame.params.hidden[0]=False
 
     class InputInteger(InputText):
-
         mode = Wye.mode.SINGLE_CYCLE
         dataType = Wye.dType.STRING
         paramDescr = (("frame", Wye.dType.STRING, Wye.access.REFERENCE),  # return own frame
@@ -1462,7 +1486,7 @@ class WyeUILib(Wye.staticObj):
             # add tag, input index to dictionary
             frame.vars.tags[0].append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
             # offset 3d input field right past end of 3d label
-            lblGFrm = lbl.text.getFrameActual()
+            lblGFrm = lbl.textNode.getFrameActual()
             width = (lblGFrm[1] - lblGFrm[0]) + 1
 
             # check box
@@ -1716,12 +1740,12 @@ class WyeUILib(Wye.staticObj):
                 lbl.setPos(pos)
                 width += lbl.getWidth()
                 height = lbl.getHeight()
-            #print("lbl '"+lbl.dbgTxt+"' width", width)
+            #print("lbl '"+lbl.text+"' width", width)
             if frame.vars.bWidget[0]:
                 if width:   # if we have label, space the button over
                     width += .5
                 btn = frame.vars.bWidget[0]
-                #print("btn'"+btn.dbgTxt+"' width", btn.getWidth())
+                #print("btn'"+btn.text+"' width", btn.getWidth())
                 if frame.vars.lWidget[0]:
                     btn.setPos((width, 0,0))
                 else:
@@ -1945,10 +1969,6 @@ class WyeUILib(Wye.staticObj):
 
                     #print("Dialog display: pos=frame.params.position", frame.params.position)
 
-                    # if only OK or only Cancel -> support <cr> to exit
-                    if "NO_OK" in frame.params.format[0] or "NO_CANCEL" in frame.params.format[0]:
-                        frame.params.okOnCr[0] = True
-
                     frame.verb.display(frame)
 
                     # make a background for entire dialog
@@ -2126,6 +2146,7 @@ class WyeUILib(Wye.staticObj):
             dlgNodePath = frame.vars.dragPath[0]
             # dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
             dlgBounds = dlgNodePath.getTightBounds()
+            #print("Dialog genBackground: dialog bounds", dlgBounds)
             card = CardMaker("Dlg Bgnd")
             #print("genBackground", frame.params.title[0], " ", bgndColor, " ", outlineColor)
             #card.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
@@ -2184,7 +2205,7 @@ class WyeUILib(Wye.staticObj):
                 okIx = 1
             # if have ok button, position it
             if not (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
-                #print("Dialog redisplay: okIx", okIx, " put", frame.vars.dlgWidgets[0][okIx].dbgTxt, " at", pos)
+                #print("Dialog redisplay: okIx", okIx, " put", frame.vars.dlgWidgets[0][okIx].text, " at", pos)
                 frame.vars.dlgWidgets[0][2].setPos(pos[0], pos[1], pos[2])        # Ok
                 pos[0] += 2.5  # shove Cancel to the right of OK
                 haveOk = True
@@ -2252,7 +2273,7 @@ class WyeUILib(Wye.staticObj):
                 okIx = -2
             # if have ok button, position it
             if not (frame.params.format[0] and "NO_OK" in frame.params.format[0]):
-                #print("Dialog redisplay: okIx", okIx, " put", frame.vars.dlgWidgets[0][okIx].dbgTxt, " at", pos)
+                #print("Dialog redisplay: okIx", okIx, " put", frame.vars.dlgWidgets[0][okIx].text, " at", pos)
                 frame.vars.dlgWidgets[0][okIx].setPos(pos)        # Ok
                 pos[0] += 2.5  # shove Cancel to the right of OK
                 haveOk = True
@@ -2528,6 +2549,7 @@ class WyeUILib(Wye.staticObj):
             if key == Wye.ctlKeys.ENTER:
                 #print("OK to dialog", frame.params.title[0], " okOnCr", frame.params.okOnCr[0])
                 if frame.params.okOnCr[0]:
+                    print("doKey <cr>", frame.params.title[0], " okOnCr", frame.params.okOnCr[0])
                     if "NO_OK" in frame.params.format[0]:   # if dlg not showing OK, do Cancel
                         tag = frame.vars.canTags[0][0]
                     else:
@@ -2744,6 +2766,10 @@ class WyeUILib(Wye.staticObj):
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
 
+            # If there isn't a text input cursor, make it
+            if WyeUILib.Dialog._cursor is None:
+                WyeUILib.Dialog._cursor = WyeCore.libs.Wye3dObjsLib._box([.05, .05, .6], [0, 0, 0])
+                WyeUILib.Dialog._cursor.hide()
             return frame
 
         def run(frame):
@@ -2899,6 +2925,11 @@ class WyeUILib(Wye.staticObj):
 
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
+
+            # If there isn't a text input cursor, make it
+            if WyeUILib.Dialog._cursor is None:
+                WyeUILib.Dialog._cursor = WyeCore.libs.Wye3dObjsLib._box([.05, .05, .6], [0, 0, 0])
+                WyeUILib.Dialog._cursor.hide()
             return frame
 
         def run(frame):
@@ -2914,7 +2945,7 @@ class WyeUILib(Wye.staticObj):
                     width = base.win.getProperties().getXSize()
                     height = base.win.getProperties().getYSize()
                     rat = width/height
-                    frame.params.position[0] = [-6 * rat, Wye.UI.NOTIFICATION_OFFSET, 5.8]
+                    frame.params.position[0] = [-6 * rat, Wye.UI.NOTIFICATION_OFFSET, frame.params.position[0][2]]
 
                     # make a background for entire dialog
                     WyeUILib.Dialog.genBackground(frame, Wye.color.BACKGROUND_COLOR, Wye.color.OUTLINE_COLOR)
@@ -4546,9 +4577,10 @@ class WyeUILib(Wye.staticObj):
                                 WyeUILib.EditMainDialog.SaveLibToFileCallback)
                         saveBtn.params.optData = [(saveBtn, dlgFrm, frame, saveBtn, lib)]
 
-                        WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Select Verb to Edit", color=Wye.color.SUBHD_COLOR)
+                        frame.vars.doDbgFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Start in Debug",
+                                                                                            frame.vars.doDbg)
 
-                    frame.vars.doDbgFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Start in Debug", frame.vars.doDbg)
+                        WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Library Verbs:", color=Wye.color.SUBHD_COLOR)
 
                     # create a row for each verb in the library
                     WyeUILib.EditLibDialog.listVerbs(frame, dlgFrm)
@@ -5141,7 +5173,6 @@ class WyeUILib(Wye.staticObj):
                     saveCodeFileFrm.params.optData = [(saveCodeFileFrm, dlgFrm, frame)]
 
                     # edit library
-                    # NOTE: WE ARE CALLING EditMainDialog's CALLBACK, THIS IS RISKY!!!!
                     editLibFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Open Library "+verb.library.__name__, WyeUILib.EditLibDialog)
                     editLibFrm.params.optData = [(editLibFrm, dlgFrm, verb.library)]
 
@@ -5280,9 +5311,7 @@ class WyeUILib(Wye.staticObj):
                     # mark this frame actively being edited
                     WyeUILib.EditVerb.activeVerbs[verb.library.__name__+"."+verb.__name__] = dlgFrm
 
-                    # WyeUILib.Dialog.run(dlgFrm)
                     frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
-
                     frame.PC += 1  # on return from dialog, run next case
 
                 case 1:
@@ -7598,8 +7627,7 @@ class WyeUILib(Wye.staticObj):
 
                         # create dialog
                         dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit Code", parent=parentFrm,
-                                      position=(.5,-.5, -.5 + btnFrm.vars.position[0][2]))
-                        dlgFrm.params.okOnCr = [True]
+                                      position=(.5,-.5, -.5 + btnFrm.vars.position[0][2]), okOnCr=True)
 
                         # op dropdown - callback hide/shows the relevant lines for the op type
                         if op is None:
@@ -10153,3 +10181,183 @@ Wye Overview:
 '''
 
             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "NO_CANCEL"])
+
+
+
+
+    # Record UI actions to a verb
+    class RecordManager:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.STRING
+        paramDescr = ()
+        varDescr = (("count", Wye.dType.INTEGER, 0),
+                    ("libNameFrm", Wye.dType.OBJECT, None),
+                    ("verbNameFrm", Wye.dType.OBJECT, None),
+                    ("dlgFrm", Wye.dType.OBJECT, None),
+                    ("overwriteFrm", Wye.dType.OBJECT, None),
+                    ("badLib", Wye.dType.BOOL, False),
+                    ("badVerb", Wye.dType.BOOL, False),
+                    )
+
+        def start(stack):
+            #print("RecordManager start")
+            f = Wye.codeFrame(WyeUILib.RecordManager, stack)
+            f.systemObject = True
+            return f
+
+        def run(frame):
+
+            match(frame.PC):
+                case 0:  # Put up record dialog.  Don't exit on <cr>
+                    print("Recorder opened")
+                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doHUDDialog("Record UI Actions", formatLst=["NO_CANCEL"],
+                               okOnCr=False, position=(-11.3, Wye.UI.NOTIFICATION_OFFSET, -4))
+                    frame.vars.dlgFrm[0] = dlgFrm
+
+                    #WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Library:", color=Wye.color.SUBHD_COLOR)
+
+                    frame.vars.libNameFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Library:", ["Library"],
+                                                   WyeUILib.RecordManager.CheckExistsCallback, (frame,))
+
+                    frame.vars.verbNameFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Recording:", ["Verb"],
+                                                   WyeUILib.RecordManager.CheckExistsCallback, (frame,))
+
+
+                    frame.vars.overwriteFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Overwrite Existing Verb", [True])
+
+                    WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  Start",
+                                        WyeUILib.RecordManager.RecordStartCallback, (frame,))
+
+                    # get mouse and key events
+                    WyeCore.keyCallbacks.append((WyeUILib.RecordManager.keyCallback, frame))
+                    WyeCore.controlKeyCallbacks.append((WyeUILib.RecordManager.controlKeyCallback, frame))
+                    WyeCore.mouseMoveCallbacks.append((WyeUILib.RecordManager.mouseCallback, frame))
+                    WyeCore.mouseWheelCallbacks.append((WyeUILib.RecordManager.mouseWheelCallback, frame))
+
+
+                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
+                    frame.PC += 1  # on return from dialog, run next case
+
+                case 1:
+                    dlgFrm = frame.SP.pop()  # remove dialog frame from stack
+                    frame.status = Wye.status.SUCCESS
+                    # shut down
+                    WyeCore.keyCallbacks.remove((WyeUILib.RecordManager.keyCallback, frame))
+                    WyeCore.controlKeyCallbacks.remove((WyeUILib.RecordManager.controlKeyCallback, frame))
+                    WyeCore.mouseMoveCallbacks.remove((WyeUILib.RecordManager.mouseCallback, frame))
+                    WyeCore.mouseWheelCallbacks.remove((WyeUILib.RecordManager.mouseWheelCallback, frame))
+                    WyeCore.recorder = None
+                    print("Recorder closed")
+
+        def keyCallback(frame, key):
+            #print("keyCallback: key", key)
+            return False
+
+
+        def controlKeyCallback(frame, keyCode):
+            print("controKey", Wye.ctlKeys.tostring(keyCode))
+            return False
+
+
+        def mouseCallback(frame, mouseMove):
+            if mouseMove.m1Pressed:
+                print("mouse", mouseMove.pos, "", mouseMove.m1Down)
+            if mouseMove.m1Released:
+                print("mouse", mouseMove.pos, "", mouseMove.m1Down)
+
+
+        def mouseWheelCallback(frame, dir):
+            print("mouseWheel", dir)
+
+
+        # called every verb name text keystroke
+        class CheckExistsCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("retStat", Wye.dType.INTEGER, -1),
+                        ("rowFrm", Wye.dType.OBJECT, None),
+                        )
+
+            def start(stack):
+                # print("CheckExistsCallback started")
+                f = Wye.codeFrame(WyeUILib.RecordManager.CheckExistsCallback, stack)
+                f.systemObject = True
+                return f
+
+            def run(frame):
+                data = frame.eventData
+                #print("CheckExistsCallback run: data", data)
+                recMgrFrm = data[1][0]
+                parentFrm = recMgrFrm.vars.dlgFrm[0]
+                libFrm = recMgrFrm.vars.libNameFrm[0]
+                verbFrm = recMgrFrm.vars.verbNameFrm[0]
+                overwriteFrm = recMgrFrm.vars.overwriteFrm[0]
+
+                # if lib, name exists, set background red if
+                libName = libFrm.vars.currVal[0].strip()
+                verbName = verbFrm.vars.currVal[0].strip()
+                overFlag = overwriteFrm.vars.currVal[0]
+
+                #print("CheckExistsCallback, lib", libName, " verb", verbName, " overFlag", overFlag)
+
+                if not libName:
+                    if not recMgrFrm.vars.badLib[0]:
+                        libFrm.verb.setLabelColor(libFrm, Wye.color.ERROR_COLOR)
+                        recMgrFrm.vars.badLib[0] = True
+                else:
+                    if recMgrFrm.vars.badLib[0]:
+                        libFrm.verb.setLabelColor(libFrm, Wye.color.LABEL_COLOR)
+                        recMgrFrm.vars.badLib[0] = False
+
+                if libName in WyeCore.World.libDict:
+                    lib = WyeCore.World.libDict[libName]
+                else:
+                    lib = None
+
+                print("CheckExistsCallback: verbName", verbName, " lib", lib.__name__ if lib else "None", " overwriteFlag", overFlag)
+                if not verbName or (lib and hasattr(lib, verbName) and not overFlag):
+                    if not recMgrFrm.vars.badVerb[0]:
+                        verbFrm.verb.setLabelColor(verbFrm, Wye.color.ERROR_COLOR)
+                        recMgrFrm.vars.badVerb[0] = True
+                else:
+                    if recMgrFrm.vars.badVerb[0]:
+                        verbFrm.verb.setLabelColor(verbFrm, Wye.color.LABEL_COLOR)
+                        recMgrFrm.vars.badVerb[0] = False
+
+
+        # start recording
+        class RecordStartCallback:
+            mode = Wye.mode.MULTI_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = (("retStat", Wye.dType.INTEGER, -1),
+                        ("rowFrm", Wye.dType.OBJECT, None),
+                        )
+
+            def start(stack):
+                # print("RecordStartCallback started")
+                f = Wye.codeFrame(WyeUILib.RecordManager.RecordStartCallback, stack)
+                f.systemObject = True
+                return f
+
+            def run(frame):
+                data = frame.eventData
+                #print("RecordStartCallback run: data", data)
+                recMgrFrm = data[1][0]
+                parentFrm = recMgrFrm.vars.dlgFrm[0]
+                libFrm = recMgrFrm.vars.libNameFrm[0]
+                verbFrm = recMgrFrm.vars.verbNameFrm[0]
+                overWriteFrm = recMgrFrm.vars.libNameFrm[0]
+
+                match (frame.PC):
+                    case 0:
+                        print("Record start")
+                        frame.status = Wye.status.SUCCESS
+
+        # called by Ctrl-S
+        def stop():
+            print("RecordManager: stop")
+            recMgrDlg = WyeCore.recorder
+            dlgFrm = recMgrDlg.vars.dlgFrm[0]
+            pass

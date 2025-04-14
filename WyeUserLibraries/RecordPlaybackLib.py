@@ -61,9 +61,9 @@ class RecordPlaybackLib:
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  (
-        ("nFrames",Wye.dType.INTEGER,1))
+        ("nFrames",Wye.dType.INTEGER,1),)
     varDescr =  (
-        ("frameCt",Wye.dType.INTEGER,0))
+        ("frameCt",Wye.dType.INTEGER,0),)
     codeDescr =        (
         ("Label","Loop"),
         ("IfGoTo","frame.vars.frameCt[0] >= frame.params.nFrames[0]","Done"),
@@ -99,7 +99,7 @@ class RecordPlaybackLib:
         ("endPos",Wye.dType.FLOAT_LIST,1),
         ("nFrames",Wye.dType.INTEGER,1))
     varDescr =  (
-        ("frameNum",Wye.dType.INTEGER,0))
+        ("frameNum",Wye.dType.INTEGER,0),)
     codeDescr =        (
         ("IfGoTo","frame.vars.frameNum[0] > frame.params.nFrames","Done"),
         ("Code","frac = frame.vars.frameNum[0] / params.nFrames[0]"),
@@ -138,7 +138,7 @@ class RecordPlaybackLib:
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  (
-        ("dir",Wye.dType.INTEGER,1))
+        ("dir",Wye.dType.INTEGER,1),)
     varDescr =  ()
     codeDescr =        (
         ("Code","WyeCore.focusManager._mouseHandler.mouseWheel(frame.params.dir[0])"),)
@@ -302,7 +302,7 @@ class RecordPlaybackLib:
         # print('Run 'MoveCameraToPosHpr)
         RecordPlaybackLib.RecordPlaybackLib_rt.MoveCameraToPosHpr_run_rt(frame)
 
-  class RecordDialog:
+  class RecordManager:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = False
     dataType = Wye.dType.NONE
@@ -310,7 +310,7 @@ class RecordPlaybackLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  ()
     varDescr =  (
-        ("newVar",Wye.dType.ANY,None))
+        ("newVar",Wye.dType.ANY,None),)
     codeDescr =        (
         ("Code","pass #"),
         ("Code","#"),
@@ -323,16 +323,16 @@ class RecordPlaybackLib:
         ("Code","#"))
 
     def _build(rowRef):
-        # print("Build ",RecordDialog)
+        # print("Build ",RecordManager)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('RecordDialog', RecordPlaybackLib.RecordDialog.codeDescr, RecordPlaybackLib.RecordDialog, rowIxRef)
+        return WyeCore.Utils.buildCodeText('RecordManager', RecordPlaybackLib.RecordManager.codeDescr, RecordPlaybackLib.RecordManager, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(RecordPlaybackLib.RecordDialog, stack)
+        return Wye.codeFrame(RecordPlaybackLib.RecordManager, stack)
 
     def run(frame):
-        # print('Run 'RecordDialog)
-        RecordPlaybackLib.RecordPlaybackLib_rt.RecordDialog_run_rt(frame)
+        # print('Run 'RecordManager)
+        RecordPlaybackLib.RecordPlaybackLib_rt.RecordManager_run_rt(frame)
 
   class SendControlKey:
     mode = Wye.mode.SINGLE_CYCLE
@@ -341,7 +341,7 @@ class RecordPlaybackLib:
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  (
-        ("key",Wye.dType.INTEGER,1))
+        ("key",Wye.dType.INTEGER,1),)
     varDescr =  ()
     codeDescr =        (
         ("Code","WyeCore.World.keyHandler.controlKeyFunc(frame.params.key[0]) #"),)
@@ -365,7 +365,7 @@ class RecordPlaybackLib:
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  (
-        ("key",Wye.dType.STRING,1))
+        ("key",Wye.dType.STRING,1),)
     varDescr =  ()
     codeDescr =        (
         ("Code","WyeCore.World.keyHandler.keyFunc(frame.params.key[0])"),)
@@ -389,9 +389,9 @@ class RecordPlaybackLib:
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  (
-        ("position",Wye.dType.FLOAT_LIST,1,"[0,0]"))
+        ("position",Wye.dType.FLOAT_LIST,1,"[0,0]"),)
     varDescr =  (
-        ("fakeMouseFrm",Wye.dType.OBJECT,None))
+        ("fakeMouseFrm",Wye.dType.OBJECT,None),)
     codeDescr =        (
         ("Code","#print('SetFakeMousePos position', frame.params.position[0])"),
         ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
@@ -500,7 +500,7 @@ class RecordPlaybackLib:
     parTermType = Wye.parTermType.FIRST_FAIL
     paramDescr =  ()
     varDescr =  (
-        ("fakeMouseFrm",Wye.dType.ANY,None))
+        ("fakeMouseFrm",Wye.dType.ANY,None),)
     codeDescr =        (
         ("Code","frame.vars.fakeMouseFrm[0] = WyeCore.World.findActiveObj('FakeMouse')"),
         ("Code","if not frame.vars.fakeMouseFrm[0]:  # if mouse not running, nevermind!"),

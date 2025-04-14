@@ -524,7 +524,9 @@ class Wye3dObjsLib(Wye.staticObj):
             #curframe = inspect.currentframe()
             #callframe = inspect.getouterframes(curframe, 2)
             #print('  caller name:', callframe[1][3])
-            self.dbgTxt = text
+            if len(text) == 0:
+                text = ' '
+            self.text = text
             if parent is None:
                 self.parent = render
             else:
@@ -532,21 +534,24 @@ class Wye3dObjsLib(Wye.staticObj):
             self.tag = tag          # if caller supplied, else will auto-gen unique tag
             self.doTag = doTag      # false if caller doesn't want a tag
             self.color = color
+            self.pos = pos
+            self.scale = scale
             self.bg = bg
             self.marginL = .1
             self.marginR = .2
             self.marginB = .1
             self.marginT = .1
             #
-            self.text = None
+            self.textNode = None
             self.card = None
             self._path = None
+            self._txtPath = None
             self.gFrame = None
             #
             self._genTextObj(text, color)
             if self.bg[3] > 0:
                 self._genCardObj(bg)
-            self._gen3dTextObj(pos, scale, bg)
+            self._gen3dTextObj(pos, scale, color)
 
             # txtNode.setAlign(TextNode.ACenter)
             # txtNode.setFrameMargin(0.2, 0.2, 0.1, 0.1)
@@ -554,15 +559,17 @@ class Wye3dObjsLib(Wye.staticObj):
         ## setters
 
         def setAlign(self, ctr):
-            self.text.setAlign(ctr)
+            self.textNode.setAlign(ctr)
 
         def setColor(self, color):
             self.color = color
-            self.text.setTextColor(color)
+            self.textNode.setTextColor(color)
             self._regen3d()
 
         def setBackgroundColor(self, bg):
             self.bg = bg
+            if self.bg[3] > 0:
+                self._genCardObj(self.bg)
             self._regen3d()
 
         # update the margin spacing
@@ -575,6 +582,7 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def setPos(self, *args):
             self._path.setPos(*args)
+            self.pos = self._path.getPos()
 
         def getHpr(self):
             return self._path.getHpr()
@@ -584,22 +592,26 @@ class Wye3dObjsLib(Wye.staticObj):
 
         def setScale(self, val):
             self._path.setScale(val)
+            self.scale = val
 
         # changing the text requires regenerating the background card and the 3d node
         def setText(self, text):
-            self.text.setText(text)
+            if len(text) == 0:
+                text = ' '
+            self.textNode.setText(text)
+            self.text = text
             self._regen3d()
 
         def setWordWrap(self):
-            return self.text.getWordwrap()
+            return self.textNode.getWordwrap()
 
         ## getters
 
         def getAlign(self):
-            return self.text.getAlign()
+            return self.textNode.getAlign()
 
         def getColor(self):
-            return self._path.getColor()
+            return self.color
 
         def getFrame(self):
             return self.gFrame
@@ -608,7 +620,7 @@ class Wye3dObjsLib(Wye.staticObj):
             return self.gFrame[3] - self.gFrame[2]
 
         def getFrameColor(self):
-            return self._path.getColor()
+            return self.color
 
         # update the margin spacing
         def getFrameMargin(self):
@@ -618,22 +630,22 @@ class Wye3dObjsLib(Wye.staticObj):
             return self._path
 
         def getPos(self):
-            return self._path.getPos()
+            return self.pos
 
         def getScale(self):
-            return self._path.getScale()
+            return self.scale
 
         def getTag(self):
             return self.tag
 
         def getText(self):
-            return self.text.getText()
+            return self.text
 
         def getWidth(self):
             return self.gFrame[1] - self.gFrame[0]
 
         def getWordWrap(self):
-            return self.text.setWordwrap()
+            return self.textNode.setWordwrap()
 
         ## methods
 
@@ -647,77 +659,79 @@ class Wye3dObjsLib(Wye.staticObj):
 
         # rebuild card and path for updated text object
         def _regen3d(self):
-            bg = self.bg
-            color = self._path.getColor()
-            pos = self._path.getPos()
-            scale = self._path.getScale()
-            if self.bg[3] > 0:                              # if alpha not transparent
-                self._genCardObj(bg)                            # generate new background card obj for updated text object
-            self._path.detachNode()                         # detach 3d node path from old card
-            self._gen3dTextObj(pos, scale, color, False)    # make new 3d node path to new card
+            self.textNode = TextNode(self.tag)
+            self.textNode.setText(self.text)
+            self.textNode.setTextColor(self.color)
+            if self.bg[3] > 0:
+                self._genCardObj(self.bg)
+            self._gen3dTextObj(self.pos, self.scale, self.color)
 
         # internal rtn to gen text object with unique wyeTag name
         def _genTextObj(self, text, color=(1,1,1,1)):
             if self.doTag and not self.tag:
                 self.tag = "txt"+str(WyeCore.Utils.getId())
-                #print("_3dTxt", self.dbgTxt, " tag", self.tag, " doTag", self.doTag)
-            self.text = TextNode(self.tag)
+                #print("_3dTxt", self.text, " tag", self.tag, " doTag", self.doTag)
+            self.textNode = TextNode(self.tag)
             if len(text) == 0:
                 text = ' '
-            self.text.setText(text)
-            self.text.setTextColor(color)
+            self.textNode.setText(text)
+            self.textNode.setTextColor(color)
 
         ## internal rtn to gen 3d Card clickable background object
         # only used when background color set
         def _genCardObj(self, bg=(0,0,0,0)):
-            #print("initial txtNode frame ", self.text.getFrameActual())
-            self.card = CardMaker("Txt Card")
-            self.card.set_color(bg[0], bg[1], bg[2], bg[3])    # set background color
-            self.gFrame = self.text.getFrameActual()
-            if self.gFrame[1] == 0:      # if empty frame
-                self.gFrame[1] = 1
-                self.gFrame[3] = 1
-            #print("self.gFrame", self.gFrame)
-            self.gFrame[0] -= self.marginL
-            self.gFrame[1] += self.marginR
-            self.gFrame[2] -= self.marginB
-            self.gFrame[3] += self.marginT
-            #print("initial adjusted self.gFrame", self.gFrame)
-            self.card.setFrame(self.gFrame)
+            self.textNode.set_card_as_margin(.1,.1,.1,.1)
+            self.textNode.set_card_color(bg[0], bg[1], bg[2], bg[3])
+            #print("initial txtNode frame ", self.textNode.getFrameActual())
+            #self.card = CardMaker("Txt Card")
+            #self.card.set_color(bg[0], bg[1], bg[2], bg[3])    # set background color
+            #self.gFrame = self.textNode.getFrameActual()
+            #if self.gFrame[1] == 0:      # if empty frame
+            #    self.gFrame[1] = 1
+            #    self.gFrame[3] = 1
+            ##print("self.gFrame", self.gFrame)
+            #self.gFrame[0] -= self.marginL
+            #self.gFrame[1] += self.marginR
+            #self.gFrame[2] -= self.marginB
+            #self.gFrame[3] += self.marginT
+            ##print("initial adjusted self.gFrame", self.gFrame)
+            #self.card.setFrame(self.gFrame)
 
-        # internal rtn to generate 3d (path) object to position, etc. the text
+        # internal rtn to generate/update 3d path object to position, etc. the text
         def _gen3dTextObj(self, pos=(0,0,0), scale=(1,1,1), color=(0,0,0,1), genNodePath = True):
-            genNodePath = True
-            if genNodePath:
-                #print("_gen3dTextObj make new node path for", self.dbgTxt)
-                self._path = NodePath(self.text.generate())
-            else:
-                #print("_gen3dTextObj keep old node path for", self.dbgTxt)
-                self._path.attachNewNode(self.text.generate())
-            if self.bg[3] > 0:      # if visible background color, gen background card
-                if genNodePath:
-                    self._path = NodePath(self.card.generate())     # ,generate() makes clickable geometry but won't resize when frame dimensions change
-                else:
-                    self._path.attachNewNode(self.card.generate())
-                self._path.attachNewNode(self.text)
-                self._path.setEffect(DecalEffect.make())        # glue text onto card
-            # finished gen card
-            self._path.reparentTo(self.parent)
+            #print("_gen3dTextObj keep old node path for", self.text)
+            if self._path:  # if we already have a path, keep using it
+                #print("Update text node", self.text, " re-use node path")
+                self._txtPath.removeNode()
+                self._txtPath = NodePath(self.textNode.generate())
+                self._txtPath.reparentTo(self._path)
+            else:   # first time, create new path0
+                #print("New text node", self.text, " gen node path")
+                self._path = NodePath(self.tag)
+                self._txtPath = NodePath(self.textNode.generate())
+                self._txtPath.reparentTo(self._path)
+                # stick text path into scene
+                self._path.reparentTo(self.parent)
 
-            if self.doTag:
-                WyeCore.picker.makePickable(self._path)         # make selectable
-                self._path.setTag("wyeTag", self.text.name)       # section tag: use unique name from text object
+                if self.doTag:
+                    WyeCore.picker.makePickable(self._path)  # make selectable
+                    self._path.setTag("wyeTag", self.textNode.name)  # section tag: use unique name from text object
+            #if self.bg[3] > 0:      # if visible background color, gen background card
+            #    self._path.attachNewNode(self.card.generate())  # ,generate() makes clickable geometry but won't resize when frame dimensions change
+            #    self._path.setEffect(DecalEffect.make())        # glue text onto card
+
+
             self._path.setPos(pos[0], pos[1], pos[2])
             self._path.setScale(scale)
 
-            #took billboard off 'cause it broke mouse intersection critical to UI.  Done elsewhere manually now
-            #self._path.setBillboardPointWorld(0.)           # always face the camera
-            #self._path.setBillboardAxis()
             self._path.setLightOff()                        # unaffected by world lighting
+            #print(" set new path to color", color)
             self._path.setColor(color)
+            self.textNode.setText(self.text)
 
-            self.gFrame = self.text.getFrameActual()
+            self.gFrame = self.textNode.getFrameActual()
             if self.gFrame[1] == 0:  # if empty frame
+                print("_3dText _gen3dTextObj: Warning", self.text,": empty gFrame")
                 self.gFrame[1] = 1
                 self.gFrame[3] = 1
             # print("self.gFrame", self.gFrame)
@@ -736,4 +750,4 @@ class Wye3dObjsLib(Wye.staticObj):
         def hide(self):
             self._path.hide()
             WyeCore.picker.makeNotPickable(self._path)
-            #print("_3tTxt ", self.dbgTxt, " made not pickable. tag 'pickable'=", self._path.getTag('pickable'))
+            #print("_3tTxt ", self.text, " made not pickable. tag 'pickable'=", self._path.getTag('pickable'))

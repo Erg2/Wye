@@ -140,6 +140,8 @@ class WyeCore(Wye.staticObj):
     libLoadList = ["WyeLib.py", "WyeUILib.py", "WyeUIUtilsLib.py", "Wye3dObjsLib.py"]  # list of lib files to load on start.  libList on cmd line added to it
 
     HUD = None      # HUD dialog, if any
+    recorder = None     # record UI dialog, if any
+
     winWidth = 0        # updated on resize
     winHeight = 0
 
@@ -357,7 +359,7 @@ class WyeCore(Wye.staticObj):
                         path = WyeCore.Utils.resourcePath(libFile)[2:]
                     else:
                         path = WyeCore.Utils.resourcePath(libFile)
-                    # print("Load library '" + path + "'")
+                    #print("Load library '",libName,"' from path'" + path + "'")
                     try:
                         libModule = SourceFileLoader(libName, path).load_module()
                         # print("libModule ", libModule)
@@ -794,9 +796,11 @@ class WyeCore(Wye.staticObj):
                 self.accept("f1", self.controlKeyFunc, [Wye.ctlKeys.F1])
                 self.accept("f11", self.controlKeyFunc, [Wye.ctlKeys.F11])
                 self.accept("window-event", self.resize)
-                self.accept("control-w", self.controlKeyFunc, [Wye.ctlKeys.CTL_W])
                 self.accept("control-h", self.controlKeyFunc, [Wye.ctlKeys.CTL_H])
                 self.accept("control-p", self.controlKeyFunc, [Wye.ctlKeys.CTL_P])
+                self.accept("control-r", self.controlKeyFunc, [Wye.ctlKeys.CTL_R])
+                self.accept("control-s", self.controlKeyFunc, [Wye.ctlKeys.CTL_S])
+                self.accept("control-w", self.controlKeyFunc, [Wye.ctlKeys.CTL_W])
 
 
             def resize(self, dummy):
@@ -821,8 +825,8 @@ class WyeCore(Wye.staticObj):
                 # If callback(s) return True, don't process any further
                 usedCtlKey = False
                 if len(WyeCore.controlKeyCallbacks) > 0:
-                    for callback in WyeCore.controlKeyCallbacks:
-                        usedCtlKey = usedCtlKey or callback(self)
+                    for callbackStruct in WyeCore.controlKeyCallbacks:
+                        usedCtlKey = usedCtlKey or callbackStruct[0](callbackStruct[1], keyID)       # usedCtlKey true if any callback used the key
                 if usedCtlKey:
                     return
 
@@ -835,8 +839,8 @@ class WyeCore(Wye.staticObj):
                 # If callback(s) return True, don't process any further
                 usedKey = False
                 if len(WyeCore.keyCallbacks) > 0:
-                    for callback in WyeCore.keyCallbacks:
-                        usedKey = usedKey or callback(self)
+                    for callbackStruct in WyeCore.keyCallbacks:
+                        usedKey = usedKey or callbackStruct[0](callbackStruct[1], keyname)
                 if usedKey:
                     return
 
@@ -1344,10 +1348,7 @@ class WyeCore(Wye.staticObj):
                             newDescr += "\"" + p + "\"" + ("," if ii<(dLen-1) else "")
                         else:
                             newDescr += str(p) + ("," if ii<(dLen-1) else "")
-                if jj < (totLen-1):
-                    newDescr+="),"
-                else:
-                    newDescr+=")"
+                newDescr+="),"      # note: do not optimize away the comma - otherwise Python deletes solitary (xxx)'s tuples
             return newDescr+")"
 
         # recursively count nested lists in list

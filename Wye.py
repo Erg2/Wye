@@ -634,7 +634,9 @@ class Wye:
         F11 = -15
         CTL_H = -16
         CTL_P = -17
-        CTL_W = -18
+        CTL_R = -18
+        CTL_S = -19
+        CTL_W = -20
 
         ctlList = [
             RIGHT,
@@ -654,6 +656,8 @@ class Wye:
             F11,
             CTL_H,
             CTL_P,
+            CTL_R,
+            CTL_S,
             CTL_W,
         ]
 
@@ -675,6 +679,8 @@ class Wye:
             F11: "F11",
             CTL_H: "CTL_H",
             CTL_P: "CTL_P",
+            CTL_R: "CTL_R",
+            CTL_S: "CTL_S",
             CTL_W: "CTL_W",
         }
 
