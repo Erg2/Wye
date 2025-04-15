@@ -2875,6 +2875,7 @@ class WyeUILib(Wye.staticObj):
                         cardPath.reparentTo(dlgNodePath)
                         cardPath.setPos((-.5, .1, 1.2 - ht))
                         cardPath.setColor(Wye.color.BACKGROUND_COLOR)
+                        cardPath.setLightOff()
                         frame.vars.bgndGObj[0] = cardPath
                         # background outline
                         oCard = CardMaker("Dlg Bgnd Outline")
@@ -2889,6 +2890,7 @@ class WyeUILib(Wye.staticObj):
                         oCardPath.reparentTo(dlgNodePath)
                         oCardPath.setPos((-.6, .2, 1.1 - ht))
                         oCardPath.setColor(Wye.color.OUTLINE_COLOR)
+                        oCardPath.setLightOff()
                         frame.vars.outlineGObj[0] = oCardPath
                     except Exception as e:
                         print("Failed to do dialog cards '" + frame.params.title[0] + "' \n", str(e))
@@ -5158,9 +5160,9 @@ class WyeUILib(Wye.staticObj):
             return f
 
         def run(frame):
-            curframe = inspect.currentframe()
-            calframe = inspect.getouterframes(curframe, 2)
-            print('EditVerb: called from:', calframe[1][3])
+            #curframe = inspect.currentframe()
+            #calframe = inspect.getouterframes(curframe, 2)
+            #print('EditVerb: called from:', calframe[1][3])
 
             verb = frame.params.verb[0]  # shorthand
             # re-get verb from lib in case it's been updated
@@ -5404,11 +5406,11 @@ class WyeUILib(Wye.staticObj):
                         # no code, put <add code here>
                         else:
                             if verb.mode == Wye.mode.PARALLEL:
-                                print("No code, parallel, put in noStrmLnCallback")
+                                #print("No code, parallel, put in noStrmLnCallback")
                                 WyeUILib.EditVerb.insertNothingHere(dlgFrm, len(dlgFrm.params.inputs[0]), frame,
                                                                 WyeUILib.EditVerb.EditNoStreamLineCallback)
                             else:
-                                print("No code, sequential, put in noCodeLnCallback")
+                                #print("No code, sequential, put in noCodeLnCallback")
                                 WyeUILib.EditVerb.insertNothingHere(dlgFrm, len(dlgFrm.params.inputs[0]), frame,
                                                                     WyeUILib.EditVerb.EditNoCodeLineCallback)
                     # no code to edit
@@ -5424,7 +5426,7 @@ class WyeUILib(Wye.staticObj):
 
                 case 1:
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
-                    print("EditVerb popped dlg", dlgFrm.params.title[0], " status", Wye.status.tostring(dlgFrm.status))
+                    #print("EditVerb popped dlg", dlgFrm.params.title[0], " status", Wye.status.tostring(dlgFrm.status))
                     frame.status = dlgFrm.status
                     WyeUILib.EditVerb.activeVerbs.pop(frame.vars.activeKey[0])
                     #print("ObjEditor: dlg", dlgFrm.params.title[0]," returned status", dlgFrm.params.retVal[0])  # Wye.status.tostring(frame.))
@@ -10241,18 +10243,16 @@ Help:
     Ctrl-H to bring up this help dialog.
 
 Move:
-    Mouse button 1 down+drag moves fwd/back, turns
+    Mouse button 1 down+drag moves fwd/back and turns left/right
     Shift-Mouse button 1 down+drag tilts up/down and slides sideways
     Mouse button 2 down+drag slides sideways, up/down
     Pressing the scroll wheel (middle button) resets the viewpoint to the starting location
 
 Select things:    
-    Mouse button 1 (MB1) selects things
-    Ctrl-Alt-MB1 to bring up the main Wye Settings dialog.  But you know this if you got here.
+    Mouse button 1 (MB1) selects things and triggers actions
     Ctrl-MB1 on an object to edit it
-    Ctrl-Shift-MB1 anywhere to bring up the master edit dialog showing all libraries
     Alt-click on an object to debug it
-    Alt-Shift-MB1 to bring up the master debug dialog showing all running objects in the system
+    Ctrl-W brings up the HUD menu if it is closed.  The HUD gets you to the other main menus.
 
 Dialogs:
     You can drag a dialog by MB1 down on any gray part and dragging.  
@@ -10264,16 +10264,17 @@ Dialogs:
     Any control in Yellow is clickable.  
 
     Text in Green with a cursor is the currently selected text input
-
-    The +/- buttons in the editor provide line-at-a-time copy/paste support.  
-    Other than thst, there is no select/copy/paste of text.
     The text cursor always starts at the beginning of the text box.  Move the cursor with the arrow keys, 
     home/end keys, and ctl-arrow keys.
-
-    Number boxes increment/decrement on up/down arrow and scroll-wheel input.  ctl-up/down to go by 10's.
+    
+    The +/- buttons in the editor provide line-at-a-time copy/paste support.  
+    Other than thst, there is no select/copy/paste of text.
+    
+    Number boxes increment/decrement on up/down arrow keys and scroll-wheel input.  ctl-up/down to go by 10's.
 
     Cancel (or the Escape key) will close a dialog without saving.
-    Ok (or Enter) will close any dialog that has just an OK button. (information/warning dialogs)
+    Ok (or Enter) will close a dialog that has just an OK button. (information/warning dialogs)
+    Some dialogs ignore these keys, like the HUD dialog.
 
 Hot Keys
     F11 cycles between screen sizes
@@ -10281,17 +10282,20 @@ Hot Keys
     Enter(aka Return) will close dialogs that have only an OK button.
     F1 brings the mouse back if it is hidden.
     
-Wye Overview:
-    Wye will be an IDE for interactive VR characters.
-    This Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
-    When the alpha starts it loads the demo library TestLib.py.  You can also load, edit, and save user defined
-    libraries.  The alpha release ships with several example libraries available from the master edit dialog.
+Wye General Info:
+    Wye 1.0 ** will be ** an IDE for interactive VR characters.
+    This 0.9 Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
+    When this alpha version starts it loads the demo library TestLib.py.  You can also load, edit, and save user 
+    defined libraries.  The alpha release ships with several example libraries available from the Wye Libraries dialog.
 
+    Check out the release notes for a walkthrough of cool things you can do in this release. 
+    
     The current level of code editing requires a detailed understanding of the underlying engine.  In other words, 
-    editing is not recommended without a tutorial from someone who knows how it works.  In the future, this level
-    of detail will only be available to wizards who enjoy breaking things at the core level.
+    editing is not recommended without a tutorial from someone who knows how it works.  The release notes give some
+    examples of simple editing to do some fun things.  In the future, this low level of access will only be available 
+    to wizards who enjoy breaking things at the core level.
 
-    Also, saving to files is pretty reliable so you can save early/save often   
+    Saving to user libraries is pretty reliable so if you are tweaking things, save early/save often   
 
     The engine is fairly well protected from crashes, so it should stay running even if it puts up alarming dialogs
     when things go funny.  In many cases it will keep your changes around so you can keep working on them.  
@@ -10299,12 +10303,10 @@ Wye Overview:
     On the minus side, All the helpful UI stuff like undo and and "why didn't that work" debug support that Wye is 
     intended to provide is not in this release.  Remember: Underlying engine, no flashy features.  
     You probably want to ask to be on the beta test list...
-
-    Check out the release notes for a walkthrough of cool things you can do in this release. 
 '''
 
-            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "NO_CANCEL"])
-
+            WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "NO_CANCEL"],
+                                                     position=(2, Wye.UI.DIALOG_OFFSET, 7))
 
 
 

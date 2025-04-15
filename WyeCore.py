@@ -552,7 +552,7 @@ class WyeCore(Wye.staticObj):
                             try:
                                 #print("Run", frame.verb.__name__)
                                 if Wye.debugOn:
-                                    #msg = "worldRun run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC) + " Status "+Wye.status.tostring(frame.status)
+                                    msg = "worldRun run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC) + " Status "+Wye.status.tostring(frame.status)
                                     if frame.verb == WyeCore.libs.WyeUILib.Dialog:
                                         msg += " dialog '"+frame.params.title[0]+"'"
                                     #print("worldRun debug frame", frame.verb.__name__, " PC", frame.PC, " ", frame.params.title[0] if frame.verb == WyeCore.libs.WyeUILib.Dialog else "")
