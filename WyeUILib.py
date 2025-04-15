@@ -984,7 +984,7 @@ class WyeUILib(Wye.staticObj):
             width = lbl.getWidth() + .5 if len(frame.params.label[0]) else 0
             txt = WyeCore.libs.Wye3dObjsLib._3dText(frame.vars.currVal[0], frame.params.textColor[0],
                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath(), bg=frame.params.backgroundColor[0])
-            #txt.setColor(WyeUILib.ACTIVE_COLOR)
+            txt.setColor(Wye.color.ACTIVE_COLOR)
             # print("    Dialog inWdg", txt)
             frame.vars.tags[0].append(txt.getTag())  # save graphic widget for deleting on dialog close
             frame.vars.gWidgetStack[0].append(txt)  # save graphic widget for deleting on close
@@ -1116,7 +1116,7 @@ class WyeUILib(Wye.staticObj):
             # add tag, input index to dictionary
             frame.vars.tags[0].append(lbl.getTag())  # tag => inp index dictionary (both label and entry fields point to inp frm)
 
-            width = lbl.getWidth() + .5
+            width = lbl.getWidth() + .5 if len(frame.params.label[0]) else 0
             txt = WyeCore.libs.Wye3dObjsLib._3dText(str(frame.vars.currVal[0]), frame.params.textColor[0],
                                 pos=(width, 0, 0), scale=(1, 1, 1), parent=lbl.getNodePath(), bg=frame.params.backgroundColor[0])
             txt.setColor(Wye.color.ACTIVE_COLOR)
@@ -1135,11 +1135,13 @@ class WyeUILib(Wye.staticObj):
             #    return
             frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
-            lbl.setPos(pos)
-            pos[2] -= lbl.getHeight()
-            lbl = frame.vars.gWidgetStack[0][1]
-            lbl.setPos(pos)
-            pos[2] -= lbl.getHeight()
+            lbl.setPos(pos[0], pos[1], pos[2])
+            width = lbl.getWidth() + .5 if len(frame.params.label[0]) else 0
+            pos[0] += width
+            txt = frame.vars.gWidgetStack[0][1]
+            txt.setPos(width, 0, 0)
+            pos[2] -= max(lbl.getHeight(), txt.getHeight())
+            frame.vars.size[0] = (width + txt.getWidth(), 0, max(lbl.getHeight(), txt.getHeight()))
 
         # update value
         def update(inFrm):
@@ -1256,11 +1258,13 @@ class WyeUILib(Wye.staticObj):
             #    return
             frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
-            lbl.setPos(pos)
-            pos[2] -= lbl.getHeight()
-            lbl = frame.vars.gWidgetStack[0][1]
-            lbl.setPos(pos)
-            pos[2] -= lbl.getHeight()
+            lbl.setPos(pos[0], pos[1], pos[2])
+            width = lbl.getWidth() + .5 if len(frame.params.label[0]) else 0
+            pos[0] += width
+            txt = frame.vars.gWidgetStack[0][1]
+            txt.setPos(width, 0, 0)
+            pos[2] -= max(lbl.getHeight(), txt.getHeight())
+            frame.vars.size[0] = (width + txt.getWidth(), 0, max(lbl.getHeight(), txt.getHeight()))
 
         # update value
         def update(inFrm):
@@ -1847,6 +1851,7 @@ class WyeUILib(Wye.staticObj):
                         # typically used to build the list
                         callVerb = rowFrm.params.preDropCallback[0]
                         if callVerb:
+                            #print("InputDropdownCallback: call preDropCallback to build list")
                             verbFrm = callVerb.start(frame.SP)
                             data = rowFrm.params.preDropOptData[0]
                             verbFrm.eventData = ("", data, verbFrm)
@@ -1875,14 +1880,17 @@ class WyeUILib(Wye.staticObj):
 
                             attrIx += 1
 
+                        #print("InputDropdownCallback: push dlg", dlgFrm.params.title[0], " on stack. status ", Wye.status.tostring(dlgFrm.status))
                         # WyeUILib.Dialog.run(dlgFrm)
                         frame.SP.append(dlgFrm)     # push dialog so it runs next cycle
+                        #print("   stack now", [frm.verb.__name__ for frm in frame.SP])
                         frame.PC += 1               # on return from dialog, run next case
 
                     case 1:
                         dlgFrm = frame.SP.pop()
+                        #print("InputDropdownCallback: returned from dropdown dialog. selected dropdown row = ", frame.vars.retStat[0])
                         frame.status = dlgFrm.status
-                        if frame.vars.retStat[0] >=0:
+                        if frame.vars.retStat[0] >=0:       # retStat has the
                             #print("InputDropdown set value to", dlgFrm.params.retVal[0])
                             rowFrm.verb.setValue(rowFrm, frame.vars.retStat[0])
 
@@ -2311,7 +2319,7 @@ class WyeUILib(Wye.staticObj):
             elif hasattr(inFrm.params, "callback") and isinstance(inFrm.params.callback, list) \
                     and len(inFrm.params.callback) > 0 and inFrm.params.callback[0]:
                 callVerb = inFrm.params.callback[0]
-                #print("Dialog doCallback: ", inFrm.verb.__name__, "params callback", callVerb.__name__)
+                #print("Dialog doCallback: ", inFrm.verb.__name__, " user params callback", callVerb.__name__)
                 if callVerb and hasattr(inFrm.params, "optData") and isinstance(inFrm.params.optData, list) \
                     and len(inFrm.params.optData) > 0 and inFrm.params.optData[0]:
                     data = inFrm.params.optData[0]
@@ -2328,6 +2336,7 @@ class WyeUILib(Wye.staticObj):
                     # if not single cycle, then put up as parallel path
                     if callVerb.mode != Wye.mode.SINGLE_CYCLE:
                         # queue to be called every display cycle
+                        #print("Dialog doCallback: setRepeatEventCallback 'Display' with frame", callVerb.__name__)
                         WyeCore.World.setRepeatEventCallback("Display", verbFrm, data)
                     else:
                         # call this once
@@ -2339,7 +2348,7 @@ class WyeUILib(Wye.staticObj):
                             verbFrm.verb.run(verbFrm)
                 except Exception as e:
                     if Wye.devPrint:
-                        print("Dialog doCallback: Error running callback verb", callVerb.__name__, "\n", str(e))
+                        #print("Dialog doCallback: Error running callback verb", callVerb.__name__, "\n", str(e))
                         traceback.print_exception(e)
                     title = "Callback Error"
                     text = "Error running callback verb "+ callVerb.__name__+ "\n"+ str(e) + "\n" + traceback.format_exc()
@@ -3304,6 +3313,10 @@ class WyeUILib(Wye.staticObj):
                                         WyeUILib.MainMenuDialog.debugSysCallback)
                     devChkFrm.params.optData = [devChkFrm]
 
+                    traceChkFrm = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "  Enable exec trace", [Wye.trace],
+                                        WyeUILib.MainMenuDialog.traceCallback)
+                    traceChkFrm.params.optData = [traceChkFrm]
+
 
                     # exit
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Exit", color=Wye.color.SUBHD_COLOR)
@@ -3454,6 +3467,26 @@ class WyeUILib(Wye.staticObj):
                 rowFrm = data[1]
                 Wye.allowSysDebug = rowFrm.vars.currVal[0]
                 print("Allow debugging system objects", Wye.allowSysDebug)
+
+
+
+
+        # allow debugging system objects (danger Will Robinson!)
+        class traceCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            dataType = Wye.dType.STRING
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("traceCallback started")
+                return Wye.codeFrame(WyeUILib.MainMenuDialog.traceCallback, stack)
+
+            def run(frame):
+                data = frame.eventData
+                rowFrm = data[1]
+                Wye.trace = rowFrm.vars.currVal[0]
+                print("Tracing enabled", Wye.trace)
 
 
 
@@ -3921,7 +3954,15 @@ class WyeUILib(Wye.staticObj):
                 lib = data[1][4]      # the library we're messing with
 
                 # make sure we have the latest version of this library (stored links can ref old copies of lib)
-                lib = WyeCore.World.libDict[lib.__name__]
+                # make sure we have the latest version
+                if lib.__name__ in WyeCore.World.libDict:
+                    lib = WyeCore.World.libDict[lib.__name__]
+                # lib is gone, nevermind!
+                else:
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                              "Library '" + lib.__name__ + "' is no longer loaded.", Wye.color.WARNING_COLOR)
+                    frame.status = Wye.status.SUCCESS
+                    return
 
                 match(frame.PC):
                     case 0:
@@ -4097,7 +4138,17 @@ class WyeUILib(Wye.staticObj):
                 lib = data[1][4]      # the library we're messing with
 
                 # make sure we have the latest version of this library (stored links can ref old copies of lib)
-                lib = WyeCore.World.libDict[lib.__name__]
+                # make sure we have the latest version
+                if lib.__name__ in WyeCore.World.libDict:
+                    lib = WyeCore.World.libDict[lib.__name__]
+                # lib is gone, nevermind!
+                else:
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                              "Library '" + lib.__name__ + "' is no longer loaded.", Wye.color.WARNING_COLOR)
+                    frame.status = Wye.status.SUCCESS
+                    if frame.SP[-1] != frame:
+                        frame.SP.pop()
+                    return
 
                 # get selectedIx
                 opIx = editLnFrm.params.selectedIx[0]
@@ -4141,7 +4192,7 @@ class WyeUILib(Wye.staticObj):
                                     return
 
                                 # delete lib ok?
-                                #print("EditLibLineCallback: case 0: delete library")
+                                #print("EditLibLineCallback: case 0: delete library are you sure?")
                                 delOkFrm = WyeCore.libs.WyeUIUtilsLib.doPopUpDialogAsync(frame, "Delete Library", "Delete Library "+lib.__name__+"?", formatLst=[""],
                                                                                          position=pos, parent=parentFrm)
                                 frame.SP.append(delOkFrm)  # push dialog so it runs next cycle
@@ -4253,7 +4304,7 @@ class WyeUILib(Wye.staticObj):
                         delOkFrm = frame.SP.pop()
                         frame.status = Wye.status.SUCCESS
                         if delOkFrm.params.retVal[0] == Wye.status.SUCCESS:
-                            #print("EditLibLineCallback case 2: del lib "+lib.__name__)
+                            #print("EditLibLineCallback case 2: yes del lib "+lib.__name__)
 
                             # if lib open in editor, close it
                             if lib.__name__ in WyeUILib.EditMainDialog.activeLibs:
@@ -4514,7 +4565,18 @@ class WyeUILib(Wye.staticObj):
             lib = data[1][2]
 
             # make sure we have the latest version
-            lib = WyeCore.World.libDict[lib.__name__]
+            if lib.__name__ in  WyeCore.World.libDict:
+                lib = WyeCore.World.libDict[lib.__name__]
+            # lib is gone, nevermind!
+            else:
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                                                    "Library '" + lib.__name__ + "' is no longer loaded.",
+                                                    Wye.color.WARNING_COLOR)
+                frame.status = Wye.status.SUCCESS
+                if frame.SP[-1] != frame:
+                    frame.SP.pop()
+                return
+
             frame.vars.lib[0] = lib
 
             # If already open, bring that one into view
@@ -4641,7 +4703,16 @@ class WyeUILib(Wye.staticObj):
         # delete all verb rows and redo them
         def update(frame, dlgFrm):
             # make sure we have the latest lib
-            lib = WyeCore.World.libDict[frame.vars.lib[0].__name__]
+            if frame.vars.lib[0].__name__ in WyeCore.World.libDict:
+                lib = WyeCore.World.libDict[frame.vars.lib[0].__name__]
+            else:
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                          "Library '" + frame.vars.lib[0].__name__ + "' is no longer loaded.", Wye.color.WARNING_COLOR)
+                frame.status=Wye.status.SUCCESS
+                if frame.SP[-1] != frame:
+                    frame.SP.pop()
+                return
+
             frame.vars.lib[0] = lib
 
             if lib.modified:
@@ -4733,7 +4804,18 @@ class WyeUILib(Wye.staticObj):
                 lib = verb.library
 
                 # make sure we have latest version
-                lib = WyeCore.World.libDict[lib.__name__]
+                # make sure we have the latest version
+                if lib.__name__ in WyeCore.World.libDict:
+                    lib = WyeCore.World.libDict[lib.__name__]
+                # lib is gone, nevermind!
+                else:
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                              "Library '" + lib.__name__ + "' is no longer loaded.", Wye.color.WARNING_COLOR)
+                    frame.status = Wye.status.SUCCESS
+                    if frame.SP[-1] != frame:
+                        frame.SP.pop()
+                    return
+
                 match(frame.PC):
                     case 0:  # Delete library op
                         # delete verb ok?
@@ -5076,19 +5158,40 @@ class WyeUILib(Wye.staticObj):
             return f
 
         def run(frame):
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
+            print('EditVerb: called from:', calframe[1][3])
+
             verb = frame.params.verb[0]  # shorthand
             # re-get verb from lib in case it's been updated
             libName = verb.library.__name__
             verbName = verb.__name__
-            lib = WyeCore.World.libDict[libName]
+
+            # make sure we have the latest version
+            if libName in  WyeCore.World.libDict:
+                lib = WyeCore.World.libDict[libName]
+            # lib is gone, nevermind!
+            else:
+                print("EditVerb", verb.__name__, " lib gone, pop up dlg and exit")
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                                                    "Library '" + libName + "' is no longer loaded.",
+                                                    Wye.color.WARNING_COLOR)
+                frame.params.retVal = Wye.status.FAIL
+                frame.status = Wye.status.SUCCESS
+                if frame.SP[-1] != frame:
+                    frame.SP.pop()
+                return
+
             #if lib != verb.library:
             #    print("EditVerb lib", lib.__name__, " has been updated.  Using most recent")
 
             # if user deleted verb from lib, nevermind
             if not hasattr(lib, verbName):
-                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Verb Not Found", "Verb "+verbName+" no longer defined in thsi library",
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Verb Not Found", "Verb "+verbName+" no longer defined in this library",
                                                          Wye.color.WARNING_COLOR)
                 frame.status = Wye.status.SUCCESS
+                if frame.SP[-1] != frame:
+                    frame.SP.pop()
                 return
 
             verb = getattr(lib, verbName)
@@ -5321,6 +5424,7 @@ class WyeUILib(Wye.staticObj):
 
                 case 1:
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
+                    print("EditVerb popped dlg", dlgFrm.params.title[0], " status", Wye.status.tostring(dlgFrm.status))
                     frame.status = dlgFrm.status
                     WyeUILib.EditVerb.activeVerbs.pop(frame.vars.activeKey[0])
                     #print("ObjEditor: dlg", dlgFrm.params.title[0]," returned status", dlgFrm.params.retVal[0])  # Wye.status.tostring(frame.))
@@ -5357,7 +5461,7 @@ class WyeUILib(Wye.staticObj):
             if name:
                 name = name.strip()
             if not name:
-                WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Verb Name",
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Verb Name",
                                                     "Please enter a name in the Name: field",
                                                     Wye.color.WARNING_COLOR)
                 return
@@ -5365,8 +5469,11 @@ class WyeUILib(Wye.staticObj):
             # find library
             libName = frame.vars.existingLibFrm[0].vars.list[0][frame.vars.existingLibFrm[0].params.selectedIx[0]]
             if not libName in WyeCore.World.libDict:
-                WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
                           "Library '"+libName+"' is no longer loaded.  Unable to update verb.", Wye.color.WARNING_COLOR)
+                frame.status = Wye.status.SUCCESS
+                if frame.SP[-1] != frame:
+                    frame.SP.pop()
                 return
 
             # get lib
@@ -7877,6 +7984,7 @@ class WyeUILib(Wye.staticObj):
 
                                         # push the copied dialog and go back to waiting
                                         # print("Pushed dialog to stack")
+                                        frame.status = Wye.status.SUCCESS
                                         frame.SP.append(newDlg)
                                         return
 
@@ -8516,7 +8624,7 @@ class WyeUILib(Wye.staticObj):
                 if name:
                     name = name.strip()
                 if not name:
-                    WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Verb Name",
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Verb Name",
                                                         "Please enter a name in the Name: field",
                                                         Wye.color.WARNING_COLOR)
                     return
@@ -8524,7 +8632,7 @@ class WyeUILib(Wye.staticObj):
                 # find library
                 libName = editFrm.vars.existingLibFrm[0].vars.list[0][editFrm.vars.existingLibFrm[0].params.selectedIx[0]]
                 if not libName in WyeCore.World.libDict:
-                    WyeCore.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
+                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Invalid Library",
                                                         "Library '" + libName + "' is no longer loaded.  Unable to update verb.",
                                                         Wye.color.WARNING_COLOR)
                     return
@@ -8614,6 +8722,7 @@ class WyeUILib(Wye.staticObj):
                             # print("ERROR: Invalid library file name '"+ fileName +"'.  Library not saved")
                             frame.status = Wye.status.SUCCESS
                             return
+
                         frame.vars.verbName[0] = verbName
 
                         # Is the lib in memory already?
@@ -10045,15 +10154,16 @@ class WyeUILib(Wye.staticObj):
                 match frame.PC:
                     case 0:
                         if objFrm.verb is WyeCore.ParallelStream:
-                            objFrm.parentFrame.breakpt = True  # make sure the brake is on
-                            if objFrm.parentFrame.SP[-1] != objFrm.parentFrame:
-                                objFrm.parentFrame.SP[-1].breakpt = False       # step at parent object level
+                            objFrm.parentFrame.breakpt = True  # If break one parallel stream, break parent to break all
+                            #if objFrm.parentFrame.SP[-1] != objFrm.parentFrame:
+                            #    objFrm.parentFrame.SP[-1].breakpt = False       # run at child level
+                            objFrm.parentFrame.breakCt += 1  # step parent object once (all other streams cycle once)
+                            objFrm.breakCt += 1 # step this object once
                         else:
-                            if not objFrm.breakpt:  # make sure the brake is on
-                                objFrm.breakpt = True
-                            if objFrm.SP[-1] != objFrm:
-                                objFrm.SP[-1].breakpt = False           # step at parent object level
-                        objFrm.breakCt += 1  # step object once
+                            objFrm.breakpt = True
+                            #if len(objFrm.sp) and objFrm.SP[-1] != objFrm:
+                            #    objFrm.SP[-1].breakpt = False           # run at child level
+                            objFrm.breakCt += 1  # step object once
 
                         chkBxFrm.verb.setValue(chkBxFrm, False)
 
@@ -10272,7 +10382,10 @@ Wye Overview:
         def keyCallback(frame, key):
             #print("keyCallback: key", key)
             if frame.vars.recording[0]:
-                frame.vars.eventList[0].append(("key", key))
+                if key < ' ':
+                    print("key ", chr(key), " not printable")
+                else:
+                    frame.vars.eventList[0].append(("key", key))
             return False
 
 
@@ -10566,20 +10679,18 @@ Wye Overview:
 
                                 case "key":
                                     key = evt[1]
-                                    # only use printable chars
-                                    if key >= ' ':
-                                        tuple = ("WyeCore.libs.RecordPlaybackLib.SendKey", ("Expr","['%s']" % key))
-                                        code.append(tuple)
-                                        # put in a little pause
-                                        tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay",
-                                                    ("Expr", "[10]"))
-                                        code.append(tupleDly)
+                                    tuple = ("WyeCore.libs.RecordPlaybackLib.SendKey", ("Expr","['%s']" % key))
+                                    code.append(tuple)
+                                    # put in a little pause
+                                    tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay",
+                                                ("Expr", "[10]"))
+                                    code.append(tupleDly)
 
                                 case "controlKey":
                                     controlKey = evt[1]
                                     if controlKey != Wye.ctlKeys.CTL_S and controlKey != Wye.ctlKeys.CTL_R:  # ignore recording cmds
                                         tuple = ("WyeCore.libs.RecordPlaybackLib.SendControlKey",
-                                                 ("Expr","['%s']" % Wye.ctlKeys.tostring(controlKey)))
+                                                 ("Expr","[Wye.ctlKeys.%s]" % Wye.ctlKeys.tostring(controlKey)))
                                         code.append(tuple)
                                         # put in a little pause
                                         tupleDly = ("WyeCore.libs.RecordPlaybackLib.Delay", ("Expr", "[10]"))

@@ -531,7 +531,7 @@ class WyeCore(Wye.staticObj):
                 # debug
                 stackNum = 0
                 ranNothing = True  # pessimist
-                clearStackList = False      # no empty stacks found so far
+                cleanStackList = False      # no empty stacks found so far
                 for stack in WyeCore.World.objStacks:
                     sLen = len(stack)
                     if sLen > 0:  # if there's something on the stack
@@ -547,20 +547,27 @@ class WyeCore(Wye.staticObj):
                                 #if stack[0].verb.__name__ == "Dialog":
                                 #    print("  ", stack[0].params.title[0])
                                 continue
+                        # if frame is runnable, run it
                         if frame.verb.mode==Wye.mode.SINGLE_CYCLE or frame.status == Wye.status.CONTINUE:
                             try:
                                 #print("Run", frame.verb.__name__)
                                 if Wye.debugOn:
-                                    Wye.debug(frame, "worldRunner run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC))
+                                    #msg = "worldRun run: stack "+ str(stackNum)+ " verb '"+ frame.verb.__name__+ "' PC "+ str(frame.PC) + " Status "+Wye.status.tostring(frame.status)
+                                    if frame.verb == WyeCore.libs.WyeUILib.Dialog:
+                                        msg += " dialog '"+frame.params.title[0]+"'"
+                                    #print("worldRun debug frame", frame.verb.__name__, " PC", frame.PC, " ", frame.params.title[0] if frame.verb == WyeCore.libs.WyeUILib.Dialog else "")
+                                    Wye.debug(frame, msg)
+                                    #print("WorldRun: after debug", frame.verb.__name__, " status", Wye.status.tostring(frame.status), " ", frame.params.title[0] if hasattr(frame.params, "title") else " ")
                                 else:
-                                    # print("WorldRun: run", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ", " status", Wye.status.tostring(frame.status))
+                                    #print("WorldRun: run", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ", " status", Wye.status.tostring(frame.status))
                                     # run the object frame.  If it throws an error, kill that object stack
+                                    #print("worldRun run frame", id(frame), "", frame.verb.__name__, " PC", frame.PC, " ", frame.params.title[0] if frame.verb == WyeCore.libs.WyeUILib.Dialog else "")
                                     frame.verb.run(frame)
-                                    # print("WorldRun: after run", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ", " status", Wye.status.tostring(frame.status))
+                                    #print("WorldRun: ran", frame.verb.__name__, " status", Wye.status.tostring(frame.status), " ", frame.params.title[0] if hasattr(frame.params, "title") else " ")
                             except Exception as e:
                                 WyeCore.World.stopActiveObject(frame)
                                 if Wye.devPrint:
-                                    print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
+                                    #print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
                                     traceback.print_exception(e)
                                 title = "Runtime Error a"
                                 msg = "Object '"+frame.verb.__name__+", died with error\n"+str(e)+"\n"+traceback.format_exc()
@@ -568,16 +575,20 @@ class WyeCore(Wye.staticObj):
 
                             # if frame.status != Wye.status.CONTINUE:
                             #    print("worldRunner stack ", stackNum, " verb", frame.verb.__name__," status ", WyeCore.Utils.statusToString(frame.status))
-                        # print("worldRunner: run ", frame.verb.__name__, " returned status ", WyeCore.Utils.statusToString(frame.status),
-                        #       " returned param ", frame.firstParamVal())
+
+                        # Is frame done now?
+                        nm = frame.verb.__name__
+                        if frame.verb == WyeCore.libs.WyeUILib.Dialog:
+                            nm += " "+frame.params.title[0]
+                        #print("worldRun: ran ", nm, " returned status ", Wye.status.tostring(frame.status))
                         if frame.status != Wye.status.CONTINUE:
-                            # print("worldRunner: status = ", WyeCore.Utils.statusToString(frame.status))
+                            #print("worldRunner: status = ", WyeCore.Utils.statusToString(frame.status))
                             if sLen > 1:  # if there's a parent frame on the stack list, let them know their called word has exited
                                 pFrame = stack[-2]
                                 if Wye.debugOn:
-                                    Wye.debug(pFrame, "worldRunner: return from call to"+ pFrame.verb.__name__+". Run parent frame "+pFrame.verb.__name__)
+                                    Wye.debug(pFrame, "worldRun: return from call to"+ pFrame.verb.__name__+". Run parent frame "+pFrame.verb.__name__)
                                 else:
-                                    # print("WorldRun: child done, run parent", pFrame.verb.__name__, " ", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ")
+                                    #print("WorldRun: child", frame.verb.__name__, " done, run parent", pFrame.verb.__name__, " ", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ")
                                     # bottom frame done, run its parent
                                     # If it throws an error, kill that object stack
                                     try:
@@ -589,16 +600,19 @@ class WyeCore(Wye.staticObj):
                                         title = "Runtime Error b"
                                         msg = "Object '"+frame.verb.__name__+", died with error\n"+str(e)+"\n"+traceback.format_exc()
                                         WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
+                                #print("worldRun parent", pFrame.verb.__name__," returned", Wye.status.tostring(pFrame.status), " PC", pFrame.PC, " stack", Wye.codeFrame.stackToString(pFrame, pFrame.SP))
 
                             else:  # no parent frame, do the dirty work ourselves
-                                # print("worldRunner: done with top frame on stack.  Clean up stack")
+                                #print("worldRunner: done with top frame on stack ", frame.verb.__name__, ".  Clean up stack")
                                 stack.remove(frame)
+                                cleanStackList = True   # flag we've got a stack to remove
                     else:
-                        clearStackList = True
+                        cleanStackList = True
 
                     stackNum += 1
 
-                if clearStackList:
+                # if there are zero length stacks on the list, remove them
+                if cleanStackList:
                     ii = 0
                     while ii < len(WyeCore.World.objStacks):
                         if len(WyeCore.World.objStacks[ii]) == 0:
@@ -618,10 +632,12 @@ class WyeCore(Wye.staticObj):
                     for frame in WyeCore.World.objKillList:
                         if frame:  # if it still exists
                             #origFrame = frame
-                            # if in parallel exec frame, go up to top parent
-                            if len(frame.SP) > 0:
-                                while frame.SP[0].verb.__name__ == "ParallelStream":
-                                    frame = frame.SP[0].parentFrame
+                            # if in parallel exec frame, go up stacks to top parent
+                            if len(frame.SP) > 0 and frame.SP[0].verb == WyeCore.ParallelStream:
+                                frame = frame.SP[0]
+                            while frame.verb == WyeCore.ParallelStream:
+                                frame = frame.SP[0].parentFrame
+
                             if frame:  # if it still exists
                                 if frame.SP in WyeCore.World.objStacks:
                                     WyeCore.World.objStacks.remove(frame.SP)
@@ -736,6 +752,7 @@ class WyeCore(Wye.staticObj):
         # even if their context has gone away
         # Note that they keep references to any variables up the stack that they need
         # even if those variable's frames have been GC'd
+        # evt frame = (stack, eventName, frame data, unique frame id string)
         def setRepeatEventCallback(eventName, frame, data=None):
             frameID = "frm"+str(WyeCore.Utils.getId()) # get unique id for frame list
             # note: list in repEvtCallbackDict acts as global stack frame as well as
@@ -908,6 +925,7 @@ class WyeCore(Wye.staticObj):
                     if len(evt[0]) > 0:
                         #print("repeatEventExecObj run: process evt", evt)
                         evtFrame = evt[0][-1]
+                        #print("repeatEventExecObj evtFrame", evtFrame.verb.__name__, " ", evtFrame.params.title[0] if evtFrame.verb == WyeCore.libs.WyeUILib.Dialog else "")
                         # if world paused, only run critical code or code being debugged
                         if Wye.breakAll:
                             if not hasattr(evt[0][0], "systemObject") and evt[0][0].breakCt == 0:
@@ -919,18 +937,19 @@ class WyeCore(Wye.staticObj):
                             #    print("repEvt breakAll exec sysObj stack", evt[0][0].verb.__name__, " run obj", evtFrame.verb.__name__)
 
                         #print("repEventObj run: evtFrame=", evtFrame)
-                        # run bottom of stack unless done
-                        if evtFrame.status == Wye.status.CONTINUE:
-                            #print("repEventObj run bot of stack evt: ", evtIx, " verb ", evtFrame.verb.__name__, " PC ", evtFrame.PC)
+                        # run bottom of stack unless done.  Always run single cycle once
+                        if evtFrame.verb.mode == Wye.mode.SINGLE_CYCLE or evtFrame.status == Wye.status.CONTINUE:
+                            #print("repeatEventExecObj run bot of stack evt: ", evtIx, " verb ", evtFrame.verb.__name__, " PC ", evtFrame.PC)
                             evtFrame.eventData = (evtID, evt[2])        # user data
                             try:
                                 if Wye.debugOn:
                                     Wye.debug(evtFrame, "RepeatEvent run:"+ evtFrame.verb.__name__+ " evt data "+ str(evtFrame.eventData))
                                 else:
-                                    #print("run", evtFrame.verb.__name__)
+                                    #print("repeatEventExecObj: run", evtFrame.verb.__name__, " ", evtFrame.params.title[0] if evtFrame.verb == WyeCore.libs.WyeUILib.Dialog else "")
                                     evtFrame.verb.run(evtFrame)
+                                    #print("repeatEventExecObj: ran", evtFrame.verb.__name__, " ", evtFrame.params.title[0] if evtFrame.verb == WyeCore.libs.WyeUILib.Dialog else "", " status", Wye.status.tostring(evtFrame.status))
                             except Exception as e:
-                                print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
+                                #print("repeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
                                 delList.append(evt[3])          # don't run this again
                                 traceback.print_exception(e)
                                 title = "Runtime Error c"
@@ -938,36 +957,42 @@ class WyeCore(Wye.staticObj):
                                     e) + "\n" + traceback.format_exc()
                                 WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
                         # bottom of stack done, run next up on stack if any
-                        elif len(evt[0]) > 1:
-                            dbg = evt[0][-1]
-                            #print("Bot of stack", dbg.verb.__name__, " status", Wye.status.tostring(dbg.status))
-                            evtFrame = evt[0][-2]
-                            evtFrame.eventData = (evtID, evt[2])        # user data
-                            try:
-                                if Wye.debugOn:
-                                    Wye.debug(evtFrame, "RepeatEvent done, run parent:"+ evtFrame.verb.__name__+ " evt data"+ str(evtFrame.eventData))
-                                else:
-                                    #print("run", evtFrame.verb.__name__)
-                                    #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", evtFrame.verb.__name__, " PC ", evtFrame.PC)
-                                    evtFrame.verb.run(evtFrame)
-                            except Exception as e:
-                                print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__,
-                                      " with error:\n", str(e))
-                                WyeCore.World.stopActiveObject(evtFrame)
-                                traceback.print_exception(e)
-                                title = "Runtime Error d"
-                                msg = "Object '" + frame.verb.__name__ + ", died with error\n" + str(
-                                    e) + "\n" + traceback.format_exc()
-                                WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
-                            # On parent error, bail out - TODO - consider letting its parent handle error
-                            if evtFrame.status == Wye.status.FAIL and len(evt[0]) > 1:
-                                #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
-                                delList.append(evt[3])  # save this entry's tag to delete when done
-                        # if only one evtFrame on stack and it's done, remove event entry
-                        if len(evt[0]) == 1 and evt[0][0].status != Wye.status.CONTINUE:
-                            #print("repEventObj run: done with evt ", evtIx, ".  Remove from dict")
-                            delList.append(evt[3])      # save this entry's tag to delete when done
-                        evtIx += 1 # debug
+                        if evtFrame.status != Wye.status.CONTINUE:
+                            # if there's a parent to run
+                            #print("repeatEventExecObj evtFrame completed with status", Wye.status.tostring(evtFrame.status))
+                            if len(evt[0]) > 1:
+                                dbg = evt[0][-1]
+                                #print("repeatEventExecObj: Bot of stack done:", dbg.verb.__name__, " status", Wye.status.tostring(dbg.status), " run parent")
+                                evtFrame = evt[0][-2]
+                                evtFrame.eventData = (evtID, evt[2])        # user data
+                                try:
+                                    if Wye.debugOn:
+                                        Wye.debug(evtFrame, "RepeatEvent done, run parent:"+ evtFrame.verb.__name__+ " evt data"+ str(evtFrame.eventData))
+                                    else:
+                                        #print("run", evtFrame.verb.__name__)
+                                        #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", evtFrame.verb.__name__, " PC ", evtFrame.PC)
+                                        evtFrame.verb.run(evtFrame)
+                                        #print("repeatEventExecObj: ran parent]", evtFrame.verb.__name__, " status", Wye.status.tostring(evtFrame.status))
+                                except Exception as e:
+                                    #print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
+                                    WyeCore.World.stopActiveObject(evtFrame)
+                                    traceback.print_exception(e)
+                                    title = "Runtime Error d"
+                                    msg = "Object '" + frame.verb.__name__ + ", died with error\n" + str(
+                                        e) + "\n" + traceback.format_exc()
+                                    WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
+
+                                # On parent error, bail out - TODO - consider letting its parent handle error
+                                if evtFrame.status == Wye.status.FAIL and len(evt[0]) > 1:
+                                    #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
+                                    delList.append(evt[3])  # save this entry's tag to delete when done
+
+                            # else only one evtFrame on stack and if it's done, remove event entry
+                            elif evt[0][0].status != Wye.status.CONTINUE:
+                                #print("repEventObj run: done with evt ", evtIx, " ", evt[0][0].verb.__name__, ".  Remove event")
+                                delList.append(evt[3])      # save this entry's tag to delete when done
+
+                        evtIx += 1 # debug, count processed events
 
                 for tag in delList:
                     #print("repEventObj: done with tag ", tag)
