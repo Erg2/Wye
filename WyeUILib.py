@@ -382,6 +382,10 @@ class WyeUILib(Wye.staticObj):
 
             # Wye main dialog
             if self.m1Pressed and self.ctl and self.alt:
+                if WyeCore.World.mainMenu and not WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0]:
+                    print("Lost dragPath, resettting mainMenu")
+                    WyeCore.World.mainMenu = None
+
                 if not WyeCore.World.mainMenu:
                     WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeUILib.MainMenuDialog)
                 else:
@@ -391,6 +395,10 @@ class WyeUILib(Wye.staticObj):
 
             # main edit menu and the user wants it, start it
             elif self.m1Pressed and self.shift and self.ctl:
+                if WyeCore.World.editMenu and not WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0]:
+                    print("Lost dragPath, resettting editMenu")
+                    WyeCore.World.editMenu = None
+
                 if not WyeCore.World.editMenu:
                     WyeCore.World.editMenu = WyeCore.World.startActiveObject(WyeUILib.EditMainDialog)
                     WyeCore.World.editMenu.eventData = ("", (0))
@@ -401,6 +409,10 @@ class WyeUILib(Wye.staticObj):
 
             # main debug menu and the user wants it, start it
             elif self.m1Pressed and self.shift and self.alt:
+                if WyeCore.World.debugger and not WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0]:
+                    print("Lost dragPath, resettting debugger")
+                    WyeCore.World.debugger = None
+
                 if not WyeCore.World.debugger:
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeUILib.DebugMain)
                 else:
@@ -3142,6 +3154,9 @@ class WyeUILib(Wye.staticObj):
             def run(frame):
                 data = frame.eventData
                 #print("HUDMainDlgCallback run: data", data)
+                if WyeCore.World.mainMenu and not WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0]:
+                    print("Lost dragPath, resettting mainMenu")
+                    WyeCore.World.mainMenu = None
 
                 if not WyeCore.World.mainMenu:
                     WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeUILib.MainMenuDialog)
@@ -3163,6 +3178,10 @@ class WyeUILib(Wye.staticObj):
 
             def run(frame):
                 data = frame.eventData
+                if WyeCore.World.debugger and not WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0]:
+                    print("Lost dragPath, resettting debugger")
+                    WyeCore.World.debugger = None
+
                 #print("HUDDbgDlgCallback run: data", data)
                 if not WyeCore.World.debugger:
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeUILib.DebugMain)
@@ -3186,6 +3205,10 @@ class WyeUILib(Wye.staticObj):
             def run(frame):
                 data = frame.eventData
                 #print("HUDMainLibDlgCallback run: data", data)
+                if WyeCore.World.editMenu and not WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0]:
+                    print("Lost dragPath, resettting editMenu")
+                    WyeCore.World.editMenu = None
+
                 if not WyeCore.World.editMenu:
                     WyeCore.World.editMenu = WyeCore.World.startActiveObject(WyeUILib.EditMainDialog)
                     WyeCore.World.editMenu.eventData = ("", (0))
@@ -8321,7 +8344,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.retVal = frame.vars.dlgStat
                         dlgFrm.params.title = ["Edit Parameter"]
                         dlgFrm.params.parent = [parentFrm]
-                        dlgFrm.okOnCr = [True]
+                        dlgFrm.params.okOnCr = [True]
                         #print("EditParamCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
                         dlgFrm.params.position = [(.5,-.5, -.5 + btnFrm.vars.position[0][2]),]
 
@@ -9964,7 +9987,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.retVal = frame.vars.dlgStat
                         dlgFrm.params.title = ["Debug Variable"]
                         dlgFrm.params.parent = [parentFrm]
-                        dlgFrm.okOnCr = [True]
+                        dlgFrm.params.okOnCr = [True]
                         # print("DebugVarCallback title", dlgFrm.params.title, " dlgFrm.params.parent", dlgFrm.params.parent)
                         dlgFrm.params.position = [(.5, -.5, -.5 + btnFrm.vars.position[0][2]), ]
 
