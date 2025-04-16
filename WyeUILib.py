@@ -1395,8 +1395,8 @@ class WyeUILib(Wye.staticObj):
                     dlgFrame.vars.clickedBtns[0].append(frame)  # stash button for flash countdown
 
                     WyeUILib.Dialog.doCallback(dlgFrame, frame, tag)
-                else:
-                    print("InputButton doSelect: ignore click, in flashCount", frame.vars.flashCount[0])
+                #else:
+                #    print("InputButton doSelect: ignore click, in flashCount", frame.vars.flashCount[0])
                 return True
             else:
                 return False
@@ -3860,7 +3860,7 @@ class WyeUILib(Wye.staticObj):
                 case 1:
                     dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                     frame.status = Wye.status.SUCCESS  # done
-                    print("EditMainDialog: Done")
+                    #print("EditMainDialog: Done")
 
                     # stop ourselves
                     WyeCore.World.stopActiveObject(WyeCore.World.editMenu)
@@ -4659,7 +4659,7 @@ class WyeUILib(Wye.staticObj):
 
                 case 1:
                     dlgFrm = frame.SP.pop()
-                    print("EditLibDialog exit ", dlgFrm.params.title[0])
+                    #print("EditLibDialog exit ", dlgFrm.params.title[0])
                     frame.status = Wye.status.SUCCESS
 
 
