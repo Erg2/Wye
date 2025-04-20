@@ -52,7 +52,7 @@ class Wye3dObjsLib(Wye.staticObj):
             self.radius = radius
             ballBuilder = SphereMaker(radius=radius)
             self.node = ballBuilder.generate()
-            self.path = None
+            self._path = None
             if self.node:
                 self._path = render.attachNewNode(self.node)
                 self._path.setPos(pos[0], pos[1], pos[2])

@@ -1,15 +1,15 @@
 from Wye import Wye
 from WyeCore import WyeCore
-class FunFIshLib:
+class FunFishLib:
   def _build():
-    WyeCore.Utils.buildLib(FunFIshLib)
+    WyeCore.Utils.buildLib(FunFishLib)
   canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
-  class FunFIshLib_rt:
+  class FunFishLib_rt:
    pass #1
 
   class Jelly:
-    mode = Wye.mode.MULTI_CYCLE
+    mode = Wye.mode.PARALLEL
     autoStart = True
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
@@ -17,34 +17,51 @@ class FunFIshLib:
     paramDescr =  ()
     varDescr =  (
         ("tCount",Wye.dType.INTEGER,0),
-        ("nSegs",Wye.dType.INTEGER,0),
+        ("nSegs",Wye.dType.INTEGER,5),
         ("body",Wye.dType.OBJECT,None),
-        ("t1",Wye.dType.OBJECT_LIST,"None"),
-        ("tag",Wye.dType.STRING,""),
-        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
-    codeDescr =        (
-        ("Code","frame.vars.body[0] = Wye3dObjsLib._ball(.5, [0,0,0]) #"),
-        ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.body[0]._path) #"),
-        ("Label","buildTentacle"),
-        ("Code","frame.vars.t1[0].append([Wye3dObjsLib._ball(.5-(frame.vars.tCount[0] * .1), [0,0,0 - frame.vars.tCount[0]])]) #"),
-        ("WyeCore.libs.WyeLib.makePickable",
-          (None,"frame.vars.tag"),
-          (None,"frame.vars.t1[0][frame.vars.tCount[0]]")),
-        ("Var=","frame.vars.tCount[0] += 1 #"),
-        ("IfGoTo","frame.vars.tCount[0] < frame.vars.nSegs[0]","buildTentacle"),
-        ("WyeLib.noop",))
-
+        ("tag", Wye.dType.STRING, ""),
+        ("t1",Wye.dType.OBJECT_LIST,[]),
+        ("t1Tags",Wye.dType.STRING_LIST,[]),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),
+        ("noop", Wye.dType.INTEGER, 0),)
+    codeDescr = (
+        ("CreateJFishStream",
+          (
+            ("Code","frame.vars.body[0] = Wye3dObjsLib._ball(.5, [0,0,0]) #"),
+            ("Code", "frame.vars.body[0].setScale((1,1,.25))"),
+            ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.body[0]._path) #"),
+            ("WyeCore.libs.WyeLib.makePickable",
+             ("Expr", "frame.vars.tag"),
+             ("Expr", "[frame.vars.body[0]._path]")),
+            ("Code", "WyeCore.World.registerObjTag(frame.vars.tag[0], frame)"),
+            ("Label","buildTentacle"),
+            ("Code","frame.vars.t1[0].append([Wye3dObjsLib._ball(.2-(frame.vars.tCount[0] * .05), [.5,0,-.5 - (frame.vars.tCount[0] *.5)])]) #"),
+            ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.t1[0][frame.vars.tCount[0]][0]._path) #"),
+            ("Code","frame.vars.t1Tags[0].append(['']) # make row for tag"),
+            ("WyeCore.libs.WyeLib.makePickable",
+             ("Expr","frame.vars.t1Tags[0][frame.vars.tCount[0]]"),
+             ("Expr","[frame.vars.t1[0][frame.vars.tCount[0]][0]._path]")),
+            ("Code", "WyeCore.World.registerObjTag(frame.vars.t1Tags[0][frame.vars.tCount[0]][0], frame)"),
+            ("Var=","frame.vars.tCount[0] += 1 #"),
+            ("IfGoTo","frame.vars.tCount[0] < frame.vars.nSegs[0]","buildTentacle"),
+            ("WyeLib.noop",),
+            ("Label", "Done"),
+          )
+        ),
+        ("DummyStream", (("Code", "frame.vars.noop[0] = 0"),
+            ("Label", "Done")))
+    )
     def _build(rowRef):
         # print("Build ",Jelly)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('Jelly', FunFIshLib.Jelly.codeDescr, FunFIshLib.Jelly, rowIxRef)
+        return WyeCore.Utils.buildParallelText('FunFishLib', 'Jelly', FunFishLib.Jelly.codeDescr, FunFishLib.Jelly)
 
     def start(stack):
-        return Wye.codeFrame(FunFIshLib.Jelly, stack)
+        return FunFishLib.FunFishLib_rt.Jelly_start_rt(stack)
 
     def run(frame):
         # print('Run 'Jelly)
-        FunFIshLib.FunFIshLib_rt.Jelly_run_rt(frame)
+        frame.runParallel()
 
   class parallelWanderFish:
     mode = Wye.mode.PARALLEL
@@ -100,10 +117,10 @@ class FunFIshLib:
     def _build(rowRef):
         # print("Build ",parallelWanderFish)
         rowIxRef = [0]
-        return WyeCore.Utils.buildParallelText('FunFIshLib', 'parallelWanderFish', FunFIshLib.parallelWanderFish.codeDescr, FunFIshLib.parallelWanderFish)
+        return WyeCore.Utils.buildParallelText('FunFishLib', 'parallelWanderFish', FunFishLib.parallelWanderFish.codeDescr, FunFishLib.parallelWanderFish)
 
     def start(stack):
-        return FunFIshLib.FunFIshLib_rt.parallelWanderFish_start_rt(stack)
+        return FunFishLib.FunFishLib_rt.parallelWanderFish_start_rt(stack)
 
     def run(frame):
         # print('Run 'parallelWanderFish)

@@ -160,6 +160,9 @@ class Wye:
         DIALOG_OFFSET = 25      # how far from viewpoint dialogs pop up
         NOTIFICATION_OFFSET = 23 # how far from viewpoint warnings etc. pop up (i.e. closer than normal dlgs)
 
+        NICE_DIALOG_POS = (3, DIALOG_OFFSET, 5)
+        NICE_NOTIFICATION_POS = (4, NOTIFICATION_OFFSET, 5.5)
+
     # status values returned by multi-cycle verbs
     class status:
         CONTINUE = 0

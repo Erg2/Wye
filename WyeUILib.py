@@ -82,7 +82,7 @@ class WyeUILib(Wye.staticObj):
             if self.displayObj:
                 #print("CopyPasteManager dialog already showing, bring to front and update")
                 self.displayObj.verb.redisplay(self.displayObj)
-                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
+                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, (6, Wye.UI.NOTIFICATION_OFFSET, 5.8))
                 self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
             else:
                 #print("CopyPasteManager: open dialog")
@@ -92,7 +92,7 @@ class WyeUILib(Wye.staticObj):
 
                 self.displayObj.verb.run(self.displayObj)
                 self.displayObj.vars.dlgFrm[0].verb.run(self.displayObj.vars.dlgFrm[0])
-                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, (4, Wye.UI.NOTIFICATION_OFFSET, 0))
+                self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, (6, Wye.UI.NOTIFICATION_OFFSET, 5.8))
                 self.displayObj.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
         def clear(self):
@@ -390,7 +390,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeUILib.MainMenuDialog)
                 else:
                     #print("Already have Wye Main Menu", WyeCore.World.mainMenu.verb.__name__)
-                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
             # main edit menu and the user wants it, start it
@@ -404,7 +404,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.editMenu.eventData = ("", (0))
                 else:
                     #print("Already have editor")
-                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
             # main debug menu and the user wants it, start it
@@ -417,7 +417,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeUILib.DebugMain)
                 else:
                     #print("Already have debugger")
-                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
                     WyeCore.World.debugger.verb.update(WyeCore.World.debugger, WyeCore.World.debugger.vars.dlgFrm[0])
 
@@ -3046,7 +3046,7 @@ class WyeUILib(Wye.staticObj):
                         # position in front of other dialogs
                         point = NodePath("point")
                         point.reparentTo(render)
-                        point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
+                        point.setPos(base.camera, Wye.UI.NICE_NOTIFICATION_POS)
                         pos = point.getPos()
                         point.removeNode()
                     else:
@@ -3162,7 +3162,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeUILib.MainMenuDialog)
                 else:
                     #print("Already have Wye Main Menu", WyeCore.World.mainMenu.verb.__name__)
-                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
         # open or bring to front the main Debugger dialog
@@ -3187,7 +3187,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.debugger = WyeCore.World.startActiveObject(WyeUILib.DebugMain)
                 else:
                     #print("Already have debugger")
-                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     WyeCore.World.debugger.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
@@ -3214,7 +3214,7 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.World.editMenu.eventData = ("", (0))
                 else:
                     #print("Already have editor")
-                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, 0,Wye.UI.DIALOG_OFFSET,0)
+                    WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     WyeCore.World.editMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
@@ -3248,7 +3248,7 @@ class WyeUILib(Wye.staticObj):
                     dlgFrm.params.title = ["Wye Main Menu"]
                     point = NodePath("point")
                     point.reparentTo(render)
-                    point.setPos(base.camera, (0,Wye.UI.DIALOG_OFFSET,0))
+                    point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     pos = point.getPos()
                     point.removeNode()
                     dlgFrm.params.position = [(pos[0], pos[1], pos[2]),]
@@ -3837,7 +3837,7 @@ class WyeUILib(Wye.staticObj):
                 case 0:
                     point = NodePath("point")
                     point.reparentTo(render)
-                    point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET, 0))
+                    point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     pos = point.getPos()
                     point.removeNode()
 
@@ -3910,7 +3910,7 @@ class WyeUILib(Wye.staticObj):
             btnFrm.params.optData = [[btnFrm, dlgFrm, lib]]  # button row, row frame, dialog frame, obj frame
 
             editLnFrm.params.optData = [(editLnFrm, dlgFrm, frame, btnFrm, lib)]
-            
+
         def update(editVerbFrm, dlgFrm):
             # update the dialog
 
@@ -4913,7 +4913,7 @@ class WyeUILib(Wye.staticObj):
                     dbgFrm.params.objFrm = [frm]  # object to debug
                     point = NodePath("point")
                     point.reparentTo(render)
-                    point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET, 0))
+                    point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     pos = point.getPos()
                     point.removeNode()
                     dbgFrm.params.position = [[pos[0], pos[1], pos[2]], ]
@@ -5035,7 +5035,7 @@ class WyeUILib(Wye.staticObj):
                     edFrm = WyeCore.World.startActiveObject(WyeUILib.EditVerb)
                     point = NodePath("point")
                     point.reparentTo(render)
-                    point.setPos(base.camera, (0,Wye.UI.DIALOG_OFFSET,0))
+                    point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     pos = point.getPos()
                     point.removeNode()
                     edFrm.params.position = [(pos[0], pos[1], pos[2]),]
@@ -5066,7 +5066,7 @@ class WyeUILib(Wye.staticObj):
                     dbgFrm.params.objFrm = [frm]  # object to debug
                     point = NodePath("point")
                     point.reparentTo(render)
-                    point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET, 0))
+                    point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     pos = point.getPos()
                     point.removeNode()
                     dbgFrm.params.position = [[pos[0], pos[1], pos[2]],]
@@ -5092,7 +5092,8 @@ class WyeUILib(Wye.staticObj):
                       ("parent", Wye.dType.OBJECT, Wye.access.REFERENCE),   # parent dialog, if any
                       ("position", Wye.dType.FLOAT_LIST, Wye.access.REFERENCE),  # object frame to edit
                       ("retLib", Wye.dType.OBJECT, Wye.access.REFERENCE, None))
-        varDescr = (("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
+        varDescr = (("dlgFrm", Wye.dType.OBJECT, None),
+                    ("paramInpLst", Wye.dType.OBJECT_LIST, None),   # Inputs showing params
                     ("varInpLst", Wye.dType.OBJECT_LIST, None),     # Inputs showing vars
                     ("oldVerb", Wye.dType.OBJECT, None),            # verb used as a source
                     ("nameFrm", Wye.dType.OBJECT, None),            # new verb name
@@ -5119,7 +5120,7 @@ class WyeUILib(Wye.staticObj):
             "Insert First Line",
             "Paste First Line",
         ]
-        
+
         lineOpList = [
             "Move Line Up",
             "Add Line Before",
@@ -5236,7 +5237,7 @@ class WyeUILib(Wye.staticObj):
 
                         # bring lib in front of user
                         frm = WyeUILib.EditVerb.activeVerbs[verb.library.__name__+"."+verb.__name__]
-                        frm.vars.dragPath[0].setPos(base.camera, 0, Wye.UI.DIALOG_OFFSET, 0)
+                        frm.vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                         frm.vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
                         frame.status = Wye.status.FAIL
@@ -5286,8 +5287,9 @@ class WyeUILib(Wye.staticObj):
 
                     # build dialog
                     dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Edit '" + verb.__name__ + "'", frame.params.parent[0], (frame.params.position[0][0], frame.params.position[0][1], frame.params.position[0][2]))
-                    # object name
+                    frame.vars.dlgFrm[0] = dlgFrm
 
+                    # object name
                     verbNameFrm = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, "  Name:", [verb.__name__])
                     frame.vars.nameFrm[0] = verbNameFrm
 
@@ -5404,6 +5406,7 @@ class WyeUILib(Wye.staticObj):
 
 
                     # code
+                    # Note: hack codeDescr reconstitution depends on searching for this label
                     WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Wye Code:", color=Wye.color.SUBHD_COLOR)
 
                     if hasattr(verb, "codeDescr"):
@@ -5461,6 +5464,61 @@ class WyeUILib(Wye.staticObj):
                     if dlgFrm.params.retVal[0] == Wye.status.SUCCESS:
                         frame.verb.updateVerb(frame, dlgFrm)
 
+        # cut/paste can mangle codeDescr.  Rebuild codeDescr from dialog (which is correct).
+        # process dlg rows into code rows appended to current parent code row
+        # if dlg row indent, recurse
+        # Long term fix: Abstract Syntax Tree tracking both code and display
+        def recursiveHack(dlgFrm, ixRef, parentList, currLevel):
+            prevRow = parentList
+            # note: while not at end of list process dialog rows - but may return out of the middle if get a
+            # dialog row with indent less than the current line indent
+            while ixRef[0] < len(dlgFrm.params.inputs[0]):
+                # get dlg input
+                codeFrmRef = dlgFrm.params.inputs[0][ixRef[0]]
+                data = codeFrmRef[0].params.optData[0]
+                level = data[4]
+                #print("recHack currLevel", currLevel, " dlg row level", level, " row '"+ codeFrmRef[0].params.label[0])
+                codeTuple = data[3]
+
+                # build codeDescr row for this dialog row
+                row = [codeTuple[0]]    # start codeDecr for this row
+                # process non-recursive data in tuple
+                if len(codeTuple) > 1:
+                    for elem in codeTuple[1:]:
+                        # if it's not a tuple, copy it into current row
+                        if not isinstance(elem, list) and not isinstance(elem, tuple):
+                            row.append(elem)
+
+                # go to next dialog row
+                ixRef[0] += 2  # bump to next row's code line
+
+                # level determines where this descr row goes
+                # If same level, put on current parent list
+                if level == currLevel:
+                    parentList.append(row)
+                    #print("RecHack currLevel", currLevel, " == level", level, " add", row, "\n to parentList", parentList)
+                    prevRow = row
+
+                elif level > currLevel:       # recurse to nested level
+                    prevRow.append(row)
+                    #print("RecHack currLevel", currLevel, " < level", level, " add", row, "\n to prevRow", prevRow)
+                    newRow, newLevel = WyeUILib.EditVerb.recursiveHack(dlgFrm, ixRef, prevRow, level)
+                    # if either null row (done) or level > currLevel, pass pack to our caller
+                    if not newRow or newLevel < currLevel:
+                        #print("recHack ret fro recurse: currLevel", currLevel," < newLevel", newLevel, " return", newRow)
+                        return (newRow, newLevel)
+                    else:
+                        # at our level, stick it on our parentList
+                        parentList.append(newRow)
+                        #print("RecHack ret fro recurse: currLevel", currLevel, " == newLevel ", newLevel, " add", row, "\n to parentList", parentList)
+
+                # level less than ours, return row and level to caller
+                if level < currLevel:
+                    #print("recHack currLevel", currLevel, " < newLevel", level, " return", row)
+                    return (row, level)
+
+            # end of inputs, nothing left
+            return (None, 0)
 
         # build and save the verb to the library
         def updateVerb(frame, dlgFrm):
@@ -5508,11 +5566,60 @@ class WyeUILib(Wye.staticObj):
 
             disableAuto = frame.vars.disaAutoFrm[0].params.value[0]
 
+            # copy/paste can mangle the newCodeDescr.  Rebuild codedescr from dialog
+
+            nRows = len(frame.vars.newCodeDescr[0])   # may be out of order, but the size is right
+            ixRef = [0]
+            inFrm = dlgFrm.params.inputs[0][ixRef[0]][0]
+
+            # find the first dialog row (hack, label gotta match)
+            while ixRef[0] < len(dlgFrm.params.inputs[0]) and inFrm.params.label[0] != "Wye Code:":
+                ixRef[0] += 1
+                if ixRef[0] < len(dlgFrm.params.inputs[0]):
+                    inFrm = dlgFrm.params.inputs[0][ixRef[0]][0]
+            ixRef[0] += 2     # point to the first code row
+            newDescr = []
+
+            #print("Code rows:")
+            #for ii in range(ixRef[0], len(dlgFrm.params.inputs[0]), 2):
+            #    inFrm = dlgFrm.params.inputs[0][ii][0]
+            #    print(" level", inFrm.params.optData[0][4], " ", inFrm.params.label[0])
+
+            # for all the code rows
+            # if parallel, add parallel structure to newDescr and fill in each parallel stream
+            if mode==Wye.mode.PARALLEL:
+                # First stream
+                inFrm = dlgFrm.params.inputs[0][ixRef[0]][0]
+                data = inFrm.params.optData[0]
+                codeTuple = data[3]
+                sCode = []
+                # build stream row
+                sRow = [codeTuple[0], sCode]
+                newDescr.append(sRow)
+                ixRef[0] += 2
+                # for all the succeeding streams
+                while ixRef[0] < len(dlgFrm.params.inputs[0]):
+                    newRow, newLevel = WyeUILib.EditVerb.recursiveHack(dlgFrm, ixRef, sCode, 1)
+                    if newRow:
+                        sRow = newRow
+                        sCode = []
+                        sRow.append(sCode)
+                        newDescr.append(sRow)
+
+
+            else:   # not parallel, fill in newDescr
+                while ixRef[0] < len(dlgFrm.params.inputs[0]):
+                    WyeUILib.EditVerb.recursiveHack(dlgFrm, ixRef, newDescr, 0)
+
+            #print("oldDescr\n", frame.vars.newCodeDescr[0])
+            #print("newDescr\n", newDescr)
+
+
             WyeCore.Utils.createVerb(lib, name,
                                      frame.vars.newVerbSettings[0],
                                      frame.vars.newParamDescr[0],
                                      frame.vars.newVarDescr[0],
-                                     frame.vars.newCodeDescr[0], False, False, not disableAuto)
+                                     newDescr, False, False, not disableAuto)
 
             # push updated lib back to system
             WyeCore.World.libDict[lib.__name__] = lib
@@ -5610,7 +5717,7 @@ class WyeUILib(Wye.staticObj):
             btnFrm.params.callback = [WyeUILib.EditVerb.EditCodeCallback]  # button callback
 
             # fill in editLnFrm opt data including ptr to code button
-            editLnFrm.params.optData = [(editLnFrm, dlgFrm, editVerbFrm, tuple, btnFrm, level)]  # button frame, dialog frame
+            editLnFrm.params.optData = [(editLnFrm, dlgFrm, editVerbFrm, tuple, level, btnFrm)]  # button frame, dialog frame
 
 
             # fill in text and callback based on code row type
@@ -6229,7 +6336,7 @@ class WyeUILib(Wye.staticObj):
                             print("EditParamLineCallback cut: ERROR: input", editLnFrm, " ", editLnFrm.verb.__name__, " ",
                                   editLnFrm.params.label[0], " not in input list")
                             return
-                        
+
                         # remove param descr
                         editVerbFrm.vars.newParamDescr[0].remove(param)
                         # remove dialog row (2 inputs
@@ -7165,8 +7272,8 @@ class WyeUILib(Wye.staticObj):
                 parentFrm = data[1][1]  # parent dialog
                 editVerbFrm = data[1][2]
                 tuple = data[1][3]
-                btnFrm = data[1][4]     # code frame
-                level = data[1][5]      # indent level
+                level = data[1][4]      # indent level
+                btnFrm = data[1][5]     # code frame
 
                 # get selectedIx
                 opIx = editLnFrm.params.selectedIx[0]
@@ -7665,6 +7772,7 @@ class WyeUILib(Wye.staticObj):
                         dlgFrm.params.retVal = frame.vars.dlgStat
                         dlgFrm.params.title = ["Edit Stream"]
                         dlgFrm.params.parent = [parentFrm]
+                        dlgFrm.params.onOkCr = [True]
                         dlgFrm.params.position = [(.5,-.5, -.5 + btnFrm.vars.position[0][2]),]
 
                         # Code
@@ -7965,7 +8073,7 @@ class WyeUILib(Wye.staticObj):
                         else:
                             lblStr = "MyGoToLabel"
                         frame.vars.ifTgtTextFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputText(dlgFrm, " GoTo ", [lblStr], hidden=True, layout=Wye.layout.ADD_RIGHT)
-                        
+
                         # run dlg to generate display objects so can hide them
                         dlgFrm.verb.run(dlgFrm)
                         WyeUILib.EditVerb.EditCodeCallback.showHide(frame, WyeUILib.EditVerb.opStrList.index(op), dlgFrm)      # show only current op data
@@ -8944,7 +9052,7 @@ class WyeUILib(Wye.staticObj):
                 case 0:
                     point = NodePath("point")
                     point.reparentTo(render)
-                    point.setPos(base.camera, (0,Wye.UI.DIALOG_OFFSET,0))
+                    point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     pos = point.getPos()
                     point.removeNode()
 
@@ -9333,7 +9441,7 @@ class WyeUILib(Wye.staticObj):
 
                         ## bring lib in front of user
                         #frm = WyeUILib.ObjectDebugger.activeObjs[objFrm]
-                        #frm.vars.dragPath[0].setPos(base.camera, 0, Wye.UI.DIALOG_OFFSET, 0)
+                        #frm.vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                         #frm.vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
 
 
@@ -9483,7 +9591,7 @@ class WyeUILib(Wye.staticObj):
                         WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no variables>")
 
                     # build dialog frame params list of input frames
-                    lblFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Wye Code:", color = Wye.color.SUBHD_COLOR)
+                    WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Wye Code:", color = Wye.color.SUBHD_COLOR)
 
                     if objFrm.verb is WyeCore.ParallelStream:
                         oFrm = objFrm.parentFrame
@@ -9714,18 +9822,19 @@ class WyeUILib(Wye.staticObj):
                         if streamIx < len(dbgFrm.verb.caseCodeDictLst):
                             dict = dbgFrm.verb.caseCodeDictLst[streamIx]
                             # get frame for this stream
-                            if len(dbgFrm.stacks[streamIx]) > 0:
-                                strmFrm = dbgFrm.stacks[streamIx][0]
-                                caseStr = str(strmFrm.PC)
-                                if caseStr in dict:
-                                    rowLst = dict[caseStr]
-                                    for rowIx in rowLst:
-                                        try:
-                                            btnFrm = frame.vars.codeInpLst[0][rowIx + rowBase]
-                                            btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.HIGHLIGHT)
-                                        except:
-                                            # TODO - figure out why rowIx not reliable
-                                            pass
+                            if ix < len(dbgFrm.stacks):
+                                if len(dbgFrm.stacks[streamIx]) > 0:
+                                    strmFrm = dbgFrm.stacks[streamIx][0]
+                                    caseStr = str(strmFrm.PC)
+                                    if caseStr in dict:
+                                        rowLst = dict[caseStr]
+                                        for rowIx in rowLst:
+                                            try:
+                                                btnFrm = frame.vars.codeInpLst[0][rowIx + rowBase]
+                                                btnFrm.verb.setBackgroundColor(btnFrm, Wye.color.HIGHLIGHT)
+                                            except:
+                                                # TODO - figure out why rowIx not reliable
+                                                pass
                         # inc to next stream's dialog rows
                         rowBase += len(dbgFrm.verb.codeDescr[streamIx]) + 1
                 # single stream

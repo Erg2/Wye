@@ -60,7 +60,7 @@ class WyeUIUtilsLib(Wye.staticObj):
             # position in front of other dialogs
             point = NodePath("point")
             point.reparentTo(render)
-            point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
+            point.setPos(base.camera, Wye.UI.NICE_NOTIFICATION_POS)
             pos = point.getPos()
             point.removeNode()
 
@@ -85,7 +85,7 @@ class WyeUIUtilsLib(Wye.staticObj):
             # position in front of other dialogs
             point = NodePath("point")
             point.reparentTo(render)
-            point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
+            point.setPos(base.camera, Wye.UI.NICE_NOTIFICATION_POS)
             pos = point.getPos()
             point.removeNode()
 
@@ -110,7 +110,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         if not parent and position == (0,0,0):
             point = NodePath("point")
             point.reparentTo(render)
-            point.setPos(base.camera, (0, Wye.UI.NOTIFICATION_OFFSET, 0))
+            point.setPos(base.camera, Wye.UI.NICE_NOTIFICATION_POS)
             position = point.getPos()
             point.removeNode()
         askSaveFrm.params.position = [position]
@@ -128,7 +128,7 @@ class WyeUIUtilsLib(Wye.staticObj):
         if not position:
             point = NodePath("point")
             point.reparentTo(render)
-            point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET, 0))
+            point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
             position = point.getPos()
             point.removeNode()
 

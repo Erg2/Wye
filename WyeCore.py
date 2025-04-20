@@ -1302,7 +1302,8 @@ class WyeCore(Wye.staticObj):
 
             return result.normalized()
 
-        # recursively search for tuple in hierarchicaly list
+        # recursively search for tuple in hierarchical list
+        # (sadly this fails if there are duplicate toples in the list 'cause Python optimizes them to the same tuple)
         def findTupleParent(parent, tuple, level=0):
             #indent = "".join(["    " for l in range(level)])
             #print(indent + "findTupleParent: is", tuple, " in", parent)
@@ -1779,6 +1780,7 @@ class WyeCore(Wye.staticObj):
             # build the parallel stream functions
             parFnText = ""
             nStreams = len(streamDescr)
+            #print("buildParallelText verb", verbName, " nStreams", nStreams)
             # create run function for each stream
             rowIxRef = [0]
             for ix in range(nStreams):
@@ -1809,7 +1811,8 @@ class WyeCore(Wye.staticObj):
             parFnText +=     "  return f\n"
 
             # print("buildParallelText complete.  parFnText=\n"+parFnText[0])
-            return (" pass #3\n", parFnText)
+            #return (" pass #3\n", parFnText)
+            return ("\n", parFnText)
 
         # build a runtime library function for this library
         def buildLib(libClass):
@@ -2140,7 +2143,6 @@ cdStr = "class tmp:\\n" + cdStr + "\\n"
 try:
     # compile the verb's runtime code
     code = compile(parStr, "<string>", "exec")
-    print("verb's code contains\\n", dir(code))
     #print("createVerb: Compiled verb runtime successfully")
 '''
             else:
