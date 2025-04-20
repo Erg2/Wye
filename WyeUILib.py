@@ -9822,7 +9822,7 @@ class WyeUILib(Wye.staticObj):
                         if streamIx < len(dbgFrm.verb.caseCodeDictLst):
                             dict = dbgFrm.verb.caseCodeDictLst[streamIx]
                             # get frame for this stream
-                            if ix < len(dbgFrm.stacks):
+                            if streamIx < len(dbgFrm.stacks):
                                 if len(dbgFrm.stacks[streamIx]) > 0:
                                     strmFrm = dbgFrm.stacks[streamIx][0]
                                     caseStr = str(strmFrm.PC)
