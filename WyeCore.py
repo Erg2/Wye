@@ -588,19 +588,24 @@ class WyeCore(Wye.staticObj):
                                 if Wye.debugOn:
                                     Wye.debug(pFrame, "worldRun: return from call to"+ pFrame.verb.__name__+". Run parent frame "+pFrame.verb.__name__)
                                 else:
-                                    #print("WorldRun: child", frame.verb.__name__, " done, run parent", pFrame.verb.__name__, " ", frame.verb.__name__, frame.params.title[0] if hasattr(frame.params, "title") else " ")
+                                    #print("WorldRun: child", frame.verb.__name__, " done, run parent", pFrame.verb.__name__, " ", pFrame.verb.__name__, pFrame.params.title[0] if hasattr(pFrame.params, "title") else " ")
                                     # bottom frame done, run its parent
                                     # If it throws an error, kill that object stack
                                     try:
                                         pFrame.verb.run(pFrame)  # parent will remove child frame
                                     except Exception as e:
-                                        # print("WorldRun: ERROR verb ", frame.verb.__name__, " with error:\n", str(e))
-                                        WyeCore.World.stopActiveObject(frame)
+                                        # print("WorldRun: ERROR verb ", pFrame.verb.__name__, " with error:\n", str(e))
+                                        WyeCore.World.stopActiveObject(pFrame)
                                         traceback.print_exception(e)
                                         title = "Runtime Error b"
-                                        msg = "Object '"+frame.verb.__name__+", died with error\n"+str(e)+"\n"+traceback.format_exc()
+                                        msg = "Object '"+pFrame.verb.__name__+", died with error\n"+str(e)+"\n"+traceback.format_exc()
                                         WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
+
+                                # pFrame should have cleaned up frame.  Make sure
+                                if len(stack) and stack[-1] == frame:
+                                    stack.pop()
                                 #print("worldRun parent", pFrame.verb.__name__," returned", Wye.status.tostring(pFrame.status), " PC", pFrame.PC, " stack", Wye.codeFrame.stackToString(pFrame, pFrame.SP))
+
 
                             else:  # no parent frame, do the dirty work ourselves
                                 #print("worldRunner: done with top frame on stack ", frame.verb.__name__, ".  Clean up stack")
@@ -963,19 +968,19 @@ class WyeCore(Wye.staticObj):
                             if len(evt[0]) > 1:
                                 dbg = evt[0][-1]
                                 #print("repeatEventExecObj: Bot of stack done:", dbg.verb.__name__, " status", Wye.status.tostring(dbg.status), " run parent")
-                                evtFrame = evt[0][-2]
-                                evtFrame.eventData = (evtID, evt[2])        # user data
+                                pEvtFrame = evt[0][-2]
+                                pEvtFrame.eventData = (evtID, evt[2])        # user data
                                 try:
                                     if Wye.debugOn:
-                                        Wye.debug(evtFrame, "RepeatEvent done, run parent:"+ evtFrame.verb.__name__+ " evt data"+ str(evtFrame.eventData))
+                                        Wye.debug(pEvtFrame, "RepeatEvent done, run parent:"+ pEvtFrame.verb.__name__+ " evt data"+ str(pEvtFrame.eventData))
                                     else:
-                                        #print("run", evtFrame.verb.__name__)
-                                        #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", evtFrame.verb.__name__, " PC ", evtFrame.PC)
-                                        evtFrame.verb.run(evtFrame)
-                                        #print("repeatEventExecObj: ran parent]", evtFrame.verb.__name__, " status", Wye.status.tostring(evtFrame.status))
+                                        #print("run", pEvtFrame.verb.__name__)
+                                        #print("repEventObj bot of stack done, run caller evt: ", evtIx, " verb ", pEvtFrame.verb.__name__, " PC ", pEvtFrame.PC)
+                                        pEvtFrame.verb.run(pEvtFrame)
+                                        #print("repeatEventExecObj: ran parent]", pEvtFrame.verb.__name__, " status", Wye.status.tostring(pEvtFrame.status))
                                 except Exception as e:
-                                    #print("WorldRunrepeatEventExecObj: ERROR verb ", evtFrame.verb.__name__, " with error:\n", str(e))
-                                    WyeCore.World.stopActiveObject(evtFrame)
+                                    #print("WorldRunrepeatEventExecObj: ERROR verb ", pEvtFrame.verb.__name__, " with error:\n", str(e))
+                                    WyeCore.World.stopActiveObject(pEvtFrame)
                                     traceback.print_exception(e)
                                     title = "Runtime Error d"
                                     msg = "Object '" + frame.verb.__name__ + ", died with error\n" + str(
@@ -983,11 +988,15 @@ class WyeCore(Wye.staticObj):
                                     WyeCore.libs.WyeUIUtilsLib.doPopUpDialog(title, msg, Wye.color.WARNING_COLOR)
 
                                 # On parent error, bail out - TODO - consider letting its parent handle error
-                                if evtFrame.status == Wye.status.FAIL and len(evt[0]) > 1:
+                                if pEvtFrame.status == Wye.status.FAIL and len(evt[0]) > 1:
                                     #print("repEventObj run: -2 evt ", evtIx, " fail, kill event")
                                     delList.append(evt[3])  # save this entry's tag to delete when done
 
-                            # else only one evtFrame on stack and if it's done, remove event entry
+                                # if parent didn't pop child frame, clean that up
+                                if len(pEvtFrame.SP) and pEvtFrame.SP[-1] == evtFrame:
+                                    pEvtFrame.SP.pop()
+
+                            # else only one EvtFrame on stack and if it's done, remove event entry
                             elif evt[0][0].status != Wye.status.CONTINUE:
                                 #print("repEventObj run: done with evt ", evtIx, " ", evt[0][0].verb.__name__, ".  Remove event")
                                 delList.append(evt[3])      # save this entry's tag to delete when done
@@ -1493,6 +1502,7 @@ class WyeCore(Wye.staticObj):
                                                     else:
                                                         codeText += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=" + paramTuple[1] + "\n"
                                                 else:
+                                                    # paramDescr mismatch with supplied params
                                                     print("1 paramIx", paramIx, " > len(", verbClass.__name__, ".paramDescr)",
                                                           len(verbClass.paramDescr))
                                                 #print("parseWyeTuple: 3 codeText=", codeText[0])
@@ -1511,6 +1521,7 @@ class WyeCore(Wye.staticObj):
                                                     else:
                                                         cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
                                                 else:
+                                                    # paramDescr mismatch with supplied params
                                                     print("2 paramIx", paramIx, " > len(", verbClass.__name__, ".paramDescr)",
                                                           len(verbClass.paramDescr))
                                                 codeText += cdTxt
@@ -1562,8 +1573,10 @@ class WyeCore(Wye.staticObj):
                                                 #print(" parseWyeTuple: skip 0th entry in wyeTuple")
                                                 continue
 
+                                            # paramDescr mismatch with supplied params
                                             if paramIx > len(verbClass.paramDescr):
-                                                print("-1 paramIx", paramIx, " > len(", verbClass.__name__, ".paramDescr). Skip",
+                                                # paramDescr mismatch with supplied params
+                                                print("-1 paramIx", paramIx, " > len(", verbClass.__name__, ".paramDescr)",
                                                       len(verbClass.paramDescr))
                                                 continue
 
@@ -1582,6 +1595,7 @@ class WyeCore(Wye.staticObj):
                                                     else:
                                                         codeText += "    frame." + eff + ".params." + verbClass.paramDescr[paramIx - 1][0] + "=" + paramTuple[1] + "\n"
                                                 else:
+                                                    # paramDescr mismatch with supplied params
                                                     print("4 paramIx", paramIx, " > len(", verbClass.__name__, ".paramDescr)",
                                                           len(verbClass.paramDescr))
 
@@ -1601,6 +1615,7 @@ class WyeCore(Wye.staticObj):
                                                     else:
                                                         cdTxt += "    frame."+eff+".params." + verbClass.paramDescr[paramIx-1][0] + "=frame.f"+str(fNum+1)+".params."+firstParam+"\n"
                                                 else:
+                                                    # paramDescr mismatch with supplied params
                                                     print("5 paramIx", paramIx, " > len(", verbClass.__name__, ".paramDescr)",
                                                           len(verbClass.paramDescr))
                                                 codeText += cdTxt
@@ -2212,7 +2227,7 @@ try:
         WyeCore.Utils.displayError()
         
 except Exception as e:
-    print("compile verb runtime failed\\n", str(e))
+    print("1 compile verb runtime failed\\n", str(e))
 '''
 
             if verbSettings['mode'] == Wye.mode.PARALLEL:
@@ -2234,7 +2249,7 @@ except Exception as e:
             else:
                 vrbStr += '''
     if Wye.devPrint:
-      print("compile verb runtime failed\\n", str(e))
+      print("2 compile verb runtime failed\\n", str(e))
       print('cdStr')
       lnIx = 1
       for ln in cdStr.split('\\n'):

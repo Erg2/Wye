@@ -5,7 +5,6 @@ class MyFlashingFishLib:
     WyeCore.Utils.buildLib(MyFlashingFishLib)
   canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
-
   class MyFlashingFishLib_rt:
    pass #1
 
@@ -15,28 +14,21 @@ class MyFlashingFishLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (0.0,15.0,-4.0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.1)),
-        ("dAngle","FL",
-          (0.0,0.0,0.0)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (1,2,10)),
-        ("color","FL",
-          (0.75,0.75,0.75,1.0)),
-        ("skew","F",0),
-        ("delta","F",0),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(0.0, 15.0, -4.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.1)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.0)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(1, 2, 10)),
+        ("color",Wye.dType.FLOAT_LIST,(0.75, 0.75, 0.75, 1.0)),
+        ("skew",Wye.dType.FLOAT,0),
+        ("delta",Wye.dType.FLOAT,0),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -65,6 +57,11 @@ class MyFlashingFishLib:
         ("WyeCore.libs.WyeLib.getObjPos",
           (None,"frame.vars.position"),
           (None,"frame.vars.gObj")),
+        ("Code","# Stay within bounds"),
+        ("Code","frame.vars.position[0][0] = frame.vars.position[0][0] if -400 < frame.vars.position[0][0] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.position[0][1] = frame.vars.position[0][1] if -400 < frame.vars.position[0][1] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.position[0][2] = frame.vars.position[0][2] if -400 < frame.vars.position[0][2] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.gObj[0].setPos(frame.vars.position[0][0],frame.vars.position[0][1],frame.vars.position[0][2])"),
         ("Var=","frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
         ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
         ("Var=","frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
@@ -82,7 +79,6 @@ class MyFlashingFishLib:
 
     def _build(rowRef):
         # print("Build ",FlashingTestFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('FlashingTestFish', MyFlashingFishLib.FlashingTestFish.codeDescr, MyFlashingFishLib.FlashingTestFish, rowIxRef)
 
@@ -99,28 +95,21 @@ class MyFlashingFishLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (-4.0,15.0,4.0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.1)),
-        ("dAngle","FL",
-          (0.0,0.0,0.0)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (1,5,10)),
-        ("color","FL",
-          (0.5,0.5,0.5,1)),
-        ("skew","F",0),
-        ("delta","F",0),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(-4.0, 15.0, 4.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,[0.0, 0.0, -0.1]),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.0)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(1, 5, 10)),
+        ("color",Wye.dType.FLOAT_LIST,(0.5, 0.5, 0.5, 1)),
+        ("skew",Wye.dType.FLOAT,0),
+        ("delta",Wye.dType.FLOAT,0),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -142,13 +131,18 @@ class MyFlashingFishLib:
           (None,"frame.vars.gObj"),
           (None,"frame.vars.dAngle")),
         ("Code","frame.vars.dPos[0][2] += (random()-.5)/100"),
-        ("Code","frame.vars.dPos[0][2] = max(min(frame.vars.dPos[0][2], .3), .05)"),
+        ("Code","frame.vars.dPos[0][2] = max(min(frame.vars.dPos[0][2], -.05), -.3)"),
         ("WyeCore.libs.WyeLib.setObjRelPos",
           (None,"frame.vars.gObj"),
           (None,"frame.vars.dPos")),
         ("WyeCore.libs.WyeLib.getObjPos",
           (None,"frame.vars.position"),
           (None,"frame.vars.gObj")),
+        ("Code","# Stay within bounds"),
+        ("Code","frame.vars.position[0][0] = frame.vars.position[0][0] if -400 < frame.vars.position[0][0] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.position[0][1] = frame.vars.position[0][1] if -400 < frame.vars.position[0][1] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.position[0][2] = frame.vars.position[0][2] if -400 < frame.vars.position[0][2] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.gObj[0].setPos(frame.vars.position[0][0],frame.vars.position[0][1],frame.vars.position[0][2])"),
         ("Var=","frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
         ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
         ("Var=","frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
@@ -166,7 +160,6 @@ class MyFlashingFishLib:
 
     def _build(rowRef):
         # print("Build ",FlyerTestFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('FlyerTestFish', MyFlashingFishLib.FlyerTestFish.codeDescr, MyFlashingFishLib.FlyerTestFish, rowIxRef)
 
@@ -183,28 +176,21 @@ class MyFlashingFishLib:
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (4.0,15.0,2.0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.1)),
-        ("dAngle","FL",
-          (0.0,0.0,0.0)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (2,5,15)),
-        ("color","FL",
-          (0.5,0.5,0.5,1)),
-        ("skew","F",0),
-        ("delta","F",0),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(4.0, 15.0, 2.0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.1)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.0)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(2, 5, 15)),
+        ("color",Wye.dType.FLOAT_LIST,(0.5, 0.5, 0.5, 1)),
+        ("skew",Wye.dType.FLOAT,0),
+        ("delta",Wye.dType.FLOAT,0),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -233,6 +219,11 @@ class MyFlashingFishLib:
         ("WyeCore.libs.WyeLib.getObjPos",
           (None,"frame.vars.position"),
           (None,"frame.vars.gObj")),
+        ("Code","# Stay within bounds"),
+        ("Code","frame.vars.position[0][0] = frame.vars.position[0][0] if -400 < frame.vars.position[0][0] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.position[0][1] = frame.vars.position[0][1] if -400 < frame.vars.position[0][1] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.position[0][2] = frame.vars.position[0][2] if -400 < frame.vars.position[0][2] < 400 else (random()-.5)*100"),
+        ("Code","frame.vars.gObj[0].setPos(frame.vars.position[0][0],frame.vars.position[0][1],frame.vars.position[0][2])"),
         ("Var=","frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
         ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
         ("Var=","frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
@@ -250,7 +241,6 @@ class MyFlashingFishLib:
 
     def _build(rowRef):
         # print("Build ",SmallFlashingFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('SmallFlashingFish', MyFlashingFishLib.SmallFlashingFish.codeDescr, MyFlashingFishLib.SmallFlashingFish, rowIxRef)
 

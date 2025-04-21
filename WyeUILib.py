@@ -2005,6 +2005,7 @@ class WyeUILib(Wye.staticObj):
                       sys.exit(1)
                 case 1:
                     #print("Dialog '", frame.params.title[0], "' case 1")
+
                     # do click-flash count down and end-flash color reset for buttons user clicked
                     delLst = []
                     # decrement flash count.  if zero, turn off button highlight
@@ -2431,11 +2432,8 @@ class WyeUILib(Wye.staticObj):
 
                 if retStat:
                     # Done with dialog
-                    WyeUILib.Dialog.closeDialog(frame)
                     WyeUILib.Dialog.doCallback(frame, frame, tag)
-                    if WyeUILib.dragFrame == frame:
-                        WyeUILib.dragFrame = None
-
+                    WyeUILib.Dialog.closeDialog(frame)
 
                     closing = True
                     #print("Closing dialog.  Status", frame.status)
@@ -5510,6 +5508,7 @@ class WyeUILib(Wye.staticObj):
                     else:
                         # at our level, stick it on our parentList
                         parentList.append(newRow)
+                        prevRow = newRow
                         #print("RecHack ret fro recurse: currLevel", currLevel, " == newLevel ", newLevel, " add", row, "\n to parentList", parentList)
 
                 # level less than ours, return row and level to caller
@@ -9439,12 +9438,6 @@ class WyeUILib(Wye.staticObj):
                         frame.status = Wye.status.FAIL
                         return
 
-                        ## bring lib in front of user
-                        #frm = WyeUILib.ObjectDebugger.activeObjs[objFrm]
-                        #frm.vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
-                        #frm.vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
-
-
                     # if it's a systemObject (immune from Wye.breakAll) don't debug it
                     if hasattr(objFrm.SP[0], "systemObject") and not Wye.allowSysDebug:
                         #print("This is a system object, it must stay running")
@@ -9552,6 +9545,9 @@ class WyeUILib(Wye.staticObj):
                         frame.vars.sysDbgFrms[0].append(sysLbl)
 
                         sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  PC: " + str(objFrm.PC))
+                        frame.vars.sysDbgFrms[0].append(sysLbl)
+
+                        sysLbl = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  Status: " +Wye.status.tostring(objFrm.status))
                         frame.vars.sysDbgFrms[0].append(sysLbl)
 
                     # params
@@ -10413,10 +10409,12 @@ Hot Keys
     Escape will quit out of the current dialog
     Enter(aka Return) will close dialogs that have only an OK button.
     F1 brings the mouse back if it is hidden.
+    Control-R opens the interaction recorder
+    Control-S starts/stops recording an interaction
     
 Wye General Info:
     Wye 1.0 ** will be ** an IDE for interactive VR characters.
-    This 0.9 Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
+    This 0.9.1 Alpha release is testing the underlying runtime engine and a first pass at an edit and debug UI.
     When this alpha version starts it loads the demo library TestLib.py.  You can also load, edit, and save user 
     defined libraries.  The alpha release ships with several example libraries available from the Wye Libraries dialog.
 
@@ -10511,15 +10509,16 @@ Wye General Info:
                     WyeCore.mouseMoveCallbacks.remove((WyeUILib.RecordManager.mouseCallback, frame))
                     WyeCore.mouseWheelCallbacks.remove((WyeUILib.RecordManager.mouseWheelCallback, frame))
                     WyeCore.recorder = None
-                    print("Recorder closed")
+                    #print("Recorder closed")
 
         def keyCallback(frame, key):
             #print("keyCallback: key", key)
             if frame.vars.recording[0]:
-                if key < ' ':
-                    print("key ", chr(key), " not printable")
-                else:
+                if key >= ' ':
                     frame.vars.eventList[0].append(("key", key))
+                #else:
+                #    print("key ", chr(key), " not printable")
+
             return False
 
 
