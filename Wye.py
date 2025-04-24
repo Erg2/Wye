@@ -26,7 +26,7 @@ class Wye:
 
     dragging = False
 
-    version = "0.9.1"         # change save/open lib directory
+    version = "0.9.2"         # change save/open lib directory
 
     UITest = False          # True enables UI test mode which disables normal mouse input
     devPrint = False       # We're running in the Python debugger and want to see messages in text
@@ -465,7 +465,7 @@ class Wye:
                         value = "".join(value.split())   # remove all whitespace
                         if value[0] in ('[','('):
                             value = value[1:-1]
-                            if value[1] in ('[','('):    # if individual element lists
+                            if len(value) and value[1] in ('[','('):    # if individual element lists
                                 elemLst = True
                         elems = value.split(',')
                         #print("convertType INT_LIST: Split into", elems)
