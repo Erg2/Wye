@@ -465,14 +465,20 @@ class Wye:
                         value = "".join(value.split())   # remove all whitespace
                         if value[0] in ('[','('):
                             value = value[1:-1]
-                            if len(value) and value[1] in ('[','('):    # if individual element lists
-                                elemLst = True
+                            if len(value):
+                                if value[0] in ('[','('):    # if individual element lists
+                                    elemLst = True
+                            else:
+                                return([])
                         elems = value.split(',')
                         #print("convertType INT_LIST: Split into", elems)
                         for elem in elems:
                             num = 0  # debug
                             if elemLst:     # if each element wrapped in list
                                 elem = elem[1:-1]
+                                if len(elem) == 0:
+                                    retVal.append([])
+                                    continue
                             try:
                                 if dataType == Wye.dType.INTEGER_LIST:
                                     num = int(elem)
