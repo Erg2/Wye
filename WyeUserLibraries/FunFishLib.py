@@ -8,7 +8,6 @@ class FunFishLib:
   class FunFishLib_rt:
    pass #1
 
-
   class JellyFish:
     mode = Wye.mode.PARALLEL
     autoStart = True
@@ -72,7 +71,7 @@ class FunFishLib:
             ("Code","y = math.cos(frame.vars.tAngle[0])"),
             ("Code","frame.vars.tOff[0].append([x,y])"),
             ("Label","BldTentacle"),
-            ("Code","obj = Wye3dObjsLib._ball(.2-(frame.vars.tSegCt[0] * .05), [frame.vars.tOff[0][frame.vars.tCt[0]][0], frame.vars.tOff[0][frame.vars.tCt[0]][1],-.5 - (frame.vars.tSegCt[0] *frame.vars.segSep[0])])"),
+            ("Code","obj = Wye3dObjsLib._ball(.2-(frame.vars.tSegCt[0] * .05), [frame.vars.tOff[0][frame.vars.tCt[0]][0], frame.vars.tOff[0][frame.vars.tCt[0]][1],-.25 - (frame.vars.tSegCt[0] *frame.vars.segSep[0])])"),
             ("Code","obj._path.reparentTo(frame.vars.gObj[0])"),
             ("Code","frame.vars.t[0][frame.vars.tCt[0]].append([obj])"),
             ("Code","frame.vars.cleanUpObjs[0].append(obj._path)"),
@@ -115,7 +114,7 @@ class FunFishLib:
             ("Code"," for sIx in range(frame.vars.nSegs[0]):"),
             ("Code","  frame.vars.segAngle[0] = frame.vars.segAngle[0] + frame.vars.dAngle[0] if frame.vars.segAngle[0] < 360 else 0"),
             ("Code","  obj = frame.vars.t[0][tIx][sIx][0]"),
-            ("Code","  obj.setPos(x + frame.vars.segOffs[0][sIx], y, -.5 - (sIx*frame.vars.segSep[0]))"),
+            ("Code","  obj.setPos(x + frame.vars.segOffs[0][sIx], y, -.25 - (sIx*frame.vars.segSep[0]))"),
             ("Code","  #print('color', color)"),
             ("Code","  obj.setColor((color[0], color[1], color[2], 1))"),
             ("Code","  frame.vars.tColorInc[0][0] *= 1 if 0 < (color[0] + frame.vars.tColorInc[0][0]) < 1 else -1"),
@@ -172,8 +171,11 @@ class FunFishLib:
         ("position",Wye.dType.FLOAT_LIST,(3, 2, -1)),
         ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.03)),
         ("posAngle",Wye.dType.FLOAT,4.712388),
-        ("dAngleDeg",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.5)),
+        ("dAngleDeg",Wye.dType.FLOAT_LIST,[0.0, 0.0, 0.03]),
         ("dAngleRad",Wye.dType.FLOAT,-0.0087266462),
+        ("ctrAngle",Wye.dType.FLOAT,1.0),
+        ("newVar",Wye.dType.ANY,None),
+        ("newVar",Wye.dType.ANY,None),
         ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("loaderStream",
@@ -200,14 +202,27 @@ class FunFishLib:
               ("Var","frame.vars.gObj"),
               (None,"frame.vars.dAngleDeg")),
             ("Code","from random import random"),
-            ("Code","frame.vars.dAngleDeg[0][2] += (random()-.5)*.25 if frame.vars.dAngleDeg[0][2] < 1 else (random()-.75)*.25"),
+            ("Code","frame.vars.dAngleDeg[0][2] += (random()-.5)*.25 if frame.vars.dAngleDeg[0][2] < frame.vars.ctrAngle[0] else (random()-.75)*.25"),
             ("Code","frame.vars.dAngleDeg[0][2] = frame.vars.dAngleDeg[0][2] if frame.vars.dAngleDeg[0][2] > 0 else 0 - frame.vars.dAngleDeg[0][2]"),
             ("GoTo","Repeat"))),
         ("setPositionStream",
           (
             ("Label","Repeat"),
             ("Code","frame.vars.gObj[0].setPos(frame.vars.gObj[0], frame.vars.dPos[0][0], frame.vars.dPos[0][1], frame.vars.dPos[0][2]) #"),
-            ("GoTo","Repeat"))))
+            ("GoTo","Repeat"))),
+        ("NewStream",
+          (
+            ("Label","Loop"),
+            ("Code","frame.vars.ctrAngle[0] = 1."),
+            ("Code","frame.vars.dPos[0] = [0.,0.,.03]"),
+            ("WyeCore.libs.WyeLib.waitClick",
+              ("Expr","frame.vars.objTag")),
+            ("Code","frame.vars.ctrAngle[0] = 0."),
+            ("Code","frame.vars.dPos[0] = [0.,0.,.5]"),
+            ("WyeCore.libs.WyeLib.delay",
+              ("Expr","[20] # <put parameter here>")),
+            ("Label","Filler"),
+            ("GoTo","Loop"))))
 
     def _build(rowRef):
         # print("Build ",parallelWanderFish)
