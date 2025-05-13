@@ -10445,9 +10445,13 @@ Wye General Info:
     intended to provide is not in this release.  Remember: Underlying engine, no flashy features.  
     You probably want to ask to be on the beta test list...
 '''
+            point = NodePath("point")
+            point.reparentTo(render)
+            point.setPos(base.camera, (0, Wye.UI.DIALOG_OFFSET - .5, 6))
+            pos = point.getPos()
 
             WyeCore.libs.WyeUIUtilsLib.doPopUpDialog("Wye Help", helpTxt, formatLst=["FORCE_TOP_CTLS", "NO_CANCEL"],
-                                                     position=(2, Wye.UI.DIALOG_OFFSET, 7))
+                                                     position=pos)
 
 
 

@@ -76,6 +76,7 @@ class VoiceTestLib:
                 ("rate", Wye.dType.FLOAT, -1),
                 ("rec", Wye.dType.OBJECT, None),
                 ("model", Wye.dType.OBJECT, None),
+                ("cmdLst", Wye.dType.STRING_LIST, []),
                 ("outputText", Wye.dType.STRING_LIST, []),
                 )
 
@@ -138,9 +139,9 @@ class VoiceTestLib:
                                                [Wye.windowSize == 0], VoiceTestLib.VoiceDialog.StartStopCallback,
                                                (frame), hidden=True)
 
-                frame.vars.textFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Text:")
+                frame.vars.textFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Text:", hidden=True)
 
-                print("VoiceTestLib start speech rec thread")
+                print("VoiceTestLib start speech model load thread")
                 frame.vars.load[0] = Thread(target=VoiceTestLib.VoiceDialog.speech_recognition_load, args=(frame,))
                 frame.vars.load[0].start()
 
@@ -150,13 +151,17 @@ class VoiceTestLib:
 
             case 1:
                 dlgFrm = frame.SP.pop()  # remove dialog frame from stack
+                print("VoiceDialog close any open threads")
                 if frame.vars.load[0]:
+                    print("Wait for dictionary load thread to finish", flush=True)
                     frame.vars.load[0].join()
                     frame.vars.load[0] = None
                 if frame.vars.record[0]:
+                    print("Wait for transcribe thread to finish", flush=True)
                     frame.vars.record[0].join()
                     frame.vars.record[0] = None
                 if frame.vars.transcribe[0]:
+                    print("Wait for mic input thread to finish", flush=True)
                     frame.vars.transcribe[0].join()
                     frame.vars.transcribe[0] = None
 
@@ -237,6 +242,7 @@ class VoiceTestLib:
         print("speech_recognition model loaded, show start/stop")
         vMgrFrm.vars.loadLbl[0].verb.setLabel(vMgrFrm.vars.loadLbl[0], "VOSK US English Loaded")
         vMgrFrm.vars.startStopFrm[0].verb.show(vMgrFrm.vars.startStopFrm[0])
+        vMgrFrm.vars.textFrm[0].verb.show(vMgrFrm.vars.textFrm[0])
         vMgrFrm.vars.load[0] = None
 
     def speech_recognition(vMgrFrm):
@@ -247,20 +253,38 @@ class VoiceTestLib:
             if len(frames):
                 vMgrFrm.vars.rec[0].AcceptWaveform(b''.join(frames))
                 result = vMgrFrm.vars.rec[0].Result()
-                print("speech_recognition result", result)
+                #print("speech_recognition result", result)
                 text = json.loads(result)["text"]
+                print("speech", text)
 
                 textLst = text.split(" ")
-    #            vMgrFrm.vars.outputText[0].extend(textLst)
-                vMgrFrm.vars.outputText[0] =textLst
+                vMgrFrm.vars.outputText[0].extend(textLst)
                 vMgrFrm.vars.outputText[0] = vMgrFrm.vars.outputText[0][-10:]
+                print(" agg", vMgrFrm.vars.outputText[0])
                 txt = ""
                 for s in vMgrFrm.vars.outputText[0]:
-                    txt += s + "\n"
+                    txt += s + " "
                 vMgrFrm.vars.textFrm[0].verb.setLabel(vMgrFrm.vars.textFrm[0], txt)
+                txtLen = len(vMgrFrm.vars.outputText[0])
+                if txtLen:
+                    usedThru = 0
+                    for ii in range(txtLen-1):
+                        cmd = vMgrFrm.vars.outputText[0][ii]
+                        if cmd.lower() == "why":
+                            usedThru = ii + vMgrFrm.verb.parse(vMgrFrm, ii)
+
+                    vMgrFrm.vars.outputText[0] = vMgrFrm.vars.outputText[0][usedThru:]
+                    print("remaining text", vMgrFrm.vars.outputText[0])
+            else:
+                print("No input")
 
         print("speech_recognition Done")
         vMgrFrm.vars.transcribe[0] = None
+
+    # parse for cmd in ouputText starting at txtIx
+    def parse(frame, txtIx):
+        print("voiceDialog parse:", frame.vars.outputText[0][txtIx:])
+        return 1
 
     # set input source
     class SetInputCallback:
