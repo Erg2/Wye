@@ -4,6 +4,7 @@ __pycache__/
 .idea/
 venv/
 build/
+WyeUserLibraries/vosk-model-en-us-0.22/
 *.mp4
 *.tiff
 *.tif

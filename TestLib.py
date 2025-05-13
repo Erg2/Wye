@@ -3,188 +3,96 @@ from WyeCore import WyeCore
 class TestLib:
   def _build():
     WyeCore.Utils.buildLib(TestLib)
-  canSave = False  # cannot save callbacks
+  canSave = True  # all verbs can be saved with the library
   modified = False  # no changes
   class TestLib_rt:
    pass #1
 
-  class UpdateCallback:
-      mode = Wye.mode.SINGLE_CYCLE
-      dataType = Wye.dType.NONE
-      paramDescr = ()
-      varDescr = ()
-      codeDescr=(
-          ("Code", "frm = frame.eventData[1]"),
-          ("Code", "ctlFrm = frame.eventData[2]"),
-          ("Code", "dlgFrm = ctlFrm.parentDlg"),
-          ("Code", "try:"),
-          ("Code", "    x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])"),
-          ("Code", "except:"),
-          ("Code", "    x = 0."),
-          ("Code", "try:"),
-          ("Code", "    y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])"),
-          ("Code", "except:"),
-          ("Code", "    y = 0."),
-          ("Code", "try:"),
-          ("Code", "    z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])"),
-          ("Code", "except:"),
-          ("Code", "    z = 0."),
-          ("Code", "frm.vars.target[0].vars.gObj[0].setHpr(x, y, z)"),
-          ("Code", "WyeCore.World.dlightPath.setHpr(x, y, z)"),
-      )
-
-      def _build(rowRef):
-          rowIxRef = [0]
-          return WyeCore.Utils.buildCodeText('UpdateCallback', TestLib.UpdateCallback.codeDescr, TestLib.UpdateCallback, rowIxRef)
-
-      def start(stack):
-          return Wye.codeFrame(TestLib.UpdateCallback, stack)
-
-      def run(frame):
-          # print('Run 'UpdateCallback)
-          TestLib.TestLib_rt.UpdateCallback_run_rt(frame)
-
   class ResetCallback:
-      mode = Wye.mode.SINGLE_CYCLE
-      dataType = Wye.dType.NONE
-      paramDescr = ()
-      varDescr = ()
-
-      codeDescr=(
-          ("Code", "frm = frame.eventData[1]"),
-          ("Code", "ctlFrm = frame.eventData[2]"),
-          ("Code", "dlgFrm = ctlFrm.parentDlg"),
-          ("Code", "x = Wye.startLightAngle[0]"),
-          ("Code", "y = Wye.startLightAngle[1]"),
-          ("Code", "z = Wye.startLightAngle[2]"),
-          ("Code", "dlgFrm.params.inputs[0][0][0].vars.currVal[0] = x"),
-          ("Code", "dlgFrm.params.inputs[0][1][0].vars.currVal[0] = y"),
-          ("Code", "dlgFrm.params.inputs[0][2][0].vars.currVal[0] = z"),
-          ("Code", "dlgFrm.params.inputs[0][0][0].verb.update(dlgFrm.params.inputs[0][0][0])"),
-          ("Code", "dlgFrm.params.inputs[0][1][0].verb.update(dlgFrm.params.inputs[0][1][0])"),
-          ("Code", "dlgFrm.params.inputs[0][2][0].verb.update(dlgFrm.params.inputs[0][2][0])"),
-          ("Code", "frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))"),
-          ("Code", "WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))"),
-          ("Code", ""),
-          ("Code", ""),
-          ("Code", ""),
-          ("Code", ""),
-      )
-
-      def _build(rowRef):
-          rowIxRef = [0]
-          return WyeCore.Utils.buildCodeText('ResetCallback', TestLib.ResetCallback.codeDescr, TestLib.ResetCallback, rowIxRef)
-
-      def start(stack):
-          return Wye.codeFrame(TestLib.ResetCallback, stack)
-
-      def run(frame):
-          # print('Run 'UpdateCallback)
-          TestLib.TestLib_rt.ResetCallback_run_rt(frame)
-
-
-  class MyTestVerb:
-    mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
-    paramDescr =        (
-        ("ret","I",1),)
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (0,75,0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.05)),
-        ("dAngle","FL",
-          (0.0,0.0,-0.7)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (12,12,12)),
-        ("color","FL",
-          (1,1,1,1)),
-        ("cleanUpObjs","OL",None))
-    codeDescr =        (
-        #("Var=","frame.vars.cleanUpObjs[0] = []"),
-        ("WyeCore.libs.WyeLib.loadObject",
-          (None,"[frame]"),
-          (None,"frame.vars.gObj"),
-          (None,"['flyer_01.glb']"),
-          (None,"frame.vars.position"),
-          (None,"[[0, 90, 0]]"),
-          (None,"[[2,2,2]]"),
-          (None,"frame.vars.objTag"),
-          (None,"frame.vars.color"),
-          ("Var","frame.vars.cleanUpObjs")),
-        (None,"frame.vars.sound[0] = base.loader.loadSfx('WyePop.wav')"),
-        ("Label","Repeat"),
-        ("WyeCore.libs.WyeLib.setObjRelAngle",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dAngle")),
-        ("WyeCore.libs.WyeLib.setObjRelPos",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dPos")),
-        ("WyeCore.libs.WyeLib.getObjPos",
-          (None,"frame.vars.position"),
-          (None,"frame.vars.gObj")),
-        ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
-        ("Code","if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
-        ("Code"," frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
-        ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
-        ("WyeCore.libs.WyeLib.setObjMaterialColor",
-          ("Var","frame.vars.gObj"),
-          ("Var","frame.vars.color")),
-        ("GoTo","Repeat"))
-
-    def _build(rowRef):
-        # print("Build ",MyTestVerb)
-
-        rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('MyTestVerb', TestLib.MyTestVerb.codeDescr, TestLib.MyTestVerb, rowIxRef)
-
-    def start(stack):
-        return Wye.codeFrame(TestLib.MyTestVerb, stack)
-
-    def run(frame):
-        # print('Run 'MyTestVerb)
-        TestLib.TestLib_rt.MyTestVerb_run_rt(frame)
-
-  class PlaceHolder:
-    mode = Wye.mode.MULTI_CYCLE
-    autoStart = False
+    mode = Wye.mode.SINGLE_CYCLE
     dataType = Wye.dType.NONE
-    paramDescr =        ()
-    varDescr =        ()
-    codeDescr =        ()
+    paramDescr =  ()
+    varDescr =  ()
+    codeDescr =        (
+        ("Code","frm = frame.eventData[1]"),
+        ("Code","ctlFrm = frame.eventData[2]"),
+        ("Code","dlgFrm = ctlFrm.parentDlg"),
+        ("Code","x = Wye.startLightAngle[0]"),
+        ("Code","y = Wye.startLightAngle[1]"),
+        ("Code","z = Wye.startLightAngle[2]"),
+        ("Code","dlgFrm.params.inputs[0][0][0].vars.currVal[0] = x"),
+        ("Code","dlgFrm.params.inputs[0][1][0].vars.currVal[0] = y"),
+        ("Code","dlgFrm.params.inputs[0][2][0].vars.currVal[0] = z"),
+        ("Code","dlgFrm.params.inputs[0][0][0].verb.update(dlgFrm.params.inputs[0][0][0])"),
+        ("Code","dlgFrm.params.inputs[0][1][0].verb.update(dlgFrm.params.inputs[0][1][0])"),
+        ("Code","dlgFrm.params.inputs[0][2][0].verb.update(dlgFrm.params.inputs[0][2][0])"),
+        ("Code","frm.vars.target[0].vars.gObj[0].setHpr(int(x), int(y), int(z))"),
+        ("Code","WyeCore.World.dlightPath.setHpr(int(x), int(y), int(z))"),
+        ("Code",""),
+        ("Code",""),
+        ("Code",""),
+        ("Code",""))
 
     def _build(rowRef):
-        # print("Build ",PlaceHolder)
-
+        # print("Build ",ResetCallback)
         rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('PlaceHolder', TestLib.PlaceHolder.codeDescr, TestLib.PlaceHolder, rowIxRef)
+        return WyeCore.Utils.buildCodeText('ResetCallback', TestLib.ResetCallback.codeDescr, TestLib.ResetCallback, rowIxRef)
 
     def start(stack):
-        return Wye.codeFrame(TestLib.PlaceHolder, stack)
+        return Wye.codeFrame(TestLib.ResetCallback, stack)
 
     def run(frame):
-        # print('Run 'PlaceHolder)
-        TestLib.TestLib_rt.PlaceHolder_run_rt(frame)
+        # print('Run 'ResetCallback)
+        TestLib.TestLib_rt.ResetCallback_run_rt(frame)
+
+  class UpdateCallback:
+    mode = Wye.mode.SINGLE_CYCLE
+    dataType = Wye.dType.NONE
+    paramDescr =  ()
+    varDescr =  ()
+    codeDescr =        (
+        ("Code","frm = frame.eventData[1]"),
+        ("Code","ctlFrm = frame.eventData[2]"),
+        ("Code","dlgFrm = ctlFrm.parentDlg"),
+        ("Code","try:"),
+        ("Code","    x = float(dlgFrm.params.inputs[0][0][0].vars.currVal[0])"),
+        ("Code","except:"),
+        ("Code","    x = 0."),
+        ("Code","try:"),
+        ("Code","    y = float(dlgFrm.params.inputs[0][1][0].vars.currVal[0])"),
+        ("Code","except:"),
+        ("Code","    y = 0."),
+        ("Code","try:"),
+        ("Code","    z = float(dlgFrm.params.inputs[0][2][0].vars.currVal[0])"),
+        ("Code","except:"),
+        ("Code","    z = 0."),
+        ("Code","frm.vars.target[0].vars.gObj[0].setHpr(x, y, z)"),
+        ("Code","WyeCore.World.dlightPath.setHpr(x, y, z)"))
+
+    def _build(rowRef):
+        # print("Build ",UpdateCallback)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('UpdateCallback', TestLib.UpdateCallback.codeDescr, TestLib.UpdateCallback, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(TestLib.UpdateCallback, stack)
+
+    def run(frame):
+        # print('Run 'UpdateCallback)
+        TestLib.TestLib_rt.UpdateCallback_run_rt(frame)
 
   class angleFish:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = True
     dataType = Wye.dType.NONE
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sound","O",None),
-        ("position","FL",
-          (-2,2,2.5)),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(-2, 2, 2.5)),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
-        #("Var=","frame.vars.cleanUpObjs[0] = []"),
         ("WyeCore.libs.WyeLib.loadObject",
           (None,"[frame]"),
           (None,"frame.vars.gObj"),
@@ -213,7 +121,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",angleFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('angleFish', TestLib.angleFish.codeDescr, TestLib.angleFish, rowIxRef)
 
@@ -224,19 +131,193 @@ class TestLib:
         # print('Run 'angleFish)
         TestLib.TestLib_rt.angleFish_run_rt(frame)
 
+  class circleFish1:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = True
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(-35, 75, 2)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.05)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.75)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(8, 8, 8)),
+        ("color",Wye.dType.FLOAT_LIST,(0, 0.33, 0.66, 1)),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
+    codeDescr =        (
+        ("Var=","frame.vars.cleanUpObjs[0] = []"),
+        ("WyeCore.libs.WyeLib.loadObject",
+          (None,"[frame]"),
+          (None,"frame.vars.gObj"),
+          (None,"['flyer_01.glb']"),
+          (None,"frame.vars.position"),
+          (None,"[[0, 90, 0]]"),
+          (None,"[[2,2,2]]"),
+          (None,"frame.vars.objTag"),
+          (None,"frame.vars.color"),
+          ("Var","frame.vars.cleanUpObjs")),
+        ("Label","Repeat"),
+        ("WyeCore.libs.WyeLib.setObjRelAngle",
+          (None,"frame.vars.gObj"),
+          (None,"frame.vars.dAngle")),
+        ("WyeCore.libs.WyeLib.setObjRelPos",
+          (None,"frame.vars.gObj"),
+          (None,"frame.vars.dPos")),
+        ("Var=","frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
+        ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+        ("Code","if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
+        ("Code"," frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
+        ("Code"," frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+        ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+        ("WyeCore.libs.WyeLib.setObjMaterialColor",
+          ("Var","frame.vars.gObj"),
+          ("Var","frame.vars.color")),
+        ("GoTo","Repeat"))
+
+    def _build(rowRef):
+        # print("Build ",circleFish1)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('circleFish1', TestLib.circleFish1.codeDescr, TestLib.circleFish1, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(TestLib.circleFish1, stack)
+
+    def run(frame):
+        # print('Run 'circleFish1)
+        TestLib.TestLib_rt.circleFish1_run_rt(frame)
+
+  class circleFish2:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = True
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(-35, 75, 0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.05)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.7)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(12, 12, 12)),
+        ("color",Wye.dType.FLOAT_LIST,(0, 0.33, 0.66, 1)),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
+    codeDescr =        (
+        ("WyeCore.libs.WyeLib.loadObject",
+          (None,"[frame]"),
+          (None,"frame.vars.gObj"),
+          (None,"['flyer_01.glb']"),
+          (None,"frame.vars.position"),
+          (None,"[[0, 90, 0]]"),
+          (None,"[[2,2,2]]"),
+          (None,"frame.vars.objTag"),
+          (None,"frame.vars.color"),
+          ("Var","frame.vars.cleanUpObjs")),
+        ("Label","Repeat"),
+        ("WyeCore.libs.WyeLib.setObjRelAngle",
+          (None,"frame.vars.gObj"),
+          (None,"frame.vars.dAngle")),
+        ("WyeCore.libs.WyeLib.setObjRelPos",
+          (None,"frame.vars.gObj"),
+          (None,"frame.vars.dPos")),
+        ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
+        ("Code","if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
+        ("Code"," frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
+        ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+        ("WyeCore.libs.WyeLib.setObjMaterialColor",
+          ("Var","frame.vars.gObj"),
+          ("Var","frame.vars.color")),
+        ("GoTo","Repeat"))
+
+    def _build(rowRef):
+        # print("Build ",circleFish2)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('circleFish2', TestLib.circleFish2.codeDescr, TestLib.circleFish2, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(TestLib.circleFish2, stack)
+
+    def run(frame):
+        # print('Run 'circleFish2)
+        TestLib.TestLib_rt.circleFish2_run_rt(frame)
+
+  class circleFish3:
+    mode = Wye.mode.MULTI_CYCLE
+    autoStart = True
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(-35, 75, -2)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.05)),
+        ("dAngle",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.65)),
+        ("colorWk",Wye.dType.FLOAT_LIST,(1, 1, 1)),
+        ("colorInc",Wye.dType.FLOAT_LIST,(10, 25, 10)),
+        ("color",Wye.dType.FLOAT_LIST,(0, 0.33, 0.66, 1)),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
+    codeDescr =        (
+        ("WyeCore.libs.WyeLib.loadObject",
+          (None,"[frame]"),
+          (None,"frame.vars.gObj"),
+          (None,"['flyer_01.glb']"),
+          (None,"frame.vars.position"),
+          (None,"[[0, 90, 0]]"),
+          (None,"[[2,2,2]]"),
+          (None,"frame.vars.objTag"),
+          (None,"frame.vars.color"),
+          ("Var","frame.vars.cleanUpObjs")),
+        ("Label","Repeat"),
+        ("WyeCore.libs.WyeLib.setObjRelAngle",
+          (None,"frame.vars.gObj"),
+          (None,"frame.vars.dAngle")),
+        ("WyeCore.libs.WyeLib.setObjRelPos",
+          (None,"frame.vars.gObj"),
+          (None,"frame.vars.dPos")),
+        ("Var=","frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
+        ("Code","if frame.vars.colorWk[0][0] >= 255 or frame.vars.colorWk[0][0] <= 0:"),
+        ("Code"," frame.vars.colorInc[0][0] = -1 * frame.vars.colorInc[0][0]"),
+        ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
+        ("WyeCore.libs.WyeLib.setObjMaterialColor",
+          ("Var","frame.vars.gObj"),
+          ("Var","frame.vars.color")),
+        ("GoTo","Repeat"))
+
+    def _build(rowRef):
+        # print("Build ",circleFish3)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildCodeText('circleFish3', TestLib.circleFish3.codeDescr, TestLib.circleFish3, rowIxRef)
+
+    def start(stack):
+        return Wye.codeFrame(TestLib.circleFish3, stack)
+
+    def run(frame):
+        # print('Run 'circleFish3)
+        TestLib.TestLib_rt.circleFish3_run_rt(frame)
+
   class clickWiggle:
     mode = Wye.mode.MULTI_CYCLE
     dataType = Wye.dType.NONE
-    paramDescr =        (
-        ("obj","O",1),
-        ("tag","S",1),
-        ("axis","I",1))
-    varDescr =        (
-        ("rotCt","I",0),
-        ("sound","O",None),
-        ("gObj","O",None),
-        ("vec","FL",None),
-        ("axis","I",0))
+    paramDescr =  (
+        ("obj",Wye.dType.OBJECT,1),
+        ("tag",Wye.dType.STRING,1),
+        ("axis",Wye.dType.INTEGER,1),)
+    varDescr =  (
+        ("rotCt",Wye.dType.INTEGER,0),
+        ("sound",Wye.dType.OBJECT,None),
+        ("gObj",Wye.dType.OBJECT,None),
+        ("vec",Wye.dType.FLOAT_LIST,None),
+        ("axis",Wye.dType.INTEGER,0),)
     codeDescr =        (
         ("Var=","frame.vars.rotCt[0] = 0"),
         ("Var=","frame.vars.vec[0] = frame.params.obj[0].getHpr()"),
@@ -268,7 +349,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",clickWiggle)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('clickWiggle', TestLib.clickWiggle.codeDescr, TestLib.clickWiggle, rowIxRef)
 
@@ -283,28 +363,26 @@ class TestLib:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = True
     dataType = Wye.dType.NONE
-    paramDescr =        ()
-    varDescr =        (
-        ("followDist","F",2),
-        ("leaderName", Wye.dType.STRING, "leaderFish"),
-        ("fishes","OL",None),
-        ("fishTags","SL",None),
-        ("position","FL",
-          (0,0,0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.02)),
-        ("angle","FL",
-          (0.0,90.0,0.0)),
-        ("target","O",None),
-        ("tgtDist","F",0),
-        ("count","I",0),
-        ("nFish","I",3),
-        ("objAhead","O",None),
-        ("cleanUpObjs","OL",None))
+    cType = Wye.cType.VERB
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  (
+        ("followDist",Wye.dType.FLOAT,2),
+        ("leaderName",Wye.dType.STRING,"leaderFish"),
+        ("fishes",Wye.dType.OBJECT_LIST,None),
+        ("fishTags",Wye.dType.STRING_LIST,None),
+        ("position",Wye.dType.FLOAT_LIST,(0, 0, 0)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, -0.02)),
+        ("angle",Wye.dType.FLOAT_LIST,(0.0, 90.0, 0.0)),
+        ("target",Wye.dType.OBJECT,None),
+        ("tgtDist",Wye.dType.FLOAT,0),
+        ("count",Wye.dType.INTEGER,0),
+        ("nFish",Wye.dType.INTEGER,3),
+        ("objAhead",Wye.dType.OBJECT,None),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
-        #("Var=","frame.vars.fishes[0] = []"),
-        #("Var=","frame.vars.fishTags[0] = []"),
-        #("Var=","frame.vars.cleanUpObjs[0] = []"),
+        ("Code","from random import random"),
+        ("Var=","frame.vars.followDist[0] = random()*2+1.5"),
         ("Label","MakeFish"),
         ("Expr","frame.vars.fishes[0].append([None])"),
         ("Expr","frame.vars.fishTags[0].append([''])"),
@@ -362,7 +440,6 @@ class TestLib:
 
     def _build(rowRef):
         # print("Build ",fish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('fish', TestLib.fish.codeDescr, TestLib.fish, rowIxRef)
 
@@ -377,30 +454,22 @@ class TestLib:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = True
     dataType = Wye.dType.NONE
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S","objTag"),
-        ("sounds","OL",
-          ()),
-        ("currSnd","I",0),
-        ("position","FL",
-          (-1,2,-1.2)),
-        ("weeds","OL",
-          ()),
-        ("weedColorInc","FL",
-          ()),
-        ("bubbles","OL",
-          ()),
-        ("bubbleCt","IL",
-          ()),
-        ("bubblePop","IL",
-          ()),
-        ("bubbleMin","F",180),
-        ("bubbleRand","F",180),
-        ("bubbleFloat","FL",
-          (0.001,0.001,0.075)),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,"objTag"),
+        ("sounds",Wye.dType.OBJECT_LIST,()),
+        ("currSnd",Wye.dType.INTEGER,0),
+        ("position",Wye.dType.FLOAT_LIST,(-1, 2, -1.2)),
+        ("weeds",Wye.dType.OBJECT_LIST,()),
+        ("weedColorInc",Wye.dType.FLOAT_LIST,()),
+        ("bubbles",Wye.dType.OBJECT_LIST,()),
+        ("bubbleCt",Wye.dType.INTEGER_LIST,()),
+        ("bubblePop",Wye.dType.INTEGER_LIST,()),
+        ("bubbleMin",Wye.dType.FLOAT,180),
+        ("bubbleRand",Wye.dType.FLOAT,180),
+        ("bubbleFloat",Wye.dType.FLOAT_LIST,(0.001, 0.001, 0.075)),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("CodeBlock",'''
 #frame.vars.cleanUpObjs[0] = []
@@ -533,7 +602,6 @@ for ii in range(len(frame.vars.bubbles[0])):
 
     def _build(rowRef):
         # print("Build ",ground)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('ground', TestLib.ground.codeDescr, TestLib.ground, rowIxRef)
 
@@ -550,33 +618,33 @@ for ii in range(len(frame.vars.bubbles[0])):
     dataType = Wye.dType.NONE
     cType = Wye.cType.OBJECT
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("tgtPos", "FL", (0, 25, 0)),
-        ("posStep","F",0.04),
-        ("fish","O",None),
-        ("fishTag","S",""),
-        ("tgtDist","F",1.0),
-        ("dAngleX","F",0.5),
-        ("dAngleY","F",0.5),
-        ("dAngleZ","F",0.5),
-        ("sound","O",None),
-        ("position","FL",(0,0,0)),
-        ("prevState","I",0),
-        ("startQ","O",None),
-        ("endQ","O",None),
-        ("deltaT","F",0.005),
-        ("deltaV","FL",[0,0,0]),
-        ("lerpT","F",0.0),
-        ("horizLim","F",10.0),
-        ("vertLim","F",3.0),
-        ("tgtChgCt","I",600),
-        ("cleanUpObjs","OL",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("tgtPos",Wye.dType.FLOAT_LIST,(0, 25, 0)),
+        ("posStep",Wye.dType.FLOAT,0.04),
+        ("scootDelta",Wye.dType.FLOAT,0.05),
+        ("scootCt",Wye.dType.INTEGER,50),
+        ("fish",Wye.dType.OBJECT,None),
+        ("fishTag",Wye.dType.STRING,""),
+        ("tgtDist",Wye.dType.FLOAT,1.0),
+        ("dAngleX",Wye.dType.FLOAT,0.5),
+        ("dAngleY",Wye.dType.FLOAT,0.5),
+        ("dAngleZ",Wye.dType.FLOAT,0.5),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(0, 0, 0)),
+        ("prevState",Wye.dType.INTEGER,0),
+        ("startQ",Wye.dType.OBJECT,None),
+        ("endQ",Wye.dType.OBJECT,None),
+        ("deltaT",Wye.dType.FLOAT,0.005),
+        ("deltaV",Wye.dType.FLOAT_LIST,[0, 0, 0]),
+        ("lerpT",Wye.dType.FLOAT,0.0),
+        ("horizLim",Wye.dType.FLOAT,15.0),
+        ("vertLim",Wye.dType.FLOAT,5.0),
+        ("tgtChgCt",Wye.dType.INTEGER,600),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         ("loaderStream",
           (
-            #("Var=","frame.vars.deltaV=[[0,0,0]]"),
-            #("Var=","frame.vars.cleanUpObjs[0] = []"),
             ("WyeCore.libs.WyeLib.loadObject",
               (None,"[frame]"),
               (None,"frame.vars.fish"),
@@ -711,11 +779,20 @@ else:
               (None,"frame.vars.fishTag")),
             ("Expr","frame.vars.dAngleX[0] = frame.vars.dAngleX[0] * -1"),
             ("Code","frame.vars.sound[0].play()"),
-            ("GoTo","top"))))
+            ("GoTo","top"))),
+        ("NewStream",
+          (
+            ("Label","Loop"),
+            ("WyeCore.libs.WyeLib.waitClick",
+              ("Expr","frame.vars.fishTag")),
+            ("Var=","frame.vars.posStep[0] += frame.vars.scootDelta[0]"),
+            ("WyeCore.libs.WyeLib.delay",
+              ("Expr","frame.vars.scootCt # delay this many frames")),
+            ("Var=","frame.vars.posStep[0] -= frame.vars.scootDelta[0]"),
+            ("GoTo","Loop"))))
 
     def _build(rowRef):
         # print("Build ",leaderFish)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildParallelText('TestLib', 'leaderFish', TestLib.leaderFish.codeDescr, TestLib.leaderFish)
 
@@ -726,25 +803,121 @@ else:
         # print('Run 'leaderFish)
         frame.runParallel()
 
+  class parallelFish:
+    mode = Wye.mode.PARALLEL
+    autoStart = True
+    dataType = Wye.dType.NONE
+    cType = Wye.cType.OBJECT
+    parTermType = Wye.parTermType.FIRST_FAIL
+    paramDescr =  ()
+    varDescr =  (
+        ("gObj",Wye.dType.OBJECT,None),
+        ("objTag",Wye.dType.STRING,""),
+        ("sound",Wye.dType.OBJECT,None),
+        ("position",Wye.dType.FLOAT_LIST,(3, 2, -1)),
+        ("dPos",Wye.dType.FLOAT_LIST,(0.0, 0.0, 0.03)),
+        ("posAngle",Wye.dType.FLOAT,4.712388),
+        ("dAngleDeg",Wye.dType.FLOAT_LIST,[0.0, 0.0, 0.03]),
+        ("randAngle",Wye.dType.FLOAT,0.0),
+        ("swimAngle",Wye.dType.FLOAT,0.3),
+        ("swimCt",Wye.dType.INTEGER,0),
+        ("swimLim",Wye.dType.INTEGER,20),
+        ("ctrAngle",Wye.dType.FLOAT,1.0),
+        ("note",Wye.dType.INTEGER,40),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
+    codeDescr =        (
+        ("loaderStream",
+          (
+            ("Code","from random import random"),
+            ("Var=","frame.vars.cleanUpObjs[0] = []"),
+            ("WyeCore.libs.WyeLib.loadObject",
+              (None,"[frame]"),
+              (None,"frame.vars.gObj"),
+              ("Const","['fish1a.glb']"),
+              (None,"frame.vars.position"),
+              ("Const","[[0, 90, 0]]"),
+              ("Const","[[.25,.25,.25]]"),
+              (None,"frame.vars.objTag"),
+              ("Const","[[.5+(random()*.4),0.3+(random()*.4),3,1]]"),
+              ("Var","frame.vars.cleanUpObjs")),
+            ("Label","Done"))),
+        ("setAngleStream",
+          (
+            ("Label","Repeat"),
+            ("Code","from random import random"),
+            ("Code","# wiggle back and forth"),
+            ("Code","frame.vars.swimCt[0] += 1"),
+            ("Code","if frame.vars.swimCt[0] > frame.vars.swimLim[0]:"),
+            ("Code","  frame.vars.swimAngle[0] *= -1"),
+            ("Code","  frame.vars.swimCt[0] = 0"),
+            ("Code","  # turn in a left-ish circle"),
+            ("Code","  frame.vars.randAngle[0] += (random()-.5)*.25 if frame.vars.randAngle[0] < frame.vars.ctrAngle[0] else (random()-.75)*.25"),
+            ("Code","  frame.vars.randAngle[0] = frame.vars.randAngle[0] if frame.vars.randAngle[0] > 0 else 0 - frame.vars.randAngle[0]"),
+            ("Code","frame.vars.dAngleDeg[0][2] = frame.vars.randAngle[0]*.5 + frame.vars.swimAngle[0]"),
+            ("Code","#frame.vars.dAngleDeg[0][2] = frame.vars.swimAngle[0]"),
+            ("WyeCore.libs.WyeLib.setObjRelAngle",
+              ("Var","frame.vars.gObj"),
+              ("Var","frame.vars.dAngleDeg")),
+            ("GoTo","Repeat"))),
+        ("setPositionStream",
+          (
+            ("Label","Repeat"),
+            ("Code","frame.vars.gObj[0].setPos(frame.vars.gObj[0], frame.vars.dPos[0][0], frame.vars.dPos[0][1], frame.vars.dPos[0][2]) #"),
+            ("GoTo","Repeat"))),
+        ("InteractionStream",
+          (
+            ("Code","from random import random"),
+            ("Code","frame.vars.note[0] = 45 + int(30*random())"),
+            ("Label","Loop"),
+            ("Code","frame.vars.ctrAngle[0] = 1."),
+            ("Code","frame.vars.dPos[0] = [0.,0.,.03]"),
+            ("Code","#If the user clicks on the fish, scoot forward and beep"),
+            ("WyeCore.libs.WyeLib.waitClick",
+              ("Expr","frame.vars.objTag")),
+            ("Code","Wye.midi.playNote(117, frame.vars.note[0], 64, .5)"),
+            ("WyeCore.libs.WyeLib.delay",
+              ("Expr","[5] # <put parameter here>")),
+            ("Code","frame.vars.ctrAngle[0] = 0."),
+            ("Label","MidiDelay"),
+            ("Code","frame.vars.dPos[0] = [0.,0.,.5]"),
+            ("WyeCore.libs.WyeLib.delay",
+              ("Expr","[20] # <put parameter here>")),
+            ("Label","Filler"),
+            ("GoTo","Loop"))))
+
+    def _build(rowRef):
+        # print("Build ",parallelFish)
+        rowIxRef = [0]
+        return WyeCore.Utils.buildParallelText('TestLib', 'parallelFish', TestLib.parallelFish.codeDescr, TestLib.parallelFish)
+
+    def start(stack):
+        return TestLib.TestLib_rt.parallelFish_start_rt(stack)
+
+    def run(frame):
+        # print('Run 'parallelFish)
+        frame.runParallel()
+
   class showFishDialog:
     mode = Wye.mode.MULTI_CYCLE
     autoStart = True
     dataType = Wye.dType.STRING
-    paramDescr =        ()
-    varDescr =        (
-        ("dlgRetVal","I",-1),
-        ("XAngleID","S",""),
-        ("XAngle","I",0),
-        ("YAngleID","S",""),
-        ("YAngle","I",0),
-        ("ZAngleID","S",""),
-        ("ZAngle","I",0),
-        ("updateBtnId","O",None),
-        ("dlgButton","O",None),
-        ("doitId","O",None),
-        ("target","O",None))
+    paramDescr =  ()
+    varDescr =  (
+        ("dlgRetVal",Wye.dType.INTEGER,-1),
+        ("XAngleID",Wye.dType.STRING,""),
+        ("XAngle",Wye.dType.INTEGER,0),
+        ("YAngleID",Wye.dType.STRING,""),
+        ("YAngle",Wye.dType.INTEGER,0),
+        ("ZAngleID",Wye.dType.STRING,""),
+        ("ZAngle",Wye.dType.INTEGER,0),
+        ("updateBtnId",Wye.dType.OBJECT,None),
+        ("dlgButton",Wye.dType.OBJECT,None),
+        ("doitId",Wye.dType.OBJECT,None),
+        ("target",Wye.dType.OBJECT,None),
+        ("cleanUpObjs",Wye.dType.OBJECT_LIST,None),)
     codeDescr =        (
         (None,"frame.vars.dlgButton[0] = Wye3dObjsLib._3dText(text='Set Fish and Light Angle',color=(1,1,1,1), pos=(-3,2,2), scale=(.2,.2,.2))"),
+        ("Code","frame.vars.cleanUpObjs[0].append(frame.vars.dlgButton[0])"),
         (None,"frame.vars.doitId[0] = frame.vars.dlgButton[0].getTag()"),
         ("Label","PopDialog"),
         ("WyeCore.libs.WyeLib.waitClick",
@@ -792,7 +965,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",showFishDialog)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('showFishDialog', TestLib.showFishDialog.codeDescr, TestLib.showFishDialog, rowIxRef)
 
@@ -806,14 +978,14 @@ else:
   class testLoader:
     mode = Wye.mode.SINGLE_CYCLE
     dataType = Wye.dType.NONE
-    paramDescr =        (
-        ("obj","O",1),
-        ("file","S",1),
-        ("posVec","IL",1),
-        ("scaleVec","IL",1),
-        ("tag","S",1),
-        ("colorVec","FL",1))
-    varDescr =        ()
+    paramDescr =  (
+        ("obj",Wye.dType.OBJECT,1),
+        ("file",Wye.dType.STRING,1),
+        ("posVec",Wye.dType.INTEGER_LIST,1),
+        ("scaleVec",Wye.dType.INTEGER_LIST,1),
+        ("tag",Wye.dType.STRING,1),
+        ("colorVec",Wye.dType.FLOAT_LIST,1),)
+    varDescr =  ()
     codeDescr =        (
         ("WyeCore.libs.WyeLib.loadModel",
           ("Var","frame.params.obj"),
@@ -831,7 +1003,6 @@ else:
 
     def _build(rowRef):
         # print("Build ",testLoader)
-
         rowIxRef = [0]
         return WyeCore.Utils.buildCodeText('testLoader', TestLib.testLoader.codeDescr, TestLib.testLoader, rowIxRef)
 
@@ -841,263 +1012,3 @@ else:
     def run(frame):
         # print('Run 'testLoader)
         TestLib.TestLib_rt.testLoader_run_rt(frame)
-
-  class testObj3:
-    mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
-    dataType = Wye.dType.NONE
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (-35,75,2)),
-        ("dPos","FL",
-          (0.0,0.0,-0.05)),
-        ("dAngle","FL",
-          (0.0,0.0,-0.75)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (8,8,8)),
-        ("color","FL",
-          (0,0.33,0.66,1)),
-        ("cleanUpObjs","OL",None))
-    codeDescr =        (
-        ("Var=","frame.vars.cleanUpObjs[0] = []"),
-        ("WyeCore.libs.WyeLib.loadObject",
-          (None,"[frame]"),
-          (None,"frame.vars.gObj"),
-          (None,"['flyer_01.glb']"),
-          (None,"frame.vars.position"),
-          (None,"[[0, 90, 0]]"),
-          (None,"[[2,2,2]]"),
-          (None,"frame.vars.objTag"),
-          (None,"frame.vars.color"),
-          ("Var","frame.vars.cleanUpObjs")),
-        ("Label","Repeat"),
-        ("WyeCore.libs.WyeLib.setObjRelAngle",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dAngle")),
-        ("WyeCore.libs.WyeLib.setObjRelPos",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dPos")),
-        ("Var=","frame.vars.colorWk[0][2] = (frame.vars.colorWk[0][2] + frame.vars.colorInc[0][2])"),
-        ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
-        ("Code","if frame.vars.colorWk[0][2] >= 255 or frame.vars.colorWk[0][2] <= 0:"),
-        ("Code"," frame.vars.colorInc[0][2] = -1 * frame.vars.colorInc[0][2]"),
-        ("Code"," frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
-        ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
-        ("WyeCore.libs.WyeLib.setObjMaterialColor",
-          ("Var","frame.vars.gObj"),
-          ("Var","frame.vars.color")),
-        ("GoTo","Repeat"))
-
-    def _build(rowRef):
-        # print("Build ",testObj3)
-
-        rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('testObj3', TestLib.testObj3.codeDescr, TestLib.testObj3, rowIxRef)
-
-    def start(stack):
-        return Wye.codeFrame(TestLib.testObj3, stack)
-
-    def run(frame):
-        # print('Run 'testObj3)
-        TestLib.TestLib_rt.testObj3_run_rt(frame)
-
-  class testObj3b:
-    mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
-    dataType = Wye.dType.NONE
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (-35,75,0)),
-        ("dPos","FL",
-          (0.0,0.0,-0.05)),
-        ("dAngle","FL",
-          (0.0,0.0,-0.7)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (12,12,12)),
-        ("color","FL",
-          (0,0.33,0.66,1)),
-        ("cleanUpObjs","OL",None))
-    codeDescr =        (
-        #("Var=","frame.vars.cleanUpObjs[0] = []"),
-        ("WyeCore.libs.WyeLib.loadObject",
-          (None,"[frame]"),
-          (None,"frame.vars.gObj"),
-          (None,"['flyer_01.glb']"),
-          (None,"frame.vars.position"),
-          (None,"[[0, 90, 0]]"),
-          (None,"[[2,2,2]]"),
-          (None,"frame.vars.objTag"),
-          (None,"frame.vars.color"),
-          ("Var","frame.vars.cleanUpObjs")),
-        ("Label","Repeat"),
-        ("WyeCore.libs.WyeLib.setObjRelAngle",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dAngle")),
-        ("WyeCore.libs.WyeLib.setObjRelPos",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dPos")),
-        ("Var=","frame.vars.colorWk[0][1] = (frame.vars.colorWk[0][1] + frame.vars.colorInc[0][1])"),
-        ("Code","if frame.vars.colorWk[0][1] >= 255 or frame.vars.colorWk[0][1] <= 0:"),
-        ("Code"," frame.vars.colorInc[0][1] = -1 * frame.vars.colorInc[0][1]"),
-        ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
-        ("WyeCore.libs.WyeLib.setObjMaterialColor",
-          ("Var","frame.vars.gObj"),
-          ("Var","frame.vars.color")),
-        ("GoTo","Repeat"))
-
-    def _build(rowRef):
-        # print("Build ",testObj3b)
-
-        rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('testObj3b', TestLib.testObj3b.codeDescr, TestLib.testObj3b, rowIxRef)
-
-    def start(stack):
-        return Wye.codeFrame(TestLib.testObj3b, stack)
-
-    def run(frame):
-        # print('Run 'testObj3b)
-        TestLib.TestLib_rt.testObj3b_run_rt(frame)
-
-  class testObj3c:
-    mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
-    dataType = Wye.dType.NONE
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (-35,75,-2)),
-        ("dPos","FL",
-          (0.0,0.0,-0.05)),
-        ("dAngle","FL",
-          (0.0,0.0,-0.65)),
-        ("colorWk","FL",
-          (1,1,1)),
-        ("colorInc","FL",
-          (10,25,10)),
-        ("color","FL",
-          (0,0.33,0.66,1)),
-        ("cleanUpObjs","OL",None))
-    codeDescr =        (
-        #("Var=","frame.vars.cleanUpObjs[0] = []"),
-        ("WyeCore.libs.WyeLib.loadObject",
-          (None,"[frame]"),
-          (None,"frame.vars.gObj"),
-          (None,"['flyer_01.glb']"),
-          (None,"frame.vars.position"),
-          (None,"[[0, 90, 0]]"),
-          (None,"[[2,2,2]]"),
-          (None,"frame.vars.objTag"),
-          (None,"frame.vars.color"),
-          ("Var","frame.vars.cleanUpObjs")),
-        ("Label","Repeat"),
-        ("WyeCore.libs.WyeLib.setObjRelAngle",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dAngle")),
-        ("WyeCore.libs.WyeLib.setObjRelPos",
-          (None,"frame.vars.gObj"),
-          (None,"frame.vars.dPos")),
-        ("Var=","frame.vars.colorWk[0][0] = (frame.vars.colorWk[0][0] + frame.vars.colorInc[0][0])"),
-        ("Code","if frame.vars.colorWk[0][0] >= 255 or frame.vars.colorWk[0][0] <= 0:"),
-        ("Code"," frame.vars.colorInc[0][0] = -1 * frame.vars.colorInc[0][0]"),
-        ("Var=","frame.vars.color[0] = (frame.vars.colorWk[0][0]/256., frame.vars.colorWk[0][1]/256., frame.vars.colorWk[0][2]/256., 1)"),
-        ("WyeCore.libs.WyeLib.setObjMaterialColor",
-          ("Var","frame.vars.gObj"),
-          ("Var","frame.vars.color")),
-        ("GoTo","Repeat"))
-
-    def _build(rowRef):
-        # print("Build ",testObj3c)
-
-        rowIxRef = [0]
-        return WyeCore.Utils.buildCodeText('testObj3c', TestLib.testObj3c.codeDescr, TestLib.testObj3c, rowIxRef)
-
-    def start(stack):
-        return Wye.codeFrame(TestLib.testObj3c, stack)
-
-    def run(frame):
-        # print('Run 'testObj3c)
-        TestLib.TestLib_rt.testObj3c_run_rt(frame)
-
-  class parallelFish:
-    mode = Wye.mode.PARALLEL
-    autoStart = True
-    dataType = Wye.dType.NONE
-    cType = Wye.cType.OBJECT
-    parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =        ()
-    varDescr =        (
-        ("gObj","O",None),
-        ("objTag","S",""),
-        ("sound","O",None),
-        ("position","FL",
-          (3,2,-1)),
-        ("dPos","FL",
-          (0.0,0.0,0.03)),
-        ("posAngle","F",4.712388),
-        ("dAngleDeg","FL",
-          (0.0,0.0,0.5)),
-        ("dAngleRad","F",-0.0087266462),
-        ("cleanUpObjs","OL",None))
-    codeDescr =        (
-        ("loaderStream",
-          (
-            #("Var=","frame.vars.cleanUpObjs[0] = []"),
-            ("WyeCore.libs.WyeLib.loadObject",
-              (None,"[frame]"),
-              (None,"frame.vars.gObj"),
-              (None,"['fish1a.glb']"),
-              (None,"frame.vars.position"),
-              (None,"[[0, 90, 0]]"),
-              (None,"[[.25,.25,.25]]"),
-              (None,"frame.vars.objTag"),
-              (None,"[[.9,0.5,0,1]]"),
-              ("Var","frame.vars.cleanUpObjs")),
-            ("Label","Done"))),
-        ("setAngleStream",
-          (
-            ("Label","Repeat"),
-            ("WyeCore.libs.WyeLib.setObjRelAngle",
-              (None,"frame.vars.gObj"),
-              (None,"frame.vars.dAngleDeg")),
-            ("GoTo","Repeat"))),
-        ("setPositionStream",
-          (
-            ("Label","Repeat"),
-            ("Code","import math #"),
-            ("Code","angle = frame.vars.posAngle[0] #"),
-            ("Code","ctrPos = frame.vars.position[0] #"),
-            ("Code","x = ctrPos[0] + math.sin(angle)#"),
-            ("Code","y = ctrPos[1] + math.cos(angle)#"),
-            ("Code","frame.vars.gObj[0].setPos(x,y,ctrPos[2]) #"),
-            ("Code","angle += frame.vars.dAngleRad[0] #"),
-            ("Code","angle=angle%(math.pi*2) #"),
-            ("Code","frame.vars.posAngle[0]=angle #"),
-            ("GoTo","Repeat"))))
-
-    def _build(rowRef):
-        # print("Build ",parallelFish)
-
-        rowIxRef = [0]
-        return WyeCore.Utils.buildParallelText('TestLib', 'parallelFish', TestLib.parallelFish.codeDescr, TestLib.parallelFish)
-
-    def start(stack):
-        return TestLib.TestLib_rt.parallelFish_start_rt(stack)
-
-    def run(frame):
-        # print('Run 'parallelFish)
-        frame.runParallel()

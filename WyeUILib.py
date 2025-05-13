@@ -930,11 +930,14 @@ class WyeUILib(Wye.staticObj):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.hide()
             frame.params.hidden[0]=True
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def show(frame):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.show()
             frame.params.hidden[0]=False
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
+
 
     # text input field
     class InputText:
@@ -1538,6 +1541,11 @@ class WyeUILib(Wye.staticObj):
         def redisplay(frame, dlgFrm, pos):
             #if frame.params.hidden[0]:
             #    return
+            lblGFrm = frame.vars.labelGWidget[0].textNode.getFrameActual()
+            width = (lblGFrm[1] - lblGFrm[0]) + 1
+            frame.vars.gWidget[0].setPos(width, 0, .25)
+            frame.vars.size[0] = (width + .75, 0, frame.vars.labelGWidget[0].getHeight())
+
             frame.vars.position[0] = (pos[0], pos[1], pos[2])
             lbl = frame.vars.gWidgetStack[0][0]
             lbl.setPos(pos)
@@ -1598,11 +1606,13 @@ class WyeUILib(Wye.staticObj):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.hide()
             frame.params.hidden[0]=True
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
         def show(frame):
             for gObj in frame.vars.gWidgetStack[0]:
                 gObj.show()
             frame.params.hidden[0]=False
+            frame.parentDlg.verb.redisplay(frame.parentDlg)
 
 
         # User clicked input, generate the DropDown
@@ -2148,63 +2158,6 @@ class WyeUILib(Wye.staticObj):
                 frame.vars.dlgWidgets[0].append(txt)
                 frame.vars.canTags[0].append(txt.getTag())
 
-        def genBackground(frame, bgndColor, outlineColor):
-            #print("Dialog genBackground: '",frame.params.title[0])
-            #curframe = inspect.currentframe()
-            #calframe = inspect.getouterframes(curframe, 2)
-            #print('  called from:', calframe[1][3])
-
-            # if have prev nodes, fix that
-            if frame.vars.bgndGObj[0]:
-                frame.vars.bgndGObj[0].removeNode()
-                frame.vars.outlineGObj[0].removeNode()
-
-            if frame.params.parent[0] is None:
-                scMult = 5
-            else:
-                scMult = 1
-            dlgNodePath = frame.vars.dragPath[0]
-            # dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
-            dlgBounds = dlgNodePath.getTightBounds()
-            #print("Dialog genBackground: dialog bounds", dlgBounds)
-            card = CardMaker("Dlg Bgnd")
-            #print("genBackground", frame.params.title[0], " ", bgndColor, " ", outlineColor)
-            #card.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
-            gFrame = LVecBase4f(0, 0, 0, 0)
-            # print("gFrame", gFrame)
-            ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
-            dx = dlgBounds[1][0] - dlgBounds[0][0]
-            dy = dlgBounds[1][1] - dlgBounds[0][1]
-            wd = (math.sqrt(dx * dx + dy * dy)) * scMult + 1
-            gFrame[0] = 0  # marginL
-            gFrame[1] = wd  # marginR
-            gFrame[2] = 0  # marginB
-            gFrame[3] = ht  # marginT
-            # print("initial adjusted gFrame", gFrame)
-            card.setFrame(gFrame)
-            cardPath = NodePath(card.generate())
-            cardPath.reparentTo(dlgNodePath)
-            cardPath.setPos((-.5, .1, 1.2 - ht))
-            cardPath.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
-            cardPath.setLightOff()
-            frame.vars.bgndGObj[0] = cardPath
-
-            # background outline
-            oCard = CardMaker("Dlg Bgnd Outline")
-            #oCard.setColor(outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3])
-            # print("gFrame", gFrame)
-            gFrame[0] = -.1  # marginL
-            gFrame[1] = wd + .3  # marginR
-            gFrame[2] = -.1  # marginB
-            gFrame[3] = ht + .3  # marginT
-            # print("initial adjusted gFrame", gFrame)
-            oCard.setFrame(gFrame)
-            oCardPath = NodePath(oCard.generate())
-            oCardPath.reparentTo(dlgNodePath)
-            oCardPath.setPos((-.6, .2, 1.1 - ht))
-            oCardPath.setColor(outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3])
-            oCardPath.setLightOff()
-            frame.vars.outlineGObj[0] = oCardPath
 
         # dialog's input list changed, update all row positions
         def redisplay(frame):
@@ -2315,6 +2268,64 @@ class WyeUILib(Wye.staticObj):
             frame.verb.genBackground(frame, bg, out)
             frame.doingDisplay = False
 
+
+        def genBackground(frame, bgndColor, outlineColor):
+            #print("Dialog genBackground: '",frame.params.title[0])
+            #curframe = inspect.currentframe()
+            #calframe = inspect.getouterframes(curframe, 2)
+            #print('  called from:', calframe[1][3])
+
+            # if have prev nodes, fix that
+            if frame.vars.bgndGObj[0]:
+                frame.vars.bgndGObj[0].removeNode()
+                frame.vars.outlineGObj[0].removeNode()
+
+            if frame.params.parent[0] is None:
+                scMult = 5
+            else:
+                scMult = 1
+            dlgNodePath = frame.vars.dragPath[0]
+            # dlgNodePath.setPos(frame.vars.position[0][0], frame.vars.position[0][1], frame.vars.position[0][2])
+            dlgBounds = dlgNodePath.getTightBounds()
+            #print("Dialog genBackground: dialog bounds", dlgBounds)
+            card = CardMaker("Dlg Bgnd")
+            #print("genBackground", frame.params.title[0], " ", bgndColor, " ", outlineColor)
+            #card.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
+            gFrame = LVecBase4f(0, 0, 0, 0)
+            # print("gFrame", gFrame)
+            ht = (dlgBounds[1][2] - dlgBounds[0][2]) * scMult + 1
+            dx = dlgBounds[1][0] - dlgBounds[0][0]
+            dy = dlgBounds[1][1] - dlgBounds[0][1]
+            wd = (math.sqrt(dx * dx + dy * dy)) * scMult + 1
+            gFrame[0] = 0  # marginL
+            gFrame[1] = wd  # marginR
+            gFrame[2] = 0  # marginB
+            gFrame[3] = ht  # marginT
+            # print("initial adjusted gFrame", gFrame)
+            card.setFrame(gFrame)
+            cardPath = NodePath(card.generate())
+            cardPath.reparentTo(dlgNodePath)
+            cardPath.setPos((-.5, .1, 1.2 - ht))
+            cardPath.setColor(bgndColor[0], bgndColor[1], bgndColor[2], bgndColor[3])
+            cardPath.setLightOff()
+            frame.vars.bgndGObj[0] = cardPath
+
+            # background outline
+            oCard = CardMaker("Dlg Bgnd Outline")
+            #oCard.setColor(outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3])
+            # print("gFrame", gFrame)
+            gFrame[0] = -.1  # marginL
+            gFrame[1] = wd + .3  # marginR
+            gFrame[2] = -.1  # marginB
+            gFrame[3] = ht + .3  # marginT
+            # print("initial adjusted gFrame", gFrame)
+            oCard.setFrame(gFrame)
+            oCardPath = NodePath(oCard.generate())
+            oCardPath.reparentTo(dlgNodePath)
+            oCardPath.setPos((-.6, .2, 1.1 - ht))
+            oCardPath.setColor(outlineColor[0], outlineColor[1], outlineColor[2], outlineColor[3])
+            oCardPath.setLightOff()
+            frame.vars.outlineGObj[0] = oCardPath
 
         def doCallback(frame, inFrm, tag, doUserCallback=False):
             # Unless caller overrides with doUserCallback, look for vars.localCallback first
@@ -4691,7 +4702,7 @@ class WyeUILib(Wye.staticObj):
             for attr in dir(lib):
                 if attr != "__class__":
                     verb = getattr(lib, attr)
-                    if inspect.isclass(verb) and not verb.__name__.endswith("_rt"):
+                    if inspect.isclass(verb) and not verb.__name__.endswith("_rt") and not verb.__name__.endswith("Callback"):
                         # can only start verbs that don't require data
                         if hasattr(verb, "paramDescr") and len(verb.paramDescr) == 0:
                             prefFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Start",
@@ -5228,7 +5239,7 @@ class WyeUILib(Wye.staticObj):
                     #print("EditVerb run case 0: edit", verb.__name__)
 
                     # only edit frame once
-                    if verb in WyeUILib.EditVerb.activeVerbs:
+                    if verb.library.__name__+"."+verb.__name__ in WyeUILib.EditVerb.activeVerbs:
                         #print("Already editing this library", verb.library.__name__, " verb", verb.__name__)
                         # take self off active object list
                         WyeCore.World.stopActiveObject(frame)
@@ -10677,7 +10688,7 @@ Wye General Info:
                 # if stopping, go to stop case
                 if recMgrFrm.vars.recording[0]:
                     #print("RecordStartStopCallback: recording, go to stop")
-                    startStopFrm.verb.setLabel(startStopFrm, "Start")       # switch lavel back to start
+                    startStopFrm.verb.setLabel(startStopFrm, "Start")       # switch label back to start
                     startStopFrm.verb.setValue(startStopFrm, False)         # causes recursion
                     frame.PC = 3
 
