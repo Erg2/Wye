@@ -157,11 +157,11 @@ class VoiceTestLib:
                     frame.vars.load[0].join()
                     frame.vars.load[0] = None
                 if frame.vars.record[0]:
-                    print("Wait for transcribe thread to finish", flush=True)
+                    print("Wait for mic input thread to finish", flush=True)
                     frame.vars.record[0].join()
                     frame.vars.record[0] = None
                 if frame.vars.transcribe[0]:
-                    print("Wait for mic input thread to finish", flush=True)
+                    print("Wait for transcribe thread to finish", flush=True)
                     frame.vars.transcribe[0].join()
                     frame.vars.transcribe[0] = None
 
@@ -227,10 +227,13 @@ class VoiceTestLib:
                 frames = []
 
         print("record_microphone: Done recording")
+        recordings.put([])
+
         stream.stop_stream()
         stream.close()
         p.terminate()
         vMgrFrm.vars.record[0] = None
+        print("Recording thread done")
 
     def speech_recognition_load(vMgrFrm):
         print("speech_recognition_load thread started")
@@ -244,12 +247,15 @@ class VoiceTestLib:
         vMgrFrm.vars.startStopFrm[0].verb.show(vMgrFrm.vars.startStopFrm[0])
         vMgrFrm.vars.textFrm[0].verb.show(vMgrFrm.vars.textFrm[0])
         vMgrFrm.vars.load[0] = None
+        print("Loading thread done")
 
     def speech_recognition(vMgrFrm):
         print("speech_recognition thread started")
 
         while not messages.empty():
+            print("Get recording")
             frames = recordings.get()
+            print("Got", len(frames)," recording frames")
             if len(frames):
                 vMgrFrm.vars.rec[0].AcceptWaveform(b''.join(frames))
                 result = vMgrFrm.vars.rec[0].Result()
@@ -273,13 +279,17 @@ class VoiceTestLib:
                         if cmd.lower() == "why":
                             usedThru = ii + vMgrFrm.verb.parse(vMgrFrm, ii)
 
-                    vMgrFrm.vars.outputText[0] = vMgrFrm.vars.outputText[0][usedThru:]
-                    print("remaining text", vMgrFrm.vars.outputText[0])
+                    if usedThru:
+                        vMgrFrm.vars.outputText[0] = vMgrFrm.vars.outputText[0][usedThru:]
+                        print("remaining text", vMgrFrm.vars.outputText[0])
             else:
                 print("No input")
 
-        print("speech_recognition Done")
+        print("speech_recognition: messages empty, stopped recognition")
+
+
         vMgrFrm.vars.transcribe[0] = None
+        print("speech_recognition thread Done")
 
     # parse for cmd in ouputText starting at txtIx
     def parse(frame, txtIx):

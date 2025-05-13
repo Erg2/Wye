@@ -854,7 +854,6 @@ else:
             ("Code","  frame.vars.randAngle[0] += (random()-.5)*.25 if frame.vars.randAngle[0] < frame.vars.ctrAngle[0] else (random()-.75)*.25"),
             ("Code","  frame.vars.randAngle[0] = frame.vars.randAngle[0] if frame.vars.randAngle[0] > 0 else 0 - frame.vars.randAngle[0]"),
             ("Code","frame.vars.dAngleDeg[0][2] = frame.vars.randAngle[0]*.5 + frame.vars.swimAngle[0]"),
-            ("Code","#frame.vars.dAngleDeg[0][2] = frame.vars.swimAngle[0]"),
             ("WyeCore.libs.WyeLib.setObjRelAngle",
               ("Var","frame.vars.gObj"),
               ("Var","frame.vars.dAngleDeg")),
@@ -876,13 +875,17 @@ else:
               ("Expr","frame.vars.objTag")),
             ("Code","Wye.midi.playNote(117, frame.vars.note[0], 64, .5)"),
             ("WyeCore.libs.WyeLib.delay",
-              ("Expr","[5] # <put parameter here>")),
+              ("Expr","[5] # wait for note to start")),
             ("Code","frame.vars.ctrAngle[0] = 0."),
             ("Label","MidiDelay"),
-            ("Code","frame.vars.dPos[0] = [0.,0.,.5]"),
+            ("Code","frame.vars.dPos[0] = [0.,0.,.4]"),
+            ("Code","frame.vars.swimLim[0] = 5"),
+            ("Code","frame.vars.swimAngle[0] = 1.2"),
             ("WyeCore.libs.WyeLib.delay",
-              ("Expr","[20] # <put parameter here>")),
+              ("Expr","[30] # zoom this many frames")),
             ("Label","Filler"),
+            ("Code","frame.vars.swimLim[0] = 20"),
+            ("Code","frame.vars.swimAngle[0] = .3"),
             ("GoTo","Loop"))))
 
     def _build(rowRef):
