@@ -22,7 +22,7 @@ class Wye:
     breakList = []          # list of frames to break on
     midi = None
     midiLastIns = 0
-    windowSize = 1          # 0 full frame, 1 max window, 2 small window
+    windowSize = 2          # 0 full frame, 1 max window, 2 small window
 
     dragging = False
 

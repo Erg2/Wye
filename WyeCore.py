@@ -13,11 +13,13 @@ from direct.showbase.DirectObject import DirectObject
 from panda3d.core import *
 from direct.showbase import Audio3DManager
 import sys, os
+import atexit, signal       # for exiting cleanly
 import math
 import pygame.midi
 import time
 import traceback
 from importlib.machinery import SourceFileLoader    # to load library from file
+
 
 # WyeCore class is a static container for the core Wye Classes that is never instantiated
 
@@ -291,6 +293,8 @@ class WyeCore(Wye.staticObj):
         varDescr = ()
         codeDescr = ()
 
+        shutdownCallbacks = []         # if something is running threads, put stop-function ptr here so exit can kill them
+
         audio3d = None
         keyHandler = None           # keyboard handler slot
         mouseHandler = None         # mouse handler slot
@@ -328,6 +332,22 @@ class WyeCore(Wye.staticObj):
 
         displayCycleCount = 0           # DEBUG
 
+        # do critical exit stuff
+        # (like closing voice input threads if they are running)
+        def exit_handler():
+            print("WyeCore World exit_handler called")
+            if len(WyeCore.World.shutdownCallbacks):
+                print("WyrCore World exit_handler: have", len(WyeCore.World.shutdownCallbacks), " shutdownCallbacks")
+                for callback in WyeCore.World.shutdownCallbacks:
+                    callback()
+
+            print("exit_handler: Cleaned up.  Exiting")
+
+        # app died, do clean exit so exit_handler gets called
+        def kill_handler(*args):
+            print("WyeCore World kill_handler")
+            sys.exit(0)
+
         ##########################
         # Per display frame world exec
         #
@@ -347,6 +367,24 @@ class WyeCore(Wye.staticObj):
             if not WyeCore.worldInitialized:
                 # print("worldRunner: World Init")
                 WyeCore.worldInitialized = True  # Only do this once
+
+                # handle shutdown cleanly
+                atexit.register(WyeCore.World.exit_handler)
+                signal.signal(signal.SIGINT, WyeCore.World.kill_handler)
+                signal.signal(signal.SIGTERM, WyeCore.World.kill_handler)
+
+                # set screen size
+                WyeCore.Utils.setScreenSize(Wye.windowSize)
+
+                # set up the environment
+                myFog = Fog("Fog Name")
+                myFog.setColor(0, 0, 0)
+                myFog.setExpDensity(0.001)
+                base.render.setFog(myFog)
+
+                # TURN OFF PANDA3D DEFAULT CAMERA CONTROLS
+                # (we are responsible for viewpoint movement when this is off)
+                WyeCore.base.disableMouse()  # turn off default mouse move
 
                 # import libraries
                 for libFile in WyeCore.libLoadList:

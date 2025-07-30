@@ -29,20 +29,18 @@ class WorldRunner(ShowBase):
 
         ShowBase.__init__(self)     # Init Panda3d
 
-        # set screen size
-        WyeCore.Utils.setScreenSize(Wye.windowSize)
+        ## set screen size
+        #WyeCore.Utils.setScreenSize(Wye.windowSize)
 
 
-        myFog = Fog("Fog Name")
-        myFog.setColor(0, 0, 0)
-        myFog.setExpDensity(0.001)
-        base.render.setFog(myFog)
+        #myFog = Fog("Fog Name")
+        #myFog.setColor(0, 0, 0)
+        #myFog.setExpDensity(0.001)
+        #base.render.setFog(myFog)
 
         taskMgr.add(WyeCore.World.worldRun)
         WyeCore.base = self      # world needs this to do panda3d stuff
 
-        # TURN OFF DEFAULT CAMERA CONTROLS
-        WyeCore.base.disableMouse() # turn off default mouse move
 
         #props = WindowProperties()
         #props.setTitle("Wye V" + version)

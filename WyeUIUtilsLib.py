@@ -8,7 +8,6 @@ from WyeUILib import WyeUILib
 import inspect      # for debugging
 from panda3d.core import *
 from panda3d.core import LVector3f
-#from functools import partial
 import traceback
 import sys
 #from sys import exit
