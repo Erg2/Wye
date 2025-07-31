@@ -78,6 +78,7 @@ class VoiceTestLib:
                 ("listCode", Wye.dType.BOOL, False),
                 ("inputFrm", Wye.dType.OBJECT, None),
                 ("textFrm", Wye.dType.OBJECT, None),
+                ("cmdFrm", Wye.dType.OBJECT, None),
                 ("startStopFrm", Wye.dType.OBJECT, None),
                 ("loadLbl", Wye.dType.OBJECT, None),
                 ("record", Wye.dType.OBJECT, None),
@@ -95,7 +96,7 @@ class VoiceTestLib:
 
     def stopVoiceInput(frame):
         print("VoiceDialog stopVoiceInput: stop recording")
-        frame.verb.stop_recording(frame)
+        frame.verb.stopRecording(frame)
         print("VoiceDialog close any open threads")
         if frame.vars.load[0]:
             print("Wait for dictionary load thread to finish", flush=True)
@@ -193,10 +194,11 @@ class VoiceTestLib:
                                                [Wye.windowSize == 0], VoiceTestLib.VoiceDialog.StartStopCallback,
                                                (frame), hidden=True)
 
-                frame.vars.textFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Text:", hidden=True)
+                frame.vars.textFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Input Text:", hidden=True)
+                frame.vars.cmdFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Wye Cmd:", hidden=True)
 
                 print("VoiceTestLib start speech model load thread")
-                frame.vars.load[0] = Thread(target=VoiceTestLib.VoiceDialog.speech_recognition_load, args=(frame,))
+                frame.vars.load[0] = Thread(target=VoiceTestLib.VoiceDialog.speechRecognition_load, args=(frame,))
                 frame.vars.load[0].start()
 
                 frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
@@ -216,34 +218,34 @@ class VoiceTestLib:
                 # stop ourselves
                 WyeCore.World.stopActiveObject(frame)
 
-    def start_recording(frame):
+    def startRecording(frame):
         messages.put(True)
 
-        frame.vars.record[0] = Thread(target=VoiceTestLib.VoiceDialog.record_microphone, args=(frame,1024))
+        frame.vars.record[0] = Thread(target=VoiceTestLib.VoiceDialog.recordFroMicrophone, args=(frame, 1024))
         frame.vars.record[0].start()
 
-        frame.vars.transcribe[0] = Thread(target=VoiceTestLib.VoiceDialog.speech_recognition, args=(frame,))
+        frame.vars.transcribe[0] = Thread(target=VoiceTestLib.VoiceDialog.speechRecognition, args=(frame,))
         frame.vars.transcribe[0].start()
 
-    def stop_recording(frame):
+    def stopRecording(frame):
         # pump queue dry
         try:
             while messages.get(block=False):
                 pass
         except:
             pass
-        print("stop_recording: messages emptied")
+        print("stopRecording: messages emptied")
 
     # microphone input thread
     # Runs when speech-to-text is active
     # Reads data from mic stream and puts on frames queue
     # Note messages queue is used to start/stop thread
-    def record_microphone(vMgrFrm, chunk=1024):
+    def recordFroMicrophone(vMgrFrm, chunk=1024):
         global CHANNELS
         global FRAME_RATE
         global INPUT_DEV
 
-        print("record_microphone: thread started, chan", CHANNELS, " rate", FRAME_RATE, " input", INPUT_DEV)
+        print("recordFroMicrophone: thread started, chan", CHANNELS, " rate", FRAME_RATE, " input", INPUT_DEV)
         vMgrFrm.vars.startStopFrm[0].verb.setLabel(vMgrFrm.vars.startStopFrm[0], "Disable Voice Input")
 
         p = pyaudio.PyAudio()
@@ -259,7 +261,7 @@ class VoiceTestLib:
         while not vMgrFrm.vars.rec[0]:
             pass
 
-        print("record_microphone: speech rec started, start recording")
+        print("recordFroMicrophone: speech rec started, start recording")
 
         # while main wants us to run
         while not messages.empty():
@@ -272,7 +274,7 @@ class VoiceTestLib:
                 recordings.put(frames.copy())
                 frames = []
 
-        print("record_microphone: Done recording")
+        print("recordFroMicrophone: Done recording")
         recordings.put([])
 
         stream.stop_stream()
@@ -283,19 +285,44 @@ class VoiceTestLib:
 
     # Load speech recognition model thread
     # Runs at start to load speech->text model
-    def speech_recognition_load(vMgrFrm):
-        print("speech_recognition_load thread started")
+    def speechRecognition_load(vMgrFrm):
+        print("speechRecognition_load thread started")
         if not vMgrFrm.vars.model[0]:
             vMgrFrm.vars.model[0] = Model(model_path=WyeCore.Utils.userLibPath() + "vosk-model-en-us-0.22")
             vMgrFrm.vars.rec[0] = KaldiRecognizer(vMgrFrm.vars.model[0], FRAME_RATE)
             vMgrFrm.vars.rec[0].SetWords(True)
 
-        print("speech_recognition_load model loaded, show start/stop")
+        print("speechRecognition_load model loaded, show start/stop")
         vMgrFrm.vars.loadLbl[0].verb.setLabel(vMgrFrm.vars.loadLbl[0], "VOSK US English Loaded.  Voice Input ready")
         vMgrFrm.vars.startStopFrm[0].verb.show(vMgrFrm.vars.startStopFrm[0])
         vMgrFrm.vars.textFrm[0].verb.show(vMgrFrm.vars.textFrm[0])
+        vMgrFrm.vars.cmdFrm[0].verb.show(vMgrFrm.vars.cmdFrm[0])
         vMgrFrm.vars.load[0] = None
         print("Loading speech model thread done")
+
+    # Display current command text in dialog
+    def displayCommandText(vMgrFrm):
+        txt = "Input Text: "
+        for s in vMgrFrm.vars.cmdText[0]:
+            if s == "why":
+                s = "Wye"
+            txt += s + " "
+        vMgrFrm.vars.textFrm[0].verb.setLabel(vMgrFrm.vars.textFrm[0], txt)
+
+    def displayCommand(vMgrFrm, cmdLst):
+        txt = "Wye Cmd: "
+        for s in cmdLst:
+            if s == "why":
+                s = "Wye"
+            txt += s + " "
+        vMgrFrm.vars.cmdFrm[0].verb.setLabel(vMgrFrm.vars.cmdFrm[0], txt)
+
+    # clear buffer up to "Wye"
+    # If found, return True, else return False (and an empty buffer)
+    def flushToWye(vMgrFrm):
+        while len(vMgrFrm.vars.cmdText[0]) > 0 and vMgrFrm.vars.cmdText[0][0] != "why":
+            vMgrFrm.vars.cmdText[0] = vMgrFrm.vars.cmdText[0][1:]
+        return len(vMgrFrm.vars.cmdText[0]) > 0 and vMgrFrm.vars.cmdText[0][0] == "why"
 
     # convert data to text thread
     # Runs while speech-to-text is active
@@ -305,8 +332,8 @@ class VoiceTestLib:
     #  until the user starts a new Wye command.
     # Aggregated input stream is stored in cmdText variable (vMgrFrm.vars.currCmd[0])
     # Note messages queue is used to start/stop thread
-    def speech_recognition(vMgrFrm):
-        print("speech_recognition thread started")
+    def speechRecognition(vMgrFrm):
+        print("speechRecognition thread started")
 
         # text input loop states
         BUF_EMPTY = 0           # nothing here
@@ -325,138 +352,170 @@ class VoiceTestLib:
         while not messages.empty():
             #print("Get recording")
             frames = recordings.get()
-            print("Got", len(frames)," audio frames")
+            print(">>> speechRecognition: Top of loop. Got", len(frames)," audio frames")
             if len(frames):
                 # process sound into words
                 vMgrFrm.vars.rec[0].AcceptWaveform(b''.join(frames))
                 result = vMgrFrm.vars.rec[0].Result()
-                #print("speech_recognition result", result)
+                #print("speechRecognition result", result)
                 newText = json.loads(result)["text"]
-                #print("speech", newText)
+                print("speechRecognition: frames => text", newText)
 
                 # if we got words, process them
                 if len(newText) > 0:
+                    # no input generates a "the"
                     if newText == "the":   # ignore solitary "the" which seems to be what silence generates
                         # nothing to do here
                         # if building command (i.e. current cmd not match any known cmds) then fail building that cmd and clear buffer
                         if procState == PROC_BUILDING_CMD:
                             vMgrFrm.vars.cmdText[0] = []
-                            print(" got 'the', clear building command buffer to:", vMgrFrm.vars.cmdText[0])
+                            print(" speechRecognition: got 'the', clear building command buffer to:", vMgrFrm.vars.cmdText[0])
                             procState = PROC_WAITING
 
+                        vMgrFrm.verb.displayCommandText(vMgrFrm)
+                        vMgrFrm.verb.displayCommand(vMgrFrm, [" "])
+
+                        # else waiting or running -> just go back for more input
+
+                    # something to parse in buffer
                     else:
                         # Split into words
                         textList = newText.split(" ")
-                        print(" New textList:", textList)
+                        print(" speechRecognition: New textList:", textList)
                         print(" existing text:", vMgrFrm.vars.cmdText[0])
 
-                        # if start new command clear any existing string
-                        if textList[0] == "why":
-                            # building command
-                            procState = PROC_BUILDING_CMD
+                        # add to existing text
+                        vMgrFrm.vars.cmdText[0].extend(textList)
+                        print(" combined text:", vMgrFrm.vars.cmdText[0])
 
-                            # flush command buffer and load new command
-                            vMgrFrm.vars.cmdText[0] = [x for x in textList]
-                            print("Start Wye command:", vMgrFrm.vars.cmdText[0])
+                        # loop while there's text to process
+                        moreToDo = True
+                        while len(vMgrFrm.vars.cmdText[0]) > 0 and moreToDo:
+                            vMgrFrm.verb.displayCommandText(vMgrFrm)
 
-                        # else add to current command string
-                        else:
-                            vMgrFrm.vars.cmdText[0].extend(textList)
-                            print("Continue Wye command:", vMgrFrm.vars.cmdText[0])
-
-                        txt = ""
-                        for s in vMgrFrm.vars.cmdText[0]:
-                            if s == "why":
-                                s = "Wye"
-                            txt += s + " "
-                        vMgrFrm.vars.textFrm[0].verb.setLabel(vMgrFrm.vars.textFrm[0], txt)
-
-
-                        # If we have Wye commands, process them
-
-                        # continue command loop
-                        haveCmd = True
-                        while haveCmd:
-                            print("haveCmd True, cmdText:", vMgrFrm.vars.cmdText[0])
-                            # if we're building a command (trying to recognize current command string - may not be complete yet)
-                            if procState == PROC_BUILDING_CMD:
-                                txtLen = len(vMgrFrm.vars.cmdText[0])
-                                if txtLen:
-                                    # try to find current command in known commands
-                                    # if found it will run and will remove any words it uses from the input buffer.
-                                    # if it stays running and wants more input, it will put itself in
-                                    # vMgrFrm.vars.currCmd[0] and return True
-                                    if vMgrFrm.verb.parse(vMgrFrm):
-                                        # it wants more input so put itself in vMgrFrm.vars.currCmd[0]
-                                        procState = PROC_RUNNING_CMD
-
-                                    # did not find matching command, exit loop to wait for more text in case that helps
-                                    else:
-                                        haveCmd = False
-
-                                # no text to process, drop out of loop
+                            if procState == PROC_WAITING:
+                                if vMgrFrm.verb.flushToWye(vMgrFrm):
+                                    # there's a command in the buffer, drop through to  process it
+                                    print("  speechRecognition: Run cmd shift to PROC_BUILDING_CMD")
+                                    procState = PROC_BUILDING_CMD
+                                # else no cmd found in buff and now buff's empty -> exit loop
                                 else:
-                                    haveCmd = False
+                                    print("  speechRecognition: Run cmd shift to PROC_WAITING. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
+                                    moreToDo = False
 
-                            # if command still running and it wants more input and we have more input
-                            while procState == PROC_RUNNING_CMD and len(vMgrFrm.vars.cmdText[0]) > 0:
-                                # run cmd.
-                                # if returns True then it wants to keep processing input
-                                # if returns false it's done.  See if there are more commands in input
+                            # if there's a command wanting input, call it
+                            if procState == PROC_RUNNING_CMD:
+                                print("  speechRecognition text loop: PROC_RUNNING_CMD")
+                                # call cmd.  If returns False, done command
+                                # note: cmd removes any text it uses from the buffer
                                 if not vMgrFrm.vars.currCmd[0](vMgrFrm):
-                                    # returned false, command is done. Check for another command in stream and clear leftover words
-                                    procState = PROC_WAITING
-                                    # search remaining text for a Wye command.  Clear anything not recognized
-                                    # todo - collect unmatched command text strings and log them
-                                    while len(vMgrFrm.vars.cmdText[0]) > 0 and procState == PROC_WAITING:
-                                        # Is first remaining word start of a Wye command?
-                                        if vMgrFrm.vars.cmdText[0][0] == "why":
-                                            # Found Wye command, switch to building cmd
-                                            procState = PROC_BUILDING_CMD
-                                        # nope, delete word and loop to look at next one
+                                    # cmd ret False -> finished command, clear text up to next command, if any
+
+                                    if vMgrFrm.verb.flushToWye(vMgrFrm):
+                                        # there's another command in the buffer, loop to process it
+                                        print("  speechRecognition: Run cmd shift to PROC_BUILDING_CMD. buff", vMgrFrm.vars.cmdText[0])
+                                        procState = PROC_BUILDING_CMD
+                                    # else done, buff's empty, exit loop
+                                    else:
+                                        print("  speechRecognition: Run cmd shift to PROC_WAITING. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
+                                        procState = PROC_WAITING
+                                        moreToDo = False
+
+                                # else cmd ret True -> continue PROC_RUNNING_CMD (curr cmd waiting for input)
+                                else:
+                                    print("  speechRecognition: Run continues. buff", vMgrFrm.vars.cmdText[0])
+
+                            # if we're building a command, see if it's complete
+                            # (note, this is after PROC_RUNNING_CMD 'cause there might be another cmd in buffer)
+                            if procState == PROC_BUILDING_CMD:
+                                print("  speechRecognition text loop: PROC_BUILDING_CMD")
+                                # look up command.  Returns True if it found cmd (also removes cmd text from buff)
+                                if vMgrFrm.verb.parse(vMgrFrm):
+                                    # if found command and it wants to keep processing input
+                                    if vMgrFrm.vars.currCmd[0]:
+                                        # it wants more input so it put ptr to itself in vMgrFrm.vars.currCmd[0]
+                                        print("  speechRecognition: Build found, ran cmd.  Shift to PROC_RUNNING_CMD. buff", vMgrFrm.vars.cmdText[0])
+                                        procState = PROC_RUNNING_CMD
+                                    # else finished command, go back to wait state.  If more in buffer, keep looping
+                                    else:
+                                        procState = PROC_WAITING
+                                        moreToDo = len(vMgrFrm.vars.cmdText[0]) > 0
+                                        if moreToDo:
+                                            print("  speechRecognition: Build found, ran cmd. cmd is done. Shift to PROC_WAITING and process more buffer. buff",
+                                                  vMgrFrm.vars.cmdText[0])
                                         else:
-                                            vMgrFrm.vars.cmdText[0] = vMgrFrm.vars.cmdText[0][1:]
+                                            print("  speechRecognition: Build found, ran cmd. cmd is done. Shift to PROC_WAITING.  Buff is empty.",
+                                                  vMgrFrm.vars.cmdText[0])
 
-                            haveCmd = False
+                                # did not find matching command, exit loop to wait for more text in case that helps
+                                else:
+                                    print("  speechRecognition: Build din't find matching cmd. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
+                                    moreToDo = False
 
-                        print("Done processing text input")
+                        print("speechRecognition: Done processing text input. ", end="")
+                        match procState:
+                            case 0: #PROC_WAITING:
+                                print("procState == PROC_WAITING")
+                            case 1: #PROC_BUILDING_CMD:
+                                print("procState == PROC_BUILDING_CMD")
+                            case 2: #PROC_RUNNING_CMD:
+                                print("procState == PROC_RUNNING_CMD")
 
                 else:
-                    print("Nothing parsed from input")
+                    print("speechRecognition: Nothing parsed from mic input")
             else:
-                print("No input")
+                print("speechRecognition: No mic input")
 
-        print("speech_recognition: messages empty, stopped recognition")
+        print("speechRecognition: messages empty, stopped recognition")
 
 
         vMgrFrm.vars.transcribe[0] = None
-        print("speech_recognition thread Done")
+        print("speechRecognition thread Done")
 
     # parse for cmd in ouputText starting at txtIx
+    # return true if found command
     def parse(frame):
         print("voiceDialog parse:", frame.vars.cmdText[0])
-
+        txtLen = len(frame.vars.cmdText[0])
         # look for match in prebuilt commands
         for cmd in frame.verb.commands:
             cmdLen = len(cmd[1])
-            # check text after the initial "why"
-            print("  Compare input to", cmd[1])
-            for wdIx in range(1,cmdLen):
-                # if fail to match, kick out to try the next word
-                if frame.vars.cmdText[0][wdIx] != cmd[1][wdIx]:
-                    break;
-            # if get here, it's a match!
-            print("Found command", cmd[1])
-            # call command.  Will return True if it wants to keep processing input
-            cmdContinues = cmd[0](frame)
-            # trim text used by command off input buffer
-            frame.vars.cmdText[0] = frame.vars.cmdText[cmdLen:]
-            if cmdContinues:
-                frame.vars.currCmd[0] = cmd[0]
-                # if cmd wants to process more text,
-            return cmdContinues
 
-        frame.vars.cmdText[0] = []
+            # if there's enough input text to do compare
+            if cmdLen <= txtLen:
+                # check text after the initial "why"
+                print("  Compare input to", cmd[1])
+                cmdMatched = True   # assume success
+                for wdIx in range(1,cmdLen):
+                    # if fail to match, kick out to try the next word
+                    if frame.vars.cmdText[0][wdIx] != cmd[1][wdIx]:
+                        print("   this cmd not a match")
+                        cmdMatched = False
+                        break;
+
+                # if matched
+                if cmdMatched:
+                    print("parse: Call command", cmd[1])
+                    frame.verb.displayCommand(frame, cmd[1])
+                    # call command.  Will return True if it wants to keep processing input
+                    cmdContinues = cmd[0](frame)
+                    # trim text used by command off input buffer
+                    frame.vars.cmdText[0] = frame.vars.cmdText[cmdLen:]
+                    # if command wants to keep processing input, stash ptr to it
+                    if cmdContinues:
+                        print(" parse: command wants to keep processing input")
+                        frame.vars.currCmd[0] = cmd[0]     # cmd wants to process more text,
+
+                    # else make sure no continuing command
+                    else:
+                        print(" parse: command done")
+                        frame.vars.currCmd[0] = None
+
+                    # found command
+                    return True
+
+        # get this far then did not match command
+        frame.verb.displayCommand(frame, [" "])
         return False
 
     # set input source
@@ -509,14 +568,14 @@ class VoiceTestLib:
 
             if vMgrFrm.vars.startStopFrm[0].vars.currVal[0]:
                 vMgrFrm.vars.startStopFrm[0].verb.setLabel(vMgrFrm.vars.startStopFrm[0], "Loading English Model")
-                vMgrFrm.verb.start_recording(vMgrFrm)
+                vMgrFrm.verb.startRecording(vMgrFrm)
                 vMgrFrm.vars.shutdownCallback[0] = partial(vMgrFrm.verb.stopVoiceInput, vMgrFrm)
                 WyeCore.World.shutdownCallbacks.append(vMgrFrm.vars.shutdownCallback[0])
 
 
             else:
                 vMgrFrm.vars.startStopFrm[0].verb.setLabel(vMgrFrm.vars.startStopFrm[0], "Enable Voice Input")
-                vMgrFrm.verb.stop_recording(vMgrFrm)
+                vMgrFrm.verb.stopRecording(vMgrFrm)
                 #print("StartStopCallback Stopped recording (maybe)")
                 if vMgrFrm.vars.shutdownCallback[0] and vMgrFrm.vars.shutdownCallback[0] in WyeCore.World.shutdownCallbacks:
                     WyeCore.World.shutdownCallbacks.remove(vMgrFrm.vars.shutdownCallback[0])
