@@ -618,8 +618,8 @@ for ii in range(len(frame.vars.bubbles[0])):
     dataType = Wye.dType.NONE
     cType = Wye.cType.OBJECT
     parTermType = Wye.parTermType.FIRST_FAIL
-    paramDescr =  ()
-    varDescr =  (
+    paramDescr = ()
+    varDescr = (
         ("tgtPos",Wye.dType.FLOAT_LIST,(0, 25, 0)),
         ("posStep",Wye.dType.FLOAT,0.04),
         ("scootDelta",Wye.dType.FLOAT,0.05),

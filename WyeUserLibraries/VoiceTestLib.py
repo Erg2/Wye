@@ -29,11 +29,12 @@ from queue import Queue
 
 # list input devices
 import pyaudio
+from direct.showbase.DirectObject import DirectObject
 
 ######################
 CHANNELS = 1
 FRAME_RATE=16000
-RECORD_SECONDS = 2
+RECORD_SECONDS = 1
 AUDIO_FORMAT = pyaudio.paInt16
 SAMPLE_SIZE = 2
 INPUT_DEV = 3
@@ -53,8 +54,108 @@ class VoiceCmds:
 
     def moveFwd(vMgrFrm):
         print("VoiceTestLib moveFwd")
-        pass
+        return False
 
+    def move(vMgrFrm):
+        if vMgrFrm.vars.currCmd[0] == None:
+            print("VoiceTestLib start move")
+            vMgrFrm.vars.currCmd[0] = VoiceCmds.move
+
+        else:
+            while len(vMgrFrm.vars.cmdText[0]) > 0:
+                word = vMgrFrm.vars.cmdText[0].pop()
+                if word == "why":
+                    return False
+
+                print(" VoiceTestLib do move ", word)
+                moveFrm = vMgrFrm.vars.moveFrm[0]
+                match word:
+                    case "forward":
+                        moveFrm.vars.forward[0] += moveFrm.vars.inc[0]
+
+                    case "back":
+                        moveFrm.vars.forward[0] -= moveFrm.vars.inc[0]
+
+                    case "left":
+                        moveFrm.vars.right[0] -= moveFrm.vars.inc[0]
+
+                    case "right":
+                        moveFrm.vars.right[0] += moveFrm.vars.inc[0]
+
+                    case "up":
+                        moveFrm.vars.up[0] += moveFrm.vars.inc[0]
+
+                    case "down":
+                        moveFrm.vars.up[0] -= moveFrm.vars.inc[0]
+
+                    case "turn":
+                        vMgrFrm.vars.currCmd[0] = VoiceCmds.turn
+
+                    case "stop":
+                        moveFrm.vars.forward[0] = 0
+                        moveFrm.vars.right[0] = 0
+                        moveFrm.vars.up[0] = 0
+                        moveFrm.vars.rotRight[0] = 0
+                        moveFrm.vars.rotUp[0] = 0
+
+                    case _:
+                        pass
+
+        # keep going
+        return True
+
+    def turn(vMgrFrm):
+        if vMgrFrm.vars.currCmd[0] == None:
+            print("VoiceTestLib start move")
+            vMgrFrm.vars.currCmd[0] = VoiceCmds.move
+
+        else:
+            while len(vMgrFrm.vars.cmdText[0]) > 0:
+                word = vMgrFrm.vars.cmdText[0].pop()
+                if word == "why":
+                    return False
+
+                print(" VoiceTestLib do move ", word)
+                moveFrm = vMgrFrm.vars.moveFrm[0]
+                match word:
+                    case "left":
+                        moveFrm.vars.rotRight[0] += moveFrm.vars.inc[0]
+
+                    case "right":
+                        moveFrm.vars.rotRight[0] -= moveFrm.vars.inc[0]
+
+                    case "up":
+                        moveFrm.vars.rotUp[0] += moveFrm.vars.inc[0]
+
+                    case "down":
+                        moveFrm.vars.rotUp[0] -= moveFrm.vars.inc[0]
+
+                    case "move":
+                        vMgrFrm.vars.currCmd[0] = VoiceCmds.move
+
+                    case "stop":
+                        moveFrm.vars.forward[0] = 0
+                        moveFrm.vars.right[0] = 0
+                        moveFrm.vars.up[0] = 0
+                        moveFrm.vars.rotRight[0] = 0
+                        moveFrm.vars.rotUp[0] = 0
+
+                    case _:
+                        pass
+
+        # keep going
+        return True
+
+
+    def stop(vMgrFrm):
+        print("VoiceTestLib Stop")
+        moveFrm = vMgrFrm.vars.moveFrm[0]
+        moveFrm.vars.forward[0] = 0
+        moveFrm.vars.right[0] = 0
+        moveFrm.vars.up[0] = 0
+        moveFrm.vars.rotRight[0] = 0
+        moveFrm.vars.rotUp[0] = 0
+        return False
 
 class VoiceTestLib:
   def _build():
@@ -64,13 +165,43 @@ class VoiceTestLib:
   class VoiceTestLib_rt:
    pass #1
 
+  # Move with momentum
+  class MoveViewpoint(DirectObject):
+      mode = Wye.mode.MULTI_CYCLE
+      dataType = Wye.dType.NONE
+      autoStart = False
+      paramDescr = (("vMgrFrm", Wye.dType.OBJECT, None),
+                    )
+      varDescr = (("momentum", Wye.dType.FLOAT, 0.),
+                  ("inc", Wye.dType.FLOAT, 0.01),
+                  ("right", Wye.dType.FLOAT, 0.0),
+                  ("up", Wye.dType.FLOAT, 0.0),
+                  ("rotRight", Wye.dType.FLOAT, 0.0),
+                  ("rotUp", Wye.dType.FLOAT, 0.0),
+                  ("forward", Wye.dType.FLOAT, 0.0),
+                  ("drag", Wye.dType.FLOAT, 0.01),
+                  )
+
+      def start(stack):
+          # print("MoveViewpoint: Start")
+          f = Wye.codeFrame(VoiceTestLib.MoveViewpoint,
+                            stack)  # not stopped by breakAll or debugger debugger
+          f.systemObject = True
+          return f
+
+      def run(frame):
+          global base
+
+          # print("MoveViewpoint: run")
+          base.camera.setPos(base.camera, frame.vars.right[0], frame.vars.forward[0], frame.vars.up[0])
+          camRot = base.camera.getHpr()
+          base.camera.setHpr(camRot[0] + frame.vars.rotRight[0], camRot[1], camRot[2])
 
 
-
-  # Wye main menu - user settings n stuff
+  # Wye voice input
   class VoiceDialog:
     mode = Wye.mode.MULTI_CYCLE
-    dataType = Wye.dType.STRING
+    dataType = Wye.dType.NONE
     autoStart = True
     paramDescr = ()
     varDescr = (("dlgStat", Wye.dType.INTEGER, -1),
@@ -81,6 +212,7 @@ class VoiceTestLib:
                 ("cmdFrm", Wye.dType.OBJECT, None),
                 ("startStopFrm", Wye.dType.OBJECT, None),
                 ("loadLbl", Wye.dType.OBJECT, None),
+                ("moveFrm", Wye.dType.OBJECT, None),
                 ("record", Wye.dType.OBJECT, None),
                 ("transcribe", Wye.dType.OBJECT, None),
                 ("load", Wye.dType.OBJECT, None),
@@ -112,34 +244,18 @@ class VoiceTestLib:
             frame.vars.transcribe[0] = None
 
 
-    # Audio command - word list to match and function to call
-    class cmd:
-        def __init__(self, action=None, *args):
-            self.words = [*args]
-            self.action = action
-
-        # look for matching word(s) in inList starting at ix
-        def stmtMatch(self, inList):
-            nWords = len(self.words)
-            if len(inList) < nWords:
-                return False
-            for ix in range(nWords):
-                wd = inList[ix]
-                if not wd in self.words[ix]:
-                    return False
-
-            # if get here, have match, call action
-            self.action(inList[ix:])
-            return True
-
     # command -> action lookup table
     commands = [
+        (VoiceCmds.move, ["why", "move"]),
+        (VoiceCmds.turn, ["why", "turn"]),
         (VoiceCmds.moveFwd, ["why", "forward"]),
+        (VoiceCmds.stop, ["why", "stop"]),
     ]               # Global commands
     currContext = None          # class handling current context
 
     def start(stack):
         f = Wye.codeFrame(VoiceTestLib.VoiceDialog, stack)
+        f.systemObject = True
         return f
 
     def run(frame):
@@ -150,18 +266,14 @@ class VoiceTestLib:
 
         match (frame.PC):
             case 0:
+                # start the move class
+                frame.vars.moveFrm[0] = WyeCore.World.startActiveObject(WyeCore.libs.VoiceTestLib.MoveViewpoint)
+
                 # create top level edit dialog
-                dlgFrm = WyeCore.libs.WyeUILib.Dialog.start(frame.SP)
-                dlgFrm.params.retVal = frame.vars.dlgStat
-                dlgFrm.params.title = ["Voice Input Manager"]
-                point = NodePath("point")
-                point.reparentTo(render)
-                point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
-                pos = point.getPos()
-                point.removeNode()
-                dlgFrm.params.position = [(pos[0], pos[1]-.5, pos[2]), ]
-                dlgFrm.params.parent = [None]
-                dlgFrm.params.format = [["NO_CANCEL"]]
+                #dlgFrm = WyeCore.libs.WyeUILib.Dialog.start(frame.SP)
+                dlgFrm = WyeCore.libs.WyeUIUtilsLib.doHUDDialog("Voice Input Manager", formatLst=["NO_CANCEL"],
+                                                                okOnCr=False,
+                                                                position=(-11.3, Wye.UI.NOTIFICATION_OFFSET, -4))
                 frame.vars.dlgFrm[0] = dlgFrm
 
                 p = pyaudio.PyAudio()
@@ -190,8 +302,8 @@ class VoiceTestLib:
                 frame.vars.loadLbl[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Loading language model.  Please Wait.")
 
                 #WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  Set Window Size (F11)", color=Wye.color.NORMAL_COLOR)
-                frame.vars.startStopFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Enable Voice Input",
-                                               [Wye.windowSize == 0], VoiceTestLib.VoiceDialog.StartStopCallback,
+                frame.vars.startStopFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Disable Voice Input",
+                                               [True], VoiceTestLib.VoiceDialog.StartStopCallback,
                                                (frame), hidden=True)
 
                 frame.vars.textFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Input Text:", hidden=True)
@@ -208,6 +320,8 @@ class VoiceTestLib:
             case 1:
                 dlgFrm = frame.SP.pop()  # remove dialog frame from stack
                 frame.verb.stopVoiceInput(frame)
+
+                WyeCore.World.stopActiveObject(frame.vars.moveFrm)
 
                 # delay a frame
                 frame.PC += 1
@@ -258,6 +372,7 @@ class VoiceTestLib:
                         )
         frames = []
 
+        # wait for input to start
         while not vMgrFrm.vars.rec[0]:
             pass
 
@@ -298,6 +413,13 @@ class VoiceTestLib:
         vMgrFrm.vars.textFrm[0].verb.show(vMgrFrm.vars.textFrm[0])
         vMgrFrm.vars.cmdFrm[0].verb.show(vMgrFrm.vars.cmdFrm[0])
         vMgrFrm.vars.load[0] = None
+
+        # start recording
+        # todo - call fn instead of setting everything
+        vMgrFrm.verb.startRecording(vMgrFrm)
+        vMgrFrm.vars.shutdownCallback[0] = partial(vMgrFrm.verb.stopVoiceInput, vMgrFrm)
+        WyeCore.World.shutdownCallbacks.append(vMgrFrm.vars.shutdownCallback[0])
+
         print("Loading speech model thread done")
 
     # Display current command text in dialog
@@ -307,14 +429,18 @@ class VoiceTestLib:
             if s == "why":
                 s = "Wye"
             txt += s + " "
+
         vMgrFrm.vars.textFrm[0].verb.setLabel(vMgrFrm.vars.textFrm[0], txt)
 
     def displayCommand(vMgrFrm, cmdLst):
         txt = "Wye Cmd: "
+        if vMgrFrm.vars.currCmd[0]:
+            txt += " " + vMgrFrm.vars.currCmd[0].__name__ + ": "
         for s in cmdLst:
             if s == "why":
                 s = "Wye"
             txt += s + " "
+
         vMgrFrm.vars.cmdFrm[0].verb.setLabel(vMgrFrm.vars.cmdFrm[0], txt)
 
     # clear buffer up to "Wye"
@@ -391,7 +517,12 @@ class VoiceTestLib:
                         # loop while there's text to process
                         moreToDo = True
                         while len(vMgrFrm.vars.cmdText[0]) > 0 and moreToDo:
+                            # if starting new command
+                            if vMgrFrm.vars.cmdText[0][0] == "why":
+                                procState = PROC_BUILDING_CMD
+
                             vMgrFrm.verb.displayCommandText(vMgrFrm)
+                            vMgrFrm.verb.displayCommand(vMgrFrm, [" "])
 
                             if procState == PROC_WAITING:
                                 if vMgrFrm.verb.flushToWye(vMgrFrm):
@@ -408,6 +539,7 @@ class VoiceTestLib:
                                 print("  speechRecognition text loop: PROC_RUNNING_CMD")
                                 # call cmd.  If returns False, done command
                                 # note: cmd removes any text it uses from the buffer
+                                print("  speechRecognition: Running ", vMgrFrm.vars.currCmd[0].__name__)
                                 if not vMgrFrm.vars.currCmd[0](vMgrFrm):
                                     # cmd ret False -> finished command, clear text up to next command, if any
 
@@ -417,13 +549,14 @@ class VoiceTestLib:
                                         procState = PROC_BUILDING_CMD
                                     # else done, buff's empty, exit loop
                                     else:
+
                                         print("  speechRecognition: Run cmd shift to PROC_WAITING. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
                                         procState = PROC_WAITING
                                         moreToDo = False
 
                                 # else cmd ret True -> continue PROC_RUNNING_CMD (curr cmd waiting for input)
                                 else:
-                                    print("  speechRecognition: Run continues. buff", vMgrFrm.vars.cmdText[0])
+                                    print("  speechRecognition: Run", vMgrFrm.vars.currCmd[0], " continues. buff", vMgrFrm.vars.cmdText[0])
 
                             # if we're building a command, see if it's complete
                             # (note, this is after PROC_RUNNING_CMD 'cause there might be another cmd in buffer)
@@ -501,6 +634,7 @@ class VoiceTestLib:
                     cmdContinues = cmd[0](frame)
                     # trim text used by command off input buffer
                     frame.vars.cmdText[0] = frame.vars.cmdText[cmdLen:]
+                    print("parse: trim cmd", cmd[1], " off cmdText", frame.vars.cmdText[0])
                     # if command wants to keep processing input, stash ptr to it
                     if cmdContinues:
                         print(" parse: command wants to keep processing input")
@@ -567,7 +701,7 @@ class VoiceTestLib:
             #print("vMgrFrm", vMgrFrm.verb.__name__)
 
             if vMgrFrm.vars.startStopFrm[0].vars.currVal[0]:
-                vMgrFrm.vars.startStopFrm[0].verb.setLabel(vMgrFrm.vars.startStopFrm[0], "Loading English Model")
+                #vMgrFrm.vars.startStopFrm[0].verb.setLabel(vMgrFrm.vars.startStopFrm[0], "Loading English Model")
                 vMgrFrm.verb.startRecording(vMgrFrm)
                 vMgrFrm.vars.shutdownCallback[0] = partial(vMgrFrm.verb.stopVoiceInput, vMgrFrm)
                 WyeCore.World.shutdownCallbacks.append(vMgrFrm.vars.shutdownCallback[0])
