@@ -368,7 +368,7 @@ class WyeCore(Wye.staticObj):
                 # print("worldRunner: World Init")
                 WyeCore.worldInitialized = True  # Only do this once
 
-                # handle shutdown cleanly
+                # callbacks to handle shutdown cleanly
                 atexit.register(WyeCore.World.exit_handler)
                 signal.signal(signal.SIGINT, WyeCore.World.kill_handler)
                 signal.signal(signal.SIGTERM, WyeCore.World.kill_handler)
@@ -383,7 +383,7 @@ class WyeCore(Wye.staticObj):
                 base.render.setFog(myFog)
 
                 # TURN OFF PANDA3D DEFAULT CAMERA CONTROLS
-                # (we are responsible for viewpoint movement when this is off)
+                # (turn this is off so we can drive the viewpoint the way we want to)
                 WyeCore.base.disableMouse()  # turn off default mouse move
 
                 # import libraries

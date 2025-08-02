@@ -52,9 +52,6 @@ recordings = Queue()
 class VoiceCmds:
     initialized = False
 
-    def moveFwd(vMgrFrm):
-        print("VoiceTestLib moveFwd")
-        return False
 
     def move(vMgrFrm):
         if vMgrFrm.vars.currCmd[0] == None:
@@ -97,6 +94,10 @@ class VoiceCmds:
                     moveFrm.vars.rotRight[0] = 0
                     moveFrm.vars.rotUp[0] = 0
 
+                case "reset":
+                    base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
+                    base.camera.setHpr(0, 0, 0)
+
                 case _:
                     pass
 
@@ -138,6 +139,10 @@ class VoiceCmds:
                     moveFrm.vars.rotRight[0] = 0
                     moveFrm.vars.rotUp[0] = 0
 
+                case "reset":
+                    base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
+                    base.camera.setHpr(0, 0, 0)
+
                 case _:
                     pass
 
@@ -154,6 +159,16 @@ class VoiceCmds:
         moveFrm.vars.rotRight[0] = 0
         moveFrm.vars.rotUp[0] = 0
         return False
+
+    def reset(vMgrFrm):
+        base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
+        base.camera.setHpr(0, 0, 0)
+
+    def hud(vMgrFrm):
+        print("Select HUD dialog")
+        pass
+
+        #WyeCore.focusManager.
 
 class VoiceTestLib:
   def _build():
@@ -280,8 +295,11 @@ class VoiceTestLib:
     commands = [
         (VoiceCmds.move, ["why", "move"]),
         (VoiceCmds.turn, ["why", "turn"]),
-        (VoiceCmds.moveFwd, ["why", "forward"]),
         (VoiceCmds.stop, ["why", "stop"]),
+        (VoiceCmds.reset, ["why", "reset"]),
+        (VoiceCmds.hud, ["why", "hud"]),
+        (VoiceCmds.hud, ["why", "heard"]),
+
     ]               # Global commands
     currContext = None          # class handling current context
 
@@ -616,14 +634,17 @@ class VoiceTestLib:
                                             print("  speechRecognition: Build found, ran cmd. cmd is done. Shift to PROC_WAITING.  Buff is empty.",
                                                   vMgrFrm.vars.cmdText[0])
 
-                                # did not find matching command, exit loop to wait for more text in case that helps
+                                # did not find matching command, check for new Wye cmd.
+                                # If none exit loop to wait for more text in case that helps
                                 else:
                                     # check for 2nd cmd - in which case, fail first one
                                     moreToDo = False
                                     for wdIx in range(1,len(vMgrFrm.vars.cmdText[0])):
                                         word = vMgrFrm.vars.cmdText[0][wdIx]
                                         if word == "why":
+                                            vMgrFrm.vars.cmdText[0] = vMgrFrm.vars.cmdText[0][1:]
                                             vMgrFrm.verb.flushToWye(vMgrFrm)
+                                            print(">>> Flushed to 2nd Wye cmd:", vMgrFrm.vars.cmdText[0])
                                             moreToDo = True
                                             break;
                                     if not moreToDo:

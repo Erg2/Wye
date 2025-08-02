@@ -383,7 +383,7 @@ class WyeUILib(Wye.staticObj):
             # Wye main dialog
             if self.m1Pressed and self.ctl and self.alt:
                 if WyeCore.World.mainMenu and not WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0]:
-                    print("Lost dragPath, resettting mainMenu")
+                    print("Lost dragPath, resetting mainMenu")
                     WyeCore.World.mainMenu = None
 
                 if not WyeCore.World.mainMenu:
@@ -1963,14 +1963,9 @@ class WyeUILib(Wye.staticObj):
 
         def start(stack):
             frame = Wye.codeFrame(WyeUILib.Dialog, stack)
-            # give frame unique lists
-            #frame.vars.dlgWidgets[0] = []       # standard widgets common to all Dialogs
-            #frame.vars.okTags[0] = []           # tags for OK buttons
-            #frame.vars.canTags[0] = []          # tags for Cancel buttons
+            # init unique dicts
             frame.vars.inpTags[0] = {}          # map input widget to input sequence number
-            #frame.vars.clickedBtns[0] = []      # clicked button(s) being "flashed" (so user sees they were clicked)
-            frame.vars.radBtnDict[0] = {}  # dictionary of radio button groups in this dialog
-            #frame.vars.topTags[0] = []
+            frame.vars.radBtnDict[0] = {}       # dictionary of radio button groups in this dialog
 
             frame.active = False                # we're not the active dialog
             frame.activating = False            # we're not in the process of activating/deactivating
