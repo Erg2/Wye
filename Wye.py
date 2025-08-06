@@ -26,7 +26,7 @@ class Wye:
 
     dragging = False
 
-    version = "0.9.2"         # change save/open lib directory
+    version = "0.9.3"         # change save/open lib directory
 
     UITest = False          # True enables UI test mode which disables normal mouse input
     devPrint = False       # We're running in the Python debugger and want to see messages in text

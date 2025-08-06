@@ -16,6 +16,10 @@ Run Wye with:
 WyeMain accepts user defined libraries on the command line as: -l yourlib.py
 If there is a library on the command line, the default TestLib.py will not be loaded.
 
+# Misc
+Useful configuration parameters
+-l TestLib.py -l WyeUserLibraries/VoiceTestLib.py
+
 # PyInstaller distribution build
 Tested for Windows 11
 

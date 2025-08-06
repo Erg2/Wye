@@ -83,7 +83,7 @@ class TestLib:
 
   class angleFish:
     mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
+    autoStart = False
     dataType = Wye.dType.NONE
     paramDescr =  ()
     varDescr =  (
@@ -902,7 +902,7 @@ else:
 
   class showFishDialog:
     mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
+    autoStart = False
     dataType = Wye.dType.STRING
     paramDescr =  ()
     varDescr =  (

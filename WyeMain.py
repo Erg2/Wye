@@ -74,7 +74,7 @@ if len(sys.argv) > 1:
 
 # No parameters, load default libs and start default objs
 else:
-    WyeCore.libLoadList.extend(["TestLib.py"])
+    WyeCore.libLoadList.extend(["TestLib.py", "WyeUserLibraries/FlockingFishLib.py", "WyeUserLibraries/FishLib.py", "WyeUserLibraries/WyeTestLib.py", "WyeUserLibraries/VoiceTestLib.py"])
 
 
 

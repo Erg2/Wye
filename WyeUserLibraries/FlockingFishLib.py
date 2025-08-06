@@ -10,7 +10,7 @@ class FlockingFishLib:
 
   class fish2:
     mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
+    autoStart = False
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL
@@ -101,7 +101,7 @@ class FlockingFishLib:
 
   class fish3:
     mode = Wye.mode.MULTI_CYCLE
-    autoStart = True
+    autoStart = False
     dataType = Wye.dType.NONE
     cType = Wye.cType.VERB
     parTermType = Wye.parTermType.FIRST_FAIL

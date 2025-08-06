@@ -56,36 +56,70 @@ class VoiceCmds:
     def move(vMgrFrm):
         if vMgrFrm.vars.currCmd[0] == None:
             print("VoiceTestLib start move")
-            vMgrFrm.vars.currCmd[0] = VoiceCmds.move
 
         else:
             word = vMgrFrm.vars.cmdText[0].pop()
+            moveFrm = vMgrFrm.vars.moveFrm[0]
             if word == "why":
+                moveFrm.vars.forward[0] = 0
+                moveFrm.vars.right[0] = 0
+                moveFrm.vars.up[0] = 0
+                moveFrm.vars.rotRight[0] = 0
+                moveFrm.vars.rotUp[0] = 0
+                moveFrm.vars.speed[0] = 1
+                moveFrm.vars.rotSpeed[0] = 1
                 return False
 
             print(" VoiceTestLib do move ", word)
-            moveFrm = vMgrFrm.vars.moveFrm[0]
             match word:
                 case "forward":
-                    moveFrm.vars.forward[0] += moveFrm.vars.inc[0]
+                    moveFrm.vars.forward[0] = moveFrm.vars.inc[0]
+                    moveFrm.vars.right[0] = 0
+                    moveFrm.vars.up[0] = 0
 
-                case "back":
-                    moveFrm.vars.forward[0] -= moveFrm.vars.inc[0]
+                case "back" | "backward" | "awkward":
+                    moveFrm.vars.forward[0] = -moveFrm.vars.inc[0]
+                    moveFrm.vars.right[0] = 0
+                    moveFrm.vars.up[0] = 0
 
-                case "left":
-                    moveFrm.vars.right[0] -= moveFrm.vars.inc[0]
+                case "left" | "laughed":
+                    moveFrm.vars.forward[0] = 0
+                    moveFrm.vars.right[0] = -moveFrm.vars.inc[0]
+                    moveFrm.vars.up[0] = 0
 
                 case "right":
-                    moveFrm.vars.right[0] += moveFrm.vars.inc[0]
+                    moveFrm.vars.forward[0] = 0
+                    moveFrm.vars.right[0] = moveFrm.vars.inc[0]
+                    moveFrm.vars.up[0] = 0
 
                 case "up":
-                    moveFrm.vars.up[0] += moveFrm.vars.inc[0]
+                    moveFrm.vars.forward[0] = 0
+                    moveFrm.vars.right[0] = 0
+                    moveFrm.vars.up[0] = moveFrm.vars.inc[0]
 
                 case "down":
-                    moveFrm.vars.up[0] -= moveFrm.vars.inc[0]
+                    moveFrm.vars.forward[0] = 0
+                    moveFrm.vars.right[0] = 0
+                    moveFrm.vars.up[0] = -moveFrm.vars.inc[0]
+
+                case "faster" | "master" | "minister" | "easter" | "fasted":
+                    moveFrm.vars.speed[0] += 1
+                    print("move inc", moveFrm.vars.speed[0])
+
+                case "slower":
+                    moveFrm.vars.speed[0] -= 1
+                    if moveFrm.vars.speed[0] < 1:
+                        moveFrm.vars.speed[0] = 1
+                    print("move inc", moveFrm.vars.speed[0])
 
                 case "turn":
+                    moveFrm.vars.forward[0] = 0
+                    moveFrm.vars.right[0] = 0
+                    moveFrm.vars.up[0] = 0
                     vMgrFrm.vars.currCmd[0] = VoiceCmds.turn
+                    vMgrFrm.vars.currCmdDescr[0] = "Turn"
+                    print("1 set cmdDescr to Turn")
+                    vMgrFrm.verb.displayCommand(vMgrFrm)
 
                 case "stop":
                     moveFrm.vars.forward[0] = 0
@@ -93,6 +127,8 @@ class VoiceCmds:
                     moveFrm.vars.up[0] = 0
                     moveFrm.vars.rotRight[0] = 0
                     moveFrm.vars.rotUp[0] = 0
+                    moveFrm.vars.speed[0] = 1
+                    moveFrm.vars.rotSpeed[0] = 1
 
                 case "reset":
                     base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
@@ -104,33 +140,58 @@ class VoiceCmds:
         # keep going
         return True
 
+
     def turn(vMgrFrm):
         if vMgrFrm.vars.currCmd[0] == None:
-            print("VoiceTestLib start move")
-            vMgrFrm.vars.currCmd[0] = VoiceCmds.move
-
+            print("VoiceTestLib start turn")
         else:
             word = vMgrFrm.vars.cmdText[0].pop()
+            moveFrm = vMgrFrm.vars.moveFrm[0]
             if word == "why":
+                moveFrm.vars.forward[0] = 0
+                moveFrm.vars.right[0] = 0
+                moveFrm.vars.up[0] = 0
+                moveFrm.vars.rotRight[0] = 0
+                moveFrm.vars.rotUp[0] = 0
+                moveFrm.vars.speed[0] = 1
+                moveFrm.vars.rotSpeed[0] = 1
                 return False
 
-            print(" VoiceTestLib do move ", word)
-            moveFrm = vMgrFrm.vars.moveFrm[0]
+            print(" VoiceTestLib do turn ", word)
             match word:
-                case "left":
-                    moveFrm.vars.rotRight[0] += moveFrm.vars.inc[0]
+                case "left" | "laughed":
+                    moveFrm.vars.rotRight[0] = moveFrm.vars.inc[0]
+                    moveFrm.vars.rotUp[0] = 0
 
                 case "right":
-                    moveFrm.vars.rotRight[0] -= moveFrm.vars.inc[0]
+                    moveFrm.vars.rotRight[0] = -moveFrm.vars.inc[0]
+                    moveFrm.vars.rotUp[0] = 0
 
                 case "up":
-                    moveFrm.vars.rotUp[0] += moveFrm.vars.inc[0]
+                    moveFrm.vars.rotRight[0] = 0
+                    moveFrm.vars.rotUp[0] = moveFrm.vars.inc[0]
 
                 case "down":
-                    moveFrm.vars.rotUp[0] -= moveFrm.vars.inc[0]
+                    moveFrm.vars.rotRight[0] = 0
+                    moveFrm.vars.rotUp[0] = -moveFrm.vars.inc[0]
 
-                case "move":
+                case "faster" | "master" | "minister" | "easter" | "fasted":
+                    moveFrm.vars.rotSpeed[0] += 1
+                    print("move inc", moveFrm.vars.rotSpeed[0])
+
+                case "slower":
+                    moveFrm.vars.rotSpeed[0] -= 1
+                    if moveFrm.vars.rotSpeed[0] < 1:
+                        moveFrm.vars.rotSpeed[0] = 1
+                    print("move inc", moveFrm.vars.rotSpeed[0])
+
+                case "move" | "moon":
+                    moveFrm.vars.rotRight[0] = 0
+                    moveFrm.vars.rotUp[0] = 0
                     vMgrFrm.vars.currCmd[0] = VoiceCmds.move
+                    vMgrFrm.vars.currCmdDescr[0] = "Move"
+                    print("2 set cmdDescr to Move")
+                    vMgrFrm.verb.displayCommand(vMgrFrm)
 
                 case "stop":
                     moveFrm.vars.forward[0] = 0
@@ -138,10 +199,107 @@ class VoiceCmds:
                     moveFrm.vars.up[0] = 0
                     moveFrm.vars.rotRight[0] = 0
                     moveFrm.vars.rotUp[0] = 0
+                    moveFrm.vars.speed[0] = 1
+                    moveFrm.vars.rotSpeed[0] = 1
+
 
                 case "reset":
                     base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
                     base.camera.setHpr(0, 0, 0)
+
+                case _:
+                    pass
+
+        # keep going
+        return True
+
+
+    def help(vMgrFrm):
+        if vMgrFrm.vars.currCmd[0] == None:
+            print("VoiceTestLib display Help")
+            if not vMgrFrm.vars.helpFrm[0]:
+                dlgFrm = WyeCore.libs.WyeUIUtilsLib.doHUDDialog('Voice Input Help', formatLst=['NO_CANCEL'],
+                                                                okOnCr=False,
+                                                                position=(-11.3, Wye.UI.NOTIFICATION_OFFSET, 3))
+
+                helpTxt = "Wye Alpha Release V" + Wye.version + " Voice Input Help\n"
+                helpTxt += '''
+                Wye understands voice commands of the form "Wye xxx".  
+                Many commands start a mode that accepts single word inputs.
+                The next "Wye xxx" command will terminate any command currently running.
+    
+                Currently defined voice commands:
+                  Wye Move   - Put Wye in move mode.  Then use any of the following
+                       forward               back
+                       right                   left
+                       up                       down
+                       faster                 slower
+                       stop
+                       turn
+                  Wye Turn   - Put Wye in turn mode.  Then use any of the following
+                       forward               back
+                       right                   left
+                       up                       down
+                       faster                 slower
+                       stop
+                       move
+                  Wye Open   - Put Wye in Open Object mode.  Then use any of the following
+                       jelly
+                       small
+                       following
+                       flashing
+                       flying
+                  Wye Help   - Show this dialog.  Close with "ok"
+                       ok
+                '''
+                WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, helpTxt)
+                vMgrFrm.vars.helpFrm[0] = dlgFrm
+                WyeCore.World.startActiveFrame(dlgFrm)
+
+        else:
+            word = vMgrFrm.vars.cmdText[0].pop()
+            if word == "why" or word == "okay" or word == "cancel":
+                vMgrFrm.vars.helpFrm[0].verb.closeDialog(vMgrFrm.vars.helpFrm[0])
+                WyeCore.World.stopActiveObject(vMgrFrm.vars.helpFrm[0])
+                vMgrFrm.vars.helpFrm[0] = None
+                return False
+
+        # keep going
+        return True
+
+
+    def open(vMgrFrm):
+        if vMgrFrm.vars.currCmd[0] == None:
+            print("VoiceTestLib start open")
+
+        else:
+            word = vMgrFrm.vars.cmdText[0].pop()
+            if word == "why":
+                return False
+
+            print(" VoiceTestLib do open object ", word)
+            match word:
+                case "flashing" | "slashing" | "caching", "flushing" | "blushing" | "flash" | "flashy":
+                    print("start flashingFish")
+                    WyeCore.World.startActiveObject(WyeCore.libs.FishLib.flashingFish)
+
+                case "flying" | "fly" | "dying":
+                    print("start flyingFish")
+                    WyeCore.World.startActiveObject(WyeCore.libs.FishLib.flyingFish)
+
+                case "small" | "mall":
+                    print("start smallFish")
+                    WyeCore.World.startActiveObject(WyeCore.libs.FishLib.smallFish)
+
+                case "jelly" | "really" | "jelllyfish":
+                    print("start jellyFish")
+                    WyeCore.World.startActiveObject(WyeCore.libs.FishLib.JellyFish)
+
+                case "following" | "follow" | "flocking" | "flock" | "fallen":
+                    print("start flockingFish")
+                    WyeCore.World.startActiveObject(WyeCore.libs.FishLib.flockingFish1)
+                    WyeCore.World.startActiveObject(WyeCore.libs.FishLib.flockingFish2)
+                    WyeCore.World.startActiveObject(WyeCore.libs.FishLib.flockingFish3)
 
                 case _:
                     pass
@@ -158,17 +316,16 @@ class VoiceCmds:
         moveFrm.vars.up[0] = 0
         moveFrm.vars.rotRight[0] = 0
         moveFrm.vars.rotUp[0] = 0
+        moveFrm.vars.speed[0] = 1
+        moveFrm.vars.rotSpeed[0] = 1
         return False
+
 
     def reset(vMgrFrm):
         base.camera.setPos(Wye.startPos[0], Wye.startPos[1], Wye.startPos[2])
         base.camera.setHpr(0, 0, 0)
 
-    def hud(vMgrFrm):
-        print("Select HUD dialog")
-        pass
 
-        #WyeCore.focusManager.
 
 class VoiceTestLib:
   def _build():
@@ -194,7 +351,7 @@ class VoiceTestLib:
                   )
 
       def start(stack):
-          # print("MoveViewpoint: Start")
+          # print("DisplayToVMgr: Start")
           f = Wye.codeFrame(VoiceTestLib.DisplayToVMgr,
                             stack)  # not stopped by breakAll or debugger debugger
           f.systemObject = True
@@ -202,11 +359,11 @@ class VoiceTestLib:
 
       def run(frame):
           if frame.vars.cmdString[0] != frame.vars.prevCmdString[0]:
-              print("DisplayToVMgr display cmdString", frame.vars.cmdString[0])
+              #print("DisplayToVMgr display cmdString", frame.vars.cmdString[0])
               frame.params.vMgrFrm[0].vars.cmdFrm[0].verb.setLabel(frame.params.vMgrFrm[0].vars.cmdFrm[0], frame.vars.cmdString[0])
               frame.vars.prevCmdString[0] = frame.vars.cmdString[0]
           if frame.vars.inputString[0] != frame.vars.prevInputString[0]:
-              print("DisplayToVMgr display cmdString", frame.vars.cmdString[0])
+              #print("DisplayToVMgr display cmdString", frame.vars.cmdString[0])
               frame.params.vMgrFrm[0].vars.textFrm[0].verb.setLabel(frame.params.vMgrFrm[0].vars.textFrm[0], frame.vars.inputString[0])
               frame.vars.prevInputString[0] = frame.vars.inputString[0]
 
@@ -219,12 +376,14 @@ class VoiceTestLib:
       autoStart = False
       paramDescr = ()
       varDescr = (("momentum", Wye.dType.FLOAT, 0.),
-                  ("inc", Wye.dType.FLOAT, 0.04),
+                  ("inc", Wye.dType.FLOAT, 0.02),
                   ("right", Wye.dType.FLOAT, 0.0),
                   ("up", Wye.dType.FLOAT, 0.0),
                   ("rotRight", Wye.dType.FLOAT, 0.0),
                   ("rotUp", Wye.dType.FLOAT, 0.0),
                   ("forward", Wye.dType.FLOAT, 0.0),
+                  ("speed", Wye.dType.FLOAT, 1),
+                  ("rotSpeed", Wye.dType.FLOAT, 1),
                   ("drag", Wye.dType.FLOAT, 0.01),
                   )
 
@@ -239,9 +398,9 @@ class VoiceTestLib:
           global base
 
           # print("MoveViewpoint: run")
-          base.camera.setPos(base.camera, frame.vars.right[0], frame.vars.forward[0], frame.vars.up[0])
+          base.camera.setPos(base.camera, frame.vars.right[0] * frame.vars.speed[0], frame.vars.forward[0] * frame.vars.speed[0], frame.vars.up[0] * frame.vars.speed[0])
           camRot = base.camera.getHpr()
-          base.camera.setHpr(camRot[0] + frame.vars.rotRight[0], camRot[1], camRot[2])
+          base.camera.setHpr(camRot[0] + frame.vars.rotRight[0] * frame.vars.rotSpeed[0], camRot[1], camRot[2])
 
 
   # Wye voice input
@@ -254,12 +413,14 @@ class VoiceTestLib:
                 ("dlgFrm", Wye.dType.OBJECT, None),
                 ("listCode", Wye.dType.BOOL, False),
                 ("inputFrm", Wye.dType.OBJECT, None),
+                ("helpLblFrm", Wye.dType.OBJECT, None),
                 ("textFrm", Wye.dType.OBJECT, None),
                 ("cmdFrm", Wye.dType.OBJECT, None),
                 ("startStopFrm", Wye.dType.OBJECT, None),
                 ("loadLbl", Wye.dType.OBJECT, None),
                 ("dispFrm", Wye.dType.OBJECT, None),
                 ("moveFrm", Wye.dType.OBJECT, None),
+                ("helpFrm", Wye.dType.OBJECT, None),
                 ("record", Wye.dType.OBJECT, None),
                 ("transcribe", Wye.dType.OBJECT, None),
                 ("load", Wye.dType.OBJECT, None),
@@ -268,6 +429,7 @@ class VoiceTestLib:
                 ("rec", Wye.dType.OBJECT, None),
                 ("model", Wye.dType.OBJECT, None),
                 ("currCmd", Wye.dType.OBJECT, None),
+                ("currCmdDescr", Wye.dType.STRING, ""),
                 ("cmdLst", Wye.dType.STRING_LIST, []),
                 ("cmdText", Wye.dType.STRING_LIST, []),
                 ("shutdownCallback", Wye.dType.OBJECT, None),
@@ -293,12 +455,22 @@ class VoiceTestLib:
 
     # command -> action lookup table
     commands = [
-        (VoiceCmds.move, ["why", "move"]),
-        (VoiceCmds.turn, ["why", "turn"]),
-        (VoiceCmds.stop, ["why", "stop"]),
-        (VoiceCmds.reset, ["why", "reset"]),
-        (VoiceCmds.hud, ["why", "hud"]),
-        (VoiceCmds.hud, ["why", "heard"]),
+        (VoiceCmds.help, ["why", "help"], "Help"),
+        (VoiceCmds.help, ["why", "hell"], "Help"),
+        (VoiceCmds.help, ["why", "helped"], "Help"),
+        (VoiceCmds.move, ["why", "move"], "Move"),
+        (VoiceCmds.move, ["why", "moon"], "Move"),
+        (VoiceCmds.turn, ["why", "turn"], "Turn"),
+        (VoiceCmds.stop, ["why", "stop"], "Stop"),
+        (VoiceCmds.stop, ["why", "top"], "Stop"),
+        (VoiceCmds.stop, ["why", "stay"], "Stop"),
+        (VoiceCmds.stop, ["why", "star"], "Stop"),
+        (VoiceCmds.reset, ["why", "reset"], "Reset"),
+        (VoiceCmds.reset, ["why", "rest"], "Reset"),
+        (VoiceCmds.reset, ["why", "teresa"], "Reset"),
+        (VoiceCmds.open, ["why", "open"], "Open Object"),
+        #(VoiceCmds.hud, ["why", "hud"]),
+        #(VoiceCmds.hud, ["why", "heard"]),
 
     ]               # Global commands
     currContext = None          # class handling current context
@@ -323,7 +495,7 @@ class VoiceTestLib:
 
                 # create top level edit dialog
                 #dlgFrm = WyeCore.libs.WyeUILib.Dialog.start(frame.SP)
-                dlgFrm = WyeCore.libs.WyeUIUtilsLib.doHUDDialog("Voice Input Manager", formatLst=["NO_CANCEL"],
+                dlgFrm = WyeCore.libs.WyeUIUtilsLib.doHUDDialog('Voice Input Manager', formatLst=["NO_CANCEL"],
                                                                 okOnCr=False,
                                                                 position=(-11.3, Wye.UI.NOTIFICATION_OFFSET, -4))
                 frame.vars.dlgFrm[0] = dlgFrm
@@ -357,6 +529,8 @@ class VoiceTestLib:
                 frame.vars.startStopFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputCheckbox(dlgFrm, "Disable Voice Input",
                                                [True], VoiceTestLib.VoiceDialog.StartStopCallback,
                                                (frame), hidden=True)
+
+                frame.vars.helpLblFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, 'Say "Wye Help" for help', hidden=True)
 
                 frame.vars.textFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Input Text:", hidden=True)
                 frame.vars.cmdFrm[0] = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "Wye Cmd:", hidden=True)
@@ -464,6 +638,7 @@ class VoiceTestLib:
         print("speechRecognition_load model loaded, show start/stop")
         vMgrFrm.vars.loadLbl[0].verb.setLabel(vMgrFrm.vars.loadLbl[0], "VOSK US English Loaded.  Voice Input ready")
         vMgrFrm.vars.startStopFrm[0].verb.show(vMgrFrm.vars.startStopFrm[0])
+        vMgrFrm.vars.helpLblFrm[0].verb.show(vMgrFrm.vars.helpLblFrm[0])
         vMgrFrm.vars.textFrm[0].verb.show(vMgrFrm.vars.textFrm[0])
         vMgrFrm.vars.cmdFrm[0].verb.show(vMgrFrm.vars.cmdFrm[0])
         vMgrFrm.vars.load[0] = None
@@ -477,7 +652,7 @@ class VoiceTestLib:
         print("Loading speech model thread done")
 
     # Display current command text in dialog
-    def displayCommandText(vMgrFrm):
+    def displayInputText(vMgrFrm):
         txt = "Input Text: "
         for s in vMgrFrm.vars.cmdText[0]:
             if s == "why":
@@ -485,14 +660,11 @@ class VoiceTestLib:
             txt += s + " "
         vMgrFrm.vars.dispFrm[0].vars.inputString[0] = txt
 
-    def displayCommand(vMgrFrm, cmdLst):
+    def displayCommand(vMgrFrm):
         txt = "Wye Cmd: "
-        if vMgrFrm.vars.currCmd[0]:
-            txt += " " + vMgrFrm.vars.currCmd[0].__name__ + ": "
-        for s in cmdLst:
-            if s == "why":
-                s = "Wye"
-            txt += s + " "
+        if vMgrFrm.vars.currCmdDescr[0]:
+            txt += vMgrFrm.vars.currCmdDescr[0] + ": "
+            print("displayCommand cmdDescr=", vMgrFrm.vars.currCmdDescr[0])
 
         vMgrFrm.vars.dispFrm[0].vars.cmdString[0] = txt
 
@@ -551,8 +723,8 @@ class VoiceTestLib:
                             #print(" speechRecognition: got 'the', clear building command buffer to:", vMgrFrm.vars.cmdText[0])
                             procState = PROC_WAITING
 
-                        vMgrFrm.verb.displayCommandText(vMgrFrm)
-                        vMgrFrm.verb.displayCommand(vMgrFrm, [" "])
+                            vMgrFrm.verb.displayInputText(vMgrFrm)
+                            vMgrFrm.verb.displayCommand(vMgrFrm)
 
                         # else waiting or running -> just go back for more input
 
@@ -560,7 +732,7 @@ class VoiceTestLib:
                     else:
                         # Split into words
                         textList = newText.split(" ")
-                        print("speechRecognition: New textList:", textList)
+                        #print("speechRecognition: New textList:", textList)
                         #print(" existing text:", vMgrFrm.vars.cmdText[0])
 
                         # add to existing text
@@ -573,18 +745,25 @@ class VoiceTestLib:
                             # if starting new command
                             if vMgrFrm.vars.cmdText[0][0] == "why":
                                 procState = PROC_BUILDING_CMD
+                                vMgrFrm.vars.currCmd[0] = None
+                                vMgrFrm.vars.currCmdDescr[0] = ""
+                                print("3 got 'why', clear cmdDescr")
 
-                            vMgrFrm.verb.displayCommandText(vMgrFrm)
-                            vMgrFrm.verb.displayCommand(vMgrFrm, [" "])
+                            vMgrFrm.verb.displayInputText(vMgrFrm)
 
                             if procState == PROC_WAITING:
+                                vMgrFrm.vars.currCmd[0] = None
+                                vMgrFrm.vars.currCmdDescr[0] = ""
+                                print("4 PROC_WAITING, clear cmdDescr")
+                                vMgrFrm.verb.displayCommand(vMgrFrm)
+
                                 if vMgrFrm.verb.flushToWye(vMgrFrm):
                                     # there's a command in the buffer, drop through to  process it
-                                    print("  speechRecognition: Run cmd shift to PROC_BUILDING_CMD")
+                                    #print("  speechRecognition: Run cmd shift to PROC_BUILDING_CMD")
                                     procState = PROC_BUILDING_CMD
                                 # else no cmd found in buff and now buff's empty -> exit loop
                                 else:
-                                    print("  speechRecognition: Run cmd shift to PROC_WAITING. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
+                                    #print("  speechRecognition: Run cmd shift to PROC_WAITING. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
                                     moreToDo = False
 
                             # if there's a command wanting input, call it
@@ -592,18 +771,17 @@ class VoiceTestLib:
                                 #print("  speechRecognition text loop: PROC_RUNNING_CMD")
                                 # call cmd.  If returns False, done command
                                 # note: cmd removes any text it uses from the buffer
-                                print("  speechRecognition: Running ", vMgrFrm.vars.currCmd[0].__name__)
+                                print("  speechRecognition: Running ", vMgrFrm.vars.currCmd[0].__name__, vMgrFrm.vars.currCmdDescr[0])
                                 if not vMgrFrm.vars.currCmd[0](vMgrFrm):
                                     # cmd ret False -> finished command, clear text up to next command, if any
 
                                     if vMgrFrm.verb.flushToWye(vMgrFrm):
                                         # there's another command in the buffer, loop to process it
-                                        print("  speechRecognition: Run cmd shift to PROC_BUILDING_CMD. buff", vMgrFrm.vars.cmdText[0])
+                                        #print("  speechRecognition: Run cmd shift to PROC_BUILDING_CMD. buff", vMgrFrm.vars.cmdText[0])
                                         procState = PROC_BUILDING_CMD
                                     # else done, buff's empty, exit loop
                                     else:
-
-                                        print("  speechRecognition: Run cmd shift to PROC_WAITING. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
+                                        #print("  speechRecognition: Run cmd shift to PROC_WAITING. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
                                         procState = PROC_WAITING
                                         moreToDo = False
 
@@ -615,24 +793,28 @@ class VoiceTestLib:
                             # if we're building a command, see if it's complete
                             # (note, this is after PROC_RUNNING_CMD 'cause there might be another cmd in buffer)
                             if procState == PROC_BUILDING_CMD:
-                                print("  speechRecognition text loop: PROC_BUILDING_CMD")
+                                #print("  speechRecognition text loop: PROC_BUILDING_CMD")
+                                vMgrFrm.vars.currCmdDescr[0] = ""
+                                print("5 PROC_BUILDING, clear cmdDescr")
+                                vMgrFrm.verb.displayCommand(vMgrFrm)
+
                                 # look up command.  Returns True if it found cmd (also removes cmd text from buff)
                                 if vMgrFrm.verb.parse(vMgrFrm):
                                     # if found command and it wants to keep processing input
                                     if vMgrFrm.vars.currCmd[0]:
                                         # it wants more input so it put ptr to itself in vMgrFrm.vars.currCmd[0]
-                                        print("  speechRecognition: Build found, ran cmd.  Shift to PROC_RUNNING_CMD. buff", vMgrFrm.vars.cmdText[0])
+                                        #print("  speechRecognition: Build found, ran cmd.  Shift to PROC_RUNNING_CMD. buff", vMgrFrm.vars.cmdText[0])
                                         procState = PROC_RUNNING_CMD
                                     # else finished command, go back to wait state.  If more in buffer, keep looping
                                     else:
                                         procState = PROC_WAITING
                                         moreToDo = len(vMgrFrm.vars.cmdText[0]) > 0
-                                        if moreToDo:
-                                            print("  speechRecognition: Build found, ran cmd. cmd is done. Shift to PROC_WAITING and process more buffer. buff",
-                                                  vMgrFrm.vars.cmdText[0])
-                                        else:
-                                            print("  speechRecognition: Build found, ran cmd. cmd is done. Shift to PROC_WAITING.  Buff is empty.",
-                                                  vMgrFrm.vars.cmdText[0])
+                                        #if moreToDo:
+                                        #    print("  speechRecognition: Build found, ran cmd. cmd is done. Shift to PROC_WAITING and process more buffer. buff",
+                                        #          vMgrFrm.vars.cmdText[0])
+                                        #else:
+                                        #    print("  speechRecognition: Build found, ran cmd. cmd is done. Shift to PROC_WAITING.  Buff is empty.",
+                                        #          vMgrFrm.vars.cmdText[0])
 
                                 # did not find matching command, check for new Wye cmd.
                                 # If none exit loop to wait for more text in case that helps
@@ -644,29 +826,28 @@ class VoiceTestLib:
                                         if word == "why":
                                             vMgrFrm.vars.cmdText[0] = vMgrFrm.vars.cmdText[0][1:]
                                             vMgrFrm.verb.flushToWye(vMgrFrm)
-                                            print(">>> Flushed to 2nd Wye cmd:", vMgrFrm.vars.cmdText[0])
+                                            #print(">>> Flushed to 2nd Wye cmd:", vMgrFrm.vars.cmdText[0])
                                             moreToDo = True
                                             break;
-                                    if not moreToDo:
-                                        print("  speechRecognition: No matching cmd. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
+                                    #if not moreToDo:
+                                    #    print("  speechRecognition: No matching cmd. Wait for more input. buff", vMgrFrm.vars.cmdText[0])
 
 
-                        print("speechRecognition: Done processing text input. ", end="")
-                        match procState:
-                            case 0: #PROC_WAITING:
-                                print("procState == PROC_WAITING")
-                            case 1: #PROC_BUILDING_CMD:
-                                print("procState == PROC_BUILDING_CMD")
-                            case 2: #PROC_RUNNING_CMD:
-                                print("procState == PROC_RUNNING_CMD")
+                        #print("speechRecognition: Done processing text input. ", end="")
+                        #match procState:
+                        #    case 0: #PROC_WAITING:
+                        #        print("procState == PROC_WAITING")
+                        #    case 1: #PROC_BUILDING_CMD:
+                        #        print("procState == PROC_BUILDING_CMD")
+                        #    case 2: #PROC_RUNNING_CMD:
+                        #        print("procState == PROC_RUNNING_CMD")
 
                 #else:
                 #    print("speechRecognition: Nothing parsed from mic input")
-            else:
-                print("speechRecognition: No mic input")
+            #else:
+            #    print("speechRecognition: No mic input")
 
-        print("speechRecognition: messages empty, stopped recognition")
-
+        #print("speechRecognition: got message, stopped recognition")
 
         vMgrFrm.vars.transcribe[0] = None
         print("speechRecognition thread Done")
@@ -683,39 +864,44 @@ class VoiceTestLib:
             # if there's enough input text to do compare
             if cmdLen <= txtLen:
                 # check text after the initial "why"
-                print("  Compare input to", cmd[1])
+                #print("  Compare input to", cmd[1])
                 cmdMatched = True   # assume success
                 for wdIx in range(1,cmdLen):
                     # if fail to match, kick out to try the next word
                     if frame.vars.cmdText[0][wdIx] != cmd[1][wdIx]:
-                        print("   this cmd not a match")
+                        #print("   this cmd not a match")
                         cmdMatched = False
                         break;
 
                 # if matched
                 if cmdMatched:
-                    print("parse: Call command", cmd[1])
-                    frame.verb.displayCommand(frame, cmd[1])
+                    #print("parse: Call command", cmd[1])
+                    frame.vars.currCmd[0] = None
+                    print("6 parse set cmdDescr to", cmd[2])
+                    frame.vars.currCmdDescr[0] = cmd[2]
+                    frame.verb.displayCommand(frame)
                     # call command.  Will return True if it wants to keep processing input
                     cmdContinues = cmd[0](frame)
                     # trim text used by command off input buffer
                     frame.vars.cmdText[0] = frame.vars.cmdText[cmdLen:]
-                    print("parse: trim cmd", cmd[1], " off cmdText", frame.vars.cmdText[0])
+                    #print("parse: trim cmd", cmd[1], " off cmdText", frame.vars.cmdText[0])
                     # if command wants to keep processing input, stash ptr to it
                     if cmdContinues:
-                        print(" parse: command wants to keep processing input")
+                        #print(" parse: command wants to keep processing input")
                         frame.vars.currCmd[0] = cmd[0]     # cmd wants to process more text,
 
                     # else make sure no continuing command
-                    else:
-                        print(" parse: command done")
-                        frame.vars.currCmd[0] = None
+                    #else:
+                    #    #print(" parse: command done")
+                    #    frame.vars.currCmd[0] = None
+                    #    frame.vars.currCmdDescr[0] = ""
+                    #    print("6 clear cmdDescr")
 
                     # found command
                     return True
 
         # get this far then did not match command
-        frame.verb.displayCommand(frame, [" "])
+        frame.verb.displayCommand(frame)
         return False
 
     # set input source
@@ -780,4 +966,3 @@ class VoiceTestLib:
                 if vMgrFrm.vars.shutdownCallback[0] and vMgrFrm.vars.shutdownCallback[0] in WyeCore.World.shutdownCallbacks:
                     WyeCore.World.shutdownCallbacks.remove(vMgrFrm.vars.shutdownCallback[0])
                     vMgrFrm.vars.shutdownCallback[0] = None
-

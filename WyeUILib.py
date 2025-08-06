@@ -3129,6 +3129,9 @@ class WyeUILib(Wye.staticObj):
                     WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Open Wye Libraries       (Ctrl-Shift-Click)",
                                                              WyeCore.libs.WyeUILib.MainHUDDialog.HUDMainLibDlgCallback)
 
+                    exitBtn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "List Dialogs",
+                                                             WyeCore.libs.WyeUILib.MainHUDDialog.HUDListCallback)
+
                     exitBtn = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "Exit Wye",
                                                              WyeCore.libs.WyeUILib.MainMenuDialog.ExitCallback)
                     exitBtn.params.optData = [(exitBtn, dlgFrm),]
@@ -3168,6 +3171,24 @@ class WyeUILib(Wye.staticObj):
                     #print("Already have Wye Main Menu", WyeCore.World.mainMenu.verb.__name__)
                     WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
                     WyeCore.World.mainMenu.vars.dlgFrm[0].vars.dragPath[0].setHpr(base.camera, 0, 1, 0)
+
+
+        # open or bring to front the Wye main menu dialog
+        class HUDListCallback:
+            mode = Wye.mode.SINGLE_CYCLE
+            autoStart = False
+            paramDescr = ()
+            varDescr = ()
+
+            def start(stack):
+                # print("HUDListCallback started")
+                return Wye.codeFrame(WyeUILib.MainHUDDialog.HUDListCallback, stack)
+
+            def run(frame):
+                print("HUDListCallback")
+                WyeCore.World.mainMenu = WyeCore.World.startActiveObject(WyeUILib.ListDialogs)
+
+
 
         # open or bring to front the main Debugger dialog
         class HUDDbgDlgCallback:
@@ -10997,3 +11018,65 @@ Wye General Info:
                         # clear event list
                         recMgrFrm.vars.eventList[0] = []
                         frame.vars.processing[0] = False
+
+
+
+
+
+    # List active dialogs
+    class ListDialogs:
+        mode = Wye.mode.MULTI_CYCLE
+        dataType = Wye.dType.NONE
+        paramDescr = ()
+        varDescr = (("dummy", Wye.dType.OBJECT, None),
+                    )
+
+        def start(stack):
+            print("ListDialogs started")
+            f = Wye.codeFrame(WyeUILib.ListDialogs, stack)
+            f.systemObject = True
+            return f
+
+        def run(frame):
+            #data = frame.eventData
+            #btnFrm = data[1][0]
+
+
+            match (frame.PC):
+                case 0:
+
+                    # create dialog
+                    point = NodePath("point")
+                    point.reparentTo(render)
+                    point.setPos(base.camera, Wye.UI.NICE_DIALOG_POS)
+                    pos = point.getPos()
+                    point.removeNode()
+
+                    dlgFrm = WyeCore.libs.WyeUIUtilsLib.doDialog("Active Dialogs", parent=None,
+                                                                 position=(pos[0], pos[1], pos[2]), okOnCr=True)
+
+                    for hier in WyeUILib.FocusManager._dialogHierarchies:
+                        # if there's a dialog, add to dlg list
+                        dlgCt = 0
+                        if len(hier) > 0:
+                            tgtDlgFrm = hier[-1]
+                            title = tgtDlgFrm.params.title[0]
+
+                            rowFrm = WyeCore.libs.WyeUIUtilsLib.doInputButton(dlgFrm, "  " + title, WyeUILib.EditVerb.UpdateCodeCallback)
+                            rowFrm.params.optData = [(rowFrm, dlgFrm, frame)]  # button row, dialog frame
+                            dlgCt += 1
+
+                    if not dlgCt:
+                        rowFrm = WyeCore.libs.WyeUIUtilsLib.doInputLabel(dlgFrm, "  <no active dialogs>>")
+                        print("ListDialogs: No dialogs found")
+                    else:
+                        print("ListDialogs: found", dlgCt, " dialogs")
+
+                    frame.SP.append(dlgFrm)  # push dialog so it runs next cycle
+                    frame.PC += 1  # on return from dialog, run next case
+
+                case 1:
+                    dlgFrm = frame.SP.pop()  # remove dialog frame from stack
+                    #print("EditVerb popped dlg", dlgFrm.params.title[0], " status", Wye.status.tostring(dlgFrm.status))
+                    frame.status = dlgFrm.status
+

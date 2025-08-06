@@ -404,7 +404,7 @@ class WyeCore(Wye.staticObj):
                         libClass = getattr(libModule, libName)
                         # print("add libClass", libClass, " to libList")
                         WyeCore.World.libList.append(libClass)
-                        # print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
+                        #print("Loaded library ", libName, " from file ", path, " into lib class ", libClass)
                     except:
                         #    pass    # if fail to load module, keep going
                         print("Failed to load class ", libName, " From file ", path)
